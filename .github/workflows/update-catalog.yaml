@@ -29,12 +29,14 @@ jobs:
       - name: Setup flux-operator
         uses: controlplaneio-fluxcd/flux-operator/actions/setup@be9fe84303cf7b8337b74aad1f7e1ccdafa17274 # v0.53.0
       - name: Update catalog
+        id: build
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FORCE_BUILD: ${{ inputs.force == true && '1' || '' }}
           BUILD_SUMMARY: ${{ runner.temp }}/pr-body.md
         run: make build
       - name: Create Pull Request
+        if: steps.build.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}

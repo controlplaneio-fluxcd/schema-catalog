@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { appendFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -232,6 +232,14 @@ async function main(): Promise<number> {
   if (values.summary !== undefined) {
     await Bun.write(values.summary, renderBuildSummary(changes, orphans, upToDate));
     console.log(`  summary written to ${values.summary}`);
+  }
+
+  // Tell the CI workflow whether a pull request is warranted; the build is
+  // the only party that knows if this run changed the catalog.
+  if (process.env.GITHUB_OUTPUT) {
+    const changed = changes.length > 0 || orphans.length > 0;
+    await appendFile(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+    console.log(`  GitHub output: changed=${changed}`);
   }
 
   if (failures.length > 0) {
