@@ -1,0 +1,37 @@
+# schema source: Kubernetes v1.36.2
+apiVersion <string> enum=authorization.k8s.io/v1
+kind <string> enum=SubjectAccessReview (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# spec holds information about the request being evaluated
+spec.extra <map[string]array>	# extra corresponds to the user.Info.GetExtra() method from the authenticator. Since that is input to the authorizer it needs a reflection here.
+spec.groups <[]string>	# groups is the groups you're testing for.
+spec.nonResourceAttributes <object>	# nonResourceAttributes describes information for a non-resource access request
+spec.nonResourceAttributes.path <string>	# path is the URL path of the request
+spec.nonResourceAttributes.verb <string>	# verb is the standard HTTP verb
+spec.resourceAttributes <object>	# resourceAttributes describes information for a resource access request
+spec.resourceAttributes.fieldSelector <object>	# fieldSelector describes the limitation on access based on field. It can only limit access, not broaden it.
+spec.resourceAttributes.fieldSelector.rawSelector <string>	# rawSelector is the serialization of a field selector that would be included in a query parameter. Webhook implementations are encouraged to ignore rawSelector. The kube-apiserver's *SubjectAccessReview will parse the rawSelector as long as the requirements are not present.
+spec.resourceAttributes.fieldSelector.requirements <[]object>	# requirements is the parsed interpretation of a field selector. All requirements must be met for a resource instance to match the selector. Webhook implementations should handle requirements, but how to handle them is up to the webhook. Since requirements can only limit the request, it is safe to authorize as unlimited request if the requirements are not understood.
+spec.resourceAttributes.fieldSelector.requirements[].key <string> (required)	# key is the field selector key that the requirement applies to.
+spec.resourceAttributes.fieldSelector.requirements[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. The list of operators may grow in the future.
+spec.resourceAttributes.fieldSelector.requirements[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty.
+spec.resourceAttributes.group <string>	# group is the API Group of the Resource. "*" means all.
+spec.resourceAttributes.labelSelector <object>	# labelSelector describes the limitation on access based on labels. It can only limit access, not broaden it.
+spec.resourceAttributes.labelSelector.rawSelector <string>	# rawSelector is the serialization of a field selector that would be included in a query parameter. Webhook implementations are encouraged to ignore rawSelector. The kube-apiserver's *SubjectAccessReview will parse the rawSelector as long as the requirements are not present.
+spec.resourceAttributes.labelSelector.requirements <[]object>	# requirements is the parsed interpretation of a label selector. All requirements must be met for a resource instance to match the selector. Webhook implementations should handle requirements, but how to handle them is up to the webhook. Since requirements can only limit the request, it is safe to authorize as unlimited request if the requirements are not understood.
+spec.resourceAttributes.labelSelector.requirements[].key <string> (required)	# key is the label key that the selector applies to.
+spec.resourceAttributes.labelSelector.requirements[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.resourceAttributes.labelSelector.requirements[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.resourceAttributes.name <string>	# name is the name of the resource being requested for a "get" or deleted for a "delete". "" (empty) means all.
+spec.resourceAttributes.namespace <string>	# namespace is the namespace of the action being requested. Currently, there is no distinction between no namespace and all namespaces "" (empty) is defaulted for LocalSubjectAccessReviews "" (empty) is empty for cluster-scoped resources "" (empty) means "all" for namespace scoped resources from a SubjectAccessReview or SelfSubjectAccessReview
+spec.resourceAttributes.resource <string>	# resource is one of the existing resource types. "*" means all.
+spec.resourceAttributes.subresource <string>	# subresource is one of the existing resource types. "" means none.
+spec.resourceAttributes.verb <string>	# verb is a kubernetes resource API verb, like: get, list, watch, create, update, delete, proxy. "*" means all.
+spec.resourceAttributes.version <string>	# version is the API Version of the Resource. "*" means all.
+spec.uid <string>	# uid information about the requesting user.
+spec.user <string>	# user is the user you're testing for. If you specify "User" but not "Groups", then is it interpreted as "What if User were not a member of any groups
+status <object>	# status is filled in by the server and indicates whether the request is allowed or not
+status.allowed <boolean> (required)	# allowed is required. True if the action would be allowed, false otherwise.
+status.denied <boolean>	# denied is optional. True if the action would be denied, otherwise false. If both allowed is false and denied is false, then the authorizer has no opinion on whether to authorize the action. Denied may not be true if Allowed is true.
+status.evaluationError <string>	# evaluationError is an indication that some error occurred during the authorization check. It is entirely possible to get an error and be able to continue determine authorization status in spite of it. For instance, RBAC can be missing a role, but enough roles are still present and bound to reason about the request.
+status.reason <string>	# reason is optional. It indicates why a request was allowed or denied.
