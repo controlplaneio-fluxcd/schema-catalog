@@ -1,0 +1,151 @@
+import { YAML } from "bun";
+import type { CrdInput, FluxInstance, Source } from "./types.ts";
+
+const EXTRACT_KINDS = ["k8s", "openshift", "crd"];
+const INPUT_KINDS = ["kustomize", "releaseAsset", "fluxInstance"];
+const SOURCE_KEYS = ["name", "alias", "url", "version", "extract", "input"];
+const NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+const REPO_URL_RE = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/;
+
+/** Returns the owner/name part of a source's GitHub repository URL. */
+export function repoOf(source: Pick<Source, "url">): string {
+  const match = source.url.match(REPO_URL_RE);
+  if (!match) {
+    throw new Error(`not a GitHub repository URL: ${source.url}`);
+  }
+  return match[1]!;
+}
+
+export async function loadSources(path: string): Promise<Source[]> {
+  let doc: unknown;
+  try {
+    doc = YAML.parse(await Bun.file(path).text());
+  } catch (err) {
+    throw new Error(`${path}: ${err instanceof Error ? err.message : err}`);
+  }
+  try {
+    return parseSources(doc);
+  } catch (err) {
+    throw new Error(`${path}: ${(err as Error).message}`);
+  }
+}
+
+export function parseSources(doc: unknown): Source[] {
+  if (!isRecord(doc)) {
+    throw new Error("expected a top-level mapping with a 'sources' list");
+  }
+  const unknown = Object.keys(doc).filter((k) => k !== "sources");
+  if (unknown.length > 0) {
+    throw new Error(`unknown top-level keys: ${unknown.join(", ")}`);
+  }
+  if (!Array.isArray(doc.sources) || doc.sources.length === 0) {
+    throw new Error("'sources' must be a non-empty list");
+  }
+
+  const names = new Set<string>();
+  return doc.sources.map((entry, i) => {
+    const source = parseSource(entry, `sources[${i}]`);
+    if (names.has(source.name)) {
+      throw new Error(`sources[${i}]: duplicate name '${source.name}'`);
+    }
+    names.add(source.name);
+    return source;
+  });
+}
+
+function parseSource(entry: unknown, ctx: string): Source {
+  if (!isRecord(entry)) {
+    throw new Error(`${ctx}: expected a mapping`);
+  }
+  if (typeof entry.name === "string") {
+    ctx = `${ctx} (${entry.name})`;
+  }
+
+  const unknown = Object.keys(entry).filter((k) => !SOURCE_KEYS.includes(k));
+  if (unknown.length > 0) {
+    throw new Error(`${ctx}: unknown keys: ${unknown.join(", ")}`);
+  }
+
+  const name = requireString(entry, "name", ctx);
+  if (!NAME_RE.test(name)) {
+    throw new Error(`${ctx}: name must be lowercase alphanumerics and dashes`);
+  }
+  const alias = requireString(entry, "alias", ctx);
+  const url = requireString(entry, "url", ctx);
+  if (!REPO_URL_RE.test(url) || url.endsWith(".git")) {
+    throw new Error(`${ctx}: url must be https://github.com/<owner>/<name> without a .git suffix`);
+  }
+  if (entry.version !== undefined && (typeof entry.version !== "string" || entry.version === "")) {
+    throw new Error(`${ctx}: version must be a non-empty string`);
+  }
+  const version = entry.version as string | undefined;
+
+  const extract = requireString(entry, "extract", ctx);
+  if (!EXTRACT_KINDS.includes(extract)) {
+    throw new Error(`${ctx}: extract must be one of: ${EXTRACT_KINDS.join(", ")}`);
+  }
+
+  if (extract !== "crd") {
+    if (entry.input !== undefined) {
+      throw new Error(`${ctx}: input is only valid for extract: crd`);
+    }
+    return { name, alias, url, version, extract: extract as "k8s" | "openshift" };
+  }
+  return { name, alias, url, version, extract: "crd", input: parseInput(entry.input, ctx) };
+}
+
+function parseInput(input: unknown, ctx: string): CrdInput {
+  if (!isRecord(input)) {
+    throw new Error(`${ctx}: extract: crd requires an input mapping`);
+  }
+  const keys = Object.keys(input);
+  if (keys.length !== 1 || !INPUT_KINDS.includes(keys[0]!)) {
+    throw new Error(`${ctx}: input must have exactly one of: ${INPUT_KINDS.join(", ")}`);
+  }
+  switch (keys[0]) {
+    case "kustomize":
+      if (typeof input.kustomize !== "string" || input.kustomize === "") {
+        throw new Error(`${ctx}: input.kustomize must be a non-empty overlay path`);
+      }
+      return { kustomize: input.kustomize };
+    case "releaseAsset":
+      if (typeof input.releaseAsset !== "string" || input.releaseAsset === "") {
+        throw new Error(`${ctx}: input.releaseAsset must be a non-empty asset name or glob`);
+      }
+      return { releaseAsset: input.releaseAsset };
+    default:
+      return { fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
+  }
+}
+
+function parseFluxInstance(spec: unknown, ctx: string): FluxInstance {
+  if (!isRecord(spec)) {
+    throw new Error(`${ctx}: input.fluxInstance must be a mapping`);
+  }
+  const unknown = Object.keys(spec).filter((k) => k !== "registry" && k !== "components");
+  if (unknown.length > 0) {
+    throw new Error(`${ctx}: input.fluxInstance unknown keys: ${unknown.join(", ")}`);
+  }
+  const registry = requireString(spec, "registry", `${ctx}: input.fluxInstance`);
+  const components = spec.components;
+  if (
+    !Array.isArray(components) ||
+    components.length === 0 ||
+    components.some((c) => typeof c !== "string" || c === "")
+  ) {
+    throw new Error(`${ctx}: input.fluxInstance.components must be a non-empty list of strings`);
+  }
+  return { registry, components };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function requireString(entry: Record<string, unknown>, key: string, ctx: string): string {
+  const value = entry[key];
+  if (typeof value !== "string" || value === "") {
+    throw new Error(`${ctx}: ${key} must be a non-empty string`);
+  }
+  return value;
+}
