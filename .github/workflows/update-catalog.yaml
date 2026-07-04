@@ -35,6 +35,28 @@ jobs:
           FORCE_BUILD: ${{ inputs.force == true && '1' || '' }}
           BUILD_SUMMARY: ${{ runner.temp }}/pr-body.md
         run: make build
+      - name: Checkout example repository
+        if: steps.build.outputs.changed == 'true'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          repository: fluxcd/flux2-kustomize-helm-example
+          path: example
+      - name: Configure smoke test
+        if: steps.build.outputs.changed == 'true'
+        run: |
+          cat > .fluxschema-smoke.yml <<EOF
+          apiVersion: schema.plugin.fluxcd.io/v1beta1
+          kind: Config
+          validate:
+            schemaLocation:
+              - ${GITHUB_WORKSPACE}/catalog
+          EOF
+      - name: Test validate action
+        if: steps.build.outputs.changed == 'true'
+        uses: fluxcd/flux-schema/actions/validate@a45ba852dbbfe9b61ac30e2d30f305e791e12556 # main
+        with:
+          path: example
+          config: .fluxschema-smoke.yml
       - name: Create Pull Request
         if: steps.build.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
