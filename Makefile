@@ -10,4 +10,4 @@ test:
 	cd build && bun test
 
 build:
-	cd build && bun src/main.ts build $(if $(FORCE_BUILD),--force)
+	cd build && bun src/main.ts build $(if $(FORCE_BUILD),--force) $(if $(BUILD_SUMMARY),--summary $(BUILD_SUMMARY))

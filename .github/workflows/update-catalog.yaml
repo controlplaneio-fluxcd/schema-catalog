@@ -32,16 +32,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FORCE_BUILD: ${{ inputs.force == true && '1' || '' }}
+          BUILD_SUMMARY: ${{ runner.temp }}/pr-body.md
         run: make build
-      - name: Export versions for the PR body
-        run: |
-          {
-            echo 'CATALOG_VERSIONS<<EOF'
-            for f in build/history/*.json; do
-              echo "- $(jq -r .repo "$f"): $(jq -r .version "$f")"
-            done
-            echo 'EOF'
-          } >> "$GITHUB_ENV"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
@@ -52,10 +44,7 @@ jobs:
           committer: GitHub <noreply@github.com>
           author: fluxcdbot <fluxcdbot@users.noreply.github.com>
           signoff: true
-          body: |
-            Automated update of the schema catalog:
-
-            ${{ env.CATALOG_VERSIONS }}
+          body-path: ${{ runner.temp }}/pr-body.md
           add-paths: |
             catalog
             build/history

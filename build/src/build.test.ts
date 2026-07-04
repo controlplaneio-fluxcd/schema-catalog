@@ -3,6 +3,7 @@ import { fluxInstanceManifest } from "./extract.ts";
 import { matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
 import { renderVersionsTable, spliceVersionsTable } from "./readme.ts";
+import { renderBuildSummary } from "./summary.ts";
 import { bareVersion, normalizeVersion, openshiftRef, pickLatestOpenShift } from "./resolve.ts";
 import type { HistoryEntry } from "./types.ts";
 
@@ -117,6 +118,60 @@ describe("versions table", () => {
 
   test("throws when the markers are missing", () => {
     expect(() => spliceVersionsTable("# Title\n", "")).toThrow("missing");
+  });
+});
+
+describe("renderBuildSummary", () => {
+  test("lists only changed sources with version transitions and file deltas", () => {
+    const out = renderBuildSummary(
+      [
+        {
+          repo: "fluxcd/flux2",
+          prevVersion: "v2.9.0",
+          version: "v2.10.0",
+          files: 32,
+          added: 2,
+          removed: 0,
+        },
+        {
+          repo: "controlplaneio-fluxcd/flux-operator",
+          prevVersion: "v0.53.0",
+          version: "v0.54.0",
+          files: 8,
+          added: 0,
+          removed: 0,
+        },
+      ],
+      [],
+      4,
+    );
+    expect(out).toBe(
+      `Automated update of the schema catalog.
+
+| Source | Version | Files |
+| --- | --- | --- |
+| [fluxcd/flux2](https://github.com/fluxcd/flux2) | v2.9.0 -> v2.10.0 | 32 (+2 -0) |
+| [controlplaneio-fluxcd/flux-operator](https://github.com/controlplaneio-fluxcd/flux-operator) | v0.53.0 -> v0.54.0 | 8 |
+
+4 source(s) already up to date.
+`,
+    );
+  });
+
+  test("shows plain versions for new sources and reports orphan removals", () => {
+    const out = renderBuildSummary(
+      [{ repo: "cert-manager/cert-manager", prevVersion: null, version: "v1.19.0", files: 12, added: 12, removed: 0 }],
+      [{ name: "flagger", files: 6 }],
+      5,
+    );
+    expect(out).toContain("| [cert-manager/cert-manager](https://github.com/cert-manager/cert-manager) | v1.19.0 | 12 (+12 -0) |");
+    expect(out).toContain("Removed `flagger` (6 files): no longer in sources.yaml.");
+  });
+
+  test("says so when nothing changed", () => {
+    expect(renderBuildSummary([], [], 6)).toBe(
+      "Automated update of the schema catalog.\n\nNo changes.\n\n6 source(s) already up to date.\n",
+    );
   });
 });
 

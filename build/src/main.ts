@@ -18,6 +18,8 @@ import {
 import { README_PATH, SOURCES_PATH } from "./paths.ts";
 import { updateReadme } from "./readme.ts";
 import { resolveVersion } from "./resolve.ts";
+import { renderBuildSummary } from "./summary.ts";
+import type { BuildChange, OrphanRemoval } from "./summary.ts";
 import type { HistoryEntry, Source } from "./types.ts";
 
 const USAGE = `Usage: bun run <command> [options]
@@ -29,6 +31,7 @@ Commands:
 Options:
   --source <name>   Process a single source from build/sources.yaml
   --force           Rebuild even when the resolved version is unchanged
+  --summary <path>  Write a markdown summary of the changes (for PR bodies)
   -h, --help        Show this help message
 `;
 
@@ -55,7 +58,7 @@ async function processSource(
   source: Source,
   opts: Options,
   history: Map<string, HistoryEntry | null>,
-): Promise<void> {
+): Promise<BuildChange | null> {
   const prev = history.get(source.name) ?? null;
 
   let version: string;
@@ -69,7 +72,7 @@ async function processSource(
     if (!opts.force && prev?.version === version) {
       if (await historyFilesPresent(prev)) {
         console.log(`  ${source.name}: ${version} is up to date, skipped`);
-        return;
+        return null;
       }
       console.log(`  ${source.name}: ${version} has missing catalog files, rebuilding`);
     }
@@ -110,6 +113,14 @@ async function processSource(
       `  ${source.name}: ${prev?.version ?? "none"} -> ${version},` +
         ` ${files.length} files (+${added} -${removed.length})`,
     );
+    return {
+      repo: entry.repo,
+      prevVersion: prev?.version ?? null,
+      version,
+      files: files.length,
+      added,
+      removed: removed.length,
+    };
   } finally {
     await rm(staging, { recursive: true, force: true });
   }
@@ -119,7 +130,8 @@ async function processSource(
 async function gcOrphanedSources(
   configured: Set<string>,
   history: Map<string, HistoryEntry | null>,
-): Promise<void> {
+): Promise<OrphanRemoval[]> {
+  const orphans: OrphanRemoval[] = [];
   for (const [name, entry] of history) {
     if (configured.has(name) || entry === null) {
       continue;
@@ -128,8 +140,10 @@ async function gcOrphanedSources(
     await gcCatalog(removed);
     await deleteHistory(name);
     history.delete(name);
+    orphans.push({ name, files: removed.length });
     console.log(`  ${name}: no longer in sources.yaml, removed ${removed.length} catalog file(s)`);
   }
+  return orphans;
 }
 
 /** Includes stderr from failed shell commands (Bun ShellError) when present. */
@@ -147,6 +161,7 @@ async function main(): Promise<number> {
     options: {
       source: { type: "string" },
       force: { type: "boolean", default: false },
+      summary: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
     },
     allowPositionals: true,
@@ -189,17 +204,21 @@ async function main(): Promise<number> {
   console.log(`${command}: ${sources.length} source(s), flux-schema ${opts.toolVersion}`);
 
   const failures: string[] = [];
+  const changes: BuildChange[] = [];
+  let upToDate = 0;
   for (const source of sources) {
     try {
-      await processSource(source, opts, history);
+      const change = await processSource(source, opts, history);
+      change !== null ? changes.push(change) : upToDate++;
     } catch (err) {
       failures.push(source.name);
       console.error(`  ${source.name}: error: ${errorMessage(err)}`);
     }
   }
 
+  let orphans: OrphanRemoval[] = [];
   if (command === "build" && values.source === undefined) {
-    await gcOrphanedSources(new Set(allSources.map((s) => s.name)), history);
+    orphans = await gcOrphanedSources(new Set(allSources.map((s) => s.name)), history);
   }
 
   const rows = allSources
@@ -208,6 +227,11 @@ async function main(): Promise<number> {
     .map((e) => ({ repo: e.repo, version: e.version }));
   if (rows.length > 0 && (await updateReadme(README_PATH, rows))) {
     console.log("  README.md: versions table updated");
+  }
+
+  if (values.summary !== undefined) {
+    await Bun.write(values.summary, renderBuildSummary(changes, orphans, upToDate));
+    console.log(`  summary written to ${values.summary}`);
   }
 
   if (failures.length > 0) {
