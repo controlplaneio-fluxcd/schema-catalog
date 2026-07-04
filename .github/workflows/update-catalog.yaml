@@ -1,0 +1,63 @@
+name: update-catalog
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild all sources even when versions are unchanged
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 6 * * *" # every day at 6 AM (UTC)
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - name: Setup flux-schema
+        uses: fluxcd/flux-schema/actions/setup@a45ba852dbbfe9b61ac30e2d30f305e791e12556 # main
+      - name: Setup flux-operator
+        uses: controlplaneio-fluxcd/flux-operator/actions/setup@2594869f150d8650dfb31f45c3744f369a6b6b09 # v0.53.0
+      - name: Update catalog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cd build && bun install
+          bun src/main.ts build ${{ inputs.force == true && '--force' || '' }}
+      - name: Export versions for the PR body
+        run: |
+          {
+            echo 'CATALOG_VERSIONS<<EOF'
+            for f in build/history/*.json; do
+              echo "- $(jq -r .repo "$f"): $(jq -r .version "$f")"
+            done
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          branch: update-catalog
+          title: "Update catalog"
+          commit-message: "Update catalog"
+          committer: GitHub <noreply@github.com>
+          author: fluxcdbot <fluxcdbot@users.noreply.github.com>
+          signoff: true
+          body: |
+            Automated update of the schema catalog:
+
+            ${{ env.CATALOG_VERSIONS }}
+          add-paths: |
+            catalog
+            build/history
+            README.md
