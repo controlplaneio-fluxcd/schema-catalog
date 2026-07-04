@@ -19,6 +19,7 @@ path, type, constraints and description.
 | [fluxcd/flagger](https://github.com/fluxcd/flagger) | v1.43.0 |
 | [controlplaneio-fluxcd/flux-operator](https://github.com/controlplaneio-fluxcd/flux-operator) | v0.53.0 |
 | [kubernetes-sigs/gateway-api](https://github.com/kubernetes-sigs/gateway-api) | v1.6.0 |
+| [cert-manager/cert-manager](https://github.com/cert-manager/cert-manager) | v1.20.3 |
 <!-- versions:end -->
 
 ## Building the catalog
