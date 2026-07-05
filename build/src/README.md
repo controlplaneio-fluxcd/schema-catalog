@@ -74,7 +74,7 @@ regenerated from the manifests, optional `--summary` markdown, and a
   through `flux-operator build instance -f -`).
 
 Every extraction runs with `--strip-description=false --with-field-index
---index-source="<alias> <version>"` and the
+--index-source="<alias> <version> <url>"` and the
 `{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. The binary
 lowercases all template variables, so catalog filenames are lowercase.
 

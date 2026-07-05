@@ -19,7 +19,7 @@ export async function extractSource(source: Source, version: string, dir: string
   const flags = [
     "--strip-description=false",
     "--with-field-index",
-    `--index-source=${source.alias} ${version}`,
+    `--index-source=${source.alias} ${version} ${source.url}`,
     "--output-format={{ .Group }}/{{ .Kind }}_{{ .Version }}.json",
     `--output-dir=${dir}`,
   ];
