@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-84-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C233-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-85-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C235-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -69,6 +69,7 @@ for the line grammar.
 | Flux Operator | [v0.53.0](build/history/flux-operator.json) | 4 | 2026-07-05 |
 | Cluster API | [v1.13.3](build/history/cluster-api.json) | 36 | 2026-07-05 |
 | Cluster API Operator | [v0.27.0](build/history/cluster-api-operator.json) | 7 | 2026-07-05 |
+| Cluster API Add-on Provider Helm | [v0.6.4](build/history/cluster-api-addon-provider-helm.json) | 2 | 2026-07-05 |
 | Gateway API | [v1.6.0](build/history/gateway-api.json) | 19 | 2026-07-05 |
 | Cert Manager | [v1.20.3](build/history/cert-manager.json) | 6 | 2026-07-05 |
 | Trust Manager | [v0.24.0](build/history/trust-manager.json) | 2 | 2026-07-05 |
