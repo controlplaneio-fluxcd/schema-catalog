@@ -67,6 +67,7 @@ for the line grammar.
 | Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-05 |
 | Cert Manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-05 |
 | External Secrets | [v2.7.0](build/history/external-secrets.json) | 2026-07-05 |
+| Cilium | [v1.19.5](build/history/cilium.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation

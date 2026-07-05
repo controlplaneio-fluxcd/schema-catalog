@@ -1,0 +1,34 @@
+# schema source: Cilium v1.19.5 https://github.com/cilium/cilium
+apiVersion <string> enum=cilium.io/v2
+kind <string> enum=CiliumBGPPeerConfig (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# Spec is the specification of the desired behavior of the CiliumBGPPeerConfig.
+spec.authSecretRef <string>	# AuthSecretRef is the name of the secret to use to fetch a TCP authentication password for this peer. If not specified, no authentication is used.
+spec.ebgpMultihop <integer> default=1 format=int32 min=1 max=255	# EBGPMultihopTTL controls the multi-hop feature for eBGP peers. Its value defines the Time To Live (TTL) value used in BGP packets sent to the peer. If not specified, EBGP multihop is disabled. This field is ignored for iBGP neighbors.
+spec.families <[]object>	# Families, if provided, defines a set of AFI/SAFIs the speaker will negotiate with it's peer. If not specified, the default families of IPv6/unicast and IPv4/unicast will be created.
+spec.families[].advertisements <object>	# Advertisements selects group of BGP Advertisement(s) to advertise for this family. If not specified, no advertisements are sent for this family.
+spec.families[].advertisements.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.families[].advertisements.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.families[].advertisements.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.families[].advertisements.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.families[].advertisements.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.families[].afi <string> (required) enum=ipv4|ipv6|l2vpn|ls|opaque	# Afi is the Address Family Identifier (AFI) of the family.
+spec.families[].safi <string> (required) enum=unicast|multicast|mpls_label|encapsulation|vpls|evpn|ls|sr_policy|mup|mpls_vpn|mpls_vpn_multicast|route_target_constraints|flowspec_unicast|flowspec_vpn|key_value	# Safi is the Subsequent Address Family Identifier (SAFI) of the family.
+spec.gracefulRestart <object>	# GracefulRestart defines graceful restart parameters which are negotiated with this peer. If not specified, the graceful restart capability is disabled.
+spec.gracefulRestart.enabled <boolean> (required)	# Enabled flag, when set enables graceful restart capability.
+spec.gracefulRestart.restartTimeSeconds <integer> default=120 format=int32 min=1 max=4095	# RestartTimeSeconds is the estimated time it will take for the BGP session to be re-established with peer after a restart. After this period, peer will remove stale routes. This is described RFC 4724 section 4.2.
+spec.timers <object>	# Timers defines the BGP timers for the peer. If not specified, the default timers are used.
+spec.timers.connectRetryTimeSeconds <integer> default=120 format=int32 min=1 max=2147483647	# ConnectRetryTimeSeconds defines the initial value for the BGP ConnectRetryTimer (RFC 4271, Section 8). If not specified, defaults to 120 seconds.
+spec.timers.holdTimeSeconds <integer> default=90 format=int32 min=3 max=65535	# HoldTimeSeconds defines the initial value for the BGP HoldTimer (RFC 4271, Section 4.2). Updating this value will cause a session reset. If not specified, defaults to 90 seconds.
+spec.timers.keepAliveTimeSeconds <integer> default=30 format=int32 min=1 max=65535	# KeepaliveTimeSeconds defines the initial value for the BGP KeepaliveTimer (RFC 4271, Section 8). It can not be larger than HoldTimeSeconds. Updating this value will cause a session reset. If not specified, defaults to 30 seconds.
+spec.transport <object>	# Transport defines the BGP transport parameters for the peer. If not specified, the default transport parameters are used.
+spec.transport.peerPort <integer> default=179 format=int32 min=1 max=65535	# PeerPort is the peer port to be used for the BGP session. If not specified, defaults to TCP port 179.
+spec.transport.sourceInterface <string>	# SourceInterface is the name of a local interface, which IP address will be used as the source IP address for the BGP session. The interface must not have more than one non-loopback, non-multicast and non-link-local-IPv6 address per address family. If not specified, or if the provided interface is not found or missing a usable IP address, the source IP address will be auto-detected based on the egress interface.
+status <object>	# Status is the running status of the CiliumBGPPeerConfig
+status.conditions <[]object>	# The current conditions of the CiliumBGPPeerConfig
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

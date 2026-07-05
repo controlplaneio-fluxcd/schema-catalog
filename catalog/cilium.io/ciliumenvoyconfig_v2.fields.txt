@@ -1,0 +1,22 @@
+# schema source: Cilium v1.19.5 https://github.com/cilium/cilium
+apiVersion <string> enum=cilium.io/v2
+kind <string> enum=CiliumEnvoyConfig
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.backendServices <[]object>	# BackendServices specifies Kubernetes services whose backends are automatically synced to Envoy using EDS. Traffic for these services is not forwarded to an Envoy listener. This allows an Envoy listener load balance traffic to these backends while normal Cilium service load balancing takes care of balancing traffic for these services at the same time.
+spec.backendServices[].name <string> (required)	# Name is the name of a destination Kubernetes service that identifies traffic to be redirected.
+spec.backendServices[].namespace <string>	# Namespace is the Kubernetes service namespace. In CiliumEnvoyConfig namespace defaults to the namespace of the CEC, In CiliumClusterwideEnvoyConfig namespace defaults to "default".
+spec.backendServices[].number <[]string>	# Ports is a set of port numbers, which can be used for filtering in case of underlying is exposing multiple port numbers.
+spec.nodeSelector <object>	# NodeSelector is a label selector that determines to which nodes this configuration applies. If nil, then this config applies to all nodes.
+spec.nodeSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.nodeSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.nodeSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.nodeSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.nodeSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.resources <[]object> (required)	# Envoy xDS resources, a list of the following Envoy resource types: type.googleapis.com/envoy.config.listener.v3.Listener, type.googleapis.com/envoy.config.route.v3.RouteConfiguration, type.googleapis.com/envoy.config.cluster.v3.Cluster, type.googleapis.com/envoy.config.endpoint.v3.ClusterLoadAssignment, and type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret.
+spec.services <[]object>	# Services specifies Kubernetes services for which traffic is forwarded to an Envoy listener for L7 load balancing. Backends of these services are automatically synced to Envoy usign EDS.
+spec.services[].listener <string>	# Listener specifies the name of the Envoy listener the service traffic is redirected to. The listener must be specified in the Envoy 'resources' of the same CiliumEnvoyConfig. If omitted, the first listener specified in 'resources' is used.
+spec.services[].name <string> (required)	# Name is the name of a destination Kubernetes service that identifies traffic to be redirected.
+spec.services[].namespace <string>	# Namespace is the Kubernetes service namespace. In CiliumEnvoyConfig namespace this is overridden to the namespace of the CEC, In CiliumClusterwideEnvoyConfig namespace defaults to "default".
+spec.services[].ports <[]integer>	# Ports is a set of service's frontend ports that should be redirected to the Envoy listener. By default all frontend ports of the service are redirected.

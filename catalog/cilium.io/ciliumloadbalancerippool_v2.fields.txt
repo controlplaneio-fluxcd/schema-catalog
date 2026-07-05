@@ -1,0 +1,25 @@
+# schema source: Cilium v1.19.5 https://github.com/cilium/cilium
+apiVersion <string> enum=cilium.io/v2
+kind <string> enum=CiliumLoadBalancerIPPool (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# Spec is a human readable description for a BGP load balancer ip pool.
+spec.allowFirstLastIPs <string> enum=Yes|No	# AllowFirstLastIPs, if set to `Yes` or undefined means that the first and last IPs of each CIDR will be allocatable. If `No`, these IPs will be reserved. This field is ignored for /{31,32} and /{127,128} CIDRs since reserving the first and last IPs would make the CIDRs unusable.
+spec.blocks <[]object>	# Blocks is a list of CIDRs comprising this IP Pool
+spec.blocks[].cidr <string> format=cidr
+spec.blocks[].start <string>
+spec.blocks[].stop <string>
+spec.disabled <boolean> default=false	# Disabled, if set to true means that no new IPs will be allocated from this pool. Existing allocations will not be removed from services.
+spec.serviceSelector <object>	# ServiceSelector selects a set of services which are eligible to receive IPs from this
+spec.serviceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.serviceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.serviceSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.serviceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.serviceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+status <object>	# Status is the status of the IP Pool. It might be possible for users to define overlapping IP Pools, we can't validate or enforce non-overlapping pools during object creation. The Cilium operator will do this validation and update the status to reflect the ability to allocate IPs from this pool.
+status.conditions <[]object>	# Current service state
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
