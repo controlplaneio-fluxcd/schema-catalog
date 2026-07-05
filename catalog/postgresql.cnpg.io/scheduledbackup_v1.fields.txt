@@ -1,0 +1,26 @@
+# schema source: CloudNativePG v1.30.0 https://github.com/cloudnative-pg/cloudnative-pg
+apiVersion <string> enum=postgresql.cnpg.io/v1
+kind <string> enum=ScheduledBackup
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Specification of the desired behavior of the ScheduledBackup. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+spec.backupOwnerReference <string> enum=none|self|cluster default="none"	# Indicates which ownerReference should be put inside the created backup resources.<br /> - none: no owner reference for created backup objects (same behavior as before the field was introduced)<br /> - self: sets the Scheduled backup object as owner of the backup<br /> - cluster: set the cluster as owner of the backup<br />
+spec.cluster <object> (required) (immutable)	# The cluster to backup
+spec.cluster.name <string> (required)	# Name of the referent.
+spec.immediate <boolean>	# If the first backup has to be immediately start after creation or not
+spec.method <string> enum=barmanObjectStore|volumeSnapshot|plugin default="barmanObjectStore"	# The backup method to be used, possible options are `barmanObjectStore`, `volumeSnapshot` or `plugin`. Defaults to: `barmanObjectStore`.
+spec.online <boolean>	# Whether the default type of backup with volume snapshots is online/hot (`true`, default) or offline/cold (`false`) Overrides the default setting specified in the cluster field '.spec.backup.volumeSnapshot.online'
+spec.onlineConfiguration <object>	# Configuration parameters to control the online/hot backup with volume snapshots Overrides the default settings specified in the cluster '.backup.volumeSnapshot.onlineConfiguration' stanza
+spec.onlineConfiguration.immediateCheckpoint <boolean>	# Control whether the I/O workload for the backup initial checkpoint will be limited, according to the `checkpoint_completion_target` setting on the PostgreSQL server. If set to true, an immediate checkpoint will be used, meaning PostgreSQL will complete the checkpoint as soon as possible. `false` by default.
+spec.onlineConfiguration.waitForArchive <boolean> default=true	# If false, the function will return immediately after the backup is completed, without waiting for WAL to be archived. This behavior is only useful with backup software that independently monitors WAL archiving. Otherwise, WAL required to make the backup consistent might be missing and make the backup useless. By default, or when this parameter is true, pg_backup_stop will wait for WAL to be archived when archiving is enabled. On a standby, this means that it will wait only when archive_mode = always. If write activity on the primary is low, it may be useful to run pg_switch_wal on the primary in order to trigger an immediate segment switch.
+spec.pluginConfiguration <object>	# Configuration parameters passed to the plugin managing this backup
+spec.pluginConfiguration.name <string> (required)	# Name is the name of the plugin managing this backup
+spec.pluginConfiguration.parameters <map[string]string>	# Parameters are the configuration parameters passed to the backup plugin for this backup
+spec.schedule <string> (required)	# The schedule does not follow the same format used in Kubernetes CronJobs as it includes an additional seconds specifier, see https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format
+spec.suspend <boolean>	# If this backup is suspended or not
+spec.target <string> enum=primary|prefer-standby	# The policy to decide which instance should perform this backup. If empty, it defaults to `cluster.spec.backup.target`. Available options are empty string, `primary` and `prefer-standby`. `primary` to have backups run always on primary instances, `prefer-standby` to have backups run preferably on the most updated standby, if available.
+status <object>	# Most recently observed status of the ScheduledBackup. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+status.error <string>	# Error is the latest admission validation error
+status.lastCheckTime <string> format=date-time	# The latest time the schedule
+status.lastScheduleTime <string> format=date-time	# Information when was the last time that backup was successfully scheduled.
+status.nextScheduleTime <string> format=date-time	# Next time we will run a backup

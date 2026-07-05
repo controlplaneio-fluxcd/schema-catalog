@@ -1,0 +1,88 @@
+# schema source: CloudNativePG v1.30.0 https://github.com/cloudnative-pg/cloudnative-pg
+apiVersion <string> enum=postgresql.cnpg.io/v1
+kind <string> enum=Backup
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required) (immutable)	# Specification of the desired behavior of the backup. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+spec.cluster <object> (required)	# The cluster to backup
+spec.cluster.name <string> (required)	# Name of the referent.
+spec.method <string> enum=barmanObjectStore|volumeSnapshot|plugin default="barmanObjectStore"	# The backup method to be used, possible options are `barmanObjectStore`, `volumeSnapshot` or `plugin`. Defaults to: `barmanObjectStore`.
+spec.online <boolean>	# Whether the default type of backup with volume snapshots is online/hot (`true`, default) or offline/cold (`false`) Overrides the default setting specified in the cluster field '.spec.backup.volumeSnapshot.online'
+spec.onlineConfiguration <object>	# Configuration parameters to control the online/hot backup with volume snapshots Overrides the default settings specified in the cluster '.backup.volumeSnapshot.onlineConfiguration' stanza
+spec.onlineConfiguration.immediateCheckpoint <boolean>	# Control whether the I/O workload for the backup initial checkpoint will be limited, according to the `checkpoint_completion_target` setting on the PostgreSQL server. If set to true, an immediate checkpoint will be used, meaning PostgreSQL will complete the checkpoint as soon as possible. `false` by default.
+spec.onlineConfiguration.waitForArchive <boolean> default=true	# If false, the function will return immediately after the backup is completed, without waiting for WAL to be archived. This behavior is only useful with backup software that independently monitors WAL archiving. Otherwise, WAL required to make the backup consistent might be missing and make the backup useless. By default, or when this parameter is true, pg_backup_stop will wait for WAL to be archived when archiving is enabled. On a standby, this means that it will wait only when archive_mode = always. If write activity on the primary is low, it may be useful to run pg_switch_wal on the primary in order to trigger an immediate segment switch.
+spec.pluginConfiguration <object>	# Configuration parameters passed to the plugin managing this backup
+spec.pluginConfiguration.name <string> (required)	# Name is the name of the plugin managing this backup
+spec.pluginConfiguration.parameters <map[string]string>	# Parameters are the configuration parameters passed to the backup plugin for this backup
+spec.target <string> enum=primary|prefer-standby	# The policy to decide which instance should perform this backup. If empty, it defaults to `cluster.spec.backup.target`. Available options are empty string, `primary` and `prefer-standby`. `primary` to have backups run always on primary instances, `prefer-standby` to have backups run preferably on the most updated standby, if available.
+status <object>	# Most recently observed status of the backup. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+status.azureCredentials <object>	# The credentials to use to upload data to Azure Blob Storage
+status.azureCredentials.connectionString <object>	# The connection string to be used
+status.azureCredentials.connectionString.key <string> (required)	# The key to select
+status.azureCredentials.connectionString.name <string> (required)	# Name of the referent.
+status.azureCredentials.inheritFromAzureAD <boolean>	# Use the Azure AD based authentication without providing explicitly the keys.
+status.azureCredentials.storageAccount <object>	# The storage account where to upload data
+status.azureCredentials.storageAccount.key <string> (required)	# The key to select
+status.azureCredentials.storageAccount.name <string> (required)	# Name of the referent.
+status.azureCredentials.storageKey <object>	# The storage account key to be used in conjunction with the storage account name
+status.azureCredentials.storageKey.key <string> (required)	# The key to select
+status.azureCredentials.storageKey.name <string> (required)	# Name of the referent.
+status.azureCredentials.storageSasToken <object>	# A shared-access-signature to be used in conjunction with the storage account name
+status.azureCredentials.storageSasToken.key <string> (required)	# The key to select
+status.azureCredentials.storageSasToken.name <string> (required)	# Name of the referent.
+status.azureCredentials.useDefaultAzureCredentials <boolean>	# Use the default Azure authentication flow, which includes DefaultAzureCredential. This allows authentication using environment variables and managed identities.
+status.backupId <string>	# The ID of the Barman backup
+status.backupLabelFile <string> format=byte	# Backup label file content as returned by Postgres in case of online (hot) backups
+status.backupName <string>	# The Name of the Barman backup
+status.beginLSN <string>	# The starting xlog
+status.beginWal <string>	# The starting WAL
+status.commandError <string>	# The backup command output in case of error
+status.commandOutput <string>	# Unused. Retained for compatibility with old versions.
+status.destinationPath <string>	# The path where to store the backup (i.e. s3://bucket/path/to/folder) this path, with different destination folders, will be used for WALs and for data. This may not be populated in case of errors.
+status.encryption <string>	# Encryption method required to S3 API
+status.endLSN <string>	# The ending xlog
+status.endWal <string>	# The ending WAL
+status.endpointCA <object>	# EndpointCA store the CA bundle of the barman endpoint. Useful when using self-signed certificates to avoid errors with certificate issuer and barman-cloud-wal-archive.
+status.endpointCA.key <string> (required)	# The key to select
+status.endpointCA.name <string> (required)	# Name of the referent.
+status.endpointURL <string>	# Endpoint to be used to upload data to the cloud, overriding the automatic endpoint discovery
+status.error <string>	# The detected error
+status.googleCredentials <object>	# The credentials to use to upload data to Google Cloud Storage
+status.googleCredentials.applicationCredentials <object>	# The secret containing the Google Cloud Storage JSON file with the credentials
+status.googleCredentials.applicationCredentials.key <string> (required)	# The key to select
+status.googleCredentials.applicationCredentials.name <string> (required)	# Name of the referent.
+status.googleCredentials.gkeEnvironment <boolean>	# If set to true, will presume that it's running inside a GKE environment, default to false.
+status.instanceID <object>	# Information to identify the instance where the backup has been taken from
+status.instanceID.ContainerID <string>	# The container ID
+status.instanceID.podName <string>	# The pod name
+status.instanceID.sessionID <string>	# The instance manager session ID. This is a unique identifier generated at instance manager startup and changes on every restart (including container reboots). Used to detect if the instance manager was restarted during long-running operations like backups, which would terminate any running backup process.
+status.majorVersion <integer>	# The PostgreSQL major version that was running when the backup was taken.
+status.method <string>	# The backup method being used
+status.online <boolean>	# Whether the backup was online/hot (`true`) or offline/cold (`false`)
+status.phase <string>	# The last backup status
+status.pluginMetadata <map[string]string>	# A map containing the plugin metadata
+status.reconciliationStartedAt <string> format=date-time	# When the backup process was started by the operator
+status.reconciliationTerminatedAt <string> format=date-time	# When the reconciliation was terminated by the operator (either successfully or not)
+status.s3Credentials <object>	# The credentials to use to upload data to S3
+status.s3Credentials.accessKeyId <object>	# The reference to the access key id
+status.s3Credentials.accessKeyId.key <string> (required)	# The key to select
+status.s3Credentials.accessKeyId.name <string> (required)	# Name of the referent.
+status.s3Credentials.inheritFromIAMRole <boolean>	# Use the role based authentication without providing explicitly the keys.
+status.s3Credentials.region <object>	# The reference to the secret containing the region name
+status.s3Credentials.region.key <string> (required)	# The key to select
+status.s3Credentials.region.name <string> (required)	# Name of the referent.
+status.s3Credentials.secretAccessKey <object>	# The reference to the secret access key
+status.s3Credentials.secretAccessKey.key <string> (required)	# The key to select
+status.s3Credentials.secretAccessKey.name <string> (required)	# Name of the referent.
+status.s3Credentials.sessionToken <object>	# The references to the session key
+status.s3Credentials.sessionToken.key <string> (required)	# The key to select
+status.s3Credentials.sessionToken.name <string> (required)	# Name of the referent.
+status.serverName <string>	# The server name on S3, the cluster name is used if this parameter is omitted
+status.snapshotBackupStatus <object>	# Status of the volumeSnapshot backup
+status.snapshotBackupStatus.elements <[]object>	# The elements list, populated with the gathered volume snapshots
+status.snapshotBackupStatus.elements[].name <string> (required)	# Name is the snapshot resource name
+status.snapshotBackupStatus.elements[].tablespaceName <string>	# TablespaceName is the name of the snapshotted tablespace. Only set when type is PG_TABLESPACE
+status.snapshotBackupStatus.elements[].type <string> (required)	# Type is tho role of the snapshot in the cluster, such as PG_DATA, PG_WAL and PG_TABLESPACE
+status.startedAt <string> format=date-time	# When the backup execution was started by the backup tool
+status.stoppedAt <string> format=date-time	# When the backup execution was terminated by the backup tool
+status.tablespaceMapFile <string> format=byte	# Tablespace map file content as returned by Postgres in case of online (hot) backups

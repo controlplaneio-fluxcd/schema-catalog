@@ -1,0 +1,79 @@
+# schema source: CloudNativePG v1.30.0 https://github.com/cloudnative-pg/cloudnative-pg
+apiVersion <string> enum=postgresql.cnpg.io/v1
+kind <string> enum=Database
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Specification of the desired Database. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+spec.allowConnections <boolean>	# Maps to the `ALLOW_CONNECTIONS` parameter of `CREATE DATABASE` and `ALTER DATABASE`. If false then no one can connect to this database.
+spec.builtinLocale <string> (immutable)	# Maps to the `BUILTIN_LOCALE` parameter of `CREATE DATABASE`. This setting cannot be changed. Specifies the locale name when the builtin provider is used. This option requires `localeProvider` to be set to `builtin`. Available from PostgreSQL 17.
+spec.cluster <object> (required) (immutable)	# The name of the PostgreSQL cluster hosting the database.
+spec.cluster.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.collationVersion <string> (immutable)	# Maps to the `COLLATION_VERSION` parameter of `CREATE DATABASE`. This setting cannot be changed.
+spec.connectionLimit <integer>	# Maps to the `CONNECTION LIMIT` clause of `CREATE DATABASE` and `ALTER DATABASE`. How many concurrent connections can be made to this database. -1 (the default) means no limit.
+spec.databaseReclaimPolicy <string> enum=delete|retain default="retain"	# The policy for end-of-life maintenance of this database.
+spec.encoding <string> (immutable)	# Maps to the `ENCODING` parameter of `CREATE DATABASE`. This setting cannot be changed. Character set encoding to use in the database.
+spec.ensure <string> enum=present|absent default="present"	# Ensure the PostgreSQL database is `present` or `absent` - defaults to "present".
+spec.extensions <[]object>	# The list of extensions to be managed in the database
+spec.extensions[].ensure <string> enum=present|absent default="present"	# Specifies whether an object (e.g schema) should be present or absent in the database. If set to `present`, the object will be created if it does not exist. If set to `absent`, the extension/schema will be removed if it exists.
+spec.extensions[].name <string> (required)	# Name of the object (extension, schema, FDW, server)
+spec.extensions[].schema <string>	# The name of the schema in which to install the extension's objects, in case the extension allows its contents to be relocated. If not specified (default), and the extension's control file does not specify a schema either, the current default object creation schema is used.
+spec.extensions[].version <string>	# The version of the extension to install. If empty, the operator will install the default version (whatever is specified in the extension's control file)
+spec.fdws <[]object>	# The list of foreign data wrappers to be managed in the database
+spec.fdws[].ensure <string> enum=present|absent default="present"	# Specifies whether an object (e.g schema) should be present or absent in the database. If set to `present`, the object will be created if it does not exist. If set to `absent`, the extension/schema will be removed if it exists.
+spec.fdws[].handler <string>	# Name of the handler function (e.g., "postgres_fdw_handler"). This will be empty if no handler is specified. In that case, the default handler is registered when the FDW extension is created.
+spec.fdws[].name <string> (required)	# Name of the object (extension, schema, FDW, server)
+spec.fdws[].options <[]object>	# Options specifies the configuration options for the FDW.
+spec.fdws[].options[].ensure <string> enum=present|absent default="present"	# Specifies whether an option should be present or absent in the database. If set to `present`, the option will be created if it does not exist. If set to `absent`, the option will be removed if it exists.
+spec.fdws[].options[].name <string> (required)	# Name of the option
+spec.fdws[].options[].value <string> (required)	# Value of the option
+spec.fdws[].owner <string>	# Owner specifies the database role that will own the Foreign Data Wrapper. The role must have superuser privileges in the target database.
+spec.fdws[].usage <[]object>	# List of roles for which `USAGE` privileges on the FDW are granted or revoked.
+spec.fdws[].usage[].name <string> (required)	# Name of the usage
+spec.fdws[].usage[].type <string> enum=grant|revoke default="grant"	# The type of usage
+spec.fdws[].validator <string>	# Name of the validator function (e.g., "postgres_fdw_validator"). This will be empty if no validator is specified. In that case, the default validator is registered when the FDW extension is created.
+spec.icuLocale <string> (immutable)	# Maps to the `ICU_LOCALE` parameter of `CREATE DATABASE`. This setting cannot be changed. Specifies the ICU locale when the ICU provider is used. This option requires `localeProvider` to be set to `icu`. Available from PostgreSQL 15.
+spec.icuRules <string> (immutable)	# Maps to the `ICU_RULES` parameter of `CREATE DATABASE`. This setting cannot be changed. Specifies additional collation rules to customize the behavior of the default collation. This option requires `localeProvider` to be set to `icu`. Available from PostgreSQL 16.
+spec.isTemplate <boolean>	# Maps to the `IS_TEMPLATE` parameter of `CREATE DATABASE` and `ALTER DATABASE`. If true, this database is considered a template and can be cloned by any user with `CREATEDB` privileges.
+spec.locale <string> (immutable)	# Maps to the `LOCALE` parameter of `CREATE DATABASE`. This setting cannot be changed. Sets the default collation order and character classification in the new database.
+spec.localeCType <string> (immutable)	# Maps to the `LC_CTYPE` parameter of `CREATE DATABASE`. This setting cannot be changed.
+spec.localeCollate <string> (immutable)	# Maps to the `LC_COLLATE` parameter of `CREATE DATABASE`. This setting cannot be changed.
+spec.localeProvider <string> (immutable)	# Maps to the `LOCALE_PROVIDER` parameter of `CREATE DATABASE`. This setting cannot be changed. This option sets the locale provider for databases created in the new cluster. Available from PostgreSQL 16.
+spec.name <string> (required) (immutable)	# The name of the database to create inside PostgreSQL. This setting cannot be changed.
+spec.owner <string> (required)	# Maps to the `OWNER` parameter of `CREATE DATABASE`. Maps to the `OWNER TO` command of `ALTER DATABASE`. The role name of the user who owns the database inside PostgreSQL.
+spec.schemas <[]object>	# The list of schemas to be managed in the database
+spec.schemas[].ensure <string> enum=present|absent default="present"	# Specifies whether an object (e.g schema) should be present or absent in the database. If set to `present`, the object will be created if it does not exist. If set to `absent`, the extension/schema will be removed if it exists.
+spec.schemas[].name <string> (required)	# Name of the object (extension, schema, FDW, server)
+spec.schemas[].owner <string>	# The role name of the user who owns the schema inside PostgreSQL. It maps to the `AUTHORIZATION` parameter of `CREATE SCHEMA` and the `OWNER TO` command of `ALTER SCHEMA`.
+spec.servers <[]object>	# The list of foreign servers to be managed in the database
+spec.servers[].ensure <string> enum=present|absent default="present"	# Specifies whether an object (e.g schema) should be present or absent in the database. If set to `present`, the object will be created if it does not exist. If set to `absent`, the extension/schema will be removed if it exists.
+spec.servers[].fdw <string> (required)	# The name of the Foreign Data Wrapper (FDW)
+spec.servers[].name <string> (required)	# Name of the object (extension, schema, FDW, server)
+spec.servers[].options <[]object>	# Options specifies the configuration options for the server (key is the option name, value is the option value).
+spec.servers[].options[].ensure <string> enum=present|absent default="present"	# Specifies whether an option should be present or absent in the database. If set to `present`, the option will be created if it does not exist. If set to `absent`, the option will be removed if it exists.
+spec.servers[].options[].name <string> (required)	# Name of the option
+spec.servers[].options[].value <string> (required)	# Value of the option
+spec.servers[].usage <[]object>	# List of roles for which `USAGE` privileges on the server are granted or revoked.
+spec.servers[].usage[].name <string> (required)	# Name of the usage
+spec.servers[].usage[].type <string> enum=grant|revoke default="grant"	# The type of usage
+spec.tablespace <string>	# Maps to the `TABLESPACE` parameter of `CREATE DATABASE`. Maps to the `SET TABLESPACE` command of `ALTER DATABASE`. The name of the tablespace (in PostgreSQL) that will be associated with the new database. This tablespace will be the default tablespace used for objects created in this database.
+spec.template <string> (immutable)	# Maps to the `TEMPLATE` parameter of `CREATE DATABASE`. This setting cannot be changed. The name of the template from which to create this database.
+status <object>	# Most recently observed status of the Database. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+status.applied <boolean>	# Applied is true if the database was reconciled correctly
+status.extensions <[]object>	# Extensions is the status of the managed extensions
+status.extensions[].applied <boolean> (required)	# True of the object has been installed successfully in the database
+status.extensions[].message <string>	# Message is the object reconciliation message
+status.extensions[].name <string> (required)	# The name of the object
+status.fdws <[]object>	# FDWs is the status of the managed FDWs
+status.fdws[].applied <boolean> (required)	# True of the object has been installed successfully in the database
+status.fdws[].message <string>	# Message is the object reconciliation message
+status.fdws[].name <string> (required)	# The name of the object
+status.message <string>	# Message is the reconciliation output message
+status.observedGeneration <integer> format=int64	# A sequence number representing the latest desired state that was synchronized
+status.schemas <[]object>	# Schemas is the status of the managed schemas
+status.schemas[].applied <boolean> (required)	# True of the object has been installed successfully in the database
+status.schemas[].message <string>	# Message is the object reconciliation message
+status.schemas[].name <string> (required)	# The name of the object
+status.servers <[]object>	# Servers is the status of the managed servers
+status.servers[].applied <boolean> (required)	# True of the object has been installed successfully in the database
+status.servers[].message <string>	# Message is the object reconciliation message
+status.servers[].name <string> (required)	# The name of the object

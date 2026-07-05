@@ -1,0 +1,25 @@
+# schema source: CloudNativePG v1.30.0 https://github.com/cloudnative-pg/cloudnative-pg
+apiVersion <string> enum=postgresql.cnpg.io/v1
+kind <string> enum=Publication
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# PublicationSpec defines the desired state of Publication
+spec.cluster <object> (required) (immutable)	# The name of the PostgreSQL cluster that identifies the "publisher"
+spec.cluster.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.dbname <string> (required) (immutable)	# The name of the database where the publication will be installed in the "publisher" cluster
+spec.name <string> (required) (immutable)	# The name of the publication inside PostgreSQL
+spec.parameters <map[string]string>	# Publication parameters part of the `WITH` clause as expected by PostgreSQL `CREATE PUBLICATION` command
+spec.publicationReclaimPolicy <string> enum=delete|retain default="retain"	# The policy for end-of-life maintenance of this publication
+spec.target <object> (required)	# Target of the publication as expected by PostgreSQL `CREATE PUBLICATION` command
+spec.target.allTables <boolean> (immutable)	# Marks the publication as one that replicates changes for all tables in the database, including tables created in the future. Corresponding to `FOR ALL TABLES` in PostgreSQL.
+spec.target.objects <[]object> max=100000	# Just the following schema objects
+spec.target.objects[].table <object>	# Specifies a list of tables to add to the publication. Corresponding to `FOR TABLE` in PostgreSQL.
+spec.target.objects[].table.columns <[]string>	# The columns to publish
+spec.target.objects[].table.name <string> (required)	# The table name
+spec.target.objects[].table.only <boolean>	# Whether to limit to the table only or include all its descendants
+spec.target.objects[].table.schema <string>	# The schema name
+spec.target.objects[].tablesInSchema <string>	# Marks the publication as one that replicates changes for all tables in the specified list of schemas, including tables created in the future. Corresponding to `FOR TABLES IN SCHEMA` in PostgreSQL.
+status <object>	# PublicationStatus defines the observed state of Publication
+status.applied <boolean>	# Applied is true if the publication was reconciled correctly
+status.message <string>	# Message is the reconciliation output message
+status.observedGeneration <integer> format=int64	# A sequence number representing the latest desired state that was synchronized
