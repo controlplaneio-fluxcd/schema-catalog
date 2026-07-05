@@ -89,6 +89,7 @@ for the line grammar.
 | CloudNativePG | [v1.30.0](build/history/cloudnative-pg.json) | 2026-07-05 |
 | Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 2026-07-05 |
 | Velero | [v1.18.2](build/history/velero.json) | 2026-07-05 |
+| Crossplane | [v2.3.3](build/history/crossplane.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation

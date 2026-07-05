@@ -1,0 +1,47 @@
+# schema source: Crossplane v2.3.3 https://github.com/crossplane/crossplane
+apiVersion <string> enum=ops.crossplane.io/v1alpha1
+kind <string> enum=Operation (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# OperationSpec specifies desired state of an operation.
+spec.mode <string> (required) enum=Pipeline default="Pipeline"	# Mode controls what type or "mode" of operation will be used. "Pipeline" indicates that an Operation specifies a pipeline of functions, each of which is responsible for implementing its logic.
+spec.pipeline <[]object> (required) min=1 max=99	# Pipeline is a list of operation function steps that will be used when this operation runs.
+spec.pipeline[].credentials <[]object>	# Credentials are optional credentials that the operation function needs.
+spec.pipeline[].credentials[].name <string> (required)	# Name of this set of credentials.
+spec.pipeline[].credentials[].secretRef <object>	# A SecretRef is a reference to a secret containing credentials that should be supplied to the function.
+spec.pipeline[].credentials[].secretRef.name <string> (required)	# Name of the secret.
+spec.pipeline[].credentials[].secretRef.namespace <string> (required)	# Namespace of the secret.
+spec.pipeline[].credentials[].source <string> (required) enum=None|Secret	# Source of the function credentials.
+spec.pipeline[].functionRef <object> (required)	# FunctionRef is a reference to the function this step should execute.
+spec.pipeline[].functionRef.name <string> (required)	# Name of the referenced function.
+spec.pipeline[].input <object (free-form)>	# Input is an optional, arbitrary Kubernetes resource (i.e. a resource with an apiVersion and kind) that will be passed to the unction as the 'input' of its RunFunctionRequest.
+spec.pipeline[].requirements <object>	# Requirements are resource requirements that will be satisfied before this pipeline step is called for the first time. This allows pre-populating required resources without requiring a function to request them first.
+spec.pipeline[].requirements.requiredResources <[]object>	# RequiredResources that will be fetched before this pipeline step is called for the first time.
+spec.pipeline[].requirements.requiredResources[].apiVersion <string> (required)	# APIVersion of resources to select.
+spec.pipeline[].requirements.requiredResources[].kind <string> (required)	# Kind of resources to select.
+spec.pipeline[].requirements.requiredResources[].matchLabels <map[string]string>	# MatchLabels matches resources by label selector. Only one of Name or MatchLabels may be specified.
+spec.pipeline[].requirements.requiredResources[].name <string>	# Name matches a single resource by name. Only one of Name or MatchLabels may be specified.
+spec.pipeline[].requirements.requiredResources[].namespace <string>	# Namespace to search for resources. Optional for cluster-scoped resources.
+spec.pipeline[].requirements.requiredResources[].requirementName <string> (required)	# RequirementName uniquely identifies this group of resources. This name will be used as the key in RunFunctionRequest.required_resources.
+spec.pipeline[].requirements.requiredSchemas <[]object>	# RequiredSchemas that will be fetched before this pipeline step is called for the first time.
+spec.pipeline[].requirements.requiredSchemas[].apiVersion <string> (required)	# APIVersion of the resource kind whose schema is required, e.g. "example.org/v1".
+spec.pipeline[].requirements.requiredSchemas[].kind <string> (required)	# Kind of resource whose schema is required, e.g. "MyResource".
+spec.pipeline[].requirements.requiredSchemas[].requirementName <string> (required)	# RequirementName uniquely identifies this schema. This name will be used as the key in RunFunctionRequest.required_schemas.
+spec.pipeline[].step <string> (required)	# Step name. Must be unique within its Pipeline.
+spec.retryLimit <integer> format=int64	# RetryLimit configures how many times the operation may fail. When the failure limit is exceeded, the operation will not be retried.
+status <object>	# OperationStatus represents the observed state of an operation.
+status.appliedResourceRefs <[]object>	# AppliedResourceRefs references all resources the Operation applied.
+status.appliedResourceRefs[].apiVersion <string> (required)	# APIVersion of the applied resource.
+status.appliedResourceRefs[].kind <string> (required)	# Kind of the applied resource.
+status.appliedResourceRefs[].name <string> (required)	# Name of the applied resource.
+status.appliedResourceRefs[].namespace <string>	# Namespace of the applied resource.
+status.conditions <[]object>	# Conditions of the resource.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
+status.conditions[].message <string>	# A Message containing details about this condition's last transition from one status to another, if any.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
+status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
+status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.failures <integer> format=int64	# Number of operation failures.
+status.pipeline <[]object>	# Pipeline represents the output of the pipeline steps that this operation ran.
+status.pipeline[].output <object (free-form)>	# Output of this step.
+status.pipeline[].step <string> (required)	# Step name. Unique within its Pipeline.

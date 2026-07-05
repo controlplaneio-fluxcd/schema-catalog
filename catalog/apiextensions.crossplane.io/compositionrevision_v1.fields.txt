@@ -1,0 +1,42 @@
+# schema source: Crossplane v2.3.3 https://github.com/crossplane/crossplane
+apiVersion <string> enum=apiextensions.crossplane.io/v1
+kind <string> enum=CompositionRevision (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# CompositionRevisionSpec specifies the desired state of the composition revision.
+spec.compositeTypeRef <object> (required) (immutable)	# CompositeTypeRef specifies the type of composite resource that this composition is compatible with.
+spec.compositeTypeRef.apiVersion <string> (required)	# APIVersion of the type.
+spec.compositeTypeRef.kind <string> (required)	# Kind of the type.
+spec.mode <string> enum=Pipeline default="Pipeline"	# Mode controls what type or "mode" of Composition will be used. "Pipeline" indicates that a Composition specifies a pipeline of functions, each of which is responsible for producing composed resources that Crossplane should create or update.
+spec.pipeline <[]object>	# Pipeline is a list of function steps that will be used when a composite resource referring to this composition is created. The Pipeline is only used by the "Pipeline" mode of Composition. It is ignored by other modes.
+spec.pipeline[].credentials <[]object>	# Credentials are optional credentials that the function needs.
+spec.pipeline[].credentials[].name <string> (required)	# Name of this set of credentials.
+spec.pipeline[].credentials[].secretRef <object>	# A SecretRef is a reference to a secret containing credentials that should be supplied to the function.
+spec.pipeline[].credentials[].secretRef.name <string> (required)	# Name of the secret.
+spec.pipeline[].credentials[].secretRef.namespace <string> (required)	# Namespace of the secret.
+spec.pipeline[].credentials[].source <string> (required) enum=None|Secret	# Source of the function credentials.
+spec.pipeline[].functionRef <object> (required)	# FunctionRef is a reference to the function this step should execute.
+spec.pipeline[].functionRef.name <string> (required)	# Name of the referenced Function.
+spec.pipeline[].input <object (free-form)>	# Input is an optional, arbitrary Kubernetes resource (i.e. a resource with an apiVersion and kind) that will be passed to the function as the 'input' of its RunFunctionRequest.
+spec.pipeline[].requirements <object>	# Requirements are resource requirements that will be satisfied before this pipeline step is called for the first time. This allows pre-populating required resources without requiring a function to request them first.
+spec.pipeline[].requirements.requiredResources <[]object>	# RequiredResources is a list of resources that must be fetched before this function is called.
+spec.pipeline[].requirements.requiredResources[].apiVersion <string> (required)	# APIVersion of the required resource.
+spec.pipeline[].requirements.requiredResources[].kind <string> (required)	# Kind of the required resource.
+spec.pipeline[].requirements.requiredResources[].matchLabels <map[string]string>	# MatchLabels specifies the set of labels to match for finding the required resource. When specified, Name is ignored.
+spec.pipeline[].requirements.requiredResources[].name <string>	# Name of the required resource.
+spec.pipeline[].requirements.requiredResources[].namespace <string>	# Namespace of the required resource if it is namespaced.
+spec.pipeline[].requirements.requiredResources[].requirementName <string> (required)	# RequirementName is the unique name to identify this required resource in the Required Resources map in the function request.
+spec.pipeline[].requirements.requiredSchemas <[]object>	# RequiredSchemas is a list of OpenAPI schemas that must be fetched before this function is called.
+spec.pipeline[].requirements.requiredSchemas[].apiVersion <string> (required)	# APIVersion of the resource kind whose schema is required, e.g. "example.org/v1".
+spec.pipeline[].requirements.requiredSchemas[].kind <string> (required)	# Kind of resource whose schema is required, e.g. "MyResource".
+spec.pipeline[].requirements.requiredSchemas[].requirementName <string> (required)	# RequirementName is the unique name to identify this required schema in the Required Schemas map in the function request.
+spec.pipeline[].step <string> (required)	# Step name. Must be unique within its Pipeline.
+spec.revision <integer> (required) format=int64	# Revision number. Newer revisions have larger numbers. This number can change. When a Composition transitions from state A -> B -> A there will be only two CompositionRevisions. Crossplane will edit the original CompositionRevision to change its revision number from 0 to 2.
+spec.writeConnectionSecretsToNamespace <string>	# WriteConnectionSecretsToNamespace specifies the namespace in which the connection secrets of composite resource dynamically provisioned using this composition will be created.
+status <object>	# CompositionRevisionStatus shows the observed state of the composition revision.
+status.conditions <[]object>	# Conditions of the resource.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
+status.conditions[].message <string>	# A Message containing details about this condition's last transition from one status to another, if any.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
+status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
+status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
