@@ -479,3 +479,35 @@ sources:
       # CRD release asset; the ~480 CRDs are per-kind files under
       # config/crds/resources, fetched via the repo tarball.
       crdDir: config/crds/resources
+
+  # Karpenter — Kubernetes node autoscaler. The neutral control-plane API
+  # (group karpenter.sh: NodePool, NodeClaim, NodeOverlay) lives in the upstream
+  # kubernetes-sigs/karpenter repo as per-kind files under pkg/apis/crds with no
+  # CRD release asset; crdDir fetches the tree. Each cloud provider below bundles
+  # a copy of these same karpenter.sh CRDs next to its own nodeclass, so to avoid
+  # double-writing the shared group we take karpenter.sh only from core here and
+  # pull just the provider-specific nodeclass file from each provider repo.
+  - name: karpenter
+    alias: Karpenter
+    url: https://github.com/kubernetes-sigs/karpenter
+    extract: crd
+    input:
+      crdDir: pkg/apis/crds
+
+  - name: karpenter-aws
+    alias: Karpenter AWS
+    url: https://github.com/aws/karpenter-provider-aws
+    extract: crd
+    input:
+      # only the AWS nodeclass (group karpenter.k8s.aws: EC2NodeClass); this repo
+      # also vendors the karpenter.sh CRDs, which come from the core source above.
+      crdFile: pkg/apis/crds/karpenter.k8s.aws_ec2nodeclasses.yaml
+
+  - name: karpenter-azure
+    alias: Karpenter Azure
+    url: https://github.com/Azure/karpenter-provider-azure
+    extract: crd
+    input:
+      # only the Azure nodeclass (group karpenter.azure.com: AKSNodeClass); this
+      # repo also vendors the karpenter.sh CRDs, which come from the core source.
+      crdFile: pkg/apis/crds/karpenter.azure.com_aksnodeclasses.yaml
