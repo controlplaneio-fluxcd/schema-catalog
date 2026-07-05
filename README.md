@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-80-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C214-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-542%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-81-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C216-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-542%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -142,6 +142,7 @@ for the line grammar.
 | Network Policy API | [v0.2.0](build/history/network-policy-api.json) | 1 | 2026-07-05 |
 | ExternalDNS | [v0.21.0](build/history/external-dns.json) | 1 | 2026-07-05 |
 | AWS Load Balancer Controller | [v3.4.0](build/history/aws-load-balancer-controller.json) | 8 | 2026-07-05 |
+| kro | [v0.9.2](build/history/kro.json) | 2 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
