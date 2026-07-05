@@ -1,0 +1,363 @@
+{
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "properties": {
+        "captureConfig": {
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "firstN"
+              ]
+            }
+          ],
+          "properties": {
+            "firstN": {
+              "additionalProperties": false,
+              "properties": {
+                "number": {
+                  "format": "int32",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "number"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "capturePoint": {
+          "enum": [
+            "Source",
+            "Destination"
+          ],
+          "type": "string"
+        },
+        "destination": {
+          "additionalProperties": false,
+          "properties": {
+            "ip": {
+              "oneOf": [
+                {
+                  "format": "ipv4"
+                },
+                {
+                  "format": "ipv6"
+                }
+              ],
+              "type": "string"
+            },
+            "pod": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "namespace": {
+                  "default": "default",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "At most one of 'pod' or 'ip' may be set",
+              "rule": "!(has(self.pod) && has(self.ip))"
+            }
+          ]
+        },
+        "direction": {
+          "default": "SourceToDestination",
+          "enum": [
+            "SourceToDestination",
+            "DestinationToSource",
+            "Both"
+          ],
+          "type": "string"
+        },
+        "fileServer": {
+          "additionalProperties": false,
+          "properties": {
+            "hostPublicKey": {
+              "format": "byte",
+              "type": "string"
+            },
+            "url": {
+              "pattern": "sftp:\\/\\/[\\w-_./]+:\\d+",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "packet": {
+          "additionalProperties": false,
+          "properties": {
+            "ipFamily": {
+              "default": "IPv4",
+              "enum": [
+                "IPv4",
+                "IPv6"
+              ],
+              "type": "string"
+            },
+            "protocol": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "transportHeader": {
+              "additionalProperties": false,
+              "properties": {
+                "icmp": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "messages": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "maximum": 255,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "type": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                },
+                "icmpv6": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "messages": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "maximum": 255,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "type": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                },
+                "tcp": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "dstPort": {
+                      "maximum": 65535,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "flags": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "mask": {
+                            "maximum": 255,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "value": {
+                            "maximum": 255,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "srcPort": {
+                      "maximum": 65535,
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "udp": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "dstPort": {
+                      "maximum": 65535,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "srcPort": {
+                      "maximum": 65535,
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "At most one of 'ICMP', 'ICMPv6', 'UDP', or 'TCP' may be set",
+                  "rule": "(has(self.icmp) ? 1 : 0) + (has(self.icmpv6) ? 1 : 0) + (has(self.udp) ? 1 : 0) + (has(self.tcp) ? 1: 0) <= 1"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "source": {
+          "additionalProperties": false,
+          "properties": {
+            "ip": {
+              "oneOf": [
+                {
+                  "format": "ipv4"
+                },
+                {
+                  "format": "ipv6"
+                }
+              ],
+              "type": "string"
+            },
+            "pod": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "namespace": {
+                  "default": "default",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "At most one of 'pod' or 'ip' may be set",
+              "rule": "!(has(self.pod) && has(self.ip))"
+            }
+          ]
+        },
+        "timeout": {
+          "default": 60,
+          "maximum": 300,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "captureConfig"
+      ],
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "At least one of source.pod or destination.pod must be specified.",
+          "rule": "has(self.source.pod) || has(self.destination.pod)"
+        },
+        {
+          "message": "source.pod must be set when capturePoint is 'Source'",
+          "rule": "!(has(self.capturePoint) && self.capturePoint == 'Source') || has(self.source.pod)"
+        },
+        {
+          "message": "destination.pod must be set when capturePoint is 'Destination'",
+          "rule": "!(has(self.capturePoint) && self.capturePoint == 'Destination') || has(self.destination.pod)"
+        }
+      ]
+    },
+    "status": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "lastTransitionTime": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "numberCaptured": {
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}

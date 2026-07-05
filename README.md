@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-96-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C346-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-563%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-97-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C366-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-563%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -158,6 +158,7 @@ for the line grammar.
 | ScyllaDB Operator | [v1.21.0](build/history/scylla-operator.json) | 11 | 2026-07-05 |
 | Calico | [v3.32.1](build/history/calico.json) | 22 | 2026-07-05 |
 | Tigera Operator | [v3.32.1](build/history/tigera-operator.json) | 9 | 2026-07-05 |
+| Antrea | [v2.6.2](build/history/antrea.json) | 20 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
