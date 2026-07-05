@@ -1,0 +1,43 @@
+# schema source: AWS Load Balancer Controller v3.4.0 https://github.com/kubernetes-sigs/aws-load-balancer-controller
+apiVersion <string> enum=elbv2.k8s.aws/v1beta1
+kind <string> enum=TargetGroupBinding
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# TargetGroupBindingSpec defines the desired state of TargetGroupBinding
+spec.assumeRoleExternalId <string>	# IAM Role ARN to assume when calling AWS APIs. Needed to assume a role in another account and prevent the confused deputy problem. https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html
+spec.iamRoleArnToAssume <string>	# IAM Role ARN to assume when calling AWS APIs. Useful if the target group is in a different AWS account
+spec.ipAddressType <string> enum=ipv4|ipv6	# ipAddressType specifies whether the target group is of type IPv4 or IPv6. If unspecified, it will be automatically inferred.
+spec.multiClusterTargetGroup <boolean>	# MultiClusterTargetGroup Denotes if the TargetGroup is shared among multiple clusters
+spec.networking <object>	# networking defines the networking rules to allow ELBV2 LoadBalancer to access targets in TargetGroup.
+spec.networking.ingress <[]object>	# List of ingress rules to allow ELBV2 LoadBalancer to access targets in TargetGroup.
+spec.networking.ingress[].from <[]object> (required)	# List of peers which should be able to access the targets in TargetGroup. At least one NetworkingPeer should be specified.
+spec.networking.ingress[].from[].ipBlock <object>	# IPBlock defines an IPBlock peer. If specified, none of the other fields can be set.
+spec.networking.ingress[].from[].ipBlock.cidr <string> (required)	# CIDR is the network CIDR. Both IPV4 or IPV6 CIDR are accepted.
+spec.networking.ingress[].from[].securityGroup <object>	# SecurityGroup defines a SecurityGroup peer. If specified, none of the other fields can be set.
+spec.networking.ingress[].from[].securityGroup.groupID <string> (required)	# GroupID is the EC2 SecurityGroupID.
+spec.networking.ingress[].ports <[]object> (required)	# List of ports which should be made accessible on the targets in TargetGroup. If ports is empty or unspecified, it defaults to all ports with TCP.
+spec.networking.ingress[].ports[].port <int-or-string>	# The port which traffic must match. When NodePort endpoints(instance TargetType) is used, this must be a numerical port. When Port endpoints(ip TargetType) is used, this can be either numerical or named port on pods. if port is unspecified, it defaults to all ports.
+spec.networking.ingress[].ports[].protocol <string> enum=TCP|UDP	# The protocol which traffic must match. If protocol is unspecified, it defaults to TCP.
+spec.nodeSelector <object>	# node selector for instance type target groups to only register certain nodes
+spec.nodeSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.nodeSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.nodeSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.nodeSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.nodeSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.serviceRef <object> (required)	# serviceRef is a reference to a Kubernetes Service and ServicePort.
+spec.serviceRef.name <string> (required)	# Name is the name of the Service.
+spec.serviceRef.port <int-or-string> (required)	# Port is the port of the ServicePort.
+spec.targetGroupARN <string>	# targetGroupARN is the Amazon Resource Name (ARN) for the TargetGroup.
+spec.targetGroupName <string>	# targetGroupName is the Name of the TargetGroup.
+spec.targetGroupProtocol <string> enum=HTTP|HTTPS|TCP|TLS|UDP|TCP_UDP|QUIC|TCP_QUIC	# targetGroupProtocol is the Protocol of the TargetGroup. If unspecified, it will be automatically inferred.
+spec.targetType <string> enum=instance|ip	# targetType is the TargetType of TargetGroup. If unspecified, it will be automatically inferred.
+spec.vpcID <string>	# VpcID is the VPC of the TargetGroup. If unspecified, it will be automatically inferred.
+status <object>	# TargetGroupBindingStatus defines the observed state of TargetGroupBinding
+status.conditions <[]object>	# Conditions describe the current conditions of the TargetGroupBinding.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.observedGeneration <integer> format=int64	# The generation observed by the TargetGroupBinding controller.

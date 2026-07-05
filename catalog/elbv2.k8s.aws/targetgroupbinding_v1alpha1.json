@@ -1,0 +1,182 @@
+{
+  "description": "TargetGroupBinding is the Schema for the TargetGroupBinding API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "TargetGroupBindingSpec defines the desired state of TargetGroupBinding",
+      "properties": {
+        "assumeRoleExternalId": {
+          "description": "IAM Role ARN to assume when calling AWS APIs. Needed to assume a role in another account and prevent the confused deputy problem. https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html",
+          "type": "string"
+        },
+        "iamRoleArnToAssume": {
+          "description": "IAM Role ARN to assume when calling AWS APIs. Useful if the target group is in a different AWS account",
+          "type": "string"
+        },
+        "multiClusterTargetGroup": {
+          "description": "MultiClusterTargetGroup Denotes if the TargetGroup is shared among multiple clusters",
+          "type": "boolean"
+        },
+        "networking": {
+          "additionalProperties": false,
+          "description": "networking provides the networking setup for ELBV2 LoadBalancer to access targets in TargetGroup.",
+          "properties": {
+            "ingress": {
+              "description": "List of ingress rules to allow ELBV2 LoadBalancer to access targets in TargetGroup.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "description": "List of peers which should be able to access the targets in TargetGroup.\nAt least one NetworkingPeer should be specified.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "NetworkingPeer defines the source/destination peer for networking rules.",
+                      "properties": {
+                        "ipBlock": {
+                          "additionalProperties": false,
+                          "description": "IPBlock defines an IPBlock peer.\nIf specified, none of the other fields can be set.",
+                          "properties": {
+                            "cidr": {
+                              "description": "CIDR is the network CIDR.\nBoth IPV4 or IPV6 CIDR are accepted.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "cidr"
+                          ],
+                          "type": "object"
+                        },
+                        "securityGroup": {
+                          "additionalProperties": false,
+                          "description": "SecurityGroup defines a SecurityGroup peer.\nIf specified, none of the other fields can be set.",
+                          "properties": {
+                            "groupID": {
+                              "description": "GroupID is the EC2 SecurityGroupID.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "groupID"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "ports": {
+                    "description": "List of ports which should be made accessible on the targets in TargetGroup.\nIf ports is empty or unspecified, it defaults to all ports with TCP.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "port": {
+                          "description": "The port which traffic must match.\nWhen NodePort endpoints(instance TargetType) is used, this must be a numerical port.\nWhen Port endpoints(ip TargetType) is used, this can be either numerical or named port on pods.\nif port is unspecified, it defaults to all ports.",
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "integer"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "description": "The protocol which traffic must match.\nIf protocol is unspecified, it defaults to TCP.",
+                          "enum": [
+                            "TCP",
+                            "UDP"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "from",
+                  "ports"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "serviceRef": {
+          "additionalProperties": false,
+          "description": "serviceRef is a reference to a Kubernetes Service and ServicePort.",
+          "properties": {
+            "name": {
+              "description": "Name is the name of the Service.",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port is the port of the ServicePort.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "port"
+          ],
+          "type": "object"
+        },
+        "targetGroupARN": {
+          "description": "targetGroupARN is the Amazon Resource Name (ARN) for the TargetGroup.",
+          "type": "string"
+        },
+        "targetGroupName": {
+          "description": "targetGroupName is the Name of the TargetGroup.",
+          "type": "string"
+        },
+        "targetType": {
+          "description": "targetType is the TargetType of TargetGroup. If unspecified, it will be automatically inferred.",
+          "enum": [
+            "instance",
+            "ip"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "serviceRef"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "TargetGroupBindingStatus defines the observed state of TargetGroupBinding",
+      "properties": {
+        "observedGeneration": {
+          "description": "The generation observed by the TargetGroupBinding controller.",
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object"
+}

@@ -1,0 +1,57 @@
+# schema source: AWS Load Balancer Controller v3.4.0 https://github.com/kubernetes-sigs/aws-load-balancer-controller
+apiVersion <string> enum=gateway.k8s.aws/v1beta1
+kind <string> enum=ListenerRuleConfiguration
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# ListenerRuleConfigurationSpec defines the desired state of ListenerRuleConfiguration
+spec.actions <[]object> min=1 max=2	# Actions defines the set of actions to be performed when conditions match. This CRD implementation currently supports only authenticate-oidc, authenticate-cognito, and fixed-response action types fully and forward and redirect actions partially For other fields in forward and redirect actions, please use the standard Gateway API HTTPRoute or other route resources, which provide native support for those conditions through the Gateway API specification. At most one authentication action can be specified (either authenticate-oidc or authenticate-cognito).
+spec.actions[].authenticateCognitoConfig <object>	# Information for an authenticate-cognito action
+spec.actions[].authenticateCognitoConfig.authenticationRequestExtraParams <map[string]string>	# The query parameters (up to 10) to include in the redirect request to the authorization endpoint.
+spec.actions[].authenticateCognitoConfig.onUnauthenticatedRequest <string> enum=deny|allow|authenticate default="authenticate"	# The behavior if the user is not authenticated. The following are possible
+spec.actions[].authenticateCognitoConfig.scope <string> default="openid"	# The set of user claims to be requested from the IdP. The default is openid . To verify which scope values your IdP supports and how to separate multiple values, see the documentation for your IdP.
+spec.actions[].authenticateCognitoConfig.sessionCookieName <string> default="AWSELBAuthSessionCookie"	# The name of the cookie used to maintain session information. The default is AWSELBAuthSessionCookie.
+spec.actions[].authenticateCognitoConfig.sessionTimeout <integer> default=604800 format=int64 min=1 max=604800	# The maximum duration of the authentication session, in seconds. The default is 604800 seconds (7 days).
+spec.actions[].authenticateCognitoConfig.userPoolArn <string> (required)	# The Amazon Resource Name (ARN) of the Amazon Cognito user pool.
+spec.actions[].authenticateCognitoConfig.userPoolClientId <string> (required)	# The ID of the Amazon Cognito user pool client.
+spec.actions[].authenticateCognitoConfig.userPoolDomain <string> (required)	# The domain prefix or fully-qualified domain name of the Amazon Cognito user pool.
+spec.actions[].authenticateOIDCConfig <object>	# Information for an authenticate-oidc action
+spec.actions[].authenticateOIDCConfig.authenticationRequestExtraParams <map[string]string>	# The query parameters (up to 10) to include in the redirect request to the authorization endpoint.
+spec.actions[].authenticateOIDCConfig.authorizationEndpoint <string> (required)	# The authorization endpoint of the IdP. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+spec.actions[].authenticateOIDCConfig.issuer <string> (required)	# The OIDC issuer identifier of the IdP. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+spec.actions[].authenticateOIDCConfig.onUnauthenticatedRequest <string> enum=deny|allow|authenticate default="authenticate"	# The behavior if the user is not authenticated. The following are possible
+spec.actions[].authenticateOIDCConfig.scope <string> default="openid"	# The set of user claims to be requested from the IdP. The default is openid . To verify which scope values your IdP supports and how to separate multiple values, see the documentation for your IdP.
+spec.actions[].authenticateOIDCConfig.secret <object> (required)	# Secret holds OAuth 2.0 clientID and clientSecret. You need to create this secret and provide its name and namespace
+spec.actions[].authenticateOIDCConfig.secret.name <string> (required)	# Name is name of the secret
+spec.actions[].authenticateOIDCConfig.sessionCookieName <string> default="AWSELBAuthSessionCookie"	# The name of the cookie used to maintain session information. The default is AWSELBAuthSessionCookie.
+spec.actions[].authenticateOIDCConfig.sessionTimeout <integer> default=604800 format=int64 min=1 max=604800	# The maximum duration of the authentication session, in seconds. The default is 604800 seconds (7 days).
+spec.actions[].authenticateOIDCConfig.tokenEndpoint <string> (required)	# The token endpoint of the IdP. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+spec.actions[].authenticateOIDCConfig.useExistingClientSecret <boolean>	# Indicates whether to use the existing client secret when modifying a listener rule. If you are creating a listener rule, you can omit this parameter or set it to false.
+spec.actions[].authenticateOIDCConfig.userInfoEndpoint <string> (required)	# The user info endpoint of the IdP. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+spec.actions[].fixedResponseConfig <object>	# Information for a fixed-response action
+spec.actions[].fixedResponseConfig.contentType <string> enum=text/plain|text/css|text/html|application/javascript|application/json default="text/plain"	# The content type of the fixed response.
+spec.actions[].fixedResponseConfig.messageBody <string>	# The message
+spec.actions[].fixedResponseConfig.statusCode <integer> (required) format=int32	# The HTTP response code (2XX, 4XX, or 5XX).
+spec.actions[].forwardConfig <object>	# Information for a forward action
+spec.actions[].forwardConfig.targetGroupStickinessConfig <object> default={}	# The target group stickiness for the rule. Note: ForwardActionConfig only supports target group stickiness configuration through CRD. All other forward action fields must be set through the Gateway API native way.
+spec.actions[].forwardConfig.targetGroupStickinessConfig.durationSeconds <integer> default=3600 format=int32 min=1 max=604800	# The time period, in seconds, during which requests from a client should be routed to the same target group. The range is 1-604800 seconds (7 days).
+spec.actions[].forwardConfig.targetGroupStickinessConfig.enabled <boolean> default=false	# Indicates whether target group stickiness is enabled.
+spec.actions[].jwtValidationConfig <object>	# Information for a jwt-validation action
+spec.actions[].jwtValidationConfig.additionalClaims <[]object>	# Any additional claims in the JWT that should be validated
+spec.actions[].jwtValidationConfig.additionalClaims[].format <string> (required) enum=single-string|string-array|space-separated-values	# The format of the claim value(s)
+spec.actions[].jwtValidationConfig.additionalClaims[].name <string> (required) min=1	# The name of the claim. You can't specify exp, iss, nbf, or iat because we validate them by default.
+spec.actions[].jwtValidationConfig.additionalClaims[].values <[]string> (required) min=1 max=10	# The claim values. The maximum size of the list is 10. Each value can be up to 256 characters in length. If the format is space-separated-values, the values can't include spaces.
+spec.actions[].jwtValidationConfig.issuer <string> (required) max=256	# The issuer of the JWT. The maximum length is 256 characters.
+spec.actions[].jwtValidationConfig.jwksEndpoint <string> (required) max=256	# The JSON Web Key Set (JWKS) endpoint. This endpoint contains JSON Web Keys (JWK) that are used to validate signatures from the provider. This must be a full URL, including the HTTPS protocol, the domain, and the path. The maximum length is 256 characters.
+spec.actions[].redirectConfig <object>	# Information for a redirect action
+spec.actions[].redirectConfig.query <string> default="#{query}"	# The query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?", as it is automatically added. You can specify any of the reserved keywords. Note: RedirectActionConfig only supports setting the query parameter through CRD. All other redirect action fields must be set through the Gateway API native way.
+spec.actions[].type <string> (required) enum=forward|fixed-response|redirect|authenticate-cognito|authenticate-oidc|jwt-validation	# The type of action
+spec.conditions <[]object> min=1	# Conditions defines the circumstances under which the rule actions will be performed. This CRD implementation currently supports only the source-ip condition type For other condition types (such as path-pattern, host-header, http-header, etc.), please use the standard Gateway API HTTPRoute or other route resources, which provide native support for those conditions through the Gateway API specification.
+spec.conditions[].field <string> (required) enum=source-ip	# The field in the HTTP request
+spec.conditions[].matchIndexes <[]integer>	# Indexes of Match in a rule to apply source ip to If MatchIndexes is not provided, SourceIpConfig will be applied to all conditions where ListenerRuleConfiguration is used
+spec.conditions[].sourceIPConfig <object>	# Information for a source IP condition
+spec.conditions[].sourceIPConfig.values <[]string> (required) min=1	# One or more source IP addresses, in CIDR format
+spec.tags <map[string]string>	# Tags are the AWS resource tags to be applied to all AWS resources created for this rule.
+status <object>	# ListenerRuleConfigurationStatus defines the observed state of ListenerRuleConfiguration
+status.accepted <boolean>	# Accepted indicates whether ListenerRuleConfiguration is valid
+status.message <string>	# Message provides details about the current state
+status.observedGeneration <integer> format=int64	# The observed generation of the rule configuration
