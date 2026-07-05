@@ -147,8 +147,39 @@ effects get guards or a CI check, not mocks.
 ## Adding a source
 
 Add an entry to `build/config/sources.yaml` (see `types.ts` for the shape and
-`config.ts` for what the validator enforces) and run `make build`. If the
-project ships CRDs as a release asset, prefer `releaseAsset`; if it has a
-kustomize overlay, use `kustomize` with the overlay path. No test edits, no
-code edits. If validation of a popular example repo starts failing on a
-missing schema, that is the signal to add the project here.
+`config.ts` for what the validator enforces) and run `make build`. Pick the
+`input` by how the project ships its CRDs:
+
+- **`releaseAsset`** — a CRD bundle attached to a GitHub release (preferred).
+  Add `releaseTag: "<glob>"` when the repo interleaves unrelated release tags
+  so version resolution ignores them (e.g. external-secrets' `helm-chart-*`
+  releases alongside the app `v*` ones).
+- **`kustomize`** — a kustomize overlay in the repo (`config/crd` and friends).
+- **`crdDir`** — bare per-kind CRD YAML files under a repo directory, with no
+  release asset or kustomization (e.g. cilium's `client/crds` tree).
+
+No code or test edits. If validation of a popular example repo starts failing
+on a missing schema, that is the signal to add the project here.
+
+**A green build does not mean the schemas are correct.** The build's guards
+only check that extraction produced files and that no two sources collide —
+nothing verifies the *shape* of what came out. The extraction transforms
+(`$ref` inlining, int-or-string rewriting, nullable widening,
+additionalProperties closing) can silently mangle a schema, and the damage
+only surfaces when a *realistic* custom resource is validated against it. So
+before committing a new source, validate at least one complex, representative
+manifest for it against the freshly built catalog:
+
+```shell
+flux-schema validate <real-manifest.yaml> --schema-location ./catalog
+```
+
+Choose a resource that exercises the hard parts — union specs (`oneOf`/`anyOf`),
+deeply nested objects, int-or-string fields, preserve-unknown-fields maps — not
+a minimal stub. Confirm both directions: a *valid* manifest must pass (a false
+rejection means the extracted schema is over-strict), and an intentionally
+broken one must fail (a false accept means it is too loose). Adding Cilium is
+the cautionary tale — the build was green and the schemas looked plausible, but
+every valid `CiliumNetworkPolicy` was rejected because `additionalProperties:
+false` had been injected into the spec's `oneOf` branches, a flux-schema bug
+(fixed in 0.7.1) that only a real-resource validation would have caught.
