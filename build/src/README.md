@@ -41,9 +41,9 @@ sources.yaml ──parse/validate──▶ Source
                      writeHistory()             — atomic, written LAST
 ```
 
-After all sources: orphan GC (full builds only), README versions table
-regenerated from the manifests, optional `--summary` markdown, and a
-`changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
+After all sources: orphan GC (full builds only), README stats badges and
+versions table regenerated from the manifests, optional `--summary` markdown,
+and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
 
 ## Module map
 
@@ -56,7 +56,7 @@ regenerated from the manifests, optional `--summary` markdown, and a
 | `github.ts`   | GitHub REST via fetch: latest release, asset lookup/download, retry/timeout   |
 | `extract.ts`  | runs flux-schema/kubectl/flux-operator via `Bun.$` into the staging dir       |
 | `history.ts`  | provenance manifests, staging listing, catalog sync, GC                       |
-| `readme.ts`   | versions table between `<!-- versions:start/end -->` markers in README.md     |
+| `readme.ts`   | stats badges (`stats:` markers) + versions table (`versions:` markers) in README.md |
 | `summary.ts`  | markdown PR body: only changed sources, orphan removals, up-to-date count     |
 | `paths.ts`    | repo-root-derived paths and `FLUX_SCHEMA_BIN`                                 |
 

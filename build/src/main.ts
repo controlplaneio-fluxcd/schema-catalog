@@ -15,7 +15,7 @@ import {
   syncCatalog,
   writeHistory,
 } from "./history.ts";
-import { README_PATH, SOURCES_PATH } from "./paths.ts";
+import { README_PATH, ROOT_DIR, SOURCES_PATH } from "./paths.ts";
 import { updateReadme } from "./readme.ts";
 import { resolveVersion } from "./resolve.ts";
 import { renderBuildSummary } from "./summary.ts";
@@ -221,17 +221,24 @@ async function main(): Promise<number> {
     orphans = await gcOrphanedSources(new Set(allSources.map((s) => s.name)), history);
   }
 
-  const rows = allSources
+  const tracked = allSources
     .map((s) => ({ source: s, entry: history.get(s.name) }))
-    .filter((x): x is { source: Source; entry: HistoryEntry } => x.entry != null)
-    .map(({ source, entry }) => ({
-      alias: source.alias,
-      name: entry.name,
-      version: entry.version,
-      builtAt: entry.builtAt,
-      schemas: entry.files.filter((f) => f.endsWith(".json")).length,
-    }));
-  if (rows.length > 0 && (await updateReadme(README_PATH, rows))) {
+    .filter((x): x is { source: Source; entry: HistoryEntry } => x.entry != null);
+  const rows = tracked.map(({ source, entry }) => ({
+    alias: source.alias,
+    name: entry.name,
+    version: entry.version,
+    builtAt: entry.builtAt,
+    schemas: entry.files.filter((f) => f.endsWith(".json")).length,
+  }));
+  let totalBytes = 0;
+  for (const { entry } of tracked) {
+    for (const file of entry.files) {
+      totalBytes += Bun.file(join(ROOT_DIR, file)).size;
+    }
+  }
+  const sizeMB = Math.round(totalBytes / 1024 / 1024);
+  if (rows.length > 0 && (await updateReadme(README_PATH, rows, sizeMB))) {
     console.log("  README.md: versions table updated");
   }
 
