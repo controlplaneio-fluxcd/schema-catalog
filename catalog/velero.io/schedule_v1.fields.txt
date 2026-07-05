@@ -1,0 +1,82 @@
+# schema source: Velero v1.18.2 https://github.com/vmware-tanzu/velero
+apiVersion <string> enum=velero.io/v1
+kind <string> enum=Schedule
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# ScheduleSpec defines the specification for a Velero schedule
+spec.paused <boolean>	# Paused specifies whether the schedule is paused or not
+spec.schedule <string> (required)	# Schedule is a Cron expression defining when to run the Backup.
+spec.skipImmediately <boolean>	# SkipImmediately specifies whether to skip backup if schedule is due immediately from `schedule.status.lastBackup` timestamp when schedule is unpaused or if schedule is new. If true, backup will be skipped immediately when schedule is unpaused if it is due based on .Status.LastBackupTimestamp or schedule is new, and will run at next schedule time. If false, backup will not be skipped immediately when schedule is unpaused, but will run at next schedule time. If empty, will follow server configuration (default: false).
+spec.template <object> (required)	# Template is the definition of the Backup to be run on the provided schedule
+spec.template.csiSnapshotTimeout <string>	# CSISnapshotTimeout specifies the time used to wait for CSI VolumeSnapshot status turns to ReadyToUse during creation, before returning error as timeout. The default value is 10 minute.
+spec.template.datamover <string>	# DataMover specifies the data mover to be used by the backup. If DataMover is "" or "velero", the built-in data mover will be used.
+spec.template.defaultVolumesToFsBackup <boolean>	# DefaultVolumesToFsBackup specifies whether pod volume file system backup should be used for all volumes by default.
+spec.template.defaultVolumesToRestic <boolean>	# DefaultVolumesToRestic specifies whether restic should be used to take a backup of all pod volumes by default. Deprecated: this field is no longer used and will be removed entirely in future. Use DefaultVolumesToFsBackup instead.
+spec.template.excludedClusterScopedResources <[]string>	# ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to "*", all cluster-scoped resource types are excluded. The default value is empty.
+spec.template.excludedNamespaceScopedResources <[]string>	# ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup. If set to "*", all namespace-scoped resource types are excluded. The default value is empty.
+spec.template.excludedNamespaces <[]string>	# ExcludedNamespaces contains a list of namespaces that are not included in the backup.
+spec.template.excludedResources <[]string>	# ExcludedResources is a slice of resource names that are not included in the backup.
+spec.template.hooks <object>	# Hooks represent custom behaviors that should be executed at different phases of the backup.
+spec.template.hooks.resources <[]object>	# Resources are hooks that should be executed when backing up individual instances of a resource.
+spec.template.hooks.resources[].excludedNamespaces <[]string>	# ExcludedNamespaces specifies the namespaces to which this hook spec does not apply.
+spec.template.hooks.resources[].excludedResources <[]string>	# ExcludedResources specifies the resources to which this hook spec does not apply.
+spec.template.hooks.resources[].includedNamespaces <[]string>	# IncludedNamespaces specifies the namespaces to which this hook spec applies. If empty, it applies to all namespaces.
+spec.template.hooks.resources[].includedResources <[]string>	# IncludedResources specifies the resources to which this hook spec applies. If empty, it applies to all resources.
+spec.template.hooks.resources[].labelSelector <object>	# LabelSelector, if specified, filters the resources to which this hook spec applies.
+spec.template.hooks.resources[].labelSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.template.hooks.resources[].labelSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.template.hooks.resources[].labelSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.template.hooks.resources[].labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.template.hooks.resources[].labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.template.hooks.resources[].name <string> (required)	# Name is the name of this hook.
+spec.template.hooks.resources[].post <[]object>	# PostHooks is a list of BackupResourceHooks to execute after storing the item in the backup. These are executed after all "additional items" from item actions are processed.
+spec.template.hooks.resources[].post[].exec <object> (required)	# Exec defines an exec hook.
+spec.template.hooks.resources[].post[].exec.command <[]string> (required) min=1	# Command is the command and arguments to execute.
+spec.template.hooks.resources[].post[].exec.container <string>	# Container is the container in the pod where the command should be executed. If not specified, the pod's first container is used.
+spec.template.hooks.resources[].post[].exec.onError <string> enum=Continue|Fail	# OnError specifies how Velero should behave if it encounters an error executing this hook.
+spec.template.hooks.resources[].post[].exec.timeout <string>	# Timeout defines the maximum amount of time Velero should wait for the hook to complete before considering the execution a failure.
+spec.template.hooks.resources[].pre <[]object>	# PreHooks is a list of BackupResourceHooks to execute prior to storing the item in the backup. These are executed before any "additional items" from item actions are processed.
+spec.template.hooks.resources[].pre[].exec <object> (required)	# Exec defines an exec hook.
+spec.template.hooks.resources[].pre[].exec.command <[]string> (required) min=1	# Command is the command and arguments to execute.
+spec.template.hooks.resources[].pre[].exec.container <string>	# Container is the container in the pod where the command should be executed. If not specified, the pod's first container is used.
+spec.template.hooks.resources[].pre[].exec.onError <string> enum=Continue|Fail	# OnError specifies how Velero should behave if it encounters an error executing this hook.
+spec.template.hooks.resources[].pre[].exec.timeout <string>	# Timeout defines the maximum amount of time Velero should wait for the hook to complete before considering the execution a failure.
+spec.template.includeClusterResources <boolean>	# IncludeClusterResources specifies whether cluster-scoped resources should be included for consideration in the backup.
+spec.template.includedClusterScopedResources <[]string>	# IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup. If set to "*", all cluster-scoped resource types are included. The default value is empty, which means only related cluster-scoped resources are included.
+spec.template.includedNamespaceScopedResources <[]string>	# IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup. The default value is "*".
+spec.template.includedNamespaces <[]string>	# IncludedNamespaces is a slice of namespace names to include objects from. If empty, all namespaces are included.
+spec.template.includedResources <[]string>	# IncludedResources is a slice of resource names to include in the backup. If empty, all resources are included.
+spec.template.itemOperationTimeout <string>	# ItemOperationTimeout specifies the time used to wait for asynchronous BackupItemAction operations The default value is 4 hour.
+spec.template.labelSelector <object>	# LabelSelector is a metav1.LabelSelector to filter with when adding individual objects to the backup. If empty or nil, all objects are included. Optional.
+spec.template.labelSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.template.labelSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.template.labelSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.template.labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.template.labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.template.metadata <object>
+spec.template.metadata.labels <map[string]string>
+spec.template.orLabelSelectors <[]object>	# OrLabelSelectors is list of metav1.LabelSelector to filter with when adding individual objects to the backup. If multiple provided they will be joined by the OR operator. LabelSelector as well as OrLabelSelectors cannot co-exist in backup request, only one of them can be used.
+spec.template.orLabelSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.template.orLabelSelectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.template.orLabelSelectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.template.orLabelSelectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.template.orLabelSelectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.template.orderedResources <map[string]string>	# OrderedResources specifies the backup order of resources of specific Kind. The map key is the resource name and value is a list of object names separated by commas. Each resource name has format "namespace/objectname". For cluster resources, simply use "objectname".
+spec.template.resourcePolicy <object>	# ResourcePolicy specifies the referenced resource policies that backup should follow
+spec.template.resourcePolicy.apiGroup <string>	# APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.
+spec.template.resourcePolicy.kind <string> (required)	# Kind is the type of resource being referenced
+spec.template.resourcePolicy.name <string> (required)	# Name is the name of resource being referenced
+spec.template.snapshotMoveData <boolean>	# SnapshotMoveData specifies whether snapshot data should be moved
+spec.template.snapshotVolumes <boolean>	# SnapshotVolumes specifies whether to take snapshots of any PV's referenced in the set of objects included in the Backup.
+spec.template.storageLocation <string>	# StorageLocation is a string containing the name of a BackupStorageLocation where the backup should be stored.
+spec.template.ttl <string>	# TTL is a time.Duration-parseable string describing how long the Backup should be retained for.
+spec.template.uploaderConfig <object>	# UploaderConfig specifies the configuration for the uploader.
+spec.template.uploaderConfig.parallelFilesUpload <integer>	# ParallelFilesUpload is the number of files parallel uploads to perform when using the uploader.
+spec.template.volumeGroupSnapshotLabelKey <string>	# VolumeGroupSnapshotLabelKey specifies the label key to group PVCs under a VGS.
+spec.template.volumeSnapshotLocations <[]string>	# VolumeSnapshotLocations is a list containing names of VolumeSnapshotLocations associated with this backup.
+spec.useOwnerReferencesInBackup <boolean>	# UseOwnerReferencesBackup specifies whether to use OwnerReferences on backups created by this Schedule.
+status <object>	# ScheduleStatus captures the current state of a Velero schedule
+status.lastBackup <string> format=date-time	# LastBackup is the last time a Backup was run for this Schedule schedule
+status.lastSkipped <string> format=date-time	# LastSkipped is the last time a Schedule was skipped
+status.phase <string> enum=New|Enabled|FailedValidation	# Phase is the current phase of the Schedule
+status.validationErrors <[]string>	# ValidationErrors is a slice of all validation errors (if applicable)
