@@ -1,0 +1,84 @@
+# schema source: Kube-OVN v1.16.2 https://github.com/kubeovn/kube-ovn
+apiVersion <string> enum=kubeovn.io/v1
+kind <string> enum=VpcEgressGateway
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.bandwidth <object>	# Optional bandwidth limit for each egress gateway instance in both ingress and egress directions. If not specified, there will be no bandwidth limit.
+spec.bandwidth.egress <integer> format=int64	# egress bandwidth limit in Mbps
+spec.bandwidth.ingress <integer> format=int64	# ingress bandwidth limit in Mbps
+spec.bfd <object>	# BFD configuration
+spec.bfd.enabled <boolean> default=false	# whether to enable BFD if set to true, the egress gateway will establish BFD session(s) with the VPC BFD LRP the VPC's .spec.bfd.enabled must be set to true to enable BFD
+spec.bfd.minRX <integer> default=1000 format=int32 min=1 max=3600000	# optional BFD minRX/minTX/multiplier
+spec.bfd.minTX <integer> default=1000 format=int32 min=1 max=3600000
+spec.bfd.multiplier <integer> default=3 format=int32 min=1 max=3600000
+spec.bgpConf <string>	# optional BGP configuration name it references a cluster-scoped BgpConf resource
+spec.evpnConf <string>	# optional EVPN configuration name it references a cluster-scoped EvpnConf resource
+spec.externalIPs <[]string>	# External IP addresses for the egress gateway
+spec.externalSubnet <string> (required)	# external subnet used to create the workload
+spec.image <string>	# optional image used by the workload if not specified, the default image passed in by kube-ovn-controller will be used
+spec.internalIPs <[]string>	# optional internal/external IPs used to create the workload these IPs must be in the internal/external subnet the IPs count must NOT be less than the replicas count
+spec.internalSubnet <string>	# optional internal subnet used to create the workload if not specified, the workload will be created in the default subnet of the VPC
+spec.nodeSelector <[]object>	# optional node selector used to select the nodes where the workload will be running
+spec.nodeSelector[].matchExpressions <[]object>
+spec.nodeSelector[].matchExpressions[].key <string> (required)	# The label key that the selector applies to.
+spec.nodeSelector[].matchExpressions[].operator <string> (required)	# Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+spec.nodeSelector[].matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
+spec.nodeSelector[].matchFields <[]object>
+spec.nodeSelector[].matchFields[].key <string> (required)	# The label key that the selector applies to.
+spec.nodeSelector[].matchFields[].operator <string> (required)	# Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+spec.nodeSelector[].matchFields[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
+spec.nodeSelector[].matchLabels <map[string]string>
+spec.policies <[]object>	# egress policies at least one policy must be specified
+spec.policies[].ipBlocks <[]string>	# CIDRs/subnets targeted by the egress traffic policy
+spec.policies[].snat <boolean> default=false	# whether to enable SNAT/MASQUERADE for the egress traffic
+spec.policies[].subnets <[]string>
+spec.prefix <string>	# optional name prefix used to generate the workload the workload name will be generated as <prefix><vpc-egress-gateway-name>
+spec.replicas <integer> default=1 format=int32	# workload replicas
+spec.resources <object>	# Compute Resources required for the container. If not specified, the controller will set a default value. If specified, the controller will not set any default value and use the specified value directly.
+spec.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.selectors <[]object>	# namespace/pod selectors
+spec.selectors[].namespaceSelector <object>	# A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+spec.selectors[].namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.selectors[].namespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.selectors[].namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.selectors[].namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.selectors[].namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.selectors[].podSelector <object>	# A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+spec.selectors[].podSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.selectors[].podSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.selectors[].podSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.selectors[].podSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.selectors[].podSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.tolerations <[]object>	# optional tolerations applied to the workload pods
+spec.tolerations[].effect <string>	# Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+spec.tolerations[].key <string>	# Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+spec.tolerations[].operator <string>	# Operator represents a key's relationship to the value. Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category. Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
+spec.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
+spec.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
+spec.trafficPolicy <string> default="Cluster"	# optional traffic policy used to control the traffic routing if not specified, the default traffic policy "Cluster" will be used if set to "Local", traffic will be routed to the gateway pod/instance on the same node when available currently it works only for the default vpc
+spec.vpc <string>	# optional VPC name if not specified, the default VPC will be used
+status <object>
+status.conditions <[]object> (required)	# Conditions represent the latest available observations of the egress gateway's current state
+status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.
+status.conditions[].lastUpdateTime <string> format=date-time	# Last time the condition was probed
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].status <string>	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string>	# Type of condition.
+status.externalIPs <[]string>	# External IP addresses assigned to the egress gateway
+status.internalIPs <[]string>	# internal/external IPs used by the workload
+status.labelSelector <string>	# Label selector for the egress gateway
+status.phase <string> (required) default="Pending"	# Current phase of the egress gateway (Pending, Processing, or Completed)
+status.ready <boolean> default=false	# whether the egress gateway is ready
+status.replicas <integer> format=int32	# used by the scale subresource
+status.workload <object>	# workload information
+status.workload.apiVersion <string>
+status.workload.kind <string>
+status.workload.name <string>
+status.workload.nodes <[]string>	# nodes where the workload is running

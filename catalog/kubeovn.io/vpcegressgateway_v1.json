@@ -1,0 +1,539 @@
+{
+  "description": "vpc egress gateway is used to forward the egress traffic from the VPC to the external network",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "properties": {
+        "bandwidth": {
+          "additionalProperties": false,
+          "description": "Optional bandwidth limit for each egress gateway instance in both ingress and egress directions.\nIf not specified, there will be no bandwidth limit.",
+          "properties": {
+            "egress": {
+              "description": "egress bandwidth limit in Mbps",
+              "format": "int64",
+              "type": "integer"
+            },
+            "ingress": {
+              "description": "ingress bandwidth limit in Mbps",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "bfd": {
+          "additionalProperties": false,
+          "description": "BFD configuration",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "whether to enable BFD\nif set to true, the egress gateway will establish BFD session(s) with the VPC BFD LRP\nthe VPC's .spec.bfd.enabled must be set to true to enable BFD",
+              "type": "boolean"
+            },
+            "minRX": {
+              "default": 1000,
+              "description": "optional BFD minRX/minTX/multiplier",
+              "format": "int32",
+              "maximum": 3600000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "minTX": {
+              "default": 1000,
+              "format": "int32",
+              "maximum": 3600000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "multiplier": {
+              "default": 3,
+              "format": "int32",
+              "maximum": 3600000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "bgpConf": {
+          "description": "optional BGP configuration name\nit references a cluster-scoped BgpConf resource",
+          "type": "string"
+        },
+        "evpnConf": {
+          "description": "optional EVPN configuration name\nit references a cluster-scoped EvpnConf resource",
+          "type": "string"
+        },
+        "externalIPs": {
+          "description": "External IP addresses for the egress gateway",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "externalSubnet": {
+          "description": "external subnet used to create the workload",
+          "type": "string"
+        },
+        "image": {
+          "description": "optional image used by the workload\nif not specified, the default image passed in by kube-ovn-controller will be used",
+          "type": "string"
+        },
+        "internalIPs": {
+          "description": "optional internal/external IPs used to create the workload\nthese IPs must be in the internal/external subnet\nthe IPs count must NOT be less than the replicas count",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "internalSubnet": {
+          "description": "optional internal subnet used to create the workload\nif not specified, the workload will be created in the default subnet of the VPC",
+          "type": "string"
+        },
+        "nodeSelector": {
+          "description": "optional node selector used to select the nodes where the workload will be running",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "matchExpressions": {
+                "items": {
+                  "additionalProperties": false,
+                  "description": "A node selector requirement is a selector that contains values, a key, and an operator\nthat relates the key and values.",
+                  "properties": {
+                    "key": {
+                      "description": "The label key that the selector applies to.",
+                      "type": "string"
+                    },
+                    "operator": {
+                      "description": "Represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.",
+                      "type": "string"
+                    },
+                    "values": {
+                      "description": "An array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. If the operator is Gt or Lt, the values\narray must have a single element, which will be interpreted as an integer.\nThis array is replaced during a strategic merge patch.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "operator"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "matchFields": {
+                "items": {
+                  "additionalProperties": false,
+                  "description": "A node selector requirement is a selector that contains values, a key, and an operator\nthat relates the key and values.",
+                  "properties": {
+                    "key": {
+                      "description": "The label key that the selector applies to.",
+                      "type": "string"
+                    },
+                    "operator": {
+                      "description": "Represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.",
+                      "type": "string"
+                    },
+                    "values": {
+                      "description": "An array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. If the operator is Gt or Lt, the values\narray must have a single element, which will be interpreted as an integer.\nThis array is replaced during a strategic merge patch.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "operator"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "matchLabels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "policies": {
+          "description": "egress policies\nat least one policy must be specified",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "ipBlocks": {
+                "description": "CIDRs/subnets targeted by the egress traffic policy",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "snat": {
+                "default": false,
+                "description": "whether to enable SNAT/MASQUERADE for the egress traffic",
+                "type": "boolean"
+              },
+              "subnets": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "prefix": {
+          "description": "optional name prefix used to generate the workload\nthe workload name will be generated as <prefix><vpc-egress-gateway-name>",
+          "type": "string"
+        },
+        "replicas": {
+          "default": 1,
+          "description": "workload replicas",
+          "format": "int32",
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "description": "Compute Resources required for the container. If not specified, the controller will set a default value.\nIf specified, the controller will not set any default value and use the specified value directly.",
+          "properties": {
+            "claims": {
+              "description": "Claims lists the names of resources, defined in spec.resourceClaims,\nthat are used by this container.\n\nThis field depends on the\nDynamicResourceAllocation feature gate.\n\nThis field is immutable. It can only be set for containers.",
+              "items": {
+                "additionalProperties": false,
+                "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
+                "properties": {
+                  "name": {
+                    "description": "Name must match the name of one entry in pod.spec.resourceClaims of\nthe Pod where this field is used. It makes that resource available\ninside a container.",
+                    "type": "string"
+                  },
+                  "request": {
+                    "description": "Request is the name chosen for a request in the referenced claim.\nIf empty, everything from the claim is made available, otherwise\nonly the result of this request.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array",
+              "x-kubernetes-list-map-keys": [
+                "name"
+              ],
+              "x-kubernetes-list-type": "map"
+            },
+            "limits": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "description": "Limits describes the maximum amount of compute resources allowed.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "description": "Requests describes the minimum amount of compute resources required.\nIf Requests is omitted for a container, it defaults to Limits if that is explicitly specified,\notherwise to an implementation-defined value. Requests cannot exceed Limits.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "selectors": {
+          "description": "namespace/pod selectors",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "namespaceSelector": {
+                "additionalProperties": false,
+                "description": "A label selector is a label query over a set of resources. The result of matchLabels and\nmatchExpressions are ANDed. An empty label selector matches all objects. A null\nlabel selector matches no objects.",
+                "properties": {
+                  "matchExpressions": {
+                    "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                      "properties": {
+                        "key": {
+                          "description": "key is the label key that the selector applies to.",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "operator"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "atomic"
+                  },
+                  "matchLabels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                    "type": "object"
+                  }
+                },
+                "type": "object",
+                "x-kubernetes-map-type": "atomic"
+              },
+              "podSelector": {
+                "additionalProperties": false,
+                "description": "A label selector is a label query over a set of resources. The result of matchLabels and\nmatchExpressions are ANDed. An empty label selector matches all objects. A null\nlabel selector matches no objects.",
+                "properties": {
+                  "matchExpressions": {
+                    "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                      "properties": {
+                        "key": {
+                          "description": "key is the label key that the selector applies to.",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "operator"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "atomic"
+                  },
+                  "matchLabels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                    "type": "object"
+                  }
+                },
+                "type": "object",
+                "x-kubernetes-map-type": "atomic"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "tolerations": {
+          "description": "optional tolerations applied to the workload pods",
+          "items": {
+            "additionalProperties": false,
+            "description": "The pod this Toleration is attached to tolerates any taint that matches\nthe triple <key,value,effect> using the matching operator <operator>.",
+            "properties": {
+              "effect": {
+                "description": "Effect indicates the taint effect to match. Empty means match all taint effects.\nWhen specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.",
+                "type": "string"
+              },
+              "key": {
+                "description": "Key is the taint key that the toleration applies to. Empty means match all taint keys.\nIf the key is empty, operator must be Exists; this combination means to match all values and all keys.",
+                "type": "string"
+              },
+              "operator": {
+                "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
+                "type": "string"
+              },
+              "tolerationSeconds": {
+                "description": "TolerationSeconds represents the period of time the toleration (which must be\nof effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,\nit is not set, which means tolerate the taint forever (do not evict). Zero and\nnegative values will be treated as 0 (evict immediately) by the system.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "value": {
+                "description": "Value is the taint value the toleration matches to.\nIf the operator is Exists, the value should be empty, otherwise just a regular string.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "trafficPolicy": {
+          "default": "Cluster",
+          "description": "optional traffic policy used to control the traffic routing\nif not specified, the default traffic policy \"Cluster\" will be used\nif set to \"Local\", traffic will be routed to the gateway pod/instance on the same node when available\ncurrently it works only for the default vpc",
+          "type": "string"
+        },
+        "vpc": {
+          "description": "optional VPC name\nif not specified, the default VPC will be used",
+          "type": "string"
+        }
+      },
+      "required": [
+        "externalSubnet"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "description": "Conditions represent the latest available observations of the egress gateway's current state",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition describes the state of an object at a certain point.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "Last time the condition transitioned from one status to another.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "lastUpdateTime": {
+                "description": "Last time the condition was probed",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "A human readable message indicating details about the transition.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9,\nthe condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "The reason for the condition's last transition.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of condition.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "externalIPs": {
+          "description": "External IP addresses assigned to the egress gateway",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "internalIPs": {
+          "description": "internal/external IPs used by the workload",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelSelector": {
+          "description": "Label selector for the egress gateway",
+          "type": "string"
+        },
+        "phase": {
+          "default": "Pending",
+          "description": "Current phase of the egress gateway (Pending, Processing, or Completed)",
+          "type": "string"
+        },
+        "ready": {
+          "default": false,
+          "description": "whether the egress gateway is ready",
+          "type": "boolean"
+        },
+        "replicas": {
+          "description": "used by the scale subresource",
+          "format": "int32",
+          "type": "integer"
+        },
+        "workload": {
+          "additionalProperties": false,
+          "description": "workload information",
+          "properties": {
+            "apiVersion": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "nodes": {
+              "description": "nodes where the workload is running",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "conditions",
+        "phase"
+      ],
+      "type": "object"
+    }
+  },
+  "type": "object"
+}
