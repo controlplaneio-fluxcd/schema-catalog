@@ -69,6 +69,7 @@ for the line grammar.
 | External Secrets | [v2.7.0](build/history/external-secrets.json) | 2026-07-05 |
 | Cilium | [v1.19.5](build/history/cilium.json) | 2026-07-05 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 2026-07-05 |
+| VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation

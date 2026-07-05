@@ -1,0 +1,296 @@
+# schema source: VictoriaMetrics Operator v0.72.0 https://github.com/VictoriaMetrics/operator
+apiVersion <string> enum=operator.victoriametrics.com/v1beta1
+kind <string> enum=VMAlert
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# VMAlertSpec defines the desired state of VMAlert
+spec.affinity <object (free-form)>	# Affinity If specified, the pod's scheduling constraints.
+spec.componentVersion <string>	# ComponentVersion defines default images tag for all components. it can be overwritten with component specific image.tag value.
+spec.configMaps <[]string>	# ConfigMaps is a list of ConfigMaps in the same namespace as the Application object, which shall be mounted into the Application container at /etc/vm/configs/CONFIGMAP_NAME folder
+spec.configReloadAuthKeySecret <object>	# ConfigReloadAuthKeySecret defines optional secret reference authKey for /-/reload API requests. Given secret reference will be added to the application and vm-config-reloader as volume available since v0.57.0 version
+spec.configReloadAuthKeySecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.configReloadAuthKeySecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.configReloadAuthKeySecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.configReloaderExtraArgs <map[string]string>	# ConfigReloaderExtraArgs that will be passed to VMAuths config-reloader container for example resync-interval: "30s"
+spec.configReloaderImage <string>	# ConfigReloaderImage defines image:tag for config-reloader container
+spec.configReloaderImageTag <string>	# ConfigReloaderImageTag defines image:tag for config-reloader container
+spec.configReloaderResources <object>	# ConfigReloaderResources config-reloader container resource request and limits, https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ if not defined default resources from operator config will be used
+spec.configReloaderResources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.configReloaderResources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.configReloaderResources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.configReloaderResources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.configReloaderResources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.containers <[]object>	# Containers property allows to inject additions sidecars or to patch existing containers. It can be useful for proxies, backup, etc.
+spec.datasource <object> (required)	# Datasource Victoria Metrics or VMSelect url. Required parameter. e.g. http://127.0.0.1:8428
+spec.datasource.basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.datasource.basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.datasource.basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.datasource.basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.datasource.basicAuth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.datasource.basicAuth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.datasource.basicAuth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.datasource.basicAuth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.datasource.basicAuth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.datasource.basicAuth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.datasource.bearerTokenFile <string>	# Path to bearer token file
+spec.datasource.bearerTokenSecret <object>	# Optional bearer auth token to use for -remoteWrite.url
+spec.datasource.bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.datasource.bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.datasource.bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.datasource.headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName:headerValue vmalert supports it since 1.79.0 version
+spec.datasource.oauth2 <object (free-form)>	# OAuth2 defines OAuth2 configuration
+spec.datasource.tlsConfig <object (free-form)>	# TLSConfig specifies TLSConfig configuration parameters.
+spec.datasource.url <string> (required)	# Victoria Metrics or VMSelect url. Required parameter. E.g. http://127.0.0.1:8428
+spec.disableAutomountServiceAccountToken <boolean>	# DisableAutomountServiceAccountToken whether to disable serviceAccount auto mount by Kubernetes (available from v0.54.0). Operator will conditionally create volumes and volumeMounts for containers if it requires k8s API access. For example, vmagent and vm-config-reloader requires k8s API access. Operator creates volumes with name: "kube-api-access", which can be used as volumeMount for extraContainers if needed. And also adds VolumeMounts at /var/run/secrets/kubernetes.io/serviceaccount.
+spec.disableSelfServiceScrape <boolean>	# DisableSelfServiceScrape controls creation of VMServiceScrape by operator for the application. Has priority over `VM_DISABLESELFSERVICESCRAPECREATION` operator env variable
+spec.dnsConfig <object>	# Specifies the DNS parameters of a pod. Parameters specified here will be merged to the generated DNS configuration based on DNSPolicy.
+spec.dnsConfig.nameservers <[]string>	# A list of DNS name server IP addresses. This will be appended to the base nameservers generated from DNSPolicy. Duplicated nameservers will be removed.
+spec.dnsConfig.options <[]object>	# A list of DNS resolver options. This will be merged with the base options generated from DNSPolicy. Duplicated entries will be removed. Resolution options given in Options will override those that appear in the base DNSPolicy.
+spec.dnsConfig.options[].name <string>	# Name is this DNS resolver option's name. Required.
+spec.dnsConfig.options[].value <string>	# Value is this DNS resolver option's value.
+spec.dnsConfig.searches <[]string>	# A list of DNS search domains for host-name lookup. This will be appended to the base search paths generated from DNSPolicy. Duplicated search paths will be removed.
+spec.dnsPolicy <string>	# DNSPolicy sets DNS policy for the pod
+spec.enableServiceLinks <boolean>	# EnableServiceLinks indicates whether information about services should be injected into pod's environment variables, matching the syntax of Docker links. Optional: Defaults to true.
+spec.enforcedNamespaceLabel <string>	# EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created.
+spec.evaluationInterval <string> pattern="[0-9]+(ms|s|m|h)"	# EvaluationInterval defines how often to evaluate rules by default
+spec.externalLabels <map[string]string>	# ExternalLabels in the form 'name: value' to add to all generated recording rules and alerts.
+spec.extraArgs <map[string]string>	# ExtraArgs that will be passed to the application container for example remoteWrite.tmpDataPath: /tmp
+spec.extraEnvs <[]object>	# ExtraEnvs that will be passed to the application container
+spec.extraEnvs[].name <string> (required)	# Name of the environment variable. May consist of any printable ASCII characters except '='.
+spec.extraEnvs[].value <string>	# Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".
+spec.extraEnvsFrom <[]object>	# ExtraEnvsFrom defines source of env variables for the application container could either be secret or configmap
+spec.extraEnvsFrom[].configMapRef <object>	# The ConfigMap to select from
+spec.extraEnvsFrom[].configMapRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.extraEnvsFrom[].configMapRef.optional <boolean>	# Specify whether the ConfigMap must be defined
+spec.extraEnvsFrom[].prefix <string>	# Optional text to prepend to the name of each environment variable. May consist of any printable ASCII characters except '='.
+spec.extraEnvsFrom[].secretRef <object>	# The Secret to select from
+spec.extraEnvsFrom[].secretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.extraEnvsFrom[].secretRef.optional <boolean>	# Specify whether the Secret must be defined
+spec.hostAliases <[]object>	# HostAliases provides mapping for ip and hostname, that would be propagated to pod, cannot be used with HostNetwork.
+spec.hostAliases[].hostnames <[]string>	# Hostnames for the above IP address.
+spec.hostAliases[].ip <string> (required)	# IP address of the host file entry.
+spec.hostNetwork <boolean>	# HostNetwork controls whether the pod may use the node network namespace
+spec.host_aliases <[]object>	# HostAliasesUnderScore provides mapping for ip and hostname, that would be propagated to pod, cannot be used with HostNetwork. Has Priority over hostAliases field
+spec.host_aliases[].hostnames <[]string>	# Hostnames for the above IP address.
+spec.host_aliases[].ip <string> (required)	# IP address of the host file entry.
+spec.image <object>	# Image - docker image settings if no specified operator uses default version from operator config
+spec.image.pullPolicy <string>	# PullPolicy describes how to pull docker image
+spec.image.repository <string>	# Repository contains name of docker image + it's repository if needed
+spec.image.tag <string>	# Tag contains desired docker image version
+spec.imagePullSecrets <[]object>	# ImagePullSecrets An optional list of references to secrets in the same namespace to use for pulling images from registries see https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod
+spec.imagePullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.initContainers <[]object>	# InitContainers allows adding initContainers to the pod definition. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+spec.license <object>	# License allows to configure license key to be used for enterprise features. Using license key is supported starting from VictoriaMetrics v1.94.0. See [here](https://docs.victoriametrics.com/victoriametrics/enterprise/)
+spec.license.forceOffline <boolean>	# Enforce offline verification of the license key.
+spec.license.key <string>	# Enterprise license key. This flag is available only in [VictoriaMetrics enterprise](https://docs.victoriametrics.com/victoriametrics/enterprise/). To request a trial license, [go to](https://victoriametrics.com/products/enterprise/trial)
+spec.license.keyRef <object>	# KeyRef is reference to secret with license key for enterprise features.
+spec.license.keyRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.license.keyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.license.keyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.license.reloadInterval <string>	# Interval to be used for checking for license key changes. Note that this is only applicable when using KeyRef.
+spec.livenessProbe <object (free-form)>	# LivenessProbe that will be added to CR pod
+spec.logFormat <string> enum=default|json	# LogFormat for VMAlert to be configured with. default or json
+spec.logLevel <string> enum=INFO|WARN|ERROR|FATAL|PANIC	# LogLevel for VMAlert to be configured with.
+spec.managedMetadata <object>	# ManagedMetadata defines metadata that will be added to the all objects created by operator for the given CustomResource
+spec.managedMetadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
+spec.managedMetadata.labels <map[string]string>	# Labels Map of string keys and values that can be used to organize and categorize (scope and select) objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
+spec.minReadySeconds <integer> format=int32	# MinReadySeconds defines a minimum number of seconds to wait before starting update next pod if previous in healthy state Has no effect for VLogs and VMSingle
+spec.nodeSelector <map[string]string>	# NodeSelector Define which Nodes the Pods are scheduled on.
+spec.notifier <object>	# Notifier prometheus alertmanager endpoint spec. Required at least one of notifier or notifiers when there are alerting rules. e.g. http://127.0.0.1:9093 If specified both notifier and notifiers, notifier will be added as last element to notifiers. only one of notifier options could be chosen: notifierConfigRef or notifiers + notifier
+spec.notifier.basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.notifier.basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.notifier.basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifier.basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifier.basicAuth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifier.basicAuth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.notifier.basicAuth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.notifier.basicAuth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifier.basicAuth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifier.basicAuth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifier.bearerTokenFile <string>	# Path to bearer token file
+spec.notifier.bearerTokenSecret <object>	# Optional bearer auth token to use for -remoteWrite.url
+spec.notifier.bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifier.bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifier.bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifier.headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName:headerValue vmalert supports it since 1.79.0 version
+spec.notifier.oauth2 <object (free-form)>	# OAuth2 defines OAuth2 configuration
+spec.notifier.selector <object>	# Selector allows service discovery for alertmanager in this case all matched vmalertmanager replicas will be added into vmalert notifier.url as statefulset pod.fqdn
+spec.notifier.selector.labelSelector <object>	# A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+spec.notifier.selector.labelSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.notifier.selector.labelSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.notifier.selector.labelSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.notifier.selector.labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.notifier.selector.labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.notifier.selector.namespaceSelector <object>	# NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces.
+spec.notifier.selector.namespaceSelector.any <boolean>	# Boolean describing whether all namespaces are selected in contrast to a list restricting them.
+spec.notifier.selector.namespaceSelector.matchNames <[]string>	# List of namespace names.
+spec.notifier.tlsConfig <object (free-form)>	# TLSConfig specifies TLSConfig configuration parameters.
+spec.notifier.url <string>	# AlertManager url. E.g. http://127.0.0.1:9093
+spec.notifierConfigRef <object>	# NotifierConfigRef reference for secret with notifier configuration for vmalert only one of notifier options could be chosen: notifierConfigRef or notifiers + notifier
+spec.notifierConfigRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifierConfigRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifierConfigRef.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifiers <[]object>	# Notifiers prometheus alertmanager endpoints. Required at least one of notifier or notifiers when there are alerting rules. e.g. http://127.0.0.1:9093 If specified both notifier and notifiers, notifier will be added as last element to notifiers. only one of notifier options could be chosen: notifierConfigRef or notifiers + notifier
+spec.notifiers[].basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.notifiers[].basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.notifiers[].basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifiers[].basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifiers[].basicAuth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifiers[].basicAuth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.notifiers[].basicAuth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.notifiers[].basicAuth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifiers[].basicAuth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifiers[].basicAuth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifiers[].bearerTokenFile <string>	# Path to bearer token file
+spec.notifiers[].bearerTokenSecret <object>	# Optional bearer auth token to use for -remoteWrite.url
+spec.notifiers[].bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.notifiers[].bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.notifiers[].bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.notifiers[].headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName:headerValue vmalert supports it since 1.79.0 version
+spec.notifiers[].oauth2 <object (free-form)>	# OAuth2 defines OAuth2 configuration
+spec.notifiers[].selector <object>	# Selector allows service discovery for alertmanager in this case all matched vmalertmanager replicas will be added into vmalert notifier.url as statefulset pod.fqdn
+spec.notifiers[].selector.labelSelector <object>	# A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+spec.notifiers[].selector.labelSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.notifiers[].selector.labelSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.notifiers[].selector.labelSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.notifiers[].selector.labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.notifiers[].selector.labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.notifiers[].selector.namespaceSelector <object>	# NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces.
+spec.notifiers[].selector.namespaceSelector.any <boolean>	# Boolean describing whether all namespaces are selected in contrast to a list restricting them.
+spec.notifiers[].selector.namespaceSelector.matchNames <[]string>	# List of namespace names.
+spec.notifiers[].tlsConfig <object (free-form)>	# TLSConfig specifies TLSConfig configuration parameters.
+spec.notifiers[].url <string>	# AlertManager url. E.g. http://127.0.0.1:9093
+spec.paused <boolean>	# Paused If set to true all actions on the underlying managed objects are not going to be performed, except for delete actions.
+spec.podDisruptionBudget <object>	# PodDisruptionBudget created by operator
+spec.podDisruptionBudget.maxUnavailable <int-or-string>	# An eviction is allowed if at most "maxUnavailable" pods selected by "selector" are unavailable after the eviction, i.e. even in absence of the evicted pod. For example, one can prevent all voluntary evictions by specifying 0. This is a mutually exclusive setting with "minAvailable".
+spec.podDisruptionBudget.minAvailable <int-or-string>	# An eviction is allowed if at least "minAvailable" pods selected by "selector" will still be available after the eviction, i.e. even in the absence of the evicted pod. So for example you can prevent all voluntary evictions by specifying "100%".
+spec.podDisruptionBudget.selectorLabels <map[string]string>	# replaces default labels selector generated by operator it's useful when you need to create custom budget
+spec.podDisruptionBudget.unhealthyPodEvictionPolicy <string> enum=IfHealthyBudget|AlwaysAllow	# UnhealthyPodEvictionPolicy defines the criteria for when unhealthy pods Valid policies are IfHealthyBudget and AlwaysAllow. If no policy is specified, the default behavior will be used, which corresponds to the IfHealthyBudget policy. Available from operator v0.64.0
+spec.podMetadata <object>	# PodMetadata configures Labels and Annotations which are propagated to the VMAlert pods.
+spec.podMetadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
+spec.podMetadata.labels <map[string]string>	# Labels Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
+spec.podMetadata.name <string> (immutable)	# Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names
+spec.port <string>	# Port listen address
+spec.preStopSleepSeconds <integer> format=int32	# PreStopSleepSeconds defines the number of seconds to sleep in the preStop lifecycle hook. It gives time for load balancers to remove the pod from rotation before the pod is terminated. Defaults to 15 for applicable components. Set to 0 to disable.
+spec.priorityClassName <string>	# PriorityClassName class assigned to the Pods
+spec.readinessGates <[]object>	# ReadinessGates defines pod readiness gates
+spec.readinessGates[].conditionType <string> (required)	# ConditionType refers to a condition in the pod's condition list with matching type.
+spec.readinessProbe <object (free-form)>	# ReadinessProbe that will be added to CR pod
+spec.remoteRead <object>	# RemoteRead Optional URL to read vmalert state (persisted via RemoteWrite) This configuration only makes sense if alerts state has been successfully persisted (via RemoteWrite) before. see -remoteRead.url docs in vmalerts for details. E.g. http://127.0.0.1:8428
+spec.remoteRead.basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.remoteRead.basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.remoteRead.basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.remoteRead.basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.remoteRead.basicAuth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteRead.basicAuth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.remoteRead.basicAuth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.remoteRead.basicAuth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.remoteRead.basicAuth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.remoteRead.basicAuth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteRead.bearerTokenFile <string>	# Path to bearer token file
+spec.remoteRead.bearerTokenSecret <object>	# Optional bearer auth token to use for -remoteWrite.url
+spec.remoteRead.bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.remoteRead.bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.remoteRead.bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteRead.headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName:headerValue vmalert supports it since 1.79.0 version
+spec.remoteRead.lookback <string>	# Lookback defines how far to look into past for alerts timeseries. For example, if lookback=1h then range from now() to now()-1h will be scanned. (default 1h0m0s) Applied only to RemoteReadSpec
+spec.remoteRead.oauth2 <object (free-form)>	# OAuth2 defines OAuth2 configuration
+spec.remoteRead.tlsConfig <object (free-form)>	# TLSConfig specifies TLSConfig configuration parameters.
+spec.remoteRead.url <string> (required)	# URL of the endpoint to send samples to.
+spec.remoteWrite <object>	# RemoteWrite Optional URL to remote-write compatible storage to persist vmalert state and rule results to. Rule results will be persisted according to each rule. Alerts state will be persisted in the form of time series named ALERTS and ALERTS_FOR_STATE see -remoteWrite.url docs in vmalerts for details. E.g. http://127.0.0.1:8428
+spec.remoteWrite.basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.remoteWrite.basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.remoteWrite.basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.remoteWrite.basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.remoteWrite.basicAuth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteWrite.basicAuth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.remoteWrite.basicAuth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.remoteWrite.basicAuth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.remoteWrite.basicAuth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.remoteWrite.basicAuth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteWrite.bearerTokenFile <string>	# Path to bearer token file
+spec.remoteWrite.bearerTokenSecret <object>	# Optional bearer auth token to use for -remoteWrite.url
+spec.remoteWrite.bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.remoteWrite.bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.remoteWrite.bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteWrite.concurrency <integer> format=int32	# Defines number of readers that concurrently write into remote storage (default 1)
+spec.remoteWrite.flushInterval <string> pattern="[0-9]+(ms|s|m|h)"	# Defines interval of flushes to remote write endpoint (default 5s)
+spec.remoteWrite.headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName:headerValue vmalert supports it since 1.79.0 version
+spec.remoteWrite.maxBatchSize <integer> format=int32	# Defines defines max number of timeseries to be flushed at once (default 1000)
+spec.remoteWrite.maxQueueSize <integer> format=int32	# Defines the max number of pending datapoints to remote write endpoint (default 100000)
+spec.remoteWrite.oauth2 <object (free-form)>	# OAuth2 defines OAuth2 configuration
+spec.remoteWrite.tlsConfig <object (free-form)>	# TLSConfig specifies TLSConfig configuration parameters.
+spec.remoteWrite.url <string> (required)	# URL of the endpoint to send samples to.
+spec.replicaCount <integer> format=int32	# ReplicaCount is the expected size of the Application.
+spec.resources <object>	# Resources container resource request and limits, https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ if not defined default resources from operator config will be used
+spec.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.revisionHistoryLimitCount <integer> format=int32	# The number of old ReplicaSets to retain to allow rollback in deployment or maximum number of revisions that will be maintained in the Deployment revision history. Has no effect at StatefulSets Defaults to 10.
+spec.rollingUpdate <object>	# RollingUpdate - overrides deployment update params.
+spec.rollingUpdate.maxSurge <int-or-string>	# The maximum number of pods that can be scheduled above the desired number of pods. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute number is calculated from percentage by rounding up. Defaults to 25%. Example: when this is set to 30%, the new ReplicaSet can be scaled up immediately when the rolling update starts, such that the total number of old and new pods do not exceed 130% of desired pods. Once old pods have been killed, new ReplicaSet can be scaled up further, ensuring that total number of pods running at any time during the update is at most 130% of desired pods.
+spec.rollingUpdate.maxUnavailable <int-or-string>	# The maximum number of pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). Absolute number is calculated from percentage by rounding down. This can not be 0 if MaxSurge is 0. Defaults to 25%. Example: when this is set to 30%, the old ReplicaSet can be scaled down to 70% of desired pods immediately when the rolling update starts. Once new pods are ready, old ReplicaSet can be scaled down further, followed by scaling up the new ReplicaSet, ensuring that the total number of pods available at all times during the update is at least 70% of desired pods.
+spec.ruleNamespaceSelector <object>	# RuleNamespaceSelector to be selected for VMRules discovery. Works in combination with Selector. If both nil - behaviour controlled by selectAllByDefault NamespaceSelector nil - only objects at VMAlert namespace.
+spec.ruleNamespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.ruleNamespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.ruleNamespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.ruleNamespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.ruleNamespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.rulePath <[]string>	# RulePath to the file with alert rules. Supports patterns. Flag can be specified multiple times. Examples: -rule /path/to/file. Path to a single file with alerting rules -rule dir/*.yaml -rule /*.yaml. Relative path to all .yaml files in folder, absolute path to all .yaml files in root. by default operator adds /etc/vmalert/configs/base/vmalert.yaml
+spec.ruleSelector <object>	# RuleSelector selector to select which VMRules to mount for loading alerting rules from. Works in combination with NamespaceSelector. If both nil - behaviour controlled by selectAllByDefault NamespaceSelector nil - only objects at VMAlert namespace.
+spec.ruleSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.ruleSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.ruleSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.ruleSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.ruleSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.runtimeClassName <string>	# RuntimeClassName - defines runtime class for kubernetes pod. https://kubernetes.io/docs/concepts/containers/runtime-class/
+spec.schedulerName <string>	# SchedulerName - defines kubernetes scheduler name
+spec.secrets <[]string>	# Secrets is a list of Secrets in the same namespace as the Application object, which shall be mounted into the Application container at /etc/vm/secrets/SECRET_NAME folder
+spec.securityContext <object (free-form)>	# SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext.
+spec.selectAllByDefault <boolean>	# SelectAllByDefault changes default behavior for empty CRD selectors, such RuleSelector. with selectAllByDefault: true and empty serviceScrapeSelector and RuleNamespaceSelector Operator selects all exist serviceScrapes with selectAllByDefault: false - selects nothing
+spec.serviceAccountName <string>	# ServiceAccountName is the name of the ServiceAccount to use to run the pods
+spec.serviceScrapeSpec <object (free-form)>	# ServiceScrapeSpec that will be added to vmalert VMServiceScrape spec
+spec.serviceSpec <object>	# ServiceSpec that will be added to vmalert service spec
+spec.serviceSpec.metadata <object>	# EmbeddedObjectMetadata defines objectMeta for additional service.
+spec.serviceSpec.metadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
+spec.serviceSpec.metadata.labels <map[string]string>	# Labels Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
+spec.serviceSpec.metadata.name <string> (immutable)	# Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names
+spec.serviceSpec.spec <object (free-form)> (required)	# ServiceSpec describes the attributes that a user creates on a service. More info: https://kubernetes.io/docs/concepts/services-networking/service/
+spec.serviceSpec.useAsDefault <boolean>	# UseAsDefault applies changes from given service definition to the main object Service Changing from headless service to clusterIP or loadbalancer may break cross-component communication
+spec.startupProbe <object (free-form)>	# StartupProbe that will be added to CR pod
+spec.terminationGracePeriodSeconds <integer> format=int64	# TerminationGracePeriodSeconds period for container graceful termination
+spec.tolerations <[]object>	# Tolerations If specified, the pod's tolerations.
+spec.tolerations[].effect <string>	# Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+spec.tolerations[].key <string>	# Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+spec.tolerations[].operator <string>	# Operator represents a key's relationship to the value. Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category. Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
+spec.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
+spec.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
+spec.topologySpreadConstraints <[]object>	# TopologySpreadConstraints embedded kubernetes pod configuration option, controls how pods are spread across your cluster among failure-domains such as regions, zones, nodes, and other user-defined topology domains https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+spec.updateStrategy <string> enum=Recreate|RollingUpdate	# UpdateStrategy - overrides default update strategy.
+spec.useDefaultResources <boolean>	# UseDefaultResources controls resource settings By default, operator sets built-in resource requirements
+spec.useStrictSecurity <boolean>	# UseStrictSecurity enables strict security mode for component it restricts disk writes access uses non-root user out of the box drops not needed security permissions
+spec.useVMConfigReloader <boolean>	# UseVMConfigReloader replaces prometheus-like config-reloader with vm one. It uses secrets watch instead of file watch which greatly increases speed of config updates Removed since v0.67.0: this property is ignored and no longer needed
+spec.volumeMounts <[]object>	# VolumeMounts allows configuration of additional VolumeMounts on the output Deployment/StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the Application container
+spec.volumeMounts[].mountPath <string> (required)	# Path within the container at which the volume should be mounted. Must not contain ':'.
+spec.volumeMounts[].mountPropagation <string>	# mountPropagation determines how mounts are propagated from the host to container and the other way around. When not set, MountPropagationNone is used. This field is beta in 1.10. When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified (which defaults to None).
+spec.volumeMounts[].name <string> (required)	# This must match the Name of a Volume.
+spec.volumeMounts[].readOnly <boolean>	# Mounted read-only if true, read-write otherwise (false or unspecified). Defaults to false.
+spec.volumeMounts[].recursiveReadOnly <string>	# RecursiveReadOnly specifies whether read-only mounts should be handled recursively. If ReadOnly is false, this field has no meaning and must be unspecified. If ReadOnly is true, and this field is set to Disabled, the mount is not made recursively read-only. If this field is set to IfPossible, the mount is made recursively read-only, if it is supported by the container runtime. If this field is set to Enabled, the mount is made recursively read-only if it is supported by the container runtime, otherwise the pod will not be started and an error will be generated to indicate the reason. If this field is set to IfPossible or Enabled, MountPropagation must be set to None (or be unspecified, which defaults to None). If this field is not specified, it is treated as an equivalent of Disabled.
+spec.volumeMounts[].subPath <string>	# Path within the volume from which the container's volume should be mounted. Defaults to "" (volume's root).
+spec.volumeMounts[].subPathExpr <string>	# Expanded path within the volume from which the container's volume should be mounted. Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment. Defaults to "" (volume's root). SubPathExpr and SubPath are mutually exclusive.
+spec.volumes <[]object>	# Volumes allows configuration of additional volumes on the output Deployment/StatefulSet definition. Volumes specified will be appended to other volumes that are generated. / +optional
+status <object>	# VMAlertStatus defines the observed state of VMAlert
+status.conditions <[]object>	# Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].lastUpdateTime <string> (required) format=date-time	# LastUpdateTime is the last time of given type update. This value is used for status TTL update and removal
+status.conditions[].message <string> max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) max=316	# Type of condition in CamelCase or in name.namespace.resource.victoriametrics.com/CamelCase.
+status.lastAppliedSpec <any>
+status.observedGeneration <integer> format=int64	# ObservedGeneration defines current generation picked by operator for the reconcile
+status.reason <string>	# Reason defines human readable error reason
+status.updateStatus <string>	# UpdateStatus defines a status for update rollout
