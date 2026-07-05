@@ -87,6 +87,7 @@ for the line grammar.
 | Vertical Pod Autoscaler | [vertical-pod-autoscaler-1.7.0](build/history/vertical-pod-autoscaler.json) | 2026-07-05 |
 | Kueue | [v0.18.2](build/history/kueue.json) | 2026-07-05 |
 | CloudNativePG | [v1.30.0](build/history/cloudnative-pg.json) | 2026-07-05 |
+| Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
