@@ -1,0 +1,28 @@
+# schema source: External Secrets v2.7.0
+apiVersion <string> enum=generators.external-secrets.io/v1alpha1
+kind <string> enum=ACRAccessToken
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# ACRAccessTokenSpec defines how to generate the access token e.g. how to authenticate and which registry to use. see: https://github.com/Azure/acr/blob/main/docs/AAD-OAuth.md#overview
+spec.auth <object> (required)	# ACRAuth defines the authentication methods for Azure Container Registry.
+spec.auth.managedIdentity <object>	# ManagedIdentity uses Azure Managed Identity to authenticate with Azure.
+spec.auth.managedIdentity.identityId <string>	# If multiple Managed Identity is assigned to the pod, you can select the one to be used
+spec.auth.servicePrincipal <object>	# ServicePrincipal uses Azure Service Principal credentials to authenticate with Azure.
+spec.auth.servicePrincipal.secretRef <object> (required)	# AzureACRServicePrincipalAuthSecretRef defines the secret references for Azure Service Principal authentication. It uses static credentials stored in a Kind=Secret.
+spec.auth.servicePrincipal.secretRef.clientId <object>	# The Azure clientId of the service principle used for authentication.
+spec.auth.servicePrincipal.secretRef.clientId.key <string> pattern="^[-._a-zA-Z0-9]+$" min=1 max=253	# A key in the referenced Secret. Some instances of this field may be defaulted, in others it may be required.
+spec.auth.servicePrincipal.secretRef.clientId.name <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the Secret resource being referred to.
+spec.auth.servicePrincipal.secretRef.clientId.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# The namespace of the Secret resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.auth.servicePrincipal.secretRef.clientSecret <object>	# The Azure ClientSecret of the service principle used for authentication.
+spec.auth.servicePrincipal.secretRef.clientSecret.key <string> pattern="^[-._a-zA-Z0-9]+$" min=1 max=253	# A key in the referenced Secret. Some instances of this field may be defaulted, in others it may be required.
+spec.auth.servicePrincipal.secretRef.clientSecret.name <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the Secret resource being referred to.
+spec.auth.servicePrincipal.secretRef.clientSecret.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# The namespace of the Secret resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.auth.workloadIdentity <object>	# WorkloadIdentity uses Azure Workload Identity to authenticate with Azure.
+spec.auth.workloadIdentity.serviceAccountRef <object>	# ServiceAccountRef specified the service account that should be used when authenticating with WorkloadIdentity.
+spec.auth.workloadIdentity.serviceAccountRef.audiences <[]string>	# Audience specifies the `aud` claim for the service account token If the service account uses a well-known annotation for e.g. IRSA or GCP Workload Identity then this audiences will be appended to the list
+spec.auth.workloadIdentity.serviceAccountRef.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the ServiceAccount resource being referred to.
+spec.auth.workloadIdentity.serviceAccountRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.environmentType <string> enum=PublicCloud|USGovernmentCloud|ChinaCloud|GermanCloud|AzureStackCloud default="PublicCloud"	# EnvironmentType specifies the Azure cloud environment endpoints to use for connecting and authenticating with Azure. By default, it points to the public cloud AAD endpoint. The following endpoints are available, also see here: https://github.com/Azure/go-autorest/blob/main/autorest/azure/environments.go#L152 PublicCloud, USGovernmentCloud, ChinaCloud, GermanCloud
+spec.registry <string> (required)	# the domain name of the ACR registry e.g. foobarexample.azurecr.io
+spec.scope <string>	# Define the scope for the access token, e.g. pull/push access for a repository. if not provided it will return a refresh token that has full scope. Note: you need to pin it down to the repository level, there is no wildcard available. examples: repository:my-repository:pull,push repository:my-repository:pull see docs for details: https://docs.docker.com/registry/spec/auth/scope/
+spec.tenantId <string>	# TenantID configures the Azure Tenant to send requests to. Required for ServicePrincipal auth type.

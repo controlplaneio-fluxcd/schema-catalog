@@ -1,0 +1,38 @@
+# schema source: External Secrets v2.7.0
+apiVersion <string> enum=generators.external-secrets.io/v1alpha1
+kind <string> enum=GCRAccessToken
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# GCRAccessTokenSpec defines the desired state to generate a Google Container Registry access token.
+spec.auth <object> (required)	# Auth defines the means for authenticating with GCP
+spec.auth.secretRef <object>	# GCPSMAuthSecretRef defines the reference to a secret containing Google Cloud Platform credentials.
+spec.auth.secretRef.secretAccessKeySecretRef <object>	# The SecretAccessKey is used for authentication
+spec.auth.secretRef.secretAccessKeySecretRef.key <string> pattern="^[-._a-zA-Z0-9]+$" min=1 max=253	# A key in the referenced Secret. Some instances of this field may be defaulted, in others it may be required.
+spec.auth.secretRef.secretAccessKeySecretRef.name <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the Secret resource being referred to.
+spec.auth.secretRef.secretAccessKeySecretRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# The namespace of the Secret resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.auth.workloadIdentity <object>	# GCPWorkloadIdentity defines the configuration for using GCP Workload Identity authentication.
+spec.auth.workloadIdentity.clusterLocation <string> (required)
+spec.auth.workloadIdentity.clusterName <string> (required)
+spec.auth.workloadIdentity.clusterProjectID <string>
+spec.auth.workloadIdentity.serviceAccountRef <object> (required)	# ServiceAccountSelector is a reference to a ServiceAccount resource.
+spec.auth.workloadIdentity.serviceAccountRef.audiences <[]string>	# Audience specifies the `aud` claim for the service account token If the service account uses a well-known annotation for e.g. IRSA or GCP Workload Identity then this audiences will be appended to the list
+spec.auth.workloadIdentity.serviceAccountRef.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the ServiceAccount resource being referred to.
+spec.auth.workloadIdentity.serviceAccountRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.auth.workloadIdentityFederation <object>	# GCPWorkloadIdentityFederation holds the configurations required for generating federated access tokens.
+spec.auth.workloadIdentityFederation.audience <string>	# audience is the Secure Token Service (STS) audience which contains the resource name for the workload identity pool and the provider identifier in that pool. If specified, Audience found in the external account credential config will be overridden with the configured value. audience must be provided when serviceAccountRef or awsSecurityCredentials is configured.
+spec.auth.workloadIdentityFederation.awsSecurityCredentials <object>	# awsSecurityCredentials is for configuring AWS region and credentials to use for obtaining the access token, when using the AWS metadata server is not an option.
+spec.auth.workloadIdentityFederation.awsSecurityCredentials.awsCredentialsSecretRef <object> (required)	# awsCredentialsSecretRef is the reference to the secret which holds the AWS credentials. Secret should be created with below names for keys - aws_access_key_id: Access Key ID, which is the unique identifier for the AWS account or the IAM user. - aws_secret_access_key: Secret Access Key, which is used to authenticate requests made to AWS services. - aws_session_token: Session Token, is the short-lived token to authenticate requests made to AWS services.
+spec.auth.workloadIdentityFederation.awsSecurityCredentials.awsCredentialsSecretRef.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# name of the secret.
+spec.auth.workloadIdentityFederation.awsSecurityCredentials.awsCredentialsSecretRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# namespace in which the secret exists. If empty, secret will looked up in local namespace.
+spec.auth.workloadIdentityFederation.awsSecurityCredentials.region <string> (required) pattern="^[a-z0-9-]+$" min=1 max=50	# region is for configuring the AWS region to be used.
+spec.auth.workloadIdentityFederation.credConfig <object>	# credConfig holds the configmap reference containing the GCP external account credential configuration in JSON format and the key name containing the json data. For using Kubernetes cluster as the identity provider, use serviceAccountRef instead. Operators mounted serviceaccount token cannot be used as the token source, instead serviceAccountRef must be used by providing operators service account details.
+spec.auth.workloadIdentityFederation.credConfig.key <string> (required) pattern="^[-._a-zA-Z0-9]+$" min=1 max=253	# key name holding the external account credential config.
+spec.auth.workloadIdentityFederation.credConfig.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# name of the configmap.
+spec.auth.workloadIdentityFederation.credConfig.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# namespace in which the configmap exists. If empty, configmap will looked up in local namespace.
+spec.auth.workloadIdentityFederation.externalTokenEndpoint <string>	# externalTokenEndpoint is the endpoint explicitly set up to provide tokens, which will be matched against the credential_source.url in the provided credConfig. This field is merely to double-check the external token source URL is having the expected value.
+spec.auth.workloadIdentityFederation.gcpServiceAccountEmail <string> pattern="^.*@.*\\.iam\\.gserviceaccount\\.com$" min=1	# GCPServiceAccountEmail is the email of the Google Cloud service account to impersonate after Workload Identity Federation. Use this to grant access through the service account's IAM bindings (for example roles/secretmanager.secretAccessor). When set, it overrides service_account_impersonation_url in the external account JSON from credConfig; when serviceAccountRef is set, it also overrides the "iam.gke.io/gcp-service-account" annotation on that ServiceAccount.
+spec.auth.workloadIdentityFederation.serviceAccountRef <object>	# serviceAccountRef is the reference to the kubernetes ServiceAccount to be used for obtaining the tokens, when Kubernetes is configured as provider in workload identity pool.
+spec.auth.workloadIdentityFederation.serviceAccountRef.audiences <[]string>	# Audience specifies the `aud` claim for the service account token If the service account uses a well-known annotation for e.g. IRSA or GCP Workload Identity then this audiences will be appended to the list
+spec.auth.workloadIdentityFederation.serviceAccountRef.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the ServiceAccount resource being referred to.
+spec.auth.workloadIdentityFederation.serviceAccountRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.projectID <string> (required)	# ProjectID defines which project to use to authenticate with

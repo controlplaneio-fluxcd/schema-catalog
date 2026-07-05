@@ -66,6 +66,7 @@ for the line grammar.
 | Cluster API | [v1.13.3](build/history/cluster-api.json) | 2026-07-05 |
 | Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-04 |
 | cert-manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-04 |
+| External Secrets | [v2.7.0](build/history/external-secrets.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
