@@ -1,32 +1,30 @@
 import { serveCatalog } from "./catalog.ts";
+import { handleMcp } from "./mcp.ts";
 
+/**
+ * Cloudflare Worker bindings. `CATALOG_VERSION` is part of the edge cache key
+ * and is set to the deployed commit SHA in production; `CATALOG_DEV_ORIGIN`
+ * swaps R2 reads for a local catalog file server during `make web-run`.
+ */
 export interface Env {
   CATALOG: R2Bucket;
   CATALOG_VERSION: string;
+  CATALOG_DEV_ORIGIN?: string;
+  ASSETS: Fetcher;
 }
-
-const usage = `schema-catalog
-
-flux-schema validate --schema-location https://schemas.fluxoperator.dev/catalog <path>
-`;
 
 export default {
   fetch(req, env, ctx) {
     const { pathname } = new URL(req.url);
 
-    if (pathname === "/") {
-      return new Response(usage, {
-        headers: { "Content-Type": "text/plain; charset=utf-8" },
-      });
-    }
-
     if (pathname === "/catalog" || pathname.startsWith("/catalog/")) {
       return serveCatalog(req, env, ctx);
     }
 
-    return new Response("not found\n", {
-      status: 404,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    });
+    if (pathname === "/mcp") {
+      return handleMcp(req, env, ctx);
+    }
+
+    return env.ASSETS.fetch(req);
   },
 } satisfies ExportedHandler<Env>;
