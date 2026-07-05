@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-92-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C300-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-552%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-93-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C304-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-554%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -154,6 +154,7 @@ for the line grammar.
 | OpenFeature Operator | [v0.9.2](build/history/open-feature-operator.json) | 9 | 2026-07-05 |
 | OpenReports | [v0.2.1](build/history/openreports.json) | 2 | 2026-07-05 |
 | RabbitMQ Cluster Operator | [v2.22.0](build/history/rabbitmq-cluster-operator.json) | 1 | 2026-07-05 |
+| Redis Operator | [v0.25.0](build/history/redis-operator.json) | 4 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
