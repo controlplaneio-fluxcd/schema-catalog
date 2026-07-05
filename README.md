@@ -70,6 +70,7 @@ for the line grammar.
 | Cilium | [v1.19.5](build/history/cilium.json) | 2026-07-05 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 2026-07-05 |
 | VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 2026-07-05 |
+| Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 2026-07-05 |
 | KEDA | [v2.20.1](build/history/keda.json) | 2026-07-05 |
 | Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 2026-07-05 |
 | Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 2026-07-05 |
