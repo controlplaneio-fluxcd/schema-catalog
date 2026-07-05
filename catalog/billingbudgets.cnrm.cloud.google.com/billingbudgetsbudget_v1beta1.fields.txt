@@ -1,0 +1,65 @@
+# schema source: GCP Config Connector v1.152.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+apiVersion <string> enum=billingbudgets.cnrm.cloud.google.com/v1beta1
+kind <string> enum=BillingBudgetsBudget
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)
+spec.allUpdatesRule <object>	# Optional. Rules to apply to notifications sent based on budget spend and thresholds.
+spec.allUpdatesRule.disableDefaultIamRecipients <boolean>	# Optional. When set to true, disables default notifications sent when a threshold is exceeded. Default notifications are sent to those with Billing Account Administrator and Billing Account User IAM roles for the target account.
+spec.allUpdatesRule.monitoringNotificationChannels <[]object>
+spec.allUpdatesRule.monitoringNotificationChannels[].external <string>	# Allowed value: The Google Cloud resource name of a `MonitoringNotificationChannel` resource (format: `projects/{{project}}/notificationChannels/{{name}}`).
+spec.allUpdatesRule.monitoringNotificationChannels[].name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.allUpdatesRule.monitoringNotificationChannels[].namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.allUpdatesRule.pubsubTopicRef <object>
+spec.allUpdatesRule.pubsubTopicRef.external <string>	# Optional. The name of the Pub/Sub topic where budget related messages will be published, in the form `projects/{project_id}/topics/{topic_id}`. Updates are sent at regular intervals to the topic. The topic needs to be created before the budget is created; see https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications for more details. Caller is expected to have `pubsub.topics.setIamPolicy` permission on the topic when it's set for a budget, otherwise, the API call will fail with PERMISSION_DENIED. See https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications#permissions_required_for_this_task for more details on Pub/Sub roles and permissions. Allowed value: The Google Cloud resource name of a `PubSubTopic` resource (format: `projects/{{project}}/topics/{{name}}`).
+spec.allUpdatesRule.pubsubTopicRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.allUpdatesRule.pubsubTopicRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.allUpdatesRule.schemaVersion <string>	# Optional. Required when NotificationsRule.pubsub_topic is set. The schema version of the notification sent to NotificationsRule.pubsub_topic. Only "1.0" is accepted. It represents the JSON schema as defined in https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications#notification_format.
+spec.amount <object> (required)	# Required. Budgeted amount.
+spec.amount.lastPeriodAmount <object (free-form)>	# Use the last period's actual spend as the budget for the present period. LastPeriodAmount can only be set when the budget's time period is a .
+spec.amount.specifiedAmount <object>	# A specified amount to use as the budget. `currency_code` is optional. If specified when creating a budget, it must match the currency of the billing account. If specified when updating a budget, it must match the currency_code of the existing budget. The `currency_code` is provided on output.
+spec.amount.specifiedAmount.currencyCode <string>	# Immutable. The three-letter currency code defined in ISO 4217.
+spec.amount.specifiedAmount.nanos <integer> format=int64	# Number of nano (10^-9) units of the amount. The value must be between -999,999,999 and +999,999,999 inclusive. If `units` is positive, `nanos` must be positive or zero. If `units` is zero, `nanos` can be positive, zero, or negative. If `units` is negative, `nanos` must be negative or zero. For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000.
+spec.amount.specifiedAmount.units <integer> format=int64	# The whole units of the amount. For example if `currencyCode` is `"USD"`, then 1 unit is one US dollar.
+spec.billingAccountRef <object> (required)	# Immutable.
+spec.billingAccountRef.external <string>	# The billing account of the resource Allowed value: The Google Cloud resource name of a Google Cloud Billing Account (format: `billingAccounts/{{name}}`).
+spec.billingAccountRef.name <string>	# [WARNING] BillingAccount not yet supported in Config Connector, use 'external' field to reference existing resources. Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.billingAccountRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.budgetFilter <object>	# Optional. Filters that define which resources are used to compute the actual spend against the budget amount, such as projects, services, and the budget's time period, as well as other filters.
+spec.budgetFilter.calendarPeriod <string>	# Optional. Specifies to track usage for recurring calendar period. For example, assume that CalendarPeriod.QUARTER is set. The budget will track usage from April 1 to June 30, when the current calendar month is April, May, June. After that, it will track usage from July 1 to September 30 when the current calendar month is July, August, September, so on. Possible values: CALENDAR_PERIOD_UNSPECIFIED, MONTH, QUARTER, YEAR
+spec.budgetFilter.creditTypes <[]string>	# Optional. If Filter.credit_types_treatment is INCLUDE_SPECIFIED_CREDITS, this is a list of credit types to be subtracted from gross cost to determine the spend for threshold calculations. See a list of acceptable credit type values. If Filter.credit_types_treatment is not INCLUDE_SPECIFIED_CREDITS, this field must be empty.
+spec.budgetFilter.creditTypesTreatment <string>	# Optional. If not set, default behavior is `INCLUDE_ALL_CREDITS`.
+spec.budgetFilter.customPeriod <object>	# Optional. Specifies to track usage from any start date (required) to any end date (optional). This time period is static, it does not recur.
+spec.budgetFilter.customPeriod.endDate <object>	# Immutable. Optional. The end date of the time period. Budgets with elapsed end date won't be processed. If unset, specifies to track all usage incurred since the start_date.
+spec.budgetFilter.customPeriod.endDate.day <integer> format=int64	# Immutable. Day of a month. Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant.
+spec.budgetFilter.customPeriod.endDate.month <integer> format=int64	# Immutable. Month of a year. Must be from 1 to 12, or 0 to specify a year without a month and day.
+spec.budgetFilter.customPeriod.endDate.year <integer> format=int64	# Immutable. Year of the date. Must be from 1 to 9999, or 0 to specify a date without a year.
+spec.budgetFilter.customPeriod.startDate <object> (required)	# Immutable. Required. The start date must be after January 1, 2017.
+spec.budgetFilter.customPeriod.startDate.day <integer> format=int64	# Immutable. Day of a month. Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant.
+spec.budgetFilter.customPeriod.startDate.month <integer> format=int64	# Immutable. Month of a year. Must be from 1 to 12, or 0 to specify a year without a month and day.
+spec.budgetFilter.customPeriod.startDate.year <integer> format=int64	# Immutable. Year of the date. Must be from 1 to 9999, or 0 to specify a date without a year.
+spec.budgetFilter.labels <map[string]object>	# Optional. A single label and value pair specifying that usage from only this set of labeled resources should be included in the budget. Currently, multiple entries or multiple values per entry are not allowed. If omitted, the report will include all labeled and unlabeled usage.
+spec.budgetFilter.labels.<key>.values <[]string>	# Immutable. The values of the label
+spec.budgetFilter.projects <[]object>
+spec.budgetFilter.projects[].external <string>	# Allowed value: The Google Cloud resource name of a `Project` resource (format: `projects/{{name}}`).
+spec.budgetFilter.projects[].name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.budgetFilter.projects[].namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.budgetFilter.services <[]string>	# Optional. A set of services of the form `services/{service_id}`, specifying that usage from only this set of services should be included in the budget. If omitted, the report will include usage for all the services. The service names are available through the Catalog API: https://cloud.google.com/billing/v1/how-tos/catalog-api.
+spec.budgetFilter.subaccounts <[]object>
+spec.budgetFilter.subaccounts[].external <string>
+spec.budgetFilter.subaccounts[].name <string>	# [WARNING] CloudBillingBillingAccount not yet supported in Config Connector, use 'external' field to reference existing resources. Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.budgetFilter.subaccounts[].namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.displayName <string>	# User data for display name in UI. The name must be less than or equal to 60 characters.
+spec.resourceID <string>	# Immutable. Optional. The service-generated name of the resource. Used for acquisition only. Leave unset to create a new resource.
+spec.thresholdRules <[]object>	# Optional. Rules that trigger alerts (notifications of thresholds being crossed) when spend exceeds the specified percentages of the budget.
+spec.thresholdRules[].spendBasis <string>	# Optional. The type of basis used to determine if spend has passed the threshold. Behavior defaults to CURRENT_SPEND if not set. Possible values: BASIS_UNSPECIFIED, CURRENT_SPEND, FORECASTED_SPEND
+spec.thresholdRules[].thresholdPercent <number> (required) format=double	# Required. Send an alert when this threshold is exceeded. This is a 1.0-based percentage, so 0.5 = 50%. Validation: non-negative number.
+status <object>
+status.conditions <[]object>	# Conditions represent the latest available observation of the resource's current state.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.etag <string>	# Optional. Etag to validate that the object is unchanged for a read-modify-write operation. An empty etag will cause an update to overwrite other changes.
+status.observedGeneration <integer>	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.

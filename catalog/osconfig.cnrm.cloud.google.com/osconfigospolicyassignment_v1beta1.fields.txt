@@ -1,0 +1,168 @@
+# schema source: GCP Config Connector v1.152.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+apiVersion <string> enum=osconfig.cnrm.cloud.google.com/v1beta1
+kind <string> enum=OSConfigOSPolicyAssignment
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)
+spec.description <string>	# OS policy assignment description. Length of the description is limited to 1024 characters.
+spec.instanceFilter <object> (required)	# Required. Filter to select VMs.
+spec.instanceFilter.all <boolean>	# Target all VMs in the project. If true, no other criteria is permitted.
+spec.instanceFilter.exclusionLabels <[]object>	# List of label sets used for VM exclusion. If the list has more than one label set, the VM is excluded if any of the label sets are applicable for the VM.
+spec.instanceFilter.exclusionLabels[].labels <map[string]string>	# Labels are identified by key/value pairs in this map. A VM should contain all the key/value pairs specified in this map to be selected.
+spec.instanceFilter.inclusionLabels <[]object>	# List of label sets used for VM inclusion. If the list has more than one `LabelSet`, the VM is included if any of the label sets are applicable for the VM.
+spec.instanceFilter.inclusionLabels[].labels <map[string]string>	# Labels are identified by key/value pairs in this map. A VM should contain all the key/value pairs specified in this map to be selected.
+spec.instanceFilter.inventories <[]object>	# List of inventories to select VMs. A VM is selected if its inventory data matches at least one of the following inventories.
+spec.instanceFilter.inventories[].osShortName <string> (required)	# Required. The OS short name
+spec.instanceFilter.inventories[].osVersion <string>	# The OS version Prefix matches are supported if asterisk(*) is provided as the last character. For example, to match all versions with a major version of `7`, specify the following value for this field `7.*` An empty string matches all OS versions.
+spec.location <string> (required)	# Immutable. The location for the resource
+spec.osPolicies <[]object> (required)	# Required. List of OS policies to be applied to the VMs.
+spec.osPolicies[].allowNoResourceGroupMatch <boolean>	# This flag determines the OS policy compliance status when none of the resource groups within the policy are applicable for a VM. Set this value to `true` if the policy needs to be reported as compliant even if the policy has nothing to validate or enforce.
+spec.osPolicies[].description <string>	# Policy description. Length of the description is limited to 1024 characters.
+spec.osPolicies[].id <string> (required)	# Required. The id of the OS policy with the following restrictions: * Must contain only lowercase letters, numbers, and hyphens. * Must start with a letter. * Must be between 1-63 characters. * Must end with a number or a letter. * Must be unique within the assignment.
+spec.osPolicies[].mode <string> (required)	# Required. Policy mode Possible values: MODE_UNSPECIFIED, VALIDATION, ENFORCEMENT
+spec.osPolicies[].resourceGroups <[]object> (required)	# Required. List of resource groups for the policy. For a particular VM, resource groups are evaluated in the order specified and the first resource group that is applicable is selected and the rest are ignored. If none of the resource groups are applicable for a VM, the VM is considered to be non-compliant w.r.t this policy. This behavior can be toggled by the flag `allow_no_resource_group_match`
+spec.osPolicies[].resourceGroups[].inventoryFilters <[]object>	# List of inventory filters for the resource group. The resources in this resource group are applied to the target VM if it satisfies at least one of the following inventory filters. For example, to apply this resource group to VMs running either `RHEL` or `CentOS` operating systems, specify 2 items for the list with following values: inventory_filters[0].os_short_name='rhel' and inventory_filters[1].os_short_name='centos' If the list is empty, this resource group will be applied to the target VM unconditionally.
+spec.osPolicies[].resourceGroups[].inventoryFilters[].osShortName <string> (required)	# Required. The OS short name
+spec.osPolicies[].resourceGroups[].inventoryFilters[].osVersion <string>	# The OS version Prefix matches are supported if asterisk(*) is provided as the last character. For example, to match all versions with a major version of `7`, specify the following value for this field `7.*` An empty string matches all OS versions.
+spec.osPolicies[].resourceGroups[].resources <[]object> (required)	# Required. List of resources configured for this resource group. The resources are executed in the exact order specified here.
+spec.osPolicies[].resourceGroups[].resources[].exec <object>	# Exec resource
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce <object>	# What to run to bring this resource into the desired state. An exit code of 100 indicates "success", any other exit code indicates a failure running enforce.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.args <[]string>	# Optional arguments to pass to the source during execution.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file <object>	# A remote or local file.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.allowInsecure <boolean>	# Defaults to false. When false, files are subject to validations based on the file type: Remote: A checksum must be specified. Cloud Storage: An object generation number must be specified.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.gcs <object>	# A Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.gcs.bucket <string> (required)	# Required. Bucket of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.gcs.generation <integer> format=int64	# Generation number of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.gcs.object <string> (required)	# Required. Name of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.localPath <string>	# A local path within the VM to use.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.remote <object>	# A generic remote file.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.remote.sha256Checksum <string>	# SHA256 checksum of the remote file.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.file.remote.uri <string> (required)	# Required. URI from which to fetch the object. It should contain both the protocol and path following the format `{protocol}://{location}`.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.interpreter <string> (required)	# Required. The script interpreter to use. Possible values: INTERPRETER_UNSPECIFIED, NONE, SHELL, POWERSHELL
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.outputFilePath <string>	# Only recorded for enforce Exec. Path to an output file (that is created by this Exec) whose content will be recorded in OSPolicyResourceCompliance after a successful run. Absence or failure to read this file will result in this ExecResource being non-compliant. Output file size is limited to 100K bytes.
+spec.osPolicies[].resourceGroups[].resources[].exec.enforce.script <string>	# An inline script. The size of the script is limited to 1024 characters.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate <object> (required)	# Required. What to run to validate this resource is in the desired state. An exit code of 100 indicates "in desired state", and exit code of 101 indicates "not in desired state". Any other exit code indicates a failure running validate.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.args <[]string>	# Optional arguments to pass to the source during execution.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file <object>	# A remote or local file.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.allowInsecure <boolean>	# Defaults to false. When false, files are subject to validations based on the file type: Remote: A checksum must be specified. Cloud Storage: An object generation number must be specified.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.gcs <object>	# A Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.gcs.bucket <string> (required)	# Required. Bucket of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.gcs.generation <integer> format=int64	# Generation number of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.gcs.object <string> (required)	# Required. Name of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.localPath <string>	# A local path within the VM to use.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.remote <object>	# A generic remote file.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.remote.sha256Checksum <string>	# SHA256 checksum of the remote file.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.file.remote.uri <string> (required)	# Required. URI from which to fetch the object. It should contain both the protocol and path following the format `{protocol}://{location}`.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.interpreter <string> (required)	# Required. The script interpreter to use. Possible values: INTERPRETER_UNSPECIFIED, NONE, SHELL, POWERSHELL
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.outputFilePath <string>	# Only recorded for enforce Exec. Path to an output file (that is created by this Exec) whose content will be recorded in OSPolicyResourceCompliance after a successful run. Absence or failure to read this file will result in this ExecResource being non-compliant. Output file size is limited to 100K bytes.
+spec.osPolicies[].resourceGroups[].resources[].exec.validate.script <string>	# An inline script. The size of the script is limited to 1024 characters.
+spec.osPolicies[].resourceGroups[].resources[].file <object>	# File resource
+spec.osPolicies[].resourceGroups[].resources[].file.content <string>	# A a file with this content. The size of the content is limited to 1024 characters.
+spec.osPolicies[].resourceGroups[].resources[].file.file <object>	# A remote or local source.
+spec.osPolicies[].resourceGroups[].resources[].file.file.allowInsecure <boolean>	# Defaults to false. When false, files are subject to validations based on the file type: Remote: A checksum must be specified. Cloud Storage: An object generation number must be specified.
+spec.osPolicies[].resourceGroups[].resources[].file.file.gcs <object>	# A Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].file.file.gcs.bucket <string> (required)	# Required. Bucket of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].file.file.gcs.generation <integer> format=int64	# Generation number of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].file.file.gcs.object <string> (required)	# Required. Name of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].file.file.localPath <string>	# A local path within the VM to use.
+spec.osPolicies[].resourceGroups[].resources[].file.file.remote <object>	# A generic remote file.
+spec.osPolicies[].resourceGroups[].resources[].file.file.remote.sha256Checksum <string>	# SHA256 checksum of the remote file.
+spec.osPolicies[].resourceGroups[].resources[].file.file.remote.uri <string> (required)	# Required. URI from which to fetch the object. It should contain both the protocol and path following the format `{protocol}://{location}`.
+spec.osPolicies[].resourceGroups[].resources[].file.path <string> (required)	# Required. The absolute path of the file within the VM.
+spec.osPolicies[].resourceGroups[].resources[].file.permissions <string>	# Consists of three octal digits which represent, in order, the permissions of the owner, group, and other users for the file (similarly to the numeric mode used in the linux chmod utility). Each digit represents a three bit number with the 4 bit corresponding to the read permissions, the 2 bit corresponds to the write bit, and the one bit corresponds to the execute permission. Default behavior is 755. Below are some examples of permissions and their associated values: read, write, and execute: 7 read and execute: 5 read and write: 6 read only: 4
+spec.osPolicies[].resourceGroups[].resources[].file.state <string> (required)	# Required. Desired state of the file. Possible values: OS_POLICY_COMPLIANCE_STATE_UNSPECIFIED, COMPLIANT, NON_COMPLIANT, UNKNOWN, NO_OS_POLICIES_APPLICABLE
+spec.osPolicies[].resourceGroups[].resources[].id <string> (required)	# Required. The id of the resource with the following restrictions: * Must contain only lowercase letters, numbers, and hyphens. * Must start with a letter. * Must be between 1-63 characters. * Must end with a number or a letter. * Must be unique within the OS policy.
+spec.osPolicies[].resourceGroups[].resources[].pkg <object>	# Package resource
+spec.osPolicies[].resourceGroups[].resources[].pkg.apt <object>	# A package managed by Apt.
+spec.osPolicies[].resourceGroups[].resources[].pkg.apt.name <string> (required)	# Required. Package name.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb <object>	# A deb package file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.pullDeps <boolean>	# Whether dependencies should also be installed. - install when false: `dpkg -i package` - install when true: `apt-get update && apt-get -y install package.deb`
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source <object> (required)	# Required. A deb package.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.allowInsecure <boolean>	# Defaults to false. When false, files are subject to validations based on the file type: Remote: A checksum must be specified. Cloud Storage: An object generation number must be specified.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.gcs <object>	# A Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.gcs.bucket <string> (required)	# Required. Bucket of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.gcs.generation <integer> format=int64	# Generation number of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.gcs.object <string> (required)	# Required. Name of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.localPath <string>	# A local path within the VM to use.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.remote <object>	# A generic remote file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.remote.sha256Checksum <string>	# SHA256 checksum of the remote file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.deb.source.remote.uri <string> (required)	# Required. URI from which to fetch the object. It should contain both the protocol and path following the format `{protocol}://{location}`.
+spec.osPolicies[].resourceGroups[].resources[].pkg.desiredState <string> (required)	# Required. The desired state the agent should maintain for this package. Possible values: DESIRED_STATE_UNSPECIFIED, INSTALLED, REMOVED
+spec.osPolicies[].resourceGroups[].resources[].pkg.googet <object>	# A package managed by GooGet.
+spec.osPolicies[].resourceGroups[].resources[].pkg.googet.name <string> (required)	# Required. Package name.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi <object>	# An MSI package.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.additionalProperties <any>
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.properties <[]string>	# Additional properties to use during installation. This should be in the format of Property=Setting. Appended to the defaults of `ACTION=INSTALL REBOOT=ReallySuppress`.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source <object> (required)	# Required. The MSI package.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.allowInsecure <boolean>	# Defaults to false. When false, files are subject to validations based on the file type: Remote: A checksum must be specified. Cloud Storage: An object generation number must be specified.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.gcs <object>	# A Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.gcs.bucket <string> (required)	# Required. Bucket of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.gcs.generation <integer> format=int64	# Generation number of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.gcs.object <string> (required)	# Required. Name of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.localPath <string>	# A local path within the VM to use.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.remote <object>	# A generic remote file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.remote.sha256Checksum <string>	# SHA256 checksum of the remote file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.msi.source.remote.uri <string> (required)	# Required. URI from which to fetch the object. It should contain both the protocol and path following the format `{protocol}://{location}`.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm <object>	# An rpm package file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.pullDeps <boolean>	# Whether dependencies should also be installed. - install when false: `rpm --upgrade --replacepkgs package.rpm` - install when true: `yum -y install package.rpm` or `zypper -y install package.rpm`
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source <object> (required)	# Required. An rpm package.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.allowInsecure <boolean>	# Defaults to false. When false, files are subject to validations based on the file type: Remote: A checksum must be specified. Cloud Storage: An object generation number must be specified.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.gcs <object>	# A Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.gcs.bucket <string> (required)	# Required. Bucket of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.gcs.generation <integer> format=int64	# Generation number of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.gcs.object <string> (required)	# Required. Name of the Cloud Storage object.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.localPath <string>	# A local path within the VM to use.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.remote <object>	# A generic remote file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.remote.sha256Checksum <string>	# SHA256 checksum of the remote file.
+spec.osPolicies[].resourceGroups[].resources[].pkg.rpm.source.remote.uri <string> (required)	# Required. URI from which to fetch the object. It should contain both the protocol and path following the format `{protocol}://{location}`.
+spec.osPolicies[].resourceGroups[].resources[].pkg.yum <object>	# A package managed by YUM.
+spec.osPolicies[].resourceGroups[].resources[].pkg.yum.name <string> (required)	# Required. Package name.
+spec.osPolicies[].resourceGroups[].resources[].pkg.zypper <object>	# A package managed by Zypper.
+spec.osPolicies[].resourceGroups[].resources[].pkg.zypper.name <string> (required)	# Required. Package name.
+spec.osPolicies[].resourceGroups[].resources[].repository <object>	# Package repository resource
+spec.osPolicies[].resourceGroups[].resources[].repository.apt <object>	# An Apt Repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.apt.archiveType <string> (required)	# Required. Type of archive files in this repository. Possible values: ARCHIVE_TYPE_UNSPECIFIED, DEB, DEB_SRC
+spec.osPolicies[].resourceGroups[].resources[].repository.apt.components <[]string> (required)	# Required. List of components for this repository. Must contain at least one item.
+spec.osPolicies[].resourceGroups[].resources[].repository.apt.distribution <string> (required)	# Required. Distribution of this repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.apt.gpgKey <string>	# URI of the key file for this repository. The agent maintains a keyring at `/etc/apt/trusted.gpg.d/osconfig_agent_managed.gpg`.
+spec.osPolicies[].resourceGroups[].resources[].repository.apt.uri <string> (required)	# Required. URI for this repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.goo <object>	# A Goo Repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.goo.name <string> (required)	# Required. The name of the repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.goo.url <string> (required)	# Required. The url of the repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.yum <object>	# A Yum Repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.yum.baseUrl <string> (required)	# Required. The location of the repository directory.
+spec.osPolicies[].resourceGroups[].resources[].repository.yum.displayName <string>	# The display name of the repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.yum.gpgKeys <[]string>	# URIs of GPG keys.
+spec.osPolicies[].resourceGroups[].resources[].repository.yum.id <string> (required)	# Required. A one word, unique name for this repository. This is the `repo id` in the yum config file and also the `display_name` if `display_name` is omitted. This id is also used as the unique identifier when checking for resource conflicts.
+spec.osPolicies[].resourceGroups[].resources[].repository.zypper <object>	# A Zypper Repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.zypper.baseUrl <string> (required)	# Required. The location of the repository directory.
+spec.osPolicies[].resourceGroups[].resources[].repository.zypper.displayName <string>	# The display name of the repository.
+spec.osPolicies[].resourceGroups[].resources[].repository.zypper.gpgKeys <[]string>	# URIs of GPG keys.
+spec.osPolicies[].resourceGroups[].resources[].repository.zypper.id <string> (required)	# Required. A one word, unique name for this repository. This is the `repo id` in the zypper config file and also the `display_name` if `display_name` is omitted. This id is also used as the unique identifier when checking for GuestPolicy conflicts.
+spec.projectRef <object> (required)	# Immutable. The Project that this resource belongs to.
+spec.projectRef.external <string>	# The project for the resource Allowed value: The Google Cloud resource name of a `Project` resource (format: `projects/{{name}}`).
+spec.projectRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.projectRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.resourceID <string>	# Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default.
+spec.rollout <object> (required)	# Required. Rollout to deploy the OS policy assignment. A rollout is triggered in the following situations: 1) OSPolicyAssignment is created. 2) OSPolicyAssignment is updated and the update contains changes to one of the following fields: - instance_filter - os_policies 3) OSPolicyAssignment is deleted.
+spec.rollout.disruptionBudget <object> (required)	# Required. The maximum number (or percentage) of VMs per zone to disrupt at any given moment.
+spec.rollout.disruptionBudget.fixed <integer> format=int64	# Specifies a fixed value.
+spec.rollout.disruptionBudget.percent <integer> format=int64	# Specifies the relative value defined as a percentage, which will be multiplied by a reference value.
+spec.rollout.minWaitDuration <string> (required)	# Required. This determines the minimum duration of time to wait after the configuration changes are applied through the current rollout. A VM continues to count towards the `disruption_budget` at least until this duration of time has passed after configuration changes are applied.
+spec.skipAwaitRollout <boolean>	# Set to true to skip awaiting rollout during resource creation and update.
+status <object>
+status.baseline <boolean>	# Output only. Indicates that this revision has been successfully rolled out in this zone and new VMs will be assigned OS policies from this revision. For a given OS policy assignment, there is only one revision with a value of `true` for this field.
+status.conditions <[]object>	# Conditions represent the latest available observation of the resource's current state.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.deleted <boolean>	# Output only. Indicates that this revision deletes the OS policy assignment.
+status.etag <string>	# The etag for this OS policy assignment. If this is provided on update, it must match the server's etag.
+status.observedGeneration <integer>	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.reconciling <boolean>	# Output only. Indicates that reconciliation is in progress for the revision. This value is `true` when the `rollout_state` is one of: * IN_PROGRESS * CANCELLING
+status.revisionCreateTime <string> format=date-time	# Output only. The timestamp that the revision was created.
+status.revisionId <string>	# Output only. The assignment revision ID A new revision is committed whenever a rollout is triggered for a OS policy assignment
+status.rolloutState <string>	# Output only. OS policy assignment rollout state Possible values: ROLLOUT_STATE_UNSPECIFIED, IN_PROGRESS, CANCELLING, CANCELLED, SUCCEEDED
+status.uid <string>	# Output only. Server generated unique id for the OS policy assignment resource.

@@ -1,0 +1,519 @@
+{
+  "description": "GKEBackupBackupPlan is the Schema for the GKEBackupBackupPlan API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "GKEBackupBackupPlanSpec defines the desired state of GKEBackupBackupPlan",
+      "properties": {
+        "backupConfig": {
+          "additionalProperties": false,
+          "description": "Optional. Defines the configuration of Backups created via this BackupPlan.",
+          "properties": {
+            "allNamespaces": {
+              "description": "If True, include all namespaced resources",
+              "type": "boolean"
+            },
+            "encryptionKey": {
+              "additionalProperties": false,
+              "description": "Optional. This defines a customer managed encryption key that will be\n used to encrypt the \"config\" portion (the Kubernetes resources) of\n Backups created via this plan.\n\n Default (empty): Config backup artifacts will not be encrypted.",
+              "properties": {
+                "kmsKeyRef": {
+                  "additionalProperties": false,
+                  "description": "Optional. Google Cloud KMS encryption key.",
+                  "oneOf": [
+                    {
+                      "not": {
+                        "required": [
+                          "external"
+                        ]
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    {
+                      "not": {
+                        "anyOf": [
+                          {
+                            "required": [
+                              "name"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "namespace"
+                            ]
+                          }
+                        ]
+                      },
+                      "required": [
+                        "external"
+                      ]
+                    }
+                  ],
+                  "properties": {
+                    "external": {
+                      "description": "A reference to an externally managed KMSCryptoKey. Should be in the format `projects/[kms_project_id]/locations/[region]/keyRings/[key_ring_id]/cryptoKeys/[key]`.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "The `name` of a `KMSCryptoKey` resource.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "The `namespace` of a `KMSCryptoKey` resource.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "includeSecrets": {
+              "description": "Optional. This flag specifies whether Kubernetes Secret resources should\n be included when they fall into the scope of Backups.\n\n Default: False",
+              "type": "boolean"
+            },
+            "includeVolumeData": {
+              "description": "Optional. This flag specifies whether volume data should be backed up\n when PVCs are included in the scope of a Backup.\n\n Default: False",
+              "type": "boolean"
+            },
+            "permissiveMode": {
+              "description": "Optional. If false, Backups will fail when Backup for GKE detects\n Kubernetes configuration that is non-standard or\n requires additional setup to restore.\n\n Default: False",
+              "type": "boolean"
+            },
+            "selectedApplications": {
+              "additionalProperties": false,
+              "description": "If set, include just the resources referenced by the listed ProtectedApplications.",
+              "properties": {
+                "namespacedNames": {
+                  "description": "Optional. A list of namespaced Kubernetes resources.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "description": "Optional. The name of the Kubernetes resource.",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "description": "Optional. The Namespace of the Kubernetes resource.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "selectedNamespaces": {
+              "additionalProperties": false,
+              "description": "If set, include just the resources in the listed namespaces.",
+              "properties": {
+                "namespaces": {
+                  "description": "Optional. A list of Kubernetes Namespaces",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "backupSchedule": {
+          "additionalProperties": false,
+          "description": "Optional. Defines a schedule for automatic Backup creation via this BackupPlan.",
+          "properties": {
+            "cronSchedule": {
+              "description": "Optional. A standard [cron](https://wikipedia.com/wiki/cron) string that\n defines a repeating schedule for creating Backups via this BackupPlan.\n This is mutually exclusive with the\n [rpo_config][google.cloud.gkebackup.v1.BackupPlan.Schedule.rpo_config]\n field since at most one schedule can be defined for a BackupPlan. If this\n is defined, then\n [backup_retain_days][google.cloud.gkebackup.v1.BackupPlan.RetentionPolicy.backup_retain_days]\n must also be defined.\n\n Default (empty): no automatic backup creation will occur.",
+              "type": "string"
+            },
+            "paused": {
+              "description": "Optional. This flag denotes whether automatic Backup creation is paused\n for this BackupPlan.\n\n Default: False",
+              "type": "boolean"
+            },
+            "rpoConfig": {
+              "additionalProperties": false,
+              "description": "Optional. Defines the RPO schedule configuration for this BackupPlan.\n This is mutually exclusive with the\n [cron_schedule][google.cloud.gkebackup.v1.BackupPlan.Schedule.cron_schedule]\n field since at most one schedule can be defined for a BackupPLan. If this\n is defined, then\n [backup_retain_days][google.cloud.gkebackup.v1.BackupPlan.RetentionPolicy.backup_retain_days]\n must also be defined.\n\n Default (empty): no automatic backup creation will occur.",
+              "properties": {
+                "exclusionWindows": {
+                  "description": "Optional. User specified time windows during which backup can NOT happen for this BackupPlan - backups should start and finish outside of any given exclusion window. Note: backup jobs will be scheduled to start and finish outside the duration of the window as much as possible, but running jobs will not get canceled when it runs into the window. All the time and date values in exclusion_windows entry in the API are in UTC. We only allow <=1 recurrence (daily or weekly) exclusion window for a BackupPlan while no restriction on number of single occurrence windows.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "daily": {
+                        "description": "The exclusion window occurs every day if set to \"True\". Specifying this field to \"False\" is an error.",
+                        "type": "boolean"
+                      },
+                      "daysOfWeek": {
+                        "additionalProperties": false,
+                        "description": "The exclusion window occurs on these days of each week in UTC.",
+                        "properties": {
+                          "daysOfWeek": {
+                            "description": "Optional. A list of days of week.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "duration": {
+                        "description": "Required. Specifies duration of the window. Duration must be >= 5 minutes and < (target RPO - 20 minutes). Additional restrictions based on the recurrence type to allow some time for backup to happen: - single_occurrence_date:  no restriction, but UI may warn about this when duration >= target RPO - daily window: duration < 24 hours - weekly window: - days of week includes all seven days of a week: duration < 24 hours - all other weekly window: duration < 168 hours (i.e., 24 * 7 hours)",
+                        "type": "string"
+                      },
+                      "singleOccurrenceDate": {
+                        "additionalProperties": false,
+                        "description": "No recurrence. The exclusion window occurs only once and on this date in UTC.",
+                        "properties": {
+                          "day": {
+                            "description": "Day of a month. Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant.",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "month": {
+                            "description": "Month of a year. Must be from 1 to 12, or 0 to specify a year without a month and day.",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "year": {
+                            "description": "Year of the date. Must be from 1 to 9999, or 0 to specify a date without a year.",
+                            "format": "int32",
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "startTime": {
+                        "additionalProperties": false,
+                        "description": "Required. Specifies the start time of the window using time of the day in UTC.",
+                        "properties": {
+                          "hours": {
+                            "description": "Hours of day in 24 hour format. Should be from 0 to 23. An API may choose to allow the value \"24:00:00\" for scenarios like business closing time.",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "minutes": {
+                            "description": "Minutes of hour of day. Must be from 0 to 59.",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "nanos": {
+                            "description": "Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "seconds": {
+                            "description": "Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.",
+                            "format": "int32",
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "duration",
+                      "startTime"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "targetRPOMinutes": {
+                  "description": "Required. Defines the target RPO for the BackupPlan in minutes, which means the target maximum data loss in time that is acceptable for this BackupPlan. This must be at least 60, i.e., 1 hour, and at most 86400, i.e., 60 days.",
+                  "format": "int32",
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "clusterRef": {
+          "additionalProperties": false,
+          "description": "Required. Immutable. The source cluster from which Backups will be created via this BackupPlan.",
+          "oneOf": [
+            {
+              "not": {
+                "required": [
+                  "external"
+                ]
+              },
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "namespace"
+                    ]
+                  }
+                ]
+              },
+              "required": [
+                "external"
+              ]
+            }
+          ],
+          "properties": {
+            "external": {
+              "description": "The GKE cluster. Valid formats: `projects/{projectID}/locations/{location}/clusters/{clusterID}` `projects/{projectID}/zones/{zone}/clusters/{clusterID}`",
+              "type": "string"
+            },
+            "name": {
+              "description": "Name of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names */",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ */",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "deactivated": {
+          "description": "Optional. This flag indicates whether this BackupPlan has been deactivated.\n Setting this field to True locks the BackupPlan such that no further\n updates will be allowed (except deletes), including the deactivated field\n itself. It also prevents any new Backups from being created via this\n BackupPlan (including scheduled Backups).\n\n Default: False",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Optional. User specified descriptive string for this BackupPlan.",
+          "type": "string"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Optional. A set of custom labels supplied by user.",
+          "type": "object"
+        },
+        "location": {
+          "description": "Immutable.",
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "Location field is immutable",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "projectRef": {
+          "additionalProperties": false,
+          "description": "The Project that this resource belongs to.",
+          "oneOf": [
+            {
+              "not": {
+                "required": [
+                  "external"
+                ]
+              },
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "namespace"
+                    ]
+                  }
+                ]
+              },
+              "required": [
+                "external"
+              ]
+            }
+          ],
+          "properties": {
+            "external": {
+              "description": "The `projectID` field of a project, when not managed by Config Connector.",
+              "type": "string"
+            },
+            "kind": {
+              "description": "The kind of the Project resource; optional but must be `Project` if provided.",
+              "type": "string"
+            },
+            "name": {
+              "description": "The `name` field of a `Project` resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "The `namespace` field of a `Project` resource.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "resourceID": {
+          "description": "The GKEBackupBackupPlan name. If not given, the metadata.name will be used.",
+          "type": "string"
+        },
+        "retentionPolicy": {
+          "additionalProperties": false,
+          "description": "Optional. RetentionPolicy governs lifecycle of Backups created under this plan.",
+          "properties": {
+            "backupDeleteLockDays": {
+              "description": "Optional. Minimum age for Backups created via this BackupPlan (in days).\n This field MUST be an integer value between 0-90 (inclusive).\n A Backup created under this BackupPlan will NOT be deletable until it\n reaches Backup's (create_time + backup_delete_lock_days).\n Updating this field of a BackupPlan does NOT affect existing Backups\n under it. Backups created AFTER a successful update will inherit\n the new value.\n\n Default: 0 (no delete blocking)",
+              "format": "int32",
+              "type": "integer"
+            },
+            "backupRetainDays": {
+              "description": "Optional. The default maximum age of a Backup created via this\n BackupPlan. This field MUST be an integer value >= 0 and <= 365. If\n specified, a Backup created under this BackupPlan will be automatically\n deleted after its age reaches (create_time + backup_retain_days). If not\n specified, Backups created under this BackupPlan will NOT be subject to\n automatic deletion. Updating this field does NOT affect existing Backups\n under it. Backups created AFTER a successful update will automatically\n pick up the new value. NOTE: backup_retain_days must be >=\n [backup_delete_lock_days][google.cloud.gkebackup.v1.BackupPlan.RetentionPolicy.backup_delete_lock_days].\n If\n [cron_schedule][google.cloud.gkebackup.v1.BackupPlan.Schedule.cron_schedule]\n is defined, then this must be\n <= 360 * the creation interval. If\n [rpo_config][google.cloud.gkebackup.v1.BackupPlan.Schedule.rpo_config] is\n defined, then this must be\n <= 360 * [target_rpo_minutes][Schedule.rpo_config.target_rpo_minutes] /\n (1440minutes/day).\n\n Default: 0 (no automatic deletion)",
+              "format": "int32",
+              "type": "integer"
+            },
+            "locked": {
+              "description": "Optional. This flag denotes whether the retention policy of this\n BackupPlan is locked.  If set to True, no further update is allowed on\n this policy, including the `locked` field itself.\n\n Default: False",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "clusterRef",
+        "location",
+        "projectRef"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "GKEBackupBackupPlanStatus defines the config connector machine state of GKEBackupBackupPlan",
+      "properties": {
+        "conditions": {
+          "description": "Conditions represent the latest available observations of the object's current state.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "lastTransitionTime": {
+                "description": "Last time the condition transitioned from one status to another.",
+                "type": "string"
+              },
+              "message": {
+                "description": "Human-readable message indicating details about last transition.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "Unique, one-word, CamelCase reason for the condition's last transition.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status is the status of the condition. Can be True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type is the type of the condition.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "externalRef": {
+          "description": "A unique specifier for the GKEBackupBackupPlan resource in GCP.",
+          "type": "string"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "observedState": {
+          "additionalProperties": false,
+          "description": "ObservedState is the state of the resource as most recently observed in GCP.",
+          "properties": {
+            "backupSchedule": {
+              "additionalProperties": false,
+              "description": "Optional. Defines a schedule for automatic Backup creation via this BackupPlan.",
+              "properties": {
+                "nextScheduledBackupTime": {
+                  "description": "Output only. Start time of next scheduled backup under this BackupPlan by either cron_schedule or rpo config.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "createTime": {
+              "description": "Output only. The timestamp when this BackupPlan resource was created.",
+              "type": "string"
+            },
+            "etag": {
+              "description": "Output only. `etag` is used for optimistic concurrency control as a way to help prevent simultaneous updates of a backup plan from overwriting each other. It is strongly suggested that systems make use of the 'etag' in the read-modify-write cycle to perform BackupPlan updates in order to avoid race conditions: An `etag` is returned in the response to `GetBackupPlan`, and systems are expected to put that etag in the request to `UpdateBackupPlan` or `DeleteBackupPlan` to ensure that their change will be applied to the same version of the resource.",
+              "type": "string"
+            },
+            "protectedPodCount": {
+              "description": "Output only. The number of Kubernetes Pods backed up in the last successful Backup created via this BackupPlan.",
+              "format": "int32",
+              "type": "integer"
+            },
+            "rpoRiskLevel": {
+              "description": "Output only. A number that represents the current risk level of this BackupPlan from RPO perspective with 1 being no risk and 5 being highest risk.",
+              "format": "int32",
+              "type": "integer"
+            },
+            "rpoRiskReason": {
+              "description": "Output only. Human-readable description of why the BackupPlan is in the current rpo_risk_level and action items if any.",
+              "type": "string"
+            },
+            "state": {
+              "description": "Output only. State of the BackupPlan. This State field reflects the various stages a BackupPlan can be in during the Create operation. It will be set to \"DEACTIVATED\" if the BackupPlan is deactivated on an Update",
+              "type": "string"
+            },
+            "stateReason": {
+              "description": "Output only. Human-readable description of why BackupPlan is in the current `state`",
+              "type": "string"
+            },
+            "uid": {
+              "description": "Output only. Server generated global unique identifier of [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) format.",
+              "type": "string"
+            },
+            "updateTime": {
+              "description": "Output only. The timestamp when this BackupPlan resource was last updated.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}

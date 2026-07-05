@@ -1,0 +1,37 @@
+# schema source: GCP Config Connector v1.152.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+apiVersion <string> enum=bigqueryreservation.cnrm.cloud.google.com/v1beta1
+kind <string> enum=BigQueryReservationReservation
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# BigQueryReservationReservationSpec defines the desired state of BigQueryReservationReservation
+spec.autoscale <object>	# Optional. The configuration parameters for the auto scaling feature.
+spec.autoscale.maxSlots <integer> format=int64	# Number of slots to be scaled when needed.
+spec.concurrency <integer> format=int64	# Job concurrency target which sets a soft upper bound on the number of jobs that can run concurrently in this reservation. This is a soft target due to asynchronous nature of the system and various optimizations for small queries. Default value is 0 which means that concurrency target will be automatically computed by the system. NOTE: this field is exposed as target job concurrency in the Information Schema, DDL and BigQuery CLI.
+spec.edition <string>	# Immutable. Optional. Edition of the reservation. Valid values are STANDARD, ENTERPRISE, ENTERPRISE_PLUS
+spec.failover <object>	# Optional. This field is only set for reservations using the managed disaster recovery feature. Users can set this to create a failover reservation.
+spec.failover.secondaryLocation <string> (required) (immutable)	# Users can update this field to convert a non-failover reservation to a failover reservation (by setting a specific region value) or convert a failover reservation to a non-failover reservation (by removing spec.failover). However, changes from one region to another region will be ignored by the controller. Additionally, if the value of this field changes during manual failover by the API, the controller will not attempt to revert these changes. Note: This field is only available for ENTERPRISE_PLUS edition reservations. Immutable.
+spec.ignoreIdleSlots <boolean>	# If false, any query or pipeline job using this reservation will use idle slots from other reservations within the same admin project. If true, a query or pipeline job using this reservation will execute with the slot capacity specified in the slot_capacity field at most.
+spec.location <string> (required) (immutable)	# Immutable. You can configure spec.secondaryLocation to enable the reservation fail-over to a secondary location, in which case the primary location could be different from the spec.location.
+spec.projectRef <object> (required)	# The Project that this resource belongs to.
+spec.projectRef.external <string>	# The `projectID` field of a project, when not managed by Config Connector.
+spec.projectRef.kind <string>	# The kind of the Project resource; optional but must be `Project` if provided.
+spec.projectRef.name <string>	# The `name` field of a `Project` resource.
+spec.projectRef.namespace <string>	# The `namespace` field of a `Project` resource.
+spec.resourceID <string>	# Immutable. Optional. The BigQuery Reservation ID used for resource creation or acquisition. It must only contain lower case alphanumeric characters or dashes. It must start with a letter and must not end with a dash. Its maximum length is 64 characters. For creation: If specified, this value is used as the Reservation ID. If not provided, a UUID will be generated and assigned as the Reservation ID. For acquisition: This field must be provided to identify the Reservation resource to acquire.
+spec.slotCapacity <integer> format=int64	# Optional. Baseline slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the unit of parallelism. Queries using this reservation might use more slots during runtime if ignore_idle_slots is set to false, or autoscaling is enabled.
+status <object>	# BigQueryReservationReservationStatus defines the config connector machine state of BigQueryReservationReservation
+status.conditions <[]object>	# Conditions represent the latest available observations of the object's current state.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.externalRef <string>	# A unique specifier for the BigQueryReservationReservation resource in GCP.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.observedState <object>	# ObservedState is the state of the resource as most recently observed in GCP.
+status.observedState.autoscale <object>
+status.observedState.autoscale.currentSlots <integer> format=int64	# The slot capacity added to this reservation when autoscale happens. Will be between [0, max_slots]. Note: after users reduce max_slots, it may take a while before it can be propagated, so current_slots may stay in the original value and could be larger than max_slots for that brief period (less than one minute)
+status.observedState.failover <object>
+status.observedState.failover.originalPrimaryLocation <string>	# The location where the reservation was originally created. This is set only during the failover reservation's creation. All billing charges for the failover reservation will be applied to this location.
+status.observedState.failover.primaryLocation <string>	# The current location of the reservation's primary replica. This field is only set for reservations using the managed disaster recovery feature.
+status.observedState.failover.secondaryLocation <string>	# The current location of the reservation's secondary replica. This field is only set for reservations using the managed disaster recovery feature. Users can set this in create reservation calls to create a failover reservation or in update reservation calls to convert a non-failover reservation to a failover reservation(or vice versa).
