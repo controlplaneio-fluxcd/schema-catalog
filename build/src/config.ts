@@ -3,7 +3,7 @@ import type { CrdInput, FluxInstance, Source } from "./types.ts";
 
 const EXTRACT_KINDS = ["k8s", "openshift", "crd"];
 const INPUT_KINDS = ["kustomize", "releaseAsset", "fluxInstance"];
-const SOURCE_KEYS = ["name", "alias", "url", "version", "releaseTag", "extract", "input"];
+const SOURCE_KEYS = ["name", "alias", "url", "version", "extract", "input"];
 const NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 const REPO_URL_RE = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/;
 
@@ -80,14 +80,6 @@ function parseSource(entry: unknown, ctx: string): Source {
   }
   const version = entry.version as string | undefined;
 
-  if (
-    entry.releaseTag !== undefined &&
-    (typeof entry.releaseTag !== "string" || entry.releaseTag === "")
-  ) {
-    throw new Error(`${ctx}: releaseTag must be a non-empty glob`);
-  }
-  const releaseTag = entry.releaseTag as string | undefined;
-
   const extract = requireString(entry, "extract", ctx);
   if (!EXTRACT_KINDS.includes(extract)) {
     throw new Error(`${ctx}: extract must be one of: ${EXTRACT_KINDS.join(", ")}`);
@@ -97,32 +89,40 @@ function parseSource(entry: unknown, ctx: string): Source {
     if (entry.input !== undefined) {
       throw new Error(`${ctx}: input is only valid for extract: crd`);
     }
-    return { name, alias, url, version, releaseTag, extract: extract as "k8s" | "openshift" };
+    return { name, alias, url, version, extract: extract as "k8s" | "openshift" };
   }
-  return { name, alias, url, version, releaseTag, extract: "crd", input: parseInput(entry.input, ctx) };
+  return { name, alias, url, version, extract: "crd", input: parseInput(entry.input, ctx) };
 }
 
 function parseInput(input: unknown, ctx: string): CrdInput {
   if (!isRecord(input)) {
     throw new Error(`${ctx}: extract: crd requires an input mapping`);
   }
-  const keys = Object.keys(input);
-  if (keys.length !== 1 || !INPUT_KINDS.includes(keys[0]!)) {
+  if (
+    input.releaseTag !== undefined &&
+    (typeof input.releaseTag !== "string" || input.releaseTag === "")
+  ) {
+    throw new Error(`${ctx}: input.releaseTag must be a non-empty glob`);
+  }
+  const releaseTag = input.releaseTag as string | undefined;
+
+  const kinds = Object.keys(input).filter((k) => k !== "releaseTag");
+  if (kinds.length !== 1 || !INPUT_KINDS.includes(kinds[0]!)) {
     throw new Error(`${ctx}: input must have exactly one of: ${INPUT_KINDS.join(", ")}`);
   }
-  switch (keys[0]) {
+  switch (kinds[0]) {
     case "kustomize":
       if (typeof input.kustomize !== "string" || input.kustomize === "") {
         throw new Error(`${ctx}: input.kustomize must be a non-empty overlay path`);
       }
-      return { kustomize: input.kustomize };
+      return { releaseTag, kustomize: input.kustomize };
     case "releaseAsset":
       if (typeof input.releaseAsset !== "string" || input.releaseAsset === "") {
         throw new Error(`${ctx}: input.releaseAsset must be a non-empty asset name or glob`);
       }
-      return { releaseAsset: input.releaseAsset };
+      return { releaseTag, releaseAsset: input.releaseAsset };
     default:
-      return { fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
+      return { releaseTag, fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
   }
 }
 

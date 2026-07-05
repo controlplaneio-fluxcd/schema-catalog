@@ -23,8 +23,9 @@ export async function resolveVersion(source: Source): Promise<string> {
     return `v${pickLatestOpenShift(await res.json())}`;
   }
   const repo = repoOf(source);
-  if (source.releaseTag !== undefined) {
-    return normalizeVersion(pickLatestRelease(await listReleases(repo), source.releaseTag));
+  const releaseTag = source.extract === "crd" ? source.input.releaseTag : undefined;
+  if (releaseTag !== undefined) {
+    return normalizeVersion(pickLatestRelease(await listReleases(repo), releaseTag));
   }
   return normalizeVersion(await latestReleaseTag(repo));
 }

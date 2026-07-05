@@ -110,6 +110,25 @@ describe("parseSources", () => {
     );
   });
 
+  test("accepts a releaseTag glob alongside an input kind", () => {
+    const input = { releaseTag: "v*", releaseAsset: "app.yaml" };
+    const sources = parseSources({ sources: [validSource({ input })] });
+    expect(sources[0]!).toMatchObject({ input: { releaseTag: "v*", releaseAsset: "app.yaml" } });
+  });
+
+  test("rejects an empty releaseTag glob", () => {
+    const input = { releaseTag: "", releaseAsset: "app.yaml" };
+    expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
+      "input.releaseTag must be a non-empty glob",
+    );
+  });
+
+  test("rejects input with only a releaseTag and no source kind", () => {
+    expect(() => parseSources({ sources: [validSource({ input: { releaseTag: "v*" } })] })).toThrow(
+      "exactly one of: kustomize, releaseAsset, fluxInstance",
+    );
+  });
+
   test("rejects an empty kustomize path", () => {
     expect(() => parseSources({ sources: [validSource({ input: { kustomize: "" } })] })).toThrow(
       "non-empty overlay path",

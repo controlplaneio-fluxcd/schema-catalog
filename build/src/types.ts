@@ -2,10 +2,18 @@
 export type ExtractKind = "k8s" | "openshift" | "crd";
 
 /** Where the CRD YAML piped into `flux-schema extract crd` comes from. */
-export type CrdInput =
-  | { kustomize: string }
-  | { releaseAsset: string }
-  | { fluxInstance: FluxInstance };
+export type CrdInput = CrdInputBase &
+  ({ kustomize: string } | { releaseAsset: string } | { fluxInstance: FluxInstance });
+
+interface CrdInputBase {
+  /**
+   * Optional glob constraining which release tags version resolution considers
+   * (e.g. `v*`). Use for repos that interleave unrelated release tags GitHub's
+   * /releases/latest would surface (external-secrets ships `helm-chart-*`
+   * releases alongside the app `v*` releases). Ignored when `version` is pinned.
+   */
+  releaseTag?: string;
+}
 
 /**
  * Inputs for `flux-operator build instance`; spec.distribution.version is
@@ -25,14 +33,6 @@ interface SourceBase {
   url: string;
   /** Optional pin; defaults to the latest release (openshift: release branch). */
   version?: string;
-  /**
-   * Optional glob constraining which release tags version resolution considers
-   * (e.g. `v*`). Use for repos that interleave unrelated release tags GitHub's
-   * /releases/latest would surface (external-secrets ships `helm-chart-*`
-   * releases alongside the app `v*` releases). Ignored when `version` is pinned
-   * or for extract: openshift.
-   */
-  releaseTag?: string;
 }
 
 export interface K8sSource extends SourceBase {

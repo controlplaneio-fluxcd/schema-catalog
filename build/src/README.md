@@ -71,7 +71,11 @@ regenerated from the manifests, optional `--summary` markdown, and a
   `releaseAsset` (download a GitHub release asset by name or `*` glob), or
   `fluxInstance` (the Flux special case: the manifest is constructed as a typed
   object with the resolved version in `spec.distribution.version` and piped
-  through `flux-operator build instance -f -`).
+  through `flux-operator build instance -f -`). An `input` may also carry an
+  optional `releaseTag` glob (e.g. `v*`) that constrains version resolution to
+  the highest matching release tag — for repos that interleave unrelated tags
+  (external-secrets ships `helm-chart-*` releases alongside the app `v*` ones)
+  that GitHub's `/releases/latest` would otherwise surface.
 
 Every extraction runs with `--strip-description=false --with-field-index
 --index-source="<alias> <version> <url>"` and the
