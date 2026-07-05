@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-99-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C398-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-564%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-101-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C410-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-564%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -161,6 +161,8 @@ for the line grammar.
 | Antrea | [v2.6.2](build/history/antrea.json) | 20 | 2026-07-05 |
 | Kubewarden | [v1.36.0](build/history/kubewarden.json) | 8 | 2026-07-05 |
 | Kube-OVN | [v1.16.2](build/history/kube-ovn.json) | 24 | 2026-07-05 |
+| Submariner Operator | [v0.24.0](build/history/submariner-operator.json) | 3 | 2026-07-05 |
+| Submariner | [v0.24.0](build/history/submariner.json) | 9 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
