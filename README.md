@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-78-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C205-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-542%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-79-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C206-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-542%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -140,6 +140,7 @@ for the line grammar.
 | NFD NodeResourceTopology | [v0.18.3](build/history/node-feature-discovery-nrt.json) | 2 | 2026-07-05 |
 | KWOK | [v0.8.0](build/history/kwok.json) | 12 | 2026-07-05 |
 | Network Policy API | [v0.2.0](build/history/network-policy-api.json) | 1 | 2026-07-05 |
+| ExternalDNS | [v0.21.0](build/history/external-dns.json) | 1 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
