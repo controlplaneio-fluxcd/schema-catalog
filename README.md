@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-57-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C112-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-503%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-60-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C118-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-503%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -119,6 +119,9 @@ for the line grammar.
 | AWS API Gateway v2 Controller | [v1.3.2](build/history/ack-apigatewayv2.json) | 9 | 2026-07-05 |
 | Azure Service Operator | [v2.20.0](build/history/azure-service-operator.json) | 1324 | 2026-07-05 |
 | GCP Config Connector | [v1.152.0](build/history/config-connector.json) | 548 | 2026-07-05 |
+| Karpenter | [v1.13.0](build/history/karpenter.json) | 3 | 2026-07-05 |
+| Karpenter AWS | [v1.13.0](build/history/karpenter-aws.json) | 1 | 2026-07-05 |
+| Karpenter Azure | [v1.13.1](build/history/karpenter-azure.json) | 2 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
