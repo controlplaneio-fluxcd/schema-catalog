@@ -4,7 +4,13 @@ import { matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
 import { renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
-import { bareVersion, normalizeVersion, openshiftRef, pickLatestOpenShift } from "./resolve.ts";
+import {
+  bareVersion,
+  normalizeVersion,
+  openshiftRef,
+  pickLatestOpenShift,
+  pickLatestRelease,
+} from "./resolve.ts";
 import type { HistoryEntry } from "./types.ts";
 
 describe("matchAsset", () => {
@@ -64,6 +70,40 @@ describe("pickLatestOpenShift", () => {
   test("throws when no non-EOL release exists", () => {
     expect(() => pickLatestOpenShift({ result: { releases: [] } })).toThrow(
       "could not resolve the latest OpenShift release",
+    );
+  });
+});
+
+describe("pickLatestRelease", () => {
+  const rel = (tag: string, extra: Partial<{ draft: boolean; prerelease: boolean }> = {}) => ({
+    tag_name: tag,
+    draft: false,
+    prerelease: false,
+    ...extra,
+  });
+
+  test("ignores tags that do not match the glob", () => {
+    const releases = [rel("helm-chart-2.7.0"), rel("v2.7.0"), rel("helm-chart-2.6.0")];
+    expect(pickLatestRelease(releases, "v*")).toBe("v2.7.0");
+  });
+
+  test("picks the highest semver, not the most recent, regardless of order", () => {
+    const releases = [rel("v2.7.0"), rel("v1.3.3"), rel("v2.6.0")];
+    expect(pickLatestRelease(releases, "v*")).toBe("v2.7.0");
+  });
+
+  test("skips drafts and prereleases", () => {
+    const releases = [
+      rel("v2.8.0", { prerelease: true }),
+      rel("v2.9.0", { draft: true }),
+      rel("v2.7.0"),
+    ];
+    expect(pickLatestRelease(releases, "v*")).toBe("v2.7.0");
+  });
+
+  test("throws when no release matches the glob", () => {
+    expect(() => pickLatestRelease([rel("helm-chart-2.7.0")], "v*")).toThrow(
+      "no release tag matches 'v*'",
     );
   });
 });

@@ -25,6 +25,14 @@ interface SourceBase {
   url: string;
   /** Optional pin; defaults to the latest release (openshift: release branch). */
   version?: string;
+  /**
+   * Optional glob constraining which release tags version resolution considers
+   * (e.g. `v*`). Use for repos that interleave unrelated release tags GitHub's
+   * /releases/latest would surface (external-secrets ships `helm-chart-*`
+   * releases alongside the app `v*` releases). Ignored when `version` is pinned
+   * or for extract: openshift.
+   */
+  releaseTag?: string;
 }
 
 export interface K8sSource extends SourceBase {

@@ -5,6 +5,12 @@ export interface ReleaseAsset {
   browser_download_url: string;
 }
 
+export interface Release {
+  tag_name: string;
+  draft: boolean;
+  prerelease: boolean;
+}
+
 function headers(): Record<string, string> {
   const h: Record<string, string> = {
     Accept: "application/vnd.github+json",
@@ -65,6 +71,18 @@ export async function latestReleaseTag(repo: string): Promise<string> {
     throw new Error(`no tag_name in latest release of ${repo}`);
   }
   return tag;
+}
+
+/**
+ * Returns the most recent page of releases of owner/name (up to 100), for
+ * callers that pick a tag themselves rather than trust /releases/latest.
+ */
+export async function listReleases(repo: string): Promise<Release[]> {
+  const releases = await apiJson(`/repos/${repo}/releases?per_page=100`);
+  if (!Array.isArray(releases)) {
+    throw new Error(`unexpected releases payload for ${repo}`);
+  }
+  return releases as Release[];
 }
 
 /**

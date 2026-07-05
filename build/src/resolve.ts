@@ -1,4 +1,4 @@
-import { latestReleaseTag } from "./github.ts";
+import { latestReleaseTag, listReleases, matchAsset, type Release } from "./github.ts";
 import { repoOf } from "./config.ts";
 import type { Source } from "./types.ts";
 
@@ -22,7 +22,28 @@ export async function resolveVersion(source: Source): Promise<string> {
     }
     return `v${pickLatestOpenShift(await res.json())}`;
   }
-  return normalizeVersion(await latestReleaseTag(repoOf(source)));
+  const repo = repoOf(source);
+  if (source.releaseTag !== undefined) {
+    return normalizeVersion(pickLatestRelease(await listReleases(repo), source.releaseTag));
+  }
+  return normalizeVersion(await latestReleaseTag(repo));
+}
+
+/**
+ * Picks the highest-semver release tag matching a glob, skipping drafts and
+ * prereleases. Used when a repo interleaves unrelated release tags (e.g.
+ * external-secrets' `helm-chart-*`) that /releases/latest can surface. Highest
+ * semver, not most-recent, so a backported patch of an older line never wins.
+ */
+export function pickLatestRelease(releases: Release[], pattern: string): string {
+  const tags = releases
+    .filter((r) => !r.draft && !r.prerelease && matchAsset(pattern, r.tag_name))
+    .map((r) => r.tag_name);
+  if (tags.length === 0) {
+    throw new Error(`no release tag matches '${pattern}'`);
+  }
+  tags.sort((a, b) => Bun.semver.order(bareVersion(a), bareVersion(b)));
+  return tags.at(-1)!;
 }
 
 export function normalizeVersion(version: string): string {
