@@ -65,6 +65,7 @@ for the line grammar.
 | Flux Operator | [v0.53.0](build/history/flux-operator.json) | 2026-07-04 |
 | Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-04 |
 | cert-manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-04 |
+| Cluster API | [v1.13.3](build/history/cluster-api.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
