@@ -53,46 +53,46 @@ Each line carries the field's dotted path, type, constraints and description.
 See the [field index reference](https://github.com/fluxcd/flux-schema/blob/main/docs/field-index.md)
 for the line grammar.
 
-## Coverage
+## Catalog
 
 <!-- versions:start -->
-| Project | Version | Updated |
-| --- | --- | --- |
-| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 2026-07-05 |
-| OpenShift | [v4.20](build/history/openshift.json) | 2026-07-05 |
-| Flux | [v2.9.0](build/history/flux.json) | 2026-07-05 |
-| Flagger | [v1.43.0](build/history/flagger.json) | 2026-07-05 |
-| Flux Operator | [v0.53.0](build/history/flux-operator.json) | 2026-07-05 |
-| Cluster API | [v1.13.3](build/history/cluster-api.json) | 2026-07-05 |
-| Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-05 |
-| Cert Manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-05 |
-| External Secrets | [v2.7.0](build/history/external-secrets.json) | 2026-07-05 |
-| Cilium | [v1.19.5](build/history/cilium.json) | 2026-07-05 |
-| Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 2026-07-05 |
-| VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 2026-07-05 |
-| Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 2026-07-05 |
-| KEDA | [v2.20.1](build/history/keda.json) | 2026-07-05 |
-| Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 2026-07-05 |
-| Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 2026-07-05 |
-| Tekton Pipeline | [v1.14.0](build/history/tekton-pipeline.json) | 2026-07-05 |
-| Kyverno | [v1.18.1](build/history/kyverno.json) | 2026-07-05 |
-| Rook | [v1.20.1](build/history/rook.json) | 2026-07-05 |
-| Vitess Operator | [v2.17.0](build/history/vitess-operator.json) | 2026-07-05 |
-| Strimzi | [0.51.0](build/history/strimzi.json) | 2026-07-05 |
-| NATS | [v0.23.0](build/history/nats.json) | 2026-07-05 |
-| OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 2026-07-05 |
-| OPA Gatekeeper | [v3.22.2](build/history/gatekeeper.json) | 2026-07-05 |
-| Envoy Gateway | [v1.8.2](build/history/envoy-gateway.json) | 2026-07-05 |
-| Longhorn | [v1.12.0](build/history/longhorn.json) | 2026-07-05 |
-| Vertical Pod Autoscaler | [vertical-pod-autoscaler-1.7.0](build/history/vertical-pod-autoscaler.json) | 2026-07-05 |
-| Kueue | [v0.18.2](build/history/kueue.json) | 2026-07-05 |
-| CloudNativePG | [v1.30.0](build/history/cloudnative-pg.json) | 2026-07-05 |
-| Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 2026-07-05 |
-| Velero | [v1.18.2](build/history/velero.json) | 2026-07-05 |
-| Crossplane | [v2.3.3](build/history/crossplane.json) | 2026-07-05 |
-| Upbound AWS Provider | [v2.6.0](build/history/provider-upjet-aws.json) | 2026-07-05 |
-| Upbound Azure Provider | [v2.6.0](build/history/provider-upjet-azure.json) | 2026-07-05 |
-| Upbound GCP Provider | [v2.6.0](build/history/provider-upjet-gcp.json) | 2026-07-05 |
+| Project | Version | Schemas | Updated |
+| --- | --- | --- | --- |
+| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 191 | 2026-07-05 |
+| OpenShift | [v4.20](build/history/openshift.json) | 256 | 2026-07-05 |
+| Flux | [v2.9.0](build/history/flux.json) | 15 | 2026-07-05 |
+| Flagger | [v1.43.0](build/history/flagger.json) | 3 | 2026-07-05 |
+| Flux Operator | [v0.53.0](build/history/flux-operator.json) | 4 | 2026-07-05 |
+| Cluster API | [v1.13.3](build/history/cluster-api.json) | 36 | 2026-07-05 |
+| Gateway API | [v1.6.0](build/history/gateway-api.json) | 19 | 2026-07-05 |
+| Cert Manager | [v1.20.3](build/history/cert-manager.json) | 6 | 2026-07-05 |
+| External Secrets | [v2.7.0](build/history/external-secrets.json) | 28 | 2026-07-05 |
+| Cilium | [v1.19.5](build/history/cilium.json) | 29 | 2026-07-05 |
+| Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-05 |
+| VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 24 | 2026-07-05 |
+| Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-05 |
+| KEDA | [v2.20.1](build/history/keda.json) | 6 | 2026-07-05 |
+| Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-05 |
+| Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 20 | 2026-07-05 |
+| Tekton Pipeline | [v1.14.0](build/history/tekton-pipeline.json) | 14 | 2026-07-05 |
+| Kyverno | [v1.18.1](build/history/kyverno.json) | 47 | 2026-07-05 |
+| Rook | [v1.20.1](build/history/rook.json) | 21 | 2026-07-05 |
+| Vitess Operator | [v2.17.0](build/history/vitess-operator.json) | 8 | 2026-07-05 |
+| Strimzi | [0.51.0](build/history/strimzi.json) | 24 | 2026-07-05 |
+| NATS | [v0.23.0](build/history/nats.json) | 8 | 2026-07-05 |
+| OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-05 |
+| OPA Gatekeeper | [v3.22.2](build/history/gatekeeper.json) | 27 | 2026-07-05 |
+| Envoy Gateway | [v1.8.2](build/history/envoy-gateway.json) | 8 | 2026-07-05 |
+| Longhorn | [v1.12.0](build/history/longhorn.json) | 23 | 2026-07-05 |
+| Vertical Pod Autoscaler | [vertical-pod-autoscaler-1.7.0](build/history/vertical-pod-autoscaler.json) | 4 | 2026-07-05 |
+| Kueue | [v0.18.2](build/history/kueue.json) | 22 | 2026-07-05 |
+| CloudNativePG | [v1.30.0](build/history/cloudnative-pg.json) | 11 | 2026-07-05 |
+| Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 4 | 2026-07-05 |
+| Velero | [v1.18.2](build/history/velero.json) | 11 | 2026-07-05 |
+| Crossplane | [v2.3.3](build/history/crossplane.json) | 25 | 2026-07-05 |
+| Upbound AWS Provider | [v2.6.0](build/history/provider-upjet-aws.json) | 2364 | 2026-07-05 |
+| Upbound Azure Provider | [v2.6.0](build/history/provider-upjet-azure.json) | 1789 | 2026-07-05 |
+| Upbound GCP Provider | [v2.6.0](build/history/provider-upjet-gcp.json) | 1018 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
