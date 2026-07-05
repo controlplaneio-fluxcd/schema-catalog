@@ -207,12 +207,12 @@ describe("versions table", () => {
 
   test("renders and splices between the markers", () => {
     const table = renderVersionsTable([
-      { alias: "Flux", name: "flux", version: "v2.9.0", builtAt: "2026-07-05T03:15:00.000Z" },
+      { alias: "Flux", name: "flux", version: "v2.9.0", builtAt: "2026-07-05T03:15:00.000Z", schemas: 34 },
     ]);
     expect(spliceVersionsTable(readme, table)).toBe(
       "# Title\n\n<!-- versions:start -->\n" +
-        "| Project | Version | Updated |\n| --- | --- | --- |\n" +
-        "| Flux | [v2.9.0](build/history/flux.json) | 2026-07-05 |\n" +
+        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
+        "| Flux | [v2.9.0](build/history/flux.json) | 34 | 2026-07-05 |\n" +
         "<!-- versions:end -->\n",
     );
   });

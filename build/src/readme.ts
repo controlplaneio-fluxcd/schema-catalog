@@ -9,13 +9,17 @@ export interface VersionRow {
   version: string;
   /** RFC 3339 build timestamp from the history manifest. */
   builtAt: string;
+  /** Number of JSON Schemas the source contributes (`.json` files only). */
+  schemas: number;
 }
 
 export function renderVersionsTable(rows: VersionRow[]): string {
-  const lines = ["| Project | Version | Updated |", "| --- | --- | --- |"];
+  const lines = ["| Project | Version | Schemas | Updated |", "| --- | --- | --- | --- |"];
   for (const row of rows) {
     const updated = row.builtAt.slice(0, 10);
-    lines.push(`| ${row.alias} | [${row.version}](build/history/${row.name}.json) | ${updated} |`);
+    lines.push(
+      `| ${row.alias} | [${row.version}](build/history/${row.name}.json) | ${row.schemas} | ${updated} |`,
+    );
   }
   return lines.join("\n");
 }

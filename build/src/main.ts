@@ -229,6 +229,7 @@ async function main(): Promise<number> {
       name: entry.name,
       version: entry.version,
       builtAt: entry.builtAt,
+      schemas: entry.files.filter((f) => f.endsWith(".json")).length,
     }));
   if (rows.length > 0 && (await updateReadme(README_PATH, rows))) {
     console.log("  README.md: versions table updated");
