@@ -1,0 +1,34 @@
+# schema source: Prometheus Operator v0.92.1 https://github.com/prometheus-operator/prometheus-operator
+apiVersion <string> enum=monitoring.coreos.com/v1
+kind <string> enum=PrometheusRule
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# spec defines the specification of desired alerting rule definitions for Prometheus.
+spec.groups <[]object>	# groups defines the content of Prometheus rule file
+spec.groups[].interval <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# interval defines how often rules in the group are evaluated.
+spec.groups[].labels <map[string]string>	# labels define the labels to add or overwrite before storing the result for its rules. The labels defined at the rule level take precedence. It requires Prometheus >= 3.0.0. The field is ignored for Thanos Ruler.
+spec.groups[].limit <integer>	# limit defines the number of alerts an alerting rule and series a recording rule can produce. Limit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.
+spec.groups[].name <string> (required) min=1	# name defines the name of the rule group.
+spec.groups[].partial_response_strategy <string> pattern="^(?i)(abort|warn)?$"	# partial_response_strategy is only used by ThanosRuler and will be ignored by Prometheus instances. More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
+spec.groups[].query_offset <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# query_offset defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past. It requires Prometheus >= v2.53.0. It is not supported for ThanosRuler.
+spec.groups[].rules <[]object>	# rules defines the list of alerting and recording rules.
+spec.groups[].rules[].alert <string>	# alert defines the name of the alert. Must be a valid label value. Only one of `record` and `alert` must be set.
+spec.groups[].rules[].annotations <map[string]string>	# annotations defines annotations to add to each alert. Only valid for alerting rules.
+spec.groups[].rules[].expr <int-or-string> (required)	# expr defines the PromQL expression to evaluate.
+spec.groups[].rules[].for <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# for defines how alerts are considered firing once they have been returned for this long.
+spec.groups[].rules[].keep_firing_for <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$" min=1	# keep_firing_for defines how long an alert will continue firing after the condition that triggered it has cleared.
+spec.groups[].rules[].labels <map[string]string>	# labels defines labels to add or overwrite.
+spec.groups[].rules[].record <string>	# record defines the name of the time series to output to. Must be a valid metric name. Only one of `record` and `alert` must be set.
+status <object>	# status defines the status subresource. It is under active development and is updated only when the "StatusForConfigurationResources" feature gate is enabled. Most recent observed status of the PrometheusRule. Read-only. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+status.bindings <[]object>	# bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.
+status.bindings[].conditions <[]object>	# conditions defines the current state of the configuration resource when bound to the referenced Workload object.
+status.bindings[].conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime defines the time of the last update to the current status property.
+status.bindings[].conditions[].message <string>	# message defines the human-readable message indicating details for the condition's last transition.
+status.bindings[].conditions[].observedGeneration <integer> format=int64	# observedGeneration defines the .metadata.generation that the condition was set based upon. For instance, if `.metadata.generation` is currently 12, but the `.status.conditions[].observedGeneration` is 9, the condition is out of date with respect to the current state of the object.
+status.bindings[].conditions[].reason <string>	# reason for the condition's last transition.
+status.bindings[].conditions[].status <string> (required) min=1	# status of the condition.
+status.bindings[].conditions[].type <string> (required) enum=Accepted min=1	# type of the condition being reported. Currently, only "Accepted" is supported.
+status.bindings[].group <string> (required) enum=monitoring.coreos.com	# group defines the group of the referenced resource.
+status.bindings[].name <string> (required) min=1	# name defines the name of the referenced object.
+status.bindings[].namespace <string> (required) min=1	# namespace defines the namespace of the referenced object.
+status.bindings[].resource <string> (required) enum=prometheuses|prometheusagents|thanosrulers|alertmanagers	# resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
