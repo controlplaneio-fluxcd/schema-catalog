@@ -88,11 +88,13 @@ Every extraction runs with `--strip-description=false --with-field-index
 `{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. The binary
 lowercases all template variables, so catalog filenames are lowercase.
 
-Before piping, the assembled CRD stream is normalized to drop a leading
-comment/blank banner terminated by `---` (`dropLeadingCommentDoc`): that
-preamble parses as an empty first YAML document, which flux-schema rejects with
-"document is not a YAML mapping". Several bundles ship one as a license or usage
-header (e.g. rook's `crds.yaml`).
+Before piping, the assembled CRD stream is normalized to drop any empty, blank,
+or comment-only document (`dropEmptyDocs`): flux-schema rejects such a document
+with "document is not a YAML mapping". These show up as a leading license/usage
+banner (rook's `crds.yaml`) and, in helm-rendered installs, as interior
+`# Source: …` separators where a template produced no output (longhorn's
+`longhorn.yaml`). Splitting on column-0 `---` is safe because block-scalar
+content is always indented.
 
 **Pipeline stages are separate `$` calls on purpose.** A Bun-shell pipeline,
 like bash without pipefail, reports only the last command's exit code — a

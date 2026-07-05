@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { dropLeadingCommentDoc, fluxInstanceManifest } from "./extract.ts";
+import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
 import { matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
 import { renderVersionsTable, spliceVersionsTable } from "./readme.ts";
@@ -230,23 +230,28 @@ describe("fluxInstanceManifest", () => {
   });
 });
 
-describe("dropLeadingCommentDoc", () => {
+describe("dropEmptyDocs", () => {
   test("strips a leading comment banner terminated by ---", () => {
     const yaml = "# banner line 1\n# banner line 2\n---\napiVersion: v1\nkind: Foo\n";
-    expect(dropLeadingCommentDoc(yaml)).toBe("apiVersion: v1\nkind: Foo\n");
+    expect(dropEmptyDocs(yaml)).toBe("apiVersion: v1\nkind: Foo\n");
   });
 
   test("strips a lone leading document marker", () => {
-    expect(dropLeadingCommentDoc("---\nkind: Foo\n")).toBe("kind: Foo\n");
+    expect(dropEmptyDocs("---\nkind: Foo\n")).toBe("kind: Foo\n");
+  });
+
+  test("drops an interior comment-only document", () => {
+    const yaml = "kind: Foo\n---\n# Source: chart/empty.yaml\n---\nkind: Bar\n";
+    expect(dropEmptyDocs(yaml)).toBe("kind: Foo\n---\nkind: Bar\n");
   });
 
   test("leaves a stream that opens with content untouched", () => {
     const yaml = "apiVersion: v1\nkind: Foo\n---\nkind: Bar\n";
-    expect(dropLeadingCommentDoc(yaml)).toBe(yaml);
+    expect(dropEmptyDocs(yaml)).toBe(yaml);
   });
 
   test("does not strip past the first document", () => {
     const yaml = "kind: Foo\n---\nkind: Bar\n";
-    expect(dropLeadingCommentDoc(yaml)).toBe(yaml);
+    expect(dropEmptyDocs(yaml)).toBe(yaml);
   });
 });

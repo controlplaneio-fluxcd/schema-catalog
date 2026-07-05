@@ -41,19 +41,28 @@ export async function extractSource(source: Source, version: string, dir: string
  * command's status, letting an upstream failure pass as an empty extraction.
  */
 async function extractCrd(source: CrdSource, version: string, flags: string[]): Promise<void> {
-  const yaml = dropLeadingCommentDoc(await crdYaml(source, version));
+  const yaml = dropEmptyDocs(await crdYaml(source, version));
   await $`${FLUX_SCHEMA_BIN} extract crd /dev/stdin ${flags} < ${new Response(yaml)}`.quiet();
 }
 
 /**
- * Drops a leading comment/blank preamble terminated by a `---` document
- * marker. Such a preamble is a valid but empty first YAML document that
- * flux-schema rejects ("document is not a YAML mapping"); many CRD bundles
- * ship one as a license or usage banner (e.g. rook's crds.yaml). A stream that
- * opens directly with content (no leading `---`) is left untouched.
+ * Drops YAML documents that carry no mapping — empty, blank, or comment-only
+ * documents anywhere in the stream. flux-schema rejects such a document
+ * ("document is not a YAML mapping"), and CRD bundles routinely contain them:
+ * a leading license/usage banner (rook's crds.yaml) or, in helm-rendered
+ * installs, interior `# Source: …` separators where a template produced no
+ * output (longhorn's longhorn.yaml). Splitting on column-0 `---` separators is
+ * safe because block-scalar content is always indented.
  */
-export function dropLeadingCommentDoc(yaml: string): string {
-  return yaml.replace(/^(?:[ \t]*(?:#[^\n]*)?\r?\n)*---[^\n]*\r?\n/, "");
+export function dropEmptyDocs(yaml: string): string {
+  const docs = yaml.split(/^---[ \t]*(?:#[^\n]*)?\r?\n/m);
+  const kept = docs.filter((doc) =>
+    doc.split("\n").some((line) => {
+      const trimmed = line.trim();
+      return trimmed !== "" && !trimmed.startsWith("#");
+    }),
+  );
+  return kept.join("---\n");
 }
 
 async function crdYaml(source: CrdSource, version: string): Promise<string> {
