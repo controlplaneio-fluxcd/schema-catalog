@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-90-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C297-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-551%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-91-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C299-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-551%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -152,6 +152,7 @@ for the line grammar.
 | Istio | [1.30.2](build/history/istio.json) | 33 | 2026-07-05 |
 | KubeEdge | [v1.23.0](build/history/kubeedge.json) | 18 | 2026-07-05 |
 | OpenFeature Operator | [v0.9.2](build/history/open-feature-operator.json) | 9 | 2026-07-05 |
+| OpenReports | [v0.2.1](build/history/openreports.json) | 2 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
