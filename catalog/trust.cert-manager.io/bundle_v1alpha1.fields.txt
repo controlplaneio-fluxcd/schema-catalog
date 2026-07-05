@@ -1,0 +1,62 @@
+# schema source: Trust Manager v0.24.0 https://github.com/cert-manager/trust-manager
+apiVersion <string> enum=trust.cert-manager.io/v1alpha1
+kind <string> enum=Bundle (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# spec represents the desired state of the Bundle resource.
+spec.sources <[]object> (required) min=1 max=100	# sources is a set of references to data whose data will sync to the target.
+spec.sources[].configMap <object>	# configMap is a reference (by name) to a ConfigMap's `data` key(s), or to a list of ConfigMap's `data` key(s) using label selector, in the trust namespace.
+spec.sources[].configMap.includeAllKeys <boolean>	# includeAllKeys is a flag to include all keys in the object's `data` field to be used. False by default. This field must not be true when `key` is set.
+spec.sources[].configMap.key <string> min=1 max=253	# key of the entry in the object's `data` field to be used.
+spec.sources[].configMap.name <string> min=1 max=253	# name is the name of the source object in the trust namespace. This field must be left empty when `selector` is set
+spec.sources[].configMap.selector <object>	# selector is the label selector to use to fetch a list of objects. Must not be set when `name` is set.
+spec.sources[].configMap.selector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.sources[].configMap.selector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.sources[].configMap.selector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.sources[].configMap.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.sources[].configMap.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.sources[].inLine <string> min=1 max=1048576	# inLine is a simple string to append as the source data.
+spec.sources[].secret <object>	# secret is a reference (by name) to a Secret's `data` key(s), or to a list of Secret's `data` key(s) using label selector, in the trust namespace.
+spec.sources[].secret.includeAllKeys <boolean>	# includeAllKeys is a flag to include all keys in the object's `data` field to be used. False by default. This field must not be true when `key` is set.
+spec.sources[].secret.key <string> min=1 max=253	# key of the entry in the object's `data` field to be used.
+spec.sources[].secret.name <string> min=1 max=253	# name is the name of the source object in the trust namespace. This field must be left empty when `selector` is set
+spec.sources[].secret.selector <object>	# selector is the label selector to use to fetch a list of objects. Must not be set when `name` is set.
+spec.sources[].secret.selector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.sources[].secret.selector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.sources[].secret.selector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.sources[].secret.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.sources[].secret.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.sources[].useDefaultCAs <boolean>	# useDefaultCAs indicates whether the default CA bundle should be used as a source. The default CA bundle is available only if trust-manager was installed with default CA support enabled, either via the Helm chart or by starting the trust-manager controller with the "--default-package-location" flag. If default CA support was not enabled at startup, setting this field to true will result in reconciliation failure. The version of the default CA package used for this Bundle is reported in status.defaultCAVersion.
+spec.target <object>	# target is the target location in all namespaces to sync source data to.
+spec.target.additionalFormats <object>	# additionalFormats specifies any additional formats to write to the target
+spec.target.additionalFormats.jks <object>	# jks requests a JKS-formatted binary trust bundle to be written to the target. The bundle has "changeit" as the default password. For more information refer to this link https://cert-manager.io/docs/faq/#keystore-passwords Format is deprecated: Writing JKS is subject for removal. Please migrate to PKCS12. PKCS#12 trust stores created by trust-manager are compatible with Java.
+spec.target.additionalFormats.jks.key <string> (required) min=1 max=253	# key is the key of the entry in the object's `data` field to be used.
+spec.target.additionalFormats.jks.password <string> default="changeit" min=1 max=128	# password for JKS trust store
+spec.target.additionalFormats.pkcs12 <object>	# pkcs12 requests a PKCS12-formatted binary trust bundle to be written to the target. The bundle is by default created without a password. For more information refer to this link https://cert-manager.io/docs/faq/#keystore-passwords
+spec.target.additionalFormats.pkcs12.key <string> (required) min=1 max=253	# key is the key of the entry in the object's `data` field to be used.
+spec.target.additionalFormats.pkcs12.password <string> default="" min=0 max=128	# password for PKCS12 trust store
+spec.target.additionalFormats.pkcs12.profile <string> enum=LegacyRC2|LegacyDES|Modern2023	# profile specifies the certificate encryption algorithms and the HMAC algorithm used to create the PKCS12 trust store. If provided, allowed values are: `LegacyRC2`: Deprecated. Not supported by default in OpenSSL 3 or Java 20. `LegacyDES`: Less secure algorithm. Use this option for maximal compatibility. `Modern2023`: Secure algorithm. Use this option in case you have to always use secure algorithms (e.g. because of company policy). Default value is `LegacyRC2` for backward compatibility.
+spec.target.configMap <object>	# configMap is the target ConfigMap in Namespaces that all Bundle source data will be synced to.
+spec.target.configMap.key <string> (required) min=1 max=253	# key is the key of the entry in the object's `data` field to be used.
+spec.target.configMap.metadata <object>	# metadata is an optional set of labels and annotations to be copied to the target.
+spec.target.configMap.metadata.annotations <map[string]string>	# annotations is a key value map to be copied to the target.
+spec.target.configMap.metadata.labels <map[string]string>	# labels is a key value map to be copied to the target.
+spec.target.namespaceSelector <object>	# namespaceSelector will, if set, only sync the target resource in Namespaces which match the selector.
+spec.target.namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.target.namespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.target.namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.target.namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.target.namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.target.secret <object>	# secret is the target Secret that all Bundle source data will be synced to. Using Secrets as targets is only supported if enabled at trust-manager startup. By default, trust-manager has no permissions for writing to secrets and can only read secrets in the trust namespace.
+spec.target.secret.key <string> (required) min=1 max=253	# key is the key of the entry in the object's `data` field to be used.
+spec.target.secret.metadata <object>	# metadata is an optional set of labels and annotations to be copied to the target.
+spec.target.secret.metadata.annotations <map[string]string>	# annotations is a key value map to be copied to the target.
+spec.target.secret.metadata.labels <map[string]string>	# labels is a key value map to be copied to the target.
+status <object>	# status of the Bundle. This is set and managed automatically.
+status.conditions <[]object> min=0 max=10	# conditions represent the latest available observations of the Bundle's current state.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.defaultCAVersion <string> min=1 max=253	# defaultCAVersion is the version of the default CA package used when resolving the default CA source(s) for this Bundle (for example, when any source has useDefaultCAs set to true), if applicable. Bundles resolved from identical sets of default CA certificates will report the same defaultCAVersion value.
