@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { CATEGORIES } from "./config.ts";
 import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
 import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
@@ -11,7 +12,7 @@ import {
   pickLatestOpenShift,
   pickLatestRelease,
 } from "./resolve.ts";
-import type { HistoryEntry } from "./types.ts";
+import type { HistoryEntry, SourceCategory } from "./types.ts";
 
 describe("matchAsset", () => {
   test("matches exact names", () => {
@@ -252,13 +253,31 @@ describe("removedFiles", () => {
 
 describe("versions table", () => {
   const readme = "# Title\n\n<!-- versions:start -->\nstale\n<!-- versions:end -->\n";
+  const versionRow = (
+    alias: string,
+    category: SourceCategory,
+    overrides: Partial<{
+      name: string;
+      version: string;
+      builtAt: string;
+      schemas: number;
+    }> = {},
+  ) => ({
+    alias,
+    category,
+    name: overrides.name ?? alias.toLowerCase().replaceAll(" ", "-"),
+    version: overrides.version ?? "v1.0.0",
+    builtAt: overrides.builtAt ?? "2026-07-05T03:15:00.000Z",
+    schemas: overrides.schemas ?? 1,
+  });
 
   test("renders and splices between the markers", () => {
     const table = renderVersionsTable([
-      { alias: "Flux", name: "flux", version: "v2.9.0", builtAt: "2026-07-05T03:15:00.000Z", schemas: 34 },
+      versionRow("Flux", "Orchestration & Management", { version: "v2.9.0", schemas: 34 }),
     ]);
     expect(spliceVersionsTable(readme, table)).toBe(
       "# Title\n\n<!-- versions:start -->\n" +
+        "### Orchestration & Management\n\n" +
         "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
         "| Flux | [v2.9.0](build/history/flux.json) | 34 | 2026-07-05 |\n" +
         "<!-- versions:end -->\n",
@@ -268,13 +287,68 @@ describe("versions table", () => {
   test("throws when the markers are missing", () => {
     expect(() => spliceVersionsTable("# Title\n", "")).toThrow("missing");
   });
+
+  test("renders multiple categories in configured order and skips empty categories", () => {
+    const table = renderVersionsTable([
+      versionRow("Runtime B", "Runtime", { name: "runtime-b" }),
+      versionRow("Provisioning A", "Provisioning", { name: "provisioning-a" }),
+      versionRow("Platform C", "Platform", { name: "platform-c" }),
+    ]);
+
+    expect(table).toBe(
+      "### Provisioning\n\n" +
+        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
+        "| Provisioning A | [v1.0.0](build/history/provisioning-a.json) | 1 | 2026-07-05 |\n\n" +
+        "### Runtime\n\n" +
+        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
+        "| Runtime B | [v1.0.0](build/history/runtime-b.json) | 1 | 2026-07-05 |\n\n" +
+        "### Platform\n\n" +
+        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
+        "| Platform C | [v1.0.0](build/history/platform-c.json) | 1 | 2026-07-05 |",
+    );
+    expect(CATEGORIES.filter((category) => table.includes(`### ${category}`))).toEqual([
+      "Provisioning",
+      "Runtime",
+      "Platform",
+    ]);
+  });
+
+  test("sorts rows alphabetically within each category case-insensitively", () => {
+    const table = renderVersionsTable([
+      versionRow("beta", "Runtime"),
+      versionRow("Alpha", "Runtime"),
+      versionRow("gamma", "Runtime"),
+    ]);
+
+    expect(table).toBe(
+      "### Runtime\n\n" +
+        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
+        "| Alpha | [v1.0.0](build/history/alpha.json) | 1 | 2026-07-05 |\n" +
+        "| beta | [v1.0.0](build/history/beta.json) | 1 | 2026-07-05 |\n" +
+        "| gamma | [v1.0.0](build/history/gamma.json) | 1 | 2026-07-05 |",
+    );
+  });
 });
 
 describe("renderCatalogStats", () => {
   test("renders project count, total schemas and size as shields.io badges", () => {
     const rows = [
-      { alias: "Flux", name: "flux", version: "v2.9.0", builtAt: "", schemas: 15 },
-      { alias: "AWS", name: "provider-upjet-aws", version: "v2.6.0", builtAt: "", schemas: 2364 },
+      {
+        alias: "Flux",
+        category: "Orchestration & Management" as const,
+        name: "flux",
+        version: "v2.9.0",
+        builtAt: "",
+        schemas: 15,
+      },
+      {
+        alias: "AWS",
+        category: "Provisioning" as const,
+        name: "provider-upjet-aws",
+        version: "v2.6.0",
+        builtAt: "",
+        schemas: 2364,
+      },
     ];
     expect(renderCatalogStats(rows, 1234)).toBe(
       "![Projects](https://img.shields.io/badge/Projects-2-2088FF?style=flat-square) " +

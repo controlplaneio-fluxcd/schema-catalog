@@ -1,3 +1,6 @@
+import { CATEGORIES } from "./config.ts";
+import type { SourceCategory } from "./types.ts";
+
 const VERSIONS_START = "<!-- versions:start -->";
 const VERSIONS_END = "<!-- versions:end -->";
 const STATS_START = "<!-- stats:start -->";
@@ -6,6 +9,8 @@ const STATS_END = "<!-- stats:end -->";
 export interface VersionRow {
   /** Display name from the source's `alias`. */
   alias: string;
+  /** CNCF landscape top-level group; controls README section placement. */
+  category: SourceCategory;
   /** Source key; links the version to build/history/<name>.json. */
   name: string;
   version: string;
@@ -16,14 +21,29 @@ export interface VersionRow {
 }
 
 export function renderVersionsTable(rows: VersionRow[]): string {
-  const lines = ["| Project | Version | Schemas | Updated |", "| --- | --- | --- | --- |"];
-  for (const row of rows) {
-    const updated = row.builtAt.slice(0, 10);
-    lines.push(
-      `| ${row.alias} | [${row.version}](build/history/${row.name}.json) | ${row.schemas} | ${updated} |`,
-    );
+  const sections: string[] = [];
+  for (const category of CATEGORIES) {
+    const categoryRows = rows
+      .filter((row) => row.category === category)
+      .sort((a, b) => {
+        const aa = a.alias.toLowerCase();
+        const bb = b.alias.toLowerCase();
+        return aa < bb ? -1 : aa > bb ? 1 : 0;
+      });
+    if (categoryRows.length === 0) {
+      continue;
+    }
+
+    const lines = [`### ${category}`, "", "| Project | Version | Schemas | Updated |", "| --- | --- | --- | --- |"];
+    for (const row of categoryRows) {
+      const updated = row.builtAt.slice(0, 10);
+      lines.push(
+        `| ${row.alias} | [${row.version}](build/history/${row.name}.json) | ${row.schemas} | ${updated} |`,
+      );
+    }
+    sections.push(lines.join("\n"));
   }
-  return lines.join("\n");
+  return sections.join("\n\n");
 }
 
 /** Thousands-separated integer (2364 -> "2,364"), locale-independent. */

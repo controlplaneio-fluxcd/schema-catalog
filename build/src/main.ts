@@ -226,6 +226,7 @@ async function main(): Promise<number> {
     .filter((x): x is { source: Source; entry: HistoryEntry } => x.entry != null);
   const rows = tracked.map(({ source, entry }) => ({
     alias: source.alias,
+    category: source.category,
     name: entry.name,
     version: entry.version,
     builtAt: entry.builtAt,
