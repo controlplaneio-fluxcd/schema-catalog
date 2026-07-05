@@ -1,0 +1,40 @@
+# schema source: AWS EFS Controller v1.4.0 https://github.com/aws-controllers-k8s/efs-controller
+apiVersion <string> enum=efs.services.k8s.aws/v1alpha1
+kind <string> enum=AccessPoint
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# AccessPointSpec defines the desired state of AccessPoint.
+spec.fileSystemID <string> (immutable)	# The ID of the EFS file system that the access point provides access to. Regex Pattern: `^(arn:aws[-a-z]*:elasticfilesystem:[0-9a-z-:]+:file-system/fs-[0-9a-f]{8,40}|fs-[0-9a-f]{8,40})$`
+spec.fileSystemRef <object>	# AWSResourceReferenceWrapper provides a wrapper around *AWSResourceReference type to provide more user friendly syntax for references using 'from' field Ex: APIIDRef: from: name: my-api
+spec.fileSystemRef.from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.fileSystemRef.from.name <string>
+spec.fileSystemRef.from.namespace <string>
+spec.posixUser <object> (immutable)	# The operating system user and group applied to all file system requests made using the access point.
+spec.posixUser.gid <integer> format=int64
+spec.posixUser.secondaryGIDs <[]integer>
+spec.posixUser.uid <integer> format=int64
+spec.rootDirectory <object> (immutable)	# Specifies the directory on the EFS file system that the access point exposes as the root directory of your file system to NFS clients using the access point. The clients using the access point can only access the root directory and below. If the RootDirectory > Path specified does not exist, Amazon EFS creates it and applies the CreationInfo settings when a client connects to an access point. When specifying a RootDirectory, you must provide the Path, and the CreationInfo. Amazon EFS creates a root directory only if you have provided the CreationInfo: OwnUid, OwnGID, and permissions for the directory. If you do not provide this information, Amazon EFS does not create the root directory. If the root directory does not exist, attempts to mount using the access point will fail.
+spec.rootDirectory.creationInfo <object>	# Required if the RootDirectory > Path specified does not exist. Specifies the POSIX IDs and permissions to apply to the access point's RootDirectory > Path. If the access point root directory does not exist, EFS creates it with these settings when a client connects to the access point. When specifying CreationInfo, you must include values for all properties. Amazon EFS creates a root directory only if you have provided the CreationInfo: OwnUid, OwnGID, and permissions for the directory. If you do not provide this information, Amazon EFS does not create the root directory. If the root directory does not exist, attempts to mount using the access point will fail. If you do not provide CreationInfo and the specified RootDirectory does not exist, attempts to mount the file system using the access point will fail.
+spec.rootDirectory.creationInfo.ownerGID <integer> format=int64
+spec.rootDirectory.creationInfo.ownerUID <integer> format=int64
+spec.rootDirectory.creationInfo.permissions <string>
+spec.rootDirectory.path <string>
+spec.tags <[]object>	# Creates tags associated with the access point. Each tag is a key-value pair, each key must be unique. For more information, see Tagging Amazon Web Services resources (https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) in the Amazon Web Services General Reference Guide.
+spec.tags[].key <string>
+spec.tags[].value <string>
+status <object>	# AccessPointStatus defines the observed state of AccessPoint
+status.accessPointID <string>	# The ID of the access point, assigned by Amazon EFS. Regex Pattern: `^(arn:aws[-a-z]*:elasticfilesystem:[0-9a-z-:]+:access-point/fsap-[0-9a-f]{8,40}|fsap-[0-9a-f]{8,40})$`
+status.ackResourceMetadata <object>	# All CRs managed by ACK have a common `Status.ACKResourceMetadata` member that is used to contain resource sync state, account ownership, constructed ARN for the resource
+status.ackResourceMetadata.arn <string>	# ARN is the Amazon Resource Name for the resource. This is a globally-unique identifier and is set only by the ACK service controller once the controller has orchestrated the creation of the resource OR when it has verified that an "adopted" resource (a resource where the ARN annotation was set by the Kubernetes user on the CR) exists and matches the supplied CR's Spec field values. https://github.com/aws/aws-controllers-k8s/issues/270
+status.ackResourceMetadata.ownerAccountID <string> (required)	# OwnerAccountID is the AWS Account ID of the account that owns the backend AWS service API resource.
+status.ackResourceMetadata.partition <string>	# Partition is the AWS partition in which the resource exists or will exist
+status.ackResourceMetadata.region <string> (required)	# Region is the AWS region in which the resource exists or will exist.
+status.conditions <[]object>	# All CRs managed by ACK have a common `Status.Conditions` member that contains a collection of `ackv1alpha1.Condition` objects that describe the various terminal states of the CR and its backend AWS service API resource
+status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# Type is the type of the Condition
+status.lifeCycleState <string>	# Identifies the lifecycle phase of the access point.
+status.name <string>	# The name of the access point. This is the value of the Name tag.
+status.ownerID <string>	# Identifies the Amazon Web Services account that owns the access point resource. Regex Pattern: `^(\d{12})|(\d{4}-\d{4}-\d{4})$`

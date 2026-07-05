@@ -1,0 +1,96 @@
+# schema source: AWS ACM Controller v1.4.1 https://github.com/aws-controllers-k8s/acm-controller
+apiVersion <string> enum=acm.services.k8s.aws/v1alpha1
+kind <string> enum=Certificate
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# CertificateSpec defines the desired state of Certificate.
+spec.certificate <object> (immutable)	# The Certificate to import into AWS Certificate Manager (ACM) to use with services that are integrated with ACM. This field is only valid when importing an existing certificate into ACM.
+spec.certificate.key <string> (required)	# Key is the key within the secret
+spec.certificate.name <string>	# name is unique within a namespace to reference a secret resource.
+spec.certificate.namespace <string>	# namespace defines the space within which the secret name must be unique.
+spec.certificateARN <string> (immutable)	# The Amazon Resource Name (ARN) of an imported certificate to replace. This field is only valid when importing an existing certificate into ACM.
+spec.certificateAuthorityARN <string> (immutable)	# The Amazon Resource Name (ARN) of the private certificate authority (CA) that will be used to issue the certificate. If you do not provide an ARN and you are trying to request a private certificate, ACM will attempt to issue a public certificate. For more information about private CAs, see the Amazon Web Services Private Certificate Authority (https://docs.aws.amazon.com/privateca/latest/userguide/PcaWelcome.html) user guide. The ARN must have the following form: arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 Regex Pattern: `^arn:[\w+=/,.@-]+:acm-pca:[\w+=/,.@-]*:[0-9]+:[\w+=,.@-]+(/[\w+=,.@-]+)*$`
+spec.certificateAuthorityRef <object>	# AWSResourceReferenceWrapper provides a wrapper around *AWSResourceReference type to provide more user friendly syntax for references using 'from' field Ex: APIIDRef: from: name: my-api
+spec.certificateAuthorityRef.from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.certificateAuthorityRef.from.name <string>
+spec.certificateAuthorityRef.from.namespace <string>
+spec.certificateChain <object> (immutable)	# SecretKeyReference combines a k8s corev1.SecretReference with a specific key within the referred-to Secret
+spec.certificateChain.key <string> (required)	# Key is the key within the secret
+spec.certificateChain.name <string>	# name is unique within a namespace to reference a secret resource.
+spec.certificateChain.namespace <string>	# namespace defines the space within which the secret name must be unique.
+spec.domainName <string>	# Fully qualified domain name (FQDN), such as www.example.com, that you want to secure with an ACM certificate. Use an asterisk (*) to create a wildcard certificate that protects several sites in the same domain. For example, *.example.com protects www.example.com, site.example.com, and images.example.com. In compliance with RFC 5280 (https://datatracker.ietf.org/doc/html/rfc5280), the length of the domain name (technically, the Common Name) that you provide cannot exceed 64 octets (characters), including periods. To add a longer domain name, specify it in the Subject Alternative Name field, which supports names up to 253 octets in length. Regex Pattern: `^(\*\.)?(((?!-)[A-Za-z0-9-]{0,62}[A-Za-z0-9])\.)+((?!-)[A-Za-z0-9-]{1,62}[A-Za-z0-9])$`
+spec.domainValidationOptions <[]object> (immutable)	# The domain name that you want ACM to use to send you emails so that you can validate domain ownership.
+spec.domainValidationOptions[].domainName <string>
+spec.domainValidationOptions[].validationDomain <string>
+spec.exportTo <object> (immutable)	# SecretKeyReference combines a k8s corev1.SecretReference with a specific key within the referred-to Secret
+spec.exportTo.key <string> (required)	# Key is the key within the secret
+spec.exportTo.name <string>	# name is unique within a namespace to reference a secret resource.
+spec.exportTo.namespace <string>	# namespace defines the space within which the secret name must be unique.
+spec.keyAlgorithm <string> (immutable)	# Specifies the algorithm of the public and private key pair that your certificate uses to encrypt data. RSA is the default key algorithm for ACM certificates. Elliptic Curve Digital Signature Algorithm (ECDSA) keys are smaller, offering security comparable to RSA keys but with greater computing efficiency. However, ECDSA is not supported by all network clients. Some Amazon Web Services services may require RSA keys, or only support ECDSA keys of a particular size, while others allow the use of either RSA and ECDSA keys to ensure that compatibility is not broken. Check the requirements for the Amazon Web Services service where you plan to deploy your certificate. For more information about selecting an algorithm, see Key algorithms (https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms). Algorithms supported for an ACM certificate request include: * RSA_2048 * EC_prime256v1 * EC_secp384r1 Other listed algorithms are for imported certificates only. When you request a private PKI certificate signed by a CA from Amazon Web Services Private CA, the specified signing algorithm family (RSA or ECDSA) must match the algorithm family of the CA's secret key. Default: RSA_2048
+spec.options <object>	# Currently, you can use this parameter to specify whether to add the certificate to a certificate transparency log. Certificate transparency makes it possible to detect SSL/TLS certificates that have been mistakenly or maliciously issued. Certificates that have not been logged typically produce an error message in a browser. For more information, see Opting Out of Certificate Transparency Logging (https://docs.aws.amazon.com/acm/latest/userguide/acm-bestpractices.html#best-practices-transparency).
+spec.options.certificateTransparencyLoggingPreference <string>
+spec.privateKey <object> (immutable)	# The private key that matches the public key in the certificate. This field is only valid when importing an existing certificate into ACM.
+spec.privateKey.key <string> (required)	# Key is the key within the secret
+spec.privateKey.name <string>	# name is unique within a namespace to reference a secret resource.
+spec.privateKey.namespace <string>	# namespace defines the space within which the secret name must be unique.
+spec.subjectAlternativeNames <[]string> (immutable)	# Additional FQDNs to be included in the Subject Alternative Name extension of the ACM certificate. For example, add the name www.example.net to a certificate for which the DomainName field is www.example.com if users can reach your site by using either name. The maximum number of domain names that you can add to an ACM certificate is 100. However, the initial quota is 10 domain names. If you need more than 10 names, you must request a quota increase. For more information, see Quotas (https://docs.aws.amazon.com/acm/latest/userguide/acm-limits.html). The maximum length of a SAN DNS name is 253 octets. The name is made up of multiple labels separated by periods. No label can be longer than 63 octets. Consider the following examples: * (63 octets).(63 octets).(63 octets).(61 octets) is legal because the total length is 253 octets (63+1+63+1+63+1+61) and no label exceeds 63 octets. * (64 octets).(63 octets).(63 octets).(61 octets) is not legal because the total length exceeds 253 octets (64+1+63+1+63+1+61) and the first label exceeds 63 octets. * (63 octets).(63 octets).(63 octets).(62 octets) is not legal because the total length of the DNS name (63+1+63+1+63+1+62) exceeds 253 octets.
+spec.tags <[]object>	# One or more resource tags to associate with the certificate.
+spec.tags[].key <string>
+spec.tags[].value <string>
+status <object>	# CertificateStatus defines the observed state of Certificate
+status.ackResourceMetadata <object>	# All CRs managed by ACK have a common `Status.ACKResourceMetadata` member that is used to contain resource sync state, account ownership, constructed ARN for the resource
+status.ackResourceMetadata.arn <string>	# ARN is the Amazon Resource Name for the resource. This is a globally-unique identifier and is set only by the ACK service controller once the controller has orchestrated the creation of the resource OR when it has verified that an "adopted" resource (a resource where the ARN annotation was set by the Kubernetes user on the CR) exists and matches the supplied CR's Spec field values. https://github.com/aws/aws-controllers-k8s/issues/270
+status.ackResourceMetadata.ownerAccountID <string> (required)	# OwnerAccountID is the AWS Account ID of the account that owns the backend AWS service API resource.
+status.ackResourceMetadata.partition <string>	# Partition is the AWS partition in which the resource exists or will exist
+status.ackResourceMetadata.region <string> (required)	# Region is the AWS region in which the resource exists or will exist.
+status.conditions <[]object>	# All CRs managed by ACK have a common `Status.Conditions` member that contains a collection of `ackv1alpha1.Condition` objects that describe the various terminal states of the CR and its backend AWS service API resource
+status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# Type is the type of the Condition
+status.createdAt <string> format=date-time	# The time at which the certificate was requested.
+status.domainValidations <[]object>	# Contains information about the initial validation of each domain name that occurs as a result of the RequestCertificate request. This field exists only when the certificate type is AMAZON_ISSUED.
+status.domainValidations[].domainName <string>
+status.domainValidations[].resourceRecord <object>	# Contains a DNS record value that you can use to validate ownership or control of a domain. This is used by the DescribeCertificate action.
+status.domainValidations[].resourceRecord.name <string>
+status.domainValidations[].resourceRecord.type_ <string>
+status.domainValidations[].resourceRecord.value <string>
+status.domainValidations[].validationDomain <string>
+status.domainValidations[].validationEmails <[]string>
+status.domainValidations[].validationMethod <string>
+status.domainValidations[].validationStatus <string>
+status.extendedKeyUsages <[]object>	# Contains a list of Extended Key Usage X.509 v3 extension objects. Each object specifies a purpose for which the certificate public key can be used and consists of a name and an object identifier (OID).
+status.extendedKeyUsages[].name <string>
+status.extendedKeyUsages[].oid <string>
+status.failureReason <string>	# The reason the certificate request failed. This value exists only when the certificate status is FAILED. For more information, see Certificate Request Failed (https://docs.aws.amazon.com/acm/latest/userguide/troubleshooting.html#troubleshooting-failed) in the Certificate Manager User Guide.
+status.importedAt <string> format=date-time	# The date and time when the certificate was imported. This value exists only when the certificate type is IMPORTED.
+status.inUseBy <[]string>	# A list of ARNs for the Amazon Web Services resources that are using the certificate. A certificate can be used by multiple Amazon Web Services resources.
+status.issuedAt <string> format=date-time	# The time at which the certificate was issued. This value exists only when the certificate type is AMAZON_ISSUED.
+status.issuer <string>	# The name of the certificate authority that issued and signed the certificate.
+status.keyUsages <[]object>	# A list of Key Usage X.509 v3 extension objects. Each object is a string value that identifies the purpose of the public key contained in the certificate. Possible extension values include DIGITAL_SIGNATURE, KEY_ENCHIPHERMENT, NON_REPUDIATION, and more.
+status.keyUsages[].name <string>
+status.notAfter <string> format=date-time	# The time after which the certificate is not valid.
+status.notBefore <string> format=date-time	# The time before which the certificate is not valid.
+status.renewalEligibility <string>	# Specifies whether the certificate is eligible for renewal. At this time, only exported private certificates can be renewed with the RenewCertificate command.
+status.renewalSummary <object>	# Contains information about the status of ACM's managed renewal (https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for the certificate. This field exists only when the certificate type is AMAZON_ISSUED.
+status.renewalSummary.domainValidationOptions <[]object>
+status.renewalSummary.domainValidationOptions[].domainName <string>
+status.renewalSummary.domainValidationOptions[].resourceRecord <object>	# Contains a DNS record value that you can use to validate ownership or control of a domain. This is used by the DescribeCertificate action.
+status.renewalSummary.domainValidationOptions[].resourceRecord.name <string>
+status.renewalSummary.domainValidationOptions[].resourceRecord.type_ <string>
+status.renewalSummary.domainValidationOptions[].resourceRecord.value <string>
+status.renewalSummary.domainValidationOptions[].validationDomain <string>
+status.renewalSummary.domainValidationOptions[].validationEmails <[]string>
+status.renewalSummary.domainValidationOptions[].validationMethod <string>
+status.renewalSummary.domainValidationOptions[].validationStatus <string>
+status.renewalSummary.renewalStatus <string>
+status.renewalSummary.renewalStatusReason <string>
+status.renewalSummary.updatedAt <string> format=date-time
+status.revocationReason <string>	# The reason the certificate was revoked. This value exists only when the certificate status is REVOKED.
+status.revokedAt <string> format=date-time	# The time at which the certificate was revoked. This value exists only when the certificate status is REVOKED.
+status.serial <string>	# The serial number of the certificate.
+status.signatureAlgorithm <string>	# The algorithm that was used to sign the certificate.
+status.status <string>	# The status of the certificate. A certificate enters status PENDING_VALIDATION upon being requested, unless it fails for any of the reasons given in the troubleshooting topic Certificate request fails (https://docs.aws.amazon.com/acm/latest/userguide/troubleshooting-failed.html). ACM makes repeated attempts to validate a certificate for 72 hours and then times out. If a certificate shows status FAILED or VALIDATION_TIMED_OUT, delete the request, correct the issue with DNS validation (https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html) or Email validation (https://docs.aws.amazon.com/acm/latest/userguide/email-validation.html), and try again. If validation succeeds, the certificate enters status ISSUED.
+status.subject <string>	# The name of the entity that is associated with the public key contained in the certificate.
+status.type_ <string>	# The source of the certificate. For certificates provided by ACM, this value is AMAZON_ISSUED. For certificates that you imported with ImportCertificate, this value is IMPORTED. ACM does not provide managed renewal (https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for imported certificates. For more information about the differences between certificates that you import and those that ACM provides, see Importing Certificates (https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html) in the Certificate Manager User Guide.

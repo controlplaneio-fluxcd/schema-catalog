@@ -1,0 +1,153 @@
+# schema source: AWS SageMaker Controller v1.8.1 https://github.com/aws-controllers-k8s/sagemaker-controller
+apiVersion <string> enum=sagemaker.services.k8s.aws/v1alpha1
+kind <string> enum=TrainingJob
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# TrainingJobSpec defines the desired state of TrainingJob. Contains information about a training job.
+spec.algorithmSpecification <object> (required)	# The registry path of the Docker image that contains the training algorithm and algorithm-specific metadata, including the input mode. For more information about algorithms provided by SageMaker, see Algorithms (https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). For information about providing your own algorithms, see Using Your Own Algorithms with Amazon SageMaker (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html).
+spec.algorithmSpecification.algorithmName <string>
+spec.algorithmSpecification.enableSageMakerMetricsTimeSeries <boolean>
+spec.algorithmSpecification.metricDefinitions <[]object>
+spec.algorithmSpecification.metricDefinitions[].name <string>
+spec.algorithmSpecification.metricDefinitions[].regex <string>
+spec.algorithmSpecification.trainingImage <string>
+spec.algorithmSpecification.trainingInputMode <string>	# The training input mode that the algorithm supports. For more information about input modes, see Algorithms (https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). Pipe mode If an algorithm supports Pipe mode, Amazon SageMaker streams data directly from Amazon S3 to the container. File mode If an algorithm supports File mode, SageMaker downloads the training data from S3 to the provisioned ML storage volume, and mounts the directory to the Docker volume for the training container. You must provision the ML storage volume with sufficient capacity to accommodate the data downloaded from S3. In addition to the training data, the ML storage volume also stores the output model. The algorithm container uses the ML storage volume to also store intermediate information, if any. For distributed algorithms, training data is distributed uniformly. Your training duration is predictable if the input data objects sizes are approximately the same. SageMaker does not split the files any further for model training. If the object sizes are skewed, training won't be optimal as the data distribution is also skewed when one host in a training cluster is overloaded, thus becoming a bottleneck in training. FastFile mode If an algorithm supports FastFile mode, SageMaker streams data directly from S3 to the container with no code changes, and provides file system access to the data. Users can author their training script to interact with these files as if they were stored on disk. FastFile mode works best when the data is read sequentially. Augmented manifest files aren't supported. The startup time is lower when there are fewer files in the S3 bucket provided.
+spec.checkpointConfig <object>	# Contains information about the output location for managed spot training checkpoint data.
+spec.checkpointConfig.localPath <string>
+spec.checkpointConfig.s3URI <string>
+spec.debugHookConfig <object>	# Configuration information for the Amazon SageMaker Debugger hook parameters, metric and tensor collections, and storage paths. To learn more about how to configure the DebugHookConfig parameter, see Use the SageMaker and Debugger Configuration API Operations to Create, Update, and Debug Your Training Job (https://docs.aws.amazon.com/sagemaker/latest/dg/debugger-createtrainingjob-api.html).
+spec.debugHookConfig.collectionConfigurations <[]object>
+spec.debugHookConfig.collectionConfigurations[].collectionName <string>
+spec.debugHookConfig.collectionConfigurations[].collectionParameters <map[string]string>
+spec.debugHookConfig.hookParameters <map[string]string>
+spec.debugHookConfig.localPath <string>
+spec.debugHookConfig.s3OutputPath <string>
+spec.debugRuleConfigurations <[]object>	# Configuration information for Amazon SageMaker Debugger rules for debugging output tensors.
+spec.debugRuleConfigurations[].instanceType <string>
+spec.debugRuleConfigurations[].localPath <string>
+spec.debugRuleConfigurations[].ruleConfigurationName <string>
+spec.debugRuleConfigurations[].ruleEvaluatorImage <string>
+spec.debugRuleConfigurations[].ruleParameters <map[string]string>
+spec.debugRuleConfigurations[].s3OutputPath <string>
+spec.debugRuleConfigurations[].volumeSizeInGB <integer> format=int64
+spec.enableInterContainerTrafficEncryption <boolean>	# To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithm in distributed training. For more information, see Protect Communications Between ML Compute Instances in a Distributed Training Job (https://docs.aws.amazon.com/sagemaker/latest/dg/train-encrypt.html).
+spec.enableManagedSpotTraining <boolean>	# To train models using managed spot training, choose True. Managed spot training provides a fully managed and scalable infrastructure for training machine learning models. this option is useful when training jobs can be interrupted and when there is flexibility when the training job is run. The complete and intermediate results of jobs are stored in an Amazon S3 bucket, and can be used as a starting point to train models incrementally. Amazon SageMaker provides metrics and logs in CloudWatch. They can be used to see when managed spot training jobs are running, interrupted, resumed, or completed.
+spec.enableNetworkIsolation <boolean>	# Isolates the training container. No inbound or outbound network calls can be made, except for calls between peers within a training cluster for distributed training. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
+spec.environment <map[string]string>	# The environment variables to set in the Docker container. Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
+spec.experimentConfig <object>	# Associates a SageMaker job as a trial component with an experiment and trial. Specified when you call the following APIs: * CreateProcessingJob (https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateProcessingJob.html) * CreateTrainingJob (https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrainingJob.html) * CreateTransformJob (https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTransformJob.html)
+spec.experimentConfig.experimentName <string>
+spec.experimentConfig.trialComponentDisplayName <string>
+spec.experimentConfig.trialName <string>
+spec.hyperParameters <map[string]string>	# Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms (https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint. Do not include any security-sensitive information including account access IDs, secrets, or tokens in any hyperparameter fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by any security-sensitive information included in the request hyperparameter variable or plain text fields.
+spec.infraCheckConfig <object>	# Contains information about the infrastructure health check configuration for the training job.
+spec.infraCheckConfig.enableInfraCheck <boolean>
+spec.inputDataConfig <[]object>	# An array of Channel objects. Each channel is a named input source. InputDataConfig describes the input data and its location. Algorithms can accept input data from one or more channels. For example, an algorithm might have two channels of input data, training_data and validation_data. The configuration for each channel provides the S3, EFS, or FSx location where the input data is stored. It also provides information about the stored data: the MIME type, compression method, and whether the data is wrapped in RecordIO format. Depending on the input mode that the algorithm supports, SageMaker either copies input data files from an S3 bucket to a local directory in the Docker container, or makes it available as input streams. For example, if you specify an EFS location, input data files are available as input streams. They do not need to be downloaded. Your input must be in the same Amazon Web Services region as your training job.
+spec.inputDataConfig[].channelName <string>
+spec.inputDataConfig[].compressionType <string>
+spec.inputDataConfig[].contentType <string>
+spec.inputDataConfig[].dataSource <object>	# Describes the location of the channel data.
+spec.inputDataConfig[].dataSource.fileSystemDataSource <object>	# Specifies a file system data source for a channel.
+spec.inputDataConfig[].dataSource.fileSystemDataSource.directoryPath <string>
+spec.inputDataConfig[].dataSource.fileSystemDataSource.fileSystemAccessMode <string>
+spec.inputDataConfig[].dataSource.fileSystemDataSource.fileSystemID <string>
+spec.inputDataConfig[].dataSource.fileSystemDataSource.fileSystemType <string>
+spec.inputDataConfig[].dataSource.s3DataSource <object>	# Describes the S3 data source. Your input bucket must be in the same Amazon Web Services region as your training job.
+spec.inputDataConfig[].dataSource.s3DataSource.attributeNames <[]string>
+spec.inputDataConfig[].dataSource.s3DataSource.hubAccessConfig <object>	# The configuration for a private hub model reference that points to a public SageMaker JumpStart model. For more information about private hubs, see Private curated hubs for foundation model access control in JumpStart (https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-curated-hubs.html).
+spec.inputDataConfig[].dataSource.s3DataSource.hubAccessConfig.hubContentARN <string>
+spec.inputDataConfig[].dataSource.s3DataSource.instanceGroupNames <[]string>
+spec.inputDataConfig[].dataSource.s3DataSource.modelAccessConfig <object>	# The access configuration file to control access to the ML model. You can explicitly accept the model end-user license agreement (EULA) within the ModelAccessConfig. * If you are a Jumpstart user, see the End-user license agreements (https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-foundation-models-choose.html#jumpstart-foundation-models-choose-eula) section for more details on accepting the EULA. * If you are an AutoML user, see the Optional Parameters section of Create an AutoML job to fine-tune text generation models using the API for details on How to set the EULA acceptance when fine-tuning a model using the AutoML API (https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-create-experiment-finetune-llms.html#autopilot-llms-finetuning-api-optional-params).
+spec.inputDataConfig[].dataSource.s3DataSource.modelAccessConfig.acceptEula <boolean>
+spec.inputDataConfig[].dataSource.s3DataSource.s3DataDistributionType <string>
+spec.inputDataConfig[].dataSource.s3DataSource.s3DataType <string>
+spec.inputDataConfig[].dataSource.s3DataSource.s3URI <string>
+spec.inputDataConfig[].inputMode <string>	# The training input mode that the algorithm supports. For more information about input modes, see Algorithms (https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). Pipe mode If an algorithm supports Pipe mode, Amazon SageMaker streams data directly from Amazon S3 to the container. File mode If an algorithm supports File mode, SageMaker downloads the training data from S3 to the provisioned ML storage volume, and mounts the directory to the Docker volume for the training container. You must provision the ML storage volume with sufficient capacity to accommodate the data downloaded from S3. In addition to the training data, the ML storage volume also stores the output model. The algorithm container uses the ML storage volume to also store intermediate information, if any. For distributed algorithms, training data is distributed uniformly. Your training duration is predictable if the input data objects sizes are approximately the same. SageMaker does not split the files any further for model training. If the object sizes are skewed, training won't be optimal as the data distribution is also skewed when one host in a training cluster is overloaded, thus becoming a bottleneck in training. FastFile mode If an algorithm supports FastFile mode, SageMaker streams data directly from S3 to the container with no code changes, and provides file system access to the data. Users can author their training script to interact with these files as if they were stored on disk. FastFile mode works best when the data is read sequentially. Augmented manifest files aren't supported. The startup time is lower when there are fewer files in the S3 bucket provided.
+spec.inputDataConfig[].recordWrapperType <string>
+spec.inputDataConfig[].shuffleConfig <object>	# A configuration for a shuffle option for input data in a channel. If you use S3Prefix for S3DataType, the results of the S3 key prefix matches are shuffled. If you use ManifestFile, the order of the S3 object references in the ManifestFile is shuffled. If you use AugmentedManifestFile, the order of the JSON lines in the AugmentedManifestFile is shuffled. The shuffling order is determined using the Seed value. For Pipe input mode, when ShuffleConfig is specified shuffling is done at the start of every epoch. With large datasets, this ensures that the order of the training data is different for each epoch, and it helps reduce bias and possible overfitting. In a multi-node training job when ShuffleConfig is combined with S3DataDistributionType of ShardedByS3Key, the data is shuffled across nodes so that the content sent to a particular node on the first epoch might be sent to a different node on the second epoch.
+spec.inputDataConfig[].shuffleConfig.seed <integer> format=int64
+spec.outputDataConfig <object> (required)	# Specifies the path to the S3 location where you want to store model artifacts. SageMaker creates subfolders for the artifacts.
+spec.outputDataConfig.compressionType <string>
+spec.outputDataConfig.kmsKeyID <string>
+spec.outputDataConfig.s3OutputPath <string>
+spec.profilerConfig <object>	# Configuration information for Amazon SageMaker Debugger system monitoring, framework profiling, and storage paths.
+spec.profilerConfig.profilingIntervalInMilliseconds <integer> format=int64
+spec.profilerConfig.profilingParameters <map[string]string>
+spec.profilerConfig.s3OutputPath <string>
+spec.profilerRuleConfigurations <[]object>	# Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
+spec.profilerRuleConfigurations[].instanceType <string>
+spec.profilerRuleConfigurations[].localPath <string>
+spec.profilerRuleConfigurations[].ruleConfigurationName <string>
+spec.profilerRuleConfigurations[].ruleEvaluatorImage <string>
+spec.profilerRuleConfigurations[].ruleParameters <map[string]string>
+spec.profilerRuleConfigurations[].s3OutputPath <string>
+spec.profilerRuleConfigurations[].volumeSizeInGB <integer> format=int64
+spec.remoteDebugConfig <object>	# Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging (https://docs.aws.amazon.com/sagemaker/latest/dg/train-remote-debugging.html).
+spec.remoteDebugConfig.enableRemoteDebug <boolean>
+spec.resourceConfig <object> (required)	# The resources, including the ML compute instances and ML storage volumes, to use for model training. ML storage volumes store model artifacts and incremental states. Training algorithms might also use ML storage volumes for scratch space. If you want SageMaker to use the ML storage volume to store the training data, choose File as the TrainingInputMode in the algorithm specification. For distributed training algorithms, specify an instance count greater than 1.
+spec.resourceConfig.instanceCount <integer> format=int64
+spec.resourceConfig.instanceGroups <[]object>
+spec.resourceConfig.instanceGroups[].instanceCount <integer> format=int64
+spec.resourceConfig.instanceGroups[].instanceGroupName <string>
+spec.resourceConfig.instanceGroups[].instanceType <string>
+spec.resourceConfig.instancePlacementConfig <object>	# Configuration for how instances are placed and allocated within UltraServers. This is only applicable for UltraServer capacity.
+spec.resourceConfig.instancePlacementConfig.enableMultipleJobs <boolean>
+spec.resourceConfig.instancePlacementConfig.placementSpecifications <[]object>
+spec.resourceConfig.instancePlacementConfig.placementSpecifications[].instanceCount <integer> format=int64
+spec.resourceConfig.instancePlacementConfig.placementSpecifications[].ultraServerID <string>
+spec.resourceConfig.instanceType <string>
+spec.resourceConfig.keepAlivePeriodInSeconds <integer> format=int64	# Optional. Customer requested period in seconds for which the Training cluster is kept alive after the job is finished.
+spec.resourceConfig.volumeKMSKeyID <string>
+spec.resourceConfig.volumeSizeInGB <integer> format=int64
+spec.retryStrategy <object>	# The number of times to retry the job when the job fails due to an InternalServerError.
+spec.retryStrategy.maximumRetryAttempts <integer> format=int64
+spec.roleARN <string> (required)	# The Amazon Resource Name (ARN) of an IAM role that SageMaker can assume to perform tasks on your behalf. During model training, SageMaker needs your permission to read input data from an S3 bucket, download a Docker image that contains training code, write model artifacts to an S3 bucket, write logs to Amazon CloudWatch Logs, and publish metrics to Amazon CloudWatch. You grant permissions for all of these tasks to an IAM role. For more information, see SageMaker Roles (https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html). To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission. Regex Pattern: `^arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`
+spec.stoppingCondition <object> (required)	# Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
+spec.stoppingCondition.maxPendingTimeInSeconds <integer> format=int64	# Maximum job scheduler pending time in seconds.
+spec.stoppingCondition.maxRuntimeInSeconds <integer> format=int64
+spec.stoppingCondition.maxWaitTimeInSeconds <integer> format=int64
+spec.tags <[]object>	# An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources (https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html). Do not include any security-sensitive information including account access IDs, secrets, or tokens in any tags. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by any security-sensitive information included in the request tag variable or plain text fields.
+spec.tags[].key <string>
+spec.tags[].value <string>
+spec.tensorBoardOutputConfig <object>	# Configuration of storage locations for the Amazon SageMaker Debugger TensorBoard output data.
+spec.tensorBoardOutputConfig.localPath <string>
+spec.tensorBoardOutputConfig.s3OutputPath <string>
+spec.trainingJobName <string> (required)	# The name of the training job. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account. Regex Pattern: `^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`
+spec.vpcConfig <object>	# A VpcConfig (https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_VpcConfig.html) object that specifies the VPC that you want your training job to connect to. Control access to and from your training container by configuring the VPC. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html).
+spec.vpcConfig.securityGroupIDs <[]string>
+spec.vpcConfig.subnets <[]string>
+status <object>	# TrainingJobStatus defines the observed state of TrainingJob
+status.ackResourceMetadata <object>	# All CRs managed by ACK have a common `Status.ACKResourceMetadata` member that is used to contain resource sync state, account ownership, constructed ARN for the resource
+status.ackResourceMetadata.arn <string>	# ARN is the Amazon Resource Name for the resource. This is a globally-unique identifier and is set only by the ACK service controller once the controller has orchestrated the creation of the resource OR when it has verified that an "adopted" resource (a resource where the ARN annotation was set by the Kubernetes user on the CR) exists and matches the supplied CR's Spec field values. https://github.com/aws/aws-controllers-k8s/issues/270
+status.ackResourceMetadata.ownerAccountID <string> (required)	# OwnerAccountID is the AWS Account ID of the account that owns the backend AWS service API resource.
+status.ackResourceMetadata.partition <string>	# Partition is the AWS partition in which the resource exists or will exist
+status.ackResourceMetadata.region <string> (required)	# Region is the AWS region in which the resource exists or will exist.
+status.conditions <[]object>	# All CRs managed by ACK have a common `Status.Conditions` member that contains a collection of `ackv1alpha1.Condition` objects that describe the various terminal states of the CR and its backend AWS service API resource
+status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# Type is the type of the Condition
+status.creationTime <string> format=date-time	# A timestamp that indicates when the training job was created.
+status.debugRuleEvaluationStatuses <[]object>	# Evaluation status of Amazon SageMaker Debugger rules for debugging on a training job.
+status.debugRuleEvaluationStatuses[].lastModifiedTime <string> format=date-time
+status.debugRuleEvaluationStatuses[].ruleConfigurationName <string>
+status.debugRuleEvaluationStatuses[].ruleEvaluationJobARN <string>
+status.debugRuleEvaluationStatuses[].ruleEvaluationStatus <string>
+status.debugRuleEvaluationStatuses[].statusDetails <string>
+status.failureReason <string>	# If the training job failed, the reason it failed.
+status.lastModifiedTime <string> format=date-time	# A timestamp that indicates when the status of the training job was last modified.
+status.modelArtifacts <object>	# Information about the Amazon S3 location that is configured for storing model artifacts.
+status.modelArtifacts.s3ModelArtifacts <string>
+status.profilerRuleEvaluationStatuses <[]object>	# Evaluation status of Amazon SageMaker Debugger rules for profiling on a training job.
+status.profilerRuleEvaluationStatuses[].lastModifiedTime <string> format=date-time
+status.profilerRuleEvaluationStatuses[].ruleConfigurationName <string>
+status.profilerRuleEvaluationStatuses[].ruleEvaluationJobARN <string>
+status.profilerRuleEvaluationStatuses[].ruleEvaluationStatus <string>
+status.profilerRuleEvaluationStatuses[].statusDetails <string>
+status.profilingStatus <string>	# Profiling status of a training job.
+status.secondaryStatus <string>	# Provides detailed information about the state of the training job. For detailed information on the secondary status of the training job, see StatusMessage under SecondaryStatusTransition (https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_SecondaryStatusTransition.html). SageMaker provides primary statuses and secondary statuses that apply to each of them: InProgress * Starting - Starting the training job. * Downloading - An optional stage for algorithms that support File training input mode. It indicates that data is being downloaded to the ML storage volumes. * Training - Training is in progress. * Interrupted - The job stopped because the managed spot training instances were interrupted. * Uploading - Training is complete and the model artifacts are being uploaded to the S3 location. Completed * Completed - The training job has completed. Failed * Failed - The training job has failed. The reason for the failure is returned in the FailureReason field of DescribeTrainingJobResponse. Stopped * MaxRuntimeExceeded - The job stopped because it exceeded the maximum allowed runtime. * MaxWaitTimeExceeded - The job stopped because it exceeded the maximum allowed wait time. * Stopped - The training job has stopped. Stopping * Stopping - Stopping the training job. Valid values for SecondaryStatus are subject to change. We no longer support the following secondary statuses: * LaunchingMLInstances * PreparingTraining * DownloadingTrainingImage
+status.trainingJobStatus <string>	# The status of the training job. SageMaker provides the following training job statuses: * InProgress - The training is in progress. * Completed - The training job has completed. * Failed - The training job has failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeTrainingJobResponse call. * Stopping - The training job is stopping. * Stopped - The training job has stopped. For more detailed information, see SecondaryStatus.
+status.warmPoolStatus <object>	# The status of the warm pool associated with the training job.
+status.warmPoolStatus.resourceRetainedBillableTimeInSeconds <integer> format=int64	# Optional. Indicates how many seconds the resource stayed in ResourceRetained state. Populated only after resource reaches ResourceReused or ResourceReleased state.
+status.warmPoolStatus.reusedByJob <string>
+status.warmPoolStatus.status <string>

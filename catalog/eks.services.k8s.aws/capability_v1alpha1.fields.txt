@@ -1,0 +1,49 @@
+# schema source: AWS EKS Controller v1.16.1 https://github.com/aws-controllers-k8s/eks-controller
+apiVersion <string> enum=eks.services.k8s.aws/v1alpha1
+kind <string> enum=Capability
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# CapabilitySpec defines the desired state of Capability. An object representing a managed capability in an Amazon EKS cluster. This includes all configuration, status, and health information for the capability.
+spec.clusterName <string> (required) (immutable)	# The name of the Amazon EKS cluster where you want to create the capability.
+spec.configuration <object>	# The configuration settings for the capability. The structure of this object varies depending on the capability type. For Argo CD capabilities, you can configure IAM Identity CenterIAM; Identity Center integration, RBAC role mappings, and network access settings.
+spec.configuration.argoCD <object>	# Configuration settings for an Argo CD capability. This includes the Kubernetes namespace, IAM Identity CenterIAM; Identity Center integration, RBAC role mappings, and network access configuration.
+spec.configuration.argoCD.awsIDC <object>	# Configuration for integrating Argo CD with IAM Identity CenterIAM; Identity Center. This allows you to use your organization's identity provider for authentication to Argo CD.
+spec.configuration.argoCD.awsIDC.idcInstanceARN <string>
+spec.configuration.argoCD.awsIDC.idcRegion <string>
+spec.configuration.argoCD.namespace <string>
+spec.configuration.argoCD.networkAccess <object>	# Configuration for network access to the Argo CD capability's managed API server endpoint. When VPC endpoint IDs are specified, public access is blocked and the Argo CD server is only accessible through the specified VPC endpoints.
+spec.configuration.argoCD.networkAccess.vpceIDs <[]string>
+spec.configuration.argoCD.rbacRoleMappings <[]object>
+spec.configuration.argoCD.rbacRoleMappings[].identities <[]object>
+spec.configuration.argoCD.rbacRoleMappings[].identities[].id <string>
+spec.configuration.argoCD.rbacRoleMappings[].identities[].type <string>
+spec.configuration.argoCD.rbacRoleMappings[].role <string>
+spec.deletePropagationPolicy <string> (required)	# Specifies how Kubernetes resources managed by the capability should be handled when the capability is deleted. Currently, the only supported value is RETAIN which retains all Kubernetes resources managed by the capability when the capability is deleted. Because resources are retained, all Kubernetes resources created by the capability should be deleted from the cluster before deleting the capability itself. After the capability is deleted, these resources become difficult to manage because the controller is no longer available.
+spec.name <string> (required) (immutable)	# A unique name for the capability. The name must be unique within your cluster and can contain alphanumeric characters, hyphens, and underscores.
+spec.roleARN <string>	# The Amazon Resource Name (ARN) of the IAM role that the capability uses to interact with Amazon Web Services services. This role must have a trust policy that allows the EKS service principal to assume it, and it must have the necessary permissions for the capability type you're creating. For ACK capabilities, the role needs permissions to manage the resources you want to control through Kubernetes. For Argo CD capabilities, the role needs permissions to access Git repositories and Secrets Manager. For KRO capabilities, the role needs permissions based on the resources you'll be orchestrating.
+spec.roleRef <object>	# AWSResourceReferenceWrapper provides a wrapper around *AWSResourceReference type to provide more user friendly syntax for references using 'from' field Ex: APIIDRef: from: name: my-api
+spec.roleRef.from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.roleRef.from.name <string>
+spec.roleRef.from.namespace <string>
+spec.tags <map[string]string>
+spec.type <string> (required) (immutable)	# The type of capability to create. Valid values are: * ACK – Amazon Web Services Controllers for Kubernetes (ACK), which lets you manage resources directly from Kubernetes. * ARGOCD – Argo CD for GitOps-based continuous delivery. * KRO – Kube Resource Orchestrator (KRO) for composing and managing custom Kubernetes resources.
+status <object>	# CapabilityStatus defines the observed state of Capability
+status.ackResourceMetadata <object>	# All CRs managed by ACK have a common `Status.ACKResourceMetadata` member that is used to contain resource sync state, account ownership, constructed ARN for the resource
+status.ackResourceMetadata.arn <string>	# ARN is the Amazon Resource Name for the resource. This is a globally-unique identifier and is set only by the ACK service controller once the controller has orchestrated the creation of the resource OR when it has verified that an "adopted" resource (a resource where the ARN annotation was set by the Kubernetes user on the CR) exists and matches the supplied CR's Spec field values. https://github.com/aws/aws-controllers-k8s/issues/270
+status.ackResourceMetadata.ownerAccountID <string> (required)	# OwnerAccountID is the AWS Account ID of the account that owns the backend AWS service API resource.
+status.ackResourceMetadata.partition <string>	# Partition is the AWS partition in which the resource exists or will exist
+status.ackResourceMetadata.region <string> (required)	# Region is the AWS region in which the resource exists or will exist.
+status.conditions <[]object>	# All CRs managed by ACK have a common `Status.Conditions` member that contains a collection of `ackv1alpha1.Condition` objects that describe the various terminal states of the CR and its backend AWS service API resource
+status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# Type is the type of the Condition
+status.createdAt <string> format=date-time	# The Unix epoch timestamp in seconds for when the capability was created.
+status.health <object>	# Health information for the capability, including any issues that may be affecting its operation.
+status.health.issues <[]object>
+status.health.issues[].code <string>
+status.health.issues[].message <string>
+status.modifiedAt <string> format=date-time	# The Unix epoch timestamp in seconds for when the capability was last modified.
+status.status <string>	# The current status of the capability. Valid values include: * CREATING – The capability is being created. * ACTIVE – The capability is running and available. * UPDATING – The capability is being updated. * DELETING – The capability is being deleted. * CREATE_FAILED – The capability creation failed. * UPDATE_FAILED – The capability update failed. * DELETE_FAILED – The capability deletion failed.
+status.version <string>	# The version of the capability software that is currently running.
