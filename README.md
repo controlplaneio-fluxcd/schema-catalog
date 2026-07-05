@@ -58,14 +58,14 @@ for the line grammar.
 <!-- versions:start -->
 | Project | Version | Updated |
 | --- | --- | --- |
-| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 2026-07-04 |
-| OpenShift | [v4.20](build/history/openshift.json) | 2026-07-04 |
-| Flux | [v2.9.0](build/history/flux.json) | 2026-07-04 |
-| Flagger | [v1.43.0](build/history/flagger.json) | 2026-07-04 |
-| Flux Operator | [v0.53.0](build/history/flux-operator.json) | 2026-07-04 |
+| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 2026-07-05 |
+| OpenShift | [v4.20](build/history/openshift.json) | 2026-07-05 |
+| Flux | [v2.9.0](build/history/flux.json) | 2026-07-05 |
+| Flagger | [v1.43.0](build/history/flagger.json) | 2026-07-05 |
+| Flux Operator | [v0.53.0](build/history/flux-operator.json) | 2026-07-05 |
 | Cluster API | [v1.13.3](build/history/cluster-api.json) | 2026-07-05 |
-| Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-04 |
-| cert-manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-04 |
+| Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-05 |
+| Cert Manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-05 |
 | External Secrets | [v2.7.0](build/history/external-secrets.json) | 2026-07-05 |
 <!-- versions:end -->
 
