@@ -35,19 +35,35 @@ export async function resolveVersion(source: Source): Promise<string> {
 
 /**
  * Picks the highest-semver release tag matching a glob, skipping drafts and
- * prereleases. Used when a repo interleaves unrelated release tags (e.g.
- * external-secrets' `helm-chart-*`) that /releases/latest can surface. Highest
- * semver, not most-recent, so a backported patch of an older line never wins.
+ * prereleases. Used when a repo interleaves unrelated release tags that
+ * /releases/latest can surface — an unrelated line (external-secrets'
+ * `helm-chart-*` alongside `v*`) or, in a monorepo, other components
+ * (kubernetes/autoscaler ships `vertical-pod-autoscaler-<ver>` next to
+ * `cluster-autoscaler-*` and `vertical-pod-autoscaler-chart-<ver>`).
+ *
+ * The glob's wildcard must expand to a version: the character right after the
+ * literal prefix has to be a digit, which rejects sibling tags whose wildcard
+ * would instead start with another word (`…-chart-0.10.0`). Tags are ordered
+ * by the semver embedded in the tag, so a name prefix (`vertical-pod-autoscaler-`)
+ * doesn't defeat sorting. Highest semver, not most-recent, so a backported
+ * patch of an older line never wins.
  */
 export function pickLatestRelease(releases: Release[], pattern: string): string {
+  const prefix = pattern.includes("*") ? pattern.slice(0, pattern.indexOf("*")) : pattern;
   const tags = releases
     .filter((r) => !r.draft && !r.prerelease && matchAsset(pattern, r.tag_name))
+    .filter((r) => /^\d/.test(r.tag_name.slice(prefix.length)))
     .map((r) => r.tag_name);
   if (tags.length === 0) {
     throw new Error(`no release tag matches '${pattern}'`);
   }
-  tags.sort((a, b) => Bun.semver.order(bareVersion(a), bareVersion(b)));
+  tags.sort((a, b) => Bun.semver.order(semverOf(a), semverOf(b)));
   return tags.at(-1)!;
+}
+
+/** The semver embedded in a release tag (`vertical-pod-autoscaler-1.7.0` → `1.7.0`). */
+export function semverOf(tag: string): string {
+  return tag.match(/\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?/)?.[0] ?? tag;
 }
 
 export function normalizeVersion(version: string): string {

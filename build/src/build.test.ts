@@ -106,6 +106,28 @@ describe("pickLatestRelease", () => {
       "no release tag matches 'v*'",
     );
   });
+
+  test("resolves a monorepo component prefix, ignoring the chart tags", () => {
+    const releases = [
+      rel("cluster-autoscaler-1.33.0"),
+      rel("vertical-pod-autoscaler-chart-0.10.0"),
+      rel("vertical-pod-autoscaler-1.7.0"),
+      rel("vertical-pod-autoscaler-1.6.0"),
+    ];
+    expect(pickLatestRelease(releases, "vertical-pod-autoscaler-*")).toBe(
+      "vertical-pod-autoscaler-1.7.0",
+    );
+  });
+
+  test("orders prefixed tags by embedded semver, not lexically", () => {
+    const releases = [
+      rel("vertical-pod-autoscaler-1.10.0"),
+      rel("vertical-pod-autoscaler-1.9.0"),
+    ];
+    expect(pickLatestRelease(releases, "vertical-pod-autoscaler-*")).toBe(
+      "vertical-pod-autoscaler-1.10.0",
+    );
+  });
 });
 
 describe("removedFiles", () => {
