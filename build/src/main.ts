@@ -29,7 +29,7 @@ Commands:
   regen   Rebuild the catalog at the versions pinned in build/history
 
 Options:
-  --source <name>   Process a single source from build/sources.yaml
+  --source <name>   Process a single source from build/config/sources.yaml
   --force           Rebuild even when the resolved version is unchanged
   --summary <path>  Write a markdown summary of the changes (for PR bodies)
   -h, --help        Show this help message

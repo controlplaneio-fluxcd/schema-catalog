@@ -12,15 +12,15 @@ touching anything under `build/src/`.
 
 ## Layout
 
-| Path                    | What it is                                                       |
-| ----------------------- | ---------------------------------------------------------------- |
-| `catalog/<group>/`      | **Generated.** `<kind>_<version>.json` + `.fields.txt` siblings  |
-| `build/sources.yaml`    | Catalog sources config — the only file to edit to add a project  |
-| `build/history/*.json`  | **Generated.** Per-source provenance manifests                   |
-| `build/src/`            | The Bun build system ([internals](build/src/README.md))          |
-| `README.md`             | Versions table between markers is **generated**                  |
-| `.github/workflows/`    | `test.yaml` (lint+test), `update-catalog.yaml` (daily build+PR)  |
-| `plans/`                | Git-ignored local scratch — never reference it in committed files |
+| Path                        | What it is                                                       |
+| --------------------------- | ---------------------------------------------------------------- |
+| `catalog/<group>/`          | **Generated.** `<kind>_<version>.json` + `.fields.txt` siblings  |
+| `build/config/sources.yaml` | Catalog sources config — the only file to edit to add a project  |
+| `build/history/*.json`      | **Generated.** Per-source provenance manifests                   |
+| `build/src/`                | The Bun build system ([internals](build/src/README.md))          |
+| `README.md`                 | Versions table between markers is **generated**                  |
+| `.github/workflows/`        | `test.yaml` (lint+test), `update-catalog.yaml` (daily build+PR)  |
+| `plans/`                    | Git-ignored local scratch — never reference it in committed files |
 
 ## Rules
 
@@ -30,7 +30,7 @@ touching anything under `build/src/`.
 - **Bun-native only**: no npm runtime dependencies (`@types/bun` is the only
   dev dependency), no eslint/prettier. Reach for `Bun.YAML`, `Bun.semver`,
   `Bun.$`, `bun test` and node builtins.
-- **Adding a catalog source is config-only**: edit `build/sources.yaml`,
+- **Adding a catalog source is config-only**: edit `build/config/sources.yaml`,
   nothing else — no code, no test changes. See the
   [recipe](build/src/README.md#adding-a-source).
 - **flux-schema binary**: resolved from `FLUX_SCHEMA_BIN` (a single binary

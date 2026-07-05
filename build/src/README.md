@@ -13,7 +13,7 @@ under `build/src/`.
   and `bun test` instead of packages (no yaml/zod/commander/eslint). Node
   builtins (`node:fs`, `node:path`, `node:util`) are fine.
 - **Data-driven.** Adding a project to the catalog must be a config-only edit
-  to `build/sources.yaml` — never a code or test change. The one deliberate
+  to `build/config/sources.yaml` — never a code or test change. The one deliberate
   exception is Flux itself (see `fluxInstance` below).
 - **The CLI is the contract.** All schema extraction shells out to the
   `flux-schema` binary (a single executable path from `FLUX_SCHEMA_BIN`, else
@@ -143,7 +143,7 @@ effects get guards or a CI check, not mocks.
 
 ## Adding a source
 
-Add an entry to `build/sources.yaml` (see `types.ts` for the shape and
+Add an entry to `build/config/sources.yaml` (see `types.ts` for the shape and
 `config.ts` for what the validator enforces) and run `make build`. If the
 project ships CRDs as a release asset, prefer `releaseAsset`; if it has a
 kustomize overlay, use `kustomize` with the overlay path. No test edits, no

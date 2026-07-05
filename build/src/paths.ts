@@ -7,7 +7,7 @@ export const ROOT_DIR = fileURLToPath(new URL("../../", import.meta.url));
 export const CATALOG_DIR = join(ROOT_DIR, "catalog");
 export const HISTORY_DIR = join(ROOT_DIR, "build/history");
 export const README_PATH = join(ROOT_DIR, "README.md");
-export const SOURCES_PATH = join(ROOT_DIR, "build/sources.yaml");
+export const SOURCES_PATH = join(ROOT_DIR, "build/config/sources.yaml");
 
 /**
  * Path to the flux-schema executable (a single binary path, not a command

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadSources, parseSources, repoOf } from "./config.ts";
 
-const SOURCES_YAML = new URL("../sources.yaml", import.meta.url).pathname;
+const SOURCES_YAML = new URL("../config/sources.yaml", import.meta.url).pathname;
 
 function validSource(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
