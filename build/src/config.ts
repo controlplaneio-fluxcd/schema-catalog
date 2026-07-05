@@ -106,9 +106,12 @@ function parseInput(input: unknown, ctx: string): CrdInput {
   }
   const releaseTag = input.releaseTag as string | undefined;
 
-  const kinds = Object.keys(input).filter((k) => k !== "releaseTag");
+  const kinds = Object.keys(input).filter((k) => k !== "releaseTag" && k !== "exclude");
   if (kinds.length !== 1 || !INPUT_KINDS.includes(kinds[0]!)) {
     throw new Error(`${ctx}: input must have exactly one of: ${INPUT_KINDS.join(", ")}`);
+  }
+  if (input.exclude !== undefined && kinds[0] !== "crdDir") {
+    throw new Error(`${ctx}: input.exclude is only valid with crdDir`);
   }
   switch (kinds[0]) {
     case "kustomize":
@@ -125,7 +128,7 @@ function parseInput(input: unknown, ctx: string): CrdInput {
       if (typeof input.crdDir !== "string" || input.crdDir === "") {
         throw new Error(`${ctx}: input.crdDir must be a non-empty repo directory path`);
       }
-      return { releaseTag, crdDir: input.crdDir };
+      return { releaseTag, crdDir: input.crdDir, exclude: parseExclude(input.exclude, ctx) };
     case "crdFile":
       if (typeof input.crdFile !== "string" || input.crdFile === "") {
         throw new Error(`${ctx}: input.crdFile must be a non-empty repo file path`);
@@ -134,6 +137,20 @@ function parseInput(input: unknown, ctx: string): CrdInput {
     default:
       return { releaseTag, fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
   }
+}
+
+function parseExclude(exclude: unknown, ctx: string): string[] | undefined {
+  if (exclude === undefined) {
+    return undefined;
+  }
+  if (
+    !Array.isArray(exclude) ||
+    exclude.length === 0 ||
+    exclude.some((e) => typeof e !== "string" || e === "")
+  ) {
+    throw new Error(`${ctx}: input.exclude must be a non-empty array of non-empty globs`);
+  }
+  return exclude as string[];
 }
 
 function parseFluxInstance(spec: unknown, ctx: string): FluxInstance {

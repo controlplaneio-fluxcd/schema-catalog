@@ -129,6 +129,28 @@ describe("parseSources", () => {
     );
   });
 
+  test("accepts crdDir with an exclude list", () => {
+    const input = { crdDir: "config/crd", exclude: ["policy.networking.k8s.io_*"] };
+    const sources = parseSources({ sources: [validSource({ input })] });
+    expect(sources[0]!).toMatchObject({
+      input: { crdDir: "config/crd", exclude: ["policy.networking.k8s.io_*"] },
+    });
+  });
+
+  test("rejects exclude on a non-crdDir input", () => {
+    const input = { releaseAsset: "crds.yaml", exclude: ["x_*"] };
+    expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
+      "input.exclude is only valid with crdDir",
+    );
+  });
+
+  test("rejects an empty exclude list", () => {
+    const input = { crdDir: "config/crd", exclude: [] };
+    expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
+      "input.exclude must be a non-empty array of non-empty globs",
+    );
+  });
+
   test("rejects an empty kustomize path", () => {
     expect(() => parseSources({ sources: [validSource({ input: { kustomize: "" } })] })).toThrow(
       "non-empty overlay path",

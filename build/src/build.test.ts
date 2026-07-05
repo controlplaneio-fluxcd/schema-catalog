@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
-import { extractTarFiles, matchAsset } from "./github.ts";
+import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
@@ -27,6 +27,32 @@ describe("matchAsset", () => {
 
   test("treats regex metacharacters literally", () => {
     expect(matchAsset("a.b.yaml", "aXb.yaml")).toBe(false);
+  });
+});
+
+describe("excludeByBasename", () => {
+  const files = [
+    { path: "libcalico-go/config/crd/crd.projectcalico.org_ippools.yaml" },
+    { path: "libcalico-go/config/crd/crd.projectcalico.org_bgppeers.yaml" },
+    { path: "libcalico-go/config/crd/policy.networking.k8s.io_clusternetworkpolicies.yaml" },
+  ];
+
+  test("drops files whose basename matches a glob", () => {
+    const kept = excludeByBasename(files, ["policy.networking.k8s.io_*"], "ctx");
+    expect(kept.map((f) => f.path)).toEqual([
+      "libcalico-go/config/crd/crd.projectcalico.org_ippools.yaml",
+      "libcalico-go/config/crd/crd.projectcalico.org_bgppeers.yaml",
+    ]);
+  });
+
+  test("returns input unchanged with no globs", () => {
+    expect(excludeByBasename(files, [], "ctx")).toBe(files);
+  });
+
+  test("throws when a glob matches nothing (stale exclude)", () => {
+    expect(() => excludeByBasename(files, ["gateway.networking.k8s.io_*"], "ctx")).toThrow(
+      /exclude 'gateway.networking.k8s.io_\*' matched no file/,
+    );
   });
 });
 

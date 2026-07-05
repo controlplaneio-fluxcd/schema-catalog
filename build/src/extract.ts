@@ -76,7 +76,7 @@ async function crdYaml(source: CrdSource, version: string): Promise<string> {
     return downloadAsset(asset);
   }
   if ("crdDir" in input) {
-    return fetchCrdDir(repoOf(source), version, input.crdDir);
+    return fetchCrdDir(repoOf(source), version, input.crdDir, input.exclude);
   }
   if ("crdFile" in input) {
     return fetchCrdFile(repoOf(source), version, input.crdFile);

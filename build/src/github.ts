@@ -142,14 +142,47 @@ interface ContentEntry {
  * and concatenates them into one multi-document stream (sorted by path for a
  * deterministic order). For repos that ship CRDs as bare per-kind files with
  * no release asset or kustomization (e.g. cilium's client/crds tree).
+ *
+ * `exclude` drops files whose basename matches any of the given globs (`*`
+ * spans any characters) — for a dir that co-locates a CRD another source
+ * already owns (e.g. calico's crd dir vendors a network-policy-api CRD). A
+ * glob matching nothing is a hard error, so a stale exclude never silently
+ * stops filtering.
  */
-export async function fetchCrdDir(repo: string, ref: string, dir: string): Promise<string> {
-  const files = extractTarFiles(await fetchTarball(repo, ref), dir);
+export async function fetchCrdDir(
+  repo: string,
+  ref: string,
+  dir: string,
+  exclude: string[] = [],
+): Promise<string> {
+  const all = extractTarFiles(await fetchTarball(repo, ref), dir);
+  const files = excludeByBasename(all, exclude, `${repo}@${ref} under '${dir}'`);
   if (files.length === 0) {
     throw new Error(`${repo}@${ref}: no .yaml files under '${dir}'`);
   }
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return files.map((f) => f.text).join("\n---\n");
+}
+
+/**
+ * Drops files whose basename matches any of the `exclude` globs (`*` spans any
+ * characters). A glob that matches nothing throws, so a stale exclude never
+ * silently stops filtering (e.g. after upstream renames the vendored file).
+ */
+export function excludeByBasename<T extends { path: string }>(
+  files: T[],
+  exclude: string[],
+  label: string,
+): T[] {
+  let kept = files;
+  for (const glob of exclude) {
+    const next = kept.filter((f) => !matchAsset(glob, f.path.slice(f.path.lastIndexOf("/") + 1)));
+    if (next.length === kept.length) {
+      throw new Error(`${label}: exclude '${glob}' matched no file`);
+    }
+    kept = next;
+  }
+  return kept;
 }
 
 export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; text: string }[] {
