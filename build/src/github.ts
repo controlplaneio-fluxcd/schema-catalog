@@ -160,6 +160,10 @@ export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; te
   let offset = 0;
   let zeroBlocks = 0;
   let topLevel: string | null = null;
+  // A long path from a pax 'x' (path=) or GNU 'L' header that overrides the
+  // next entry's ustar name/prefix. CRDs whose file name alone exceeds tar's
+  // 100-byte name field (e.g. Config Connector) are addressed this way.
+  let overridePath: string | null = null;
 
   while (offset < tar.length) {
     if (offset + 512 > tar.length) {
@@ -176,10 +180,7 @@ export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; te
     }
     zeroBlocks = 0;
 
-    const name = tarString(header, 0, 100);
     const typeflag = header[156]!;
-    const prefix = tarString(header, 345, 500);
-    const path = prefix ? `${prefix}/${name}` : name;
     const size = tarSize(header);
     const bodyStart = offset + 512;
     const bodyEnd = bodyStart + size;
@@ -187,21 +188,34 @@ export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; te
     if (bodyEnd > tar.length || nextOffset > tar.length) {
       throw new Error("truncated tar archive");
     }
+    const body = () => decoder.decode(arrayBufferBytes(tar.subarray(bodyStart, bodyEnd)));
 
+    // pax global header: archive-wide metadata (git prepends one), ignore.
     if (typeflag === 0x67) {
       offset = nextOffset;
       continue;
     }
+    // pax extended header: a `path=` record carries the next entry's long name.
     if (typeflag === 0x78) {
-      if (paxHasPath(decoder.decode(arrayBufferBytes(tar.subarray(bodyStart, bodyEnd))))) {
-        throw new Error("unsupported tar long-name entry (pax/GNU); ustar-only parser");
+      const p = paxPath(body());
+      if (p !== null) {
+        overridePath = p;
       }
       offset = nextOffset;
       continue;
     }
+    // GNU long name: the body is the next entry's full name.
     if (typeflag === 0x4c) {
-      throw new Error("unsupported tar long-name entry (pax/GNU); ustar-only parser");
+      overridePath = body().replace(/\0+$/, "");
+      offset = nextOffset;
+      continue;
     }
+
+    const name = tarString(header, 0, 100);
+    const prefix = tarString(header, 345, 500);
+    const path = overridePath ?? (prefix ? `${prefix}/${name}` : name);
+    overridePath = null;
+
     if (topLevel === null) {
       const slash = path.indexOf("/");
       if (slash < 0) {
@@ -216,10 +230,7 @@ export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; te
 
     const repoRelativePath = path.startsWith(`${topLevel}/`) ? path.slice(topLevel.length + 1) : path;
     if (repoRelativePath.startsWith(wantedPrefix) && repoRelativePath.endsWith(".yaml")) {
-      files.push({
-        path: repoRelativePath,
-        text: decoder.decode(arrayBufferBytes(tar.subarray(bodyStart, bodyEnd))),
-      });
+      files.push({ path: repoRelativePath, text: body() });
     }
     offset = nextOffset;
   }
@@ -279,7 +290,12 @@ function tarSize(header: Uint8Array): number {
   return Number.parseInt(raw, 8);
 }
 
-function paxHasPath(body: string): boolean {
+/**
+ * The `path=` value from a pax extended header body, or null if absent. Records
+ * are length-prefixed: "<len> key=value\n", where <len> counts the whole record
+ * including its own digits.
+ */
+function paxPath(body: string): string | null {
   let offset = 0;
   while (offset < body.length) {
     const space = body.indexOf(" ", offset);
@@ -290,12 +306,13 @@ function paxHasPath(body: string): boolean {
     if (!Number.isFinite(length) || length <= 0 || offset + length > body.length) {
       throw new Error("invalid pax header");
     }
-    if (body.slice(space + 1, offset + length).startsWith("path=")) {
-      return true;
+    const record = body.slice(space + 1, offset + length);
+    if (record.startsWith("path=")) {
+      return record.slice("path=".length).replace(/\n$/, "");
     }
     offset += length;
   }
-  return false;
+  return null;
 }
 
 function arrayBufferBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {

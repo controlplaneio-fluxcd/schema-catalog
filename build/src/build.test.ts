@@ -46,16 +46,38 @@ describe("extractTarFiles", () => {
     ]);
   });
 
-  test("throws on pax extended headers", () => {
-    expect(() => extractTarFiles(tarGz([{ name: "pax", typeflag: "x", text: "17 path=top/file\n" }]), "package/crds")).toThrow(
-      "unsupported tar long-name entry (pax/GNU); ustar-only parser",
+  test("applies a pax path= override to the next entry (long CRD file names)", () => {
+    const long = "package/crds/apiextensions.k8s.io_v1_customresourcedefinition_verylongkind.example.com.yaml";
+    const files = extractTarFiles(
+      tarGz([
+        { name: "top/PaxHeaders/x", typeflag: "x", text: paxRecord(`path=top/${long}`) },
+        { name: "top/ignored-ustar-name", typeflag: "0", text: "kind: Long\n" },
+      ]),
+      "package/crds",
     );
+    expect(files).toEqual([{ path: long, text: "kind: Long\n" }]);
   });
 
-  test("throws on GNU long-name headers", () => {
-    expect(() => extractTarFiles(tarGz([{ name: "././@LongLink", typeflag: "L", text: "top/file\n" }]), "package/crds")).toThrow(
-      "unsupported tar long-name entry (pax/GNU); ustar-only parser",
+  test("applies a GNU long name to the next entry", () => {
+    const files = extractTarFiles(
+      tarGz([
+        { name: "././@LongLink", typeflag: "L", text: "top/package/crds/gnu-long.yaml" },
+        { name: "top/ignored", typeflag: "0", text: "kind: Gnu\n" },
+      ]),
+      "package/crds",
     );
+    expect(files).toEqual([{ path: "package/crds/gnu-long.yaml", text: "kind: Gnu\n" }]);
+  });
+
+  test("ignores a pax header with no path override (e.g. symlink metadata)", () => {
+    const files = extractTarFiles(
+      tarGz([
+        { name: "top/PaxHeaders/x", typeflag: "x", text: paxRecord("comment=abc") },
+        { name: "top/package/crds/plain.yaml", typeflag: "0", text: "kind: Plain\n" },
+      ]),
+      "package/crds",
+    );
+    expect(files).toEqual([{ path: "package/crds/plain.yaml", text: "kind: Plain\n" }]);
   });
 
   test("throws on truncated bodies", () => {
@@ -338,6 +360,14 @@ function tarGz(entries: { name: string; typeflag: string; text: string }[]): Uin
   }
   chunks.push(new Uint8Array(1024));
   return new Uint8Array(Bun.gzipSync(concatBytes(chunks)));
+}
+
+/** A pax record "<len> key=value\n", where len counts the whole record. */
+function paxRecord(kv: string): string {
+  for (let digits = 1; ; digits++) {
+    const len = digits + 1 + kv.length + 1;
+    if (String(len).length === digits) return `${len} ${kv}\n`;
+  }
 }
 
 function tarHeader(name: string, typeflag: string, size: number): Uint8Array {
