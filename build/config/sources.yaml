@@ -145,3 +145,35 @@ sources:
       # kyverno ships only per-CRD assets (no single CRD bundle), so install.yaml
       # is the one asset carrying every CRD; the extractor drops the non-CRD docs.
       releaseAsset: install.yaml
+
+  - name: rook
+    alias: Rook
+    url: https://github.com/rook/rook
+    extract: crd
+    input:
+      # rook publishes no release assets; its whole CRD set is one committed file
+      # that shares deploy/examples with ~99 unrelated manifests, so crdFile
+      # fetches just that bundle.
+      crdFile: deploy/examples/crds.yaml
+
+  - name: vitess-operator
+    alias: Vitess Operator
+    url: https://github.com/planetscale/vitess-operator
+    extract: crd
+    input:
+      # vitess CRDs live in the operator repo as bare per-kind files with no
+      # release asset, so crdDir fetches the tree directly.
+      crdDir: deploy/crds
+
+  - name: strimzi
+    alias: Strimzi
+    url: https://github.com/strimzi/strimzi-kafka-operator
+    extract: crd
+    input:
+      # strimzi maintains two concurrent lines: 0.x still serves both v1beta2
+      # (what essentially every real manifest uses) and v1, while the newer 1.x
+      # serves v1 only. Pin to 0.x for the wider coverage, and so neither line
+      # regresses the other via GitHub's /releases/latest. The CRD asset embeds
+      # the version, hence the glob.
+      releaseTag: "0.*"
+      releaseAsset: "strimzi-crds-*.yaml"
