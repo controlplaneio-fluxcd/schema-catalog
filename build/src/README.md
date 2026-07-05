@@ -83,6 +83,15 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
   (external-secrets ships `helm-chart-*` releases alongside the app `v*` ones)
   that GitHub's `/releases/latest` would otherwise surface.
 
+A `crdDir` input may additionally carry an `exclude` list of basename globs that
+drop files before extraction — for repos that vendor another project's CRDs into
+the same tree (Calico's `libcalico-go/config/crd` ships a
+`policy.networking.k8s.io_*` CRD owned by the network-policy-api source, which
+would otherwise trip the cross-source conflict guard). Each glob must match at
+least one file or the build fails loud, so a vendored file quietly disappearing
+upstream surfaces as an error rather than a silent no-op. `exclude` is only valid
+alongside `crdDir`.
+
 Every extraction runs with `--strip-description=false --with-field-index
 --index-source="<alias> <version> <url>"` and the
 `{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. The binary
@@ -167,7 +176,10 @@ Add an entry to `build/config/sources.yaml` (see `types.ts` for the shape and
   releases alongside the app `v*` ones).
 - **`kustomize`** — a kustomize overlay in the repo (`config/crd` and friends).
 - **`crdDir`** — bare per-kind CRD YAML files under a repo directory, with no
-  release asset or kustomization (e.g. cilium's `client/crds` tree).
+  release asset or kustomization (e.g. cilium's `client/crds` tree). Add an
+  `exclude` list of basename globs when the directory vendors CRDs another
+  source already owns (e.g. Calico vendoring a `policy.networking.k8s.io_*`
+  CRD); each glob must match at least one file or the build fails.
 - **`crdFile`** — a single committed file bundling the whole CRD set, sharing a
   directory with unrelated manifests so `crdDir` would over-collect (e.g. rook's
   `deploy/examples/crds.yaml`).
