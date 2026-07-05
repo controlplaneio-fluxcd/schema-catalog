@@ -1,0 +1,561 @@
+{
+  "description": "TenantResource allows a Tenant Owner, if enabled with proper RBAC, to propagate resources in its Namespace.\nThe object must be deployed in a Tenant Namespace, and cannot reference object living in non-Tenant namespaces.\nFor such cases, the GlobalTenantResource must be used.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "TenantResourceSpec defines the desired state of TenantResource.",
+      "properties": {
+        "cordoned": {
+          "default": false,
+          "description": "When cordoning a replication it will no longer execute any applies or deletions (paused).\nThis is useful for maintenances",
+          "type": "boolean"
+        },
+        "dependsOn": {
+          "description": "DependsOn may contain a meta.NamespacedObjectReference slice\nwith references to TenantResource resources that must be ready before this\nTenantResource can be reconciled.",
+          "items": {
+            "additionalProperties": false,
+            "description": "LocalObjectReference contains enough information to locate the referenced Kubernetes resource object.",
+            "properties": {
+              "name": {
+                "description": "Name of the referent.",
+                "maxLength": 63,
+                "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "pruningOnDelete": {
+          "default": true,
+          "description": "When the replicated resource manifest is deleted, all the objects replicated so far will be automatically deleted.\nDisable this to keep replicated resources although the deletion of the replication manifest.",
+          "type": "boolean"
+        },
+        "resources": {
+          "description": "Defines the rules to select targeting Namespace, along with the objects that must be replicated.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "additionalMetadata": {
+                "additionalProperties": false,
+                "description": "Besides the Capsule metadata required by TenantResource controller, defines additional metadata that must be\nadded to the replicated resources.",
+                "properties": {
+                  "annotations": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "labels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "context": {
+                "additionalProperties": false,
+                "description": "Provide additional template context, which can be used throughout all\nthe declared items for the replication",
+                "properties": {
+                  "resources": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "apiVersion": {
+                          "description": "API version, API group, or API group/version selector of the referent.\n\nEmpty APIVersion means the core Kubernetes API version \"v1\".\nUse \"*\" to explicitly match all API groups and versions.\n\nExamples:\n- \"\" means core \"v1\".\n- \"v1\" means core \"v1\".\n- \"apps\" means any version in the \"apps\" API group.\n- \"apps/v1\" means the \"apps/v1\" API group/version.\n- \"apps/*\" means any version in the \"apps\" API group.",
+                          "type": "string"
+                        },
+                        "index": {
+                          "description": "Index to mount the resource in the template context",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "description": "Kind of the referent.\n\nUse \"*\" to match all kinds.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name of the values referent. This is useful\nwhen you traying to get a specific resource",
+                          "maxLength": 253,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the values referent.",
+                          "type": "string"
+                        },
+                        "optional": {
+                          "default": true,
+                          "description": "Only relevant if name is set. If an item is not optional, there will be an error thrown when it does not exist",
+                          "type": "boolean"
+                        },
+                        "selector": {
+                          "additionalProperties": false,
+                          "description": "Selector which allows to get any amount of these resources based on labels",
+                          "properties": {
+                            "matchExpressions": {
+                              "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                              "items": {
+                                "additionalProperties": false,
+                                "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                "properties": {
+                                  "key": {
+                                    "description": "key is the label key that the selector applies to.",
+                                    "type": "string"
+                                  },
+                                  "operator": {
+                                    "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                    "type": "string"
+                                  },
+                                  "values": {
+                                    "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "type": "array",
+                                    "x-kubernetes-list-type": "atomic"
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "operator"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                              "type": "object"
+                            }
+                          },
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "generators": {
+                "description": "Templates for advanced use cases",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "missingKey": {
+                      "default": "zero",
+                      "description": "Missing Key Option for templating",
+                      "enum": [
+                        "invalid",
+                        "zero",
+                        "error"
+                      ],
+                      "type": "string"
+                    },
+                    "template": {
+                      "description": "Template contains any amount of yaml which is applied to Kubernetes.\nThis can be a single resource or multiple resources",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "namespaceSelector": {
+                "additionalProperties": false,
+                "description": "Defines the Namespace selector to select the Tenant Namespaces on which the resources must be propagated.\nIn case of nil value, all the Tenant Namespaces are targeted.",
+                "properties": {
+                  "matchExpressions": {
+                    "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                      "properties": {
+                        "key": {
+                          "description": "key is the label key that the selector applies to.",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "operator"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "atomic"
+                  },
+                  "matchLabels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                    "type": "object"
+                  }
+                },
+                "type": "object",
+                "x-kubernetes-map-type": "atomic"
+              },
+              "namespacedItems": {
+                "description": "List of the resources already existing in other Namespaces that must be replicated.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "Reference",
+                  "properties": {
+                    "apiVersion": {
+                      "description": "API version, API group, or API group/version selector of the referent.\n\nEmpty APIVersion means the core Kubernetes API version \"v1\".\nUse \"*\" to explicitly match all API groups and versions.\n\nExamples:\n- \"\" means core \"v1\".\n- \"v1\" means core \"v1\".\n- \"apps\" means any version in the \"apps\" API group.\n- \"apps/v1\" means the \"apps/v1\" API group/version.\n- \"apps/*\" means any version in the \"apps\" API group.",
+                      "type": "string"
+                    },
+                    "kind": {
+                      "description": "Kind of the referent.\n\nUse \"*\" to match all kinds.",
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the values referent. This is useful\nwhen you traying to get a specific resource",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "Namespace of the values referent.",
+                      "type": "string"
+                    },
+                    "optional": {
+                      "default": true,
+                      "description": "Only relevant if name is set. If an item is not optional, there will be an error thrown when it does not exist",
+                      "type": "boolean"
+                    },
+                    "selector": {
+                      "additionalProperties": false,
+                      "description": "Selector which allows to get any amount of these resources based on labels",
+                      "properties": {
+                        "matchExpressions": {
+                          "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                            "properties": {
+                              "key": {
+                                "description": "key is the label key that the selector applies to.",
+                                "type": "string"
+                              },
+                              "operator": {
+                                "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                "type": "string"
+                              },
+                              "values": {
+                                "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array",
+                                "x-kubernetes-list-type": "atomic"
+                              }
+                            },
+                            "required": [
+                              "key",
+                              "operator"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
+                        },
+                        "matchLabels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                          "type": "object"
+                        }
+                      },
+                      "type": "object",
+                      "x-kubernetes-map-type": "atomic"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "rawItems": {
+                "description": "List of raw resources that must be replicated.",
+                "items": {
+                  "type": "object",
+                  "x-kubernetes-preserve-unknown-fields": true
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "resyncPeriod": {
+          "default": "60s",
+          "description": "Define the period of time upon a second reconciliation must be invoked.\nKeep in mind that any change to the manifests will trigger a new reconciliation.",
+          "type": "string"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "description": "Local ServiceAccount which will perform all the actions defined in the TenantResource\nYou must provide permissions accordingly to that ServiceAccount",
+          "properties": {
+            "name": {
+              "description": "Name of the referent.",
+              "maxLength": 63,
+              "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "settings": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "Provide additional settings",
+          "properties": {
+            "adopt": {
+              "default": false,
+              "description": "Enabling this allows TenanResources to interact with objects which were not created by a TenantResource. In this case on prune no deletion of the entire object is made.",
+              "type": "boolean"
+            },
+            "force": {
+              "default": false,
+              "description": "Force indicates that in case of conflicts with server-side apply, the client should acquire ownership of the conflicting field.\nYou may create collisions with this.",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "resources",
+        "resyncPeriod",
+        "settings"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "TenantResourceStatus defines the observed state of TenantResource.",
+      "properties": {
+        "conditions": {
+          "description": "Condition of the GlobalTenantResource.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the most recent generation the controller has observed.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "processedItems": {
+          "description": "List of the replicated resources for the given TenantResource.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Advanced Status Item for pin pointing items in tenants/namespaces.",
+            "properties": {
+              "group": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "namespace": {
+                "type": "string"
+              },
+              "origin": {
+                "type": "string"
+              },
+              "status": {
+                "additionalProperties": false,
+                "properties": {
+                  "clusterScoped": {
+                    "description": "Indicates whether the referenced resource is cluster-scoped.",
+                    "type": "boolean"
+                  },
+                  "created": {
+                    "description": "Indicates wether the resource was created or adopted",
+                    "type": "boolean"
+                  },
+                  "lastApply": {
+                    "description": "An opaque value that represents the internal version of this object that can\nbe used by clients to determine when objects have changed. May be used for optimistic\nconcurrency, change detection, and the watch operation on a resource or set of resources.\nClients must treat these values as opaque and passed unmodified back to the server.\nThey may only be valid for a particular resource or set of resources.\n\nPopulated by the system.\nRead-only.\nValue must be treated as opaque by clients and .\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency",
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                    "maxLength": 32768,
+                    "type": "string"
+                  },
+                  "status": {
+                    "description": "status of the condition, one of True, False, Unknown.",
+                    "enum": [
+                      "True",
+                      "False",
+                      "Unknown"
+                    ],
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                    "maxLength": 316,
+                    "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "type"
+                ],
+                "type": "object"
+              },
+              "tenant": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "description": "Serviceaccount used for impersonation",
+          "properties": {
+            "name": {
+              "description": "Name of the referent.",
+              "maxLength": 63,
+              "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the referent.",
+              "maxLength": 253,
+              "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "namespace"
+          ],
+          "type": "object"
+        },
+        "size": {
+          "description": "How many items are being replicated by the TenantResource.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "size"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}

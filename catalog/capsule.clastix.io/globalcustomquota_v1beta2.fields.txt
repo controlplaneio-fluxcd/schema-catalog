@@ -1,0 +1,67 @@
+# schema source: Capsule v0.13.8 https://github.com/projectcapsule/capsule
+apiVersion <string> enum=capsule.clastix.io/v1beta2
+kind <string> enum=GlobalCustomQuota (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# ClusterCustomQuotaSpec.
+spec.limit <int-or-string> (required)	# Resource Quantity as limit
+spec.namespaceSelectors <[]object>	# Select specifc namespaces where this Quota selects items.
+spec.namespaceSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.namespaceSelectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.namespaceSelectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.namespaceSelectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.namespaceSelectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.options <object> (required) default={"emitMetricPerClaimUsage":false}	# Additional Options for the CustomQuotaSpecification
+spec.options.emitMetricPerClaimUsage <boolean> default=false	# Additionally expose usage metrics for each claim contributing to the quota. This is disabled by default to avoid high cardinality in the metrics, but can be enabled for more granular monitoring and alerting.
+spec.scopeSelectors <[]object>	# Select items governed by this quota
+spec.scopeSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.scopeSelectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.scopeSelectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.scopeSelectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.scopeSelectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.sources <[]object> (required)	# Target resource
+spec.sources[].apiVersion <string>	# API version, API group, or API group/version selector of the referent. Empty APIVersion means the core Kubernetes API version "v1". Use "*" to explicitly match all API groups and versions. Examples: - "" means core "v1". - "v1" means core "v1". - "apps" means any version in the "apps" API group. - "apps/v1" means the "apps/v1" API group/version. - "apps/*" means any version in the "apps" API group.
+spec.sources[].kind <string> (required) min=1	# Kind of the referent. Use "*" to match all kinds.
+spec.sources[].op <string> enum=add|sub|count default="add"	# Operation used to evaluate usage.
+spec.sources[].path <string>	# Path on GVK where usage is evaluated. Must be empty when op is "count". Required and non-empty for all other operations.
+spec.sources[].selectors <[]object>	# Provide more granular selectors for these sources The ScopeSelector and NamespaceSelector are always applied Allowing these selectors to make further selecting on the resulting subset.
+spec.sources[].selectors[].fieldSelectors <[]string>	# Additional boolean JSONPath expressions. All must evaluate to true for this selector to match.
+spec.sources[].selectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.sources[].selectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.sources[].selectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.sources[].selectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.sources[].selectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+status <object>	# CustomQuotaStatus defines the observed state of GlobalResourceQuota.
+status.claims <[]object>	# Objects regarding this policy
+status.claims[].group <string> (required)
+status.claims[].kind <string> (required)
+status.claims[].name <string> (required)	# Name of the referent.
+status.claims[].namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Namespace of the referent, when not specified it acts as LocalObjectReference.
+status.claims[].uid <string> (required)	# UID of the tracked Tenant to pin point tracking
+status.claims[].usage <int-or-string> (required)	# Resource Quantity for given item
+status.claims[].version <string> (required)
+status.conditions <[]object> (required)	# Conditions
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.namespaces <[]string>	# Observed Namespaces
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation the controller has observed.
+status.targets <[]object> (required)	# Targeting GVK
+status.targets[].group <string> (required)
+status.targets[].kind <string> (required)
+status.targets[].op <string> enum=add|sub|count default="add"	# Operation used to evaluate usage.
+status.targets[].path <string>	# Path on GVK where usage is evaluated. Must be empty when op is "count". Required and non-empty for all other operations.
+status.targets[].scope <string>	# Path on GVK where usage is evaluated
+status.targets[].selectors <[]object>	# Provide more granular selectors for these sources The ScopeSelector and NamespaceSelector are always applied Allowing these selectors to make further selecting on the resulting subset.
+status.targets[].selectors[].fieldSelectors <[]string>	# Additional boolean JSONPath expressions. All must evaluate to true for this selector to match.
+status.targets[].selectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+status.targets[].selectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+status.targets[].selectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+status.targets[].selectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+status.targets[].selectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+status.targets[].version <string> (required)
+status.usage <object>	# Usage measurements
+status.usage.available <int-or-string>	# Used is the current observed total available of the resource (limit - used).
+status.usage.used <int-or-string>	# Used is the current observed total usage of the resource.

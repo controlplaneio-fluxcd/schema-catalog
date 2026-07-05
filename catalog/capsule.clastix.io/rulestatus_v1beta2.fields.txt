@@ -1,0 +1,143 @@
+# schema source: Capsule v0.13.8 https://github.com/projectcapsule/capsule
+apiVersion <string> enum=capsule.clastix.io/v1beta2
+kind <string> enum=RuleStatus
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <[]object>
+spec[].enforce <object>	# Enforcement for given rule
+spec[].enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+spec[].enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
+spec[].enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+spec[].enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
+spec[].enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
+spec[].enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec[].enforce.metadata[].annotations.<key>.values[].exp <string> min=1	# Exp matches regular expression.
+spec[].enforce.metadata[].annotations.<key>.values[].negate <boolean> default=false	# Negate regular Expression
+spec[].enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
+spec[].enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
+spec[].enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+spec[].enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
+spec[].enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
+spec[].enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec[].enforce.metadata[].labels.<key>.values[].exp <string> min=1	# Exp matches regular expression.
+spec[].enforce.metadata[].labels.<key>.values[].negate <boolean> default=false	# Negate regular Expression
+spec[].enforce.services <object>	# Enforcement for Services.
+spec[].enforce.services.externalNames <object>	# ExternalNames defines additional constraints for Services of type ExternalName.
+spec[].enforce.services.externalNames.hostnames <[]object>	# Hostnames restricts spec.externalName. Empty means no additional hostname restriction once ExternalName is allowed by types.
+spec[].enforce.services.externalNames.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec[].enforce.services.externalNames.hostnames[].exp <string> min=1	# Exp matches regular expression.
+spec[].enforce.services.externalNames.hostnames[].negate <boolean> default=false	# Negate regular Expression
+spec[].enforce.services.loadBalancers <object>	# LoadBalancers defines additional constraints for Services of type LoadBalancer.
+spec[].enforce.services.loadBalancers.cidrs <[]string>	# CIDRs restricts spec.loadBalancerIP and spec.loadBalancerSourceRanges. Empty means no additional CIDR restriction once LoadBalancer is allowed by types.
+spec[].enforce.services.nodePorts <object>	# NodePorts defines additional constraints for nodePort values.
+spec[].enforce.services.nodePorts.ports <[]object>	# Ports restricts explicitly requested nodePort values. Empty means no additional port restriction once NodePort is allowed by types.
+spec[].enforce.services.nodePorts.ports[].from <integer> (required) format=int32 min=1 max=65535
+spec[].enforce.services.nodePorts.ports[].to <integer> (required) format=int32 min=1 max=65535
+spec[].enforce.services.types <[]string>	# Types defines the Service types matched by this rule. Supported values: - ClusterIP - NodePort - LoadBalancer - ExternalName
+spec[].enforce.workloads <object>	# Enforcement for Workloads (Pods)
+spec[].enforce.workloads.qosClasses <[]string>	# Define Pod QoS classes matched by this enforcement rule. Supported values are Guaranteed, Burstable and BestEffort.
+spec[].enforce.workloads.registries <[]object>	# Define registries which are allowed to be used within this tenant The rules are aggregated, since you can use Regular Expressions the match registry endpoints
+spec[].enforce.workloads.registries[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec[].enforce.workloads.registries[].exp <string> min=1	# Exp matches regular expression.
+spec[].enforce.workloads.registries[].negate <boolean> default=false	# Negate regular Expression
+spec[].enforce.workloads.registries[].policy <[]string>	# Allowed PullPolicy for the given registry. Supplying no value allows all policies.
+spec[].enforce.workloads.schedulers <[]object>	# Schedulers defines schedulerName matchers for Pod admission. The rule is evaluated against pod.spec.schedulerName. Empty schedulerName is ignored and is not normalized to default-scheduler.
+spec[].enforce.workloads.schedulers[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec[].enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regular expression.
+spec[].enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
+spec[].enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.
+status <object>	# RuleStatus contains the accumulated rules applying to namespace it's deployed in.
+status.conditions <[]object> (required)	# Conditions
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation the controller has observed.
+status.rule <object>	# Deprecated: use Rules. Rule contains a legacy flattened view and cannot fully represent action-aware rules.
+status.rule.enforce <object>	# Enforcement for given rule
+status.rule.enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+status.rule.enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
+status.rule.enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+status.rule.enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
+status.rule.enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
+status.rule.enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rule.enforce.metadata[].annotations.<key>.values[].exp <string> min=1	# Exp matches regular expression.
+status.rule.enforce.metadata[].annotations.<key>.values[].negate <boolean> default=false	# Negate regular Expression
+status.rule.enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
+status.rule.enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
+status.rule.enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+status.rule.enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
+status.rule.enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
+status.rule.enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rule.enforce.metadata[].labels.<key>.values[].exp <string> min=1	# Exp matches regular expression.
+status.rule.enforce.metadata[].labels.<key>.values[].negate <boolean> default=false	# Negate regular Expression
+status.rule.enforce.services <object>	# Enforcement for Services.
+status.rule.enforce.services.externalNames <object>	# ExternalNames defines additional constraints for Services of type ExternalName.
+status.rule.enforce.services.externalNames.hostnames <[]object>	# Hostnames restricts spec.externalName. Empty means no additional hostname restriction once ExternalName is allowed by types.
+status.rule.enforce.services.externalNames.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rule.enforce.services.externalNames.hostnames[].exp <string> min=1	# Exp matches regular expression.
+status.rule.enforce.services.externalNames.hostnames[].negate <boolean> default=false	# Negate regular Expression
+status.rule.enforce.services.loadBalancers <object>	# LoadBalancers defines additional constraints for Services of type LoadBalancer.
+status.rule.enforce.services.loadBalancers.cidrs <[]string>	# CIDRs restricts spec.loadBalancerIP and spec.loadBalancerSourceRanges. Empty means no additional CIDR restriction once LoadBalancer is allowed by types.
+status.rule.enforce.services.nodePorts <object>	# NodePorts defines additional constraints for nodePort values.
+status.rule.enforce.services.nodePorts.ports <[]object>	# Ports restricts explicitly requested nodePort values. Empty means no additional port restriction once NodePort is allowed by types.
+status.rule.enforce.services.nodePorts.ports[].from <integer> (required) format=int32 min=1 max=65535
+status.rule.enforce.services.nodePorts.ports[].to <integer> (required) format=int32 min=1 max=65535
+status.rule.enforce.services.types <[]string>	# Types defines the Service types matched by this rule. Supported values: - ClusterIP - NodePort - LoadBalancer - ExternalName
+status.rule.enforce.workloads <object>	# Enforcement for Workloads (Pods)
+status.rule.enforce.workloads.qosClasses <[]string>	# Define Pod QoS classes matched by this enforcement rule. Supported values are Guaranteed, Burstable and BestEffort.
+status.rule.enforce.workloads.registries <[]object>	# Define registries which are allowed to be used within this tenant The rules are aggregated, since you can use Regular Expressions the match registry endpoints
+status.rule.enforce.workloads.registries[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rule.enforce.workloads.registries[].exp <string> min=1	# Exp matches regular expression.
+status.rule.enforce.workloads.registries[].negate <boolean> default=false	# Negate regular Expression
+status.rule.enforce.workloads.registries[].policy <[]string>	# Allowed PullPolicy for the given registry. Supplying no value allows all policies.
+status.rule.enforce.workloads.schedulers <[]object>	# Schedulers defines schedulerName matchers for Pod admission. The rule is evaluated against pod.spec.schedulerName. Empty schedulerName is ignored and is not normalized to default-scheduler.
+status.rule.enforce.workloads.schedulers[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rule.enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regular expression.
+status.rule.enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
+status.rule.enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.
+status.rules <[]object>	# Rules contains the effective namespace rules after tenant rule selection. Order is preserved from the originating Tenant rules.
+status.rules[].enforce <object>	# Enforcement for given rule
+status.rules[].enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+status.rules[].enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
+status.rules[].enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+status.rules[].enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
+status.rules[].enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
+status.rules[].enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rules[].enforce.metadata[].annotations.<key>.values[].exp <string> min=1	# Exp matches regular expression.
+status.rules[].enforce.metadata[].annotations.<key>.values[].negate <boolean> default=false	# Negate regular Expression
+status.rules[].enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
+status.rules[].enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
+status.rules[].enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+status.rules[].enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
+status.rules[].enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
+status.rules[].enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rules[].enforce.metadata[].labels.<key>.values[].exp <string> min=1	# Exp matches regular expression.
+status.rules[].enforce.metadata[].labels.<key>.values[].negate <boolean> default=false	# Negate regular Expression
+status.rules[].enforce.services <object>	# Enforcement for Services.
+status.rules[].enforce.services.externalNames <object>	# ExternalNames defines additional constraints for Services of type ExternalName.
+status.rules[].enforce.services.externalNames.hostnames <[]object>	# Hostnames restricts spec.externalName. Empty means no additional hostname restriction once ExternalName is allowed by types.
+status.rules[].enforce.services.externalNames.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rules[].enforce.services.externalNames.hostnames[].exp <string> min=1	# Exp matches regular expression.
+status.rules[].enforce.services.externalNames.hostnames[].negate <boolean> default=false	# Negate regular Expression
+status.rules[].enforce.services.loadBalancers <object>	# LoadBalancers defines additional constraints for Services of type LoadBalancer.
+status.rules[].enforce.services.loadBalancers.cidrs <[]string>	# CIDRs restricts spec.loadBalancerIP and spec.loadBalancerSourceRanges. Empty means no additional CIDR restriction once LoadBalancer is allowed by types.
+status.rules[].enforce.services.nodePorts <object>	# NodePorts defines additional constraints for nodePort values.
+status.rules[].enforce.services.nodePorts.ports <[]object>	# Ports restricts explicitly requested nodePort values. Empty means no additional port restriction once NodePort is allowed by types.
+status.rules[].enforce.services.nodePorts.ports[].from <integer> (required) format=int32 min=1 max=65535
+status.rules[].enforce.services.nodePorts.ports[].to <integer> (required) format=int32 min=1 max=65535
+status.rules[].enforce.services.types <[]string>	# Types defines the Service types matched by this rule. Supported values: - ClusterIP - NodePort - LoadBalancer - ExternalName
+status.rules[].enforce.workloads <object>	# Enforcement for Workloads (Pods)
+status.rules[].enforce.workloads.qosClasses <[]string>	# Define Pod QoS classes matched by this enforcement rule. Supported values are Guaranteed, Burstable and BestEffort.
+status.rules[].enforce.workloads.registries <[]object>	# Define registries which are allowed to be used within this tenant The rules are aggregated, since you can use Regular Expressions the match registry endpoints
+status.rules[].enforce.workloads.registries[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rules[].enforce.workloads.registries[].exp <string> min=1	# Exp matches regular expression.
+status.rules[].enforce.workloads.registries[].negate <boolean> default=false	# Negate regular Expression
+status.rules[].enforce.workloads.registries[].policy <[]string>	# Allowed PullPolicy for the given registry. Supplying no value allows all policies.
+status.rules[].enforce.workloads.schedulers <[]object>	# Schedulers defines schedulerName matchers for Pod admission. The rule is evaluated against pod.spec.schedulerName. Empty schedulerName is ignored and is not normalized to default-scheduler.
+status.rules[].enforce.workloads.schedulers[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rules[].enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regular expression.
+status.rules[].enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
+status.rules[].enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.

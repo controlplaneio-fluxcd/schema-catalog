@@ -1,0 +1,44 @@
+# schema source: Capsule v0.13.8 https://github.com/projectcapsule/capsule
+apiVersion <string> enum=capsule.clastix.io/v1beta2
+kind <string> enum=ResourcePool (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# ResourcePoolSpec.
+spec.config <object> default={}	# Additional Configuration
+spec.config.defaultsZero <boolean> default=false	# With this option all resources which can be allocated are set to 0 for the resourcequota defaults. (Default false)
+spec.config.deleteBoundResources <boolean> default=false	# When a resourcepool is deleted, the resourceclaims bound to it are disassociated from the resourcepool but not deleted. By Enabling this option, the resourceclaims will be deleted when the resourcepool is deleted, if they are in bound state. (Default false)
+spec.config.orderedQueue <boolean> default=false	# Claims are queued whenever they are allocated to a pool. A pool tries to allocate claims in order based on their creation date. But no matter their creation time, if a claim is requesting too much resources it's put into the queue but if a lower priority claim still has enough space in the available resources, it will be able to claim them. Eventough it's priority was lower Enabling this option respects to Order. Meaning the Creationtimestamp matters and if a resource is put into the queue, no other claim can claim the same resources with lower priority. (Default false)
+spec.defaults <object (free-form)>	# The Defaults given for each namespace, the default is not counted towards the total allocation When you use claims it's recommended to provision Defaults as the prevent the scheduling of any resources
+spec.quota <object> (required)	# Define the resourcequota served by this resourcepool.
+spec.quota.hard <object (free-form)>	# hard is the set of desired hard limits for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+spec.quota.scopeSelector <object>	# scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota but expressed using ScopeSelectorOperator in combination with possible values. For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
+spec.quota.scopeSelector.matchExpressions <[]object>	# A list of scope selector requirements by scope of the resources.
+spec.quota.scopeSelector.matchExpressions[].operator <string> (required)	# Represents a scope's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist.
+spec.quota.scopeSelector.matchExpressions[].scopeName <string> (required)	# The name of the scope that the selector applies to.
+spec.quota.scopeSelector.matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.quota.scopes <[]string>	# A collection of filters that must match each object tracked by a quota. If not specified, the quota matches all objects.
+spec.selectors <[]object>	# Selector to match the namespaces that should be managed by the GlobalResourceQuota
+spec.selectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.selectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.selectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.selectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.selectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+status <object>	# GlobalResourceQuotaStatus defines the observed state of GlobalResourceQuota.
+status.allocation <object>	# Tracks the Usage from Claimed against what has been granted from the pool
+status.allocation.available <object (free-form)>	# Used to track the usage of the resource in the pool (diff hard - claimed). May be used for further automation
+status.allocation.hard <object (free-form)>	# Hard is the set of enforced hard limits for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+status.allocation.used <object (free-form)>	# Used is the current observed total usage of the resource in the namespace.
+status.claimCount <integer> default=0	# Amount of claims
+status.claims <map[string]array>	# Tracks the quotas for the Resource.
+status.conditions <[]object> (required)	# Conditions for the resource claim
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.exhaustions <map[string]object>	# Exhaustions from claims associated with the pool
+status.exhaustions.<key>.available <int-or-string>	# Available Resources to be claimed
+status.exhaustions.<key>.requesting <int-or-string>	# Requesting Resources
+status.namespaceCount <integer> default=0	# How many namespaces are considered
+status.namespaces <[]string>	# Namespaces which are considered for claims
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation the controller has observed.
