@@ -3,7 +3,12 @@ export type ExtractKind = "k8s" | "openshift" | "crd";
 
 /** Where the CRD YAML piped into `flux-schema extract crd` comes from. */
 export type CrdInput = CrdInputBase &
-  ({ kustomize: string } | { releaseAsset: string } | { fluxInstance: FluxInstance });
+  (
+    | { kustomize: string }
+    | { releaseAsset: string }
+    | { crdDir: string }
+    | { fluxInstance: FluxInstance }
+  );
 
 interface CrdInputBase {
   /**

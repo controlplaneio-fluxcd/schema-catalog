@@ -110,13 +110,55 @@ export async function findReleaseAsset(
 }
 
 export async function downloadAsset(asset: ReleaseAsset): Promise<string> {
-  const res = await fetchRetry(asset.browser_download_url, {
-    headers: { "User-Agent": "schema-catalog-build" },
-  });
+  return downloadText(asset.browser_download_url);
+}
+
+async function downloadText(url: string): Promise<string> {
+  const res = await fetchRetry(url, { headers: { "User-Agent": "schema-catalog-build" } });
   if (!res.ok) {
-    throw new Error(`GET ${asset.browser_download_url}: ${res.status} ${res.statusText}`);
+    throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
   }
   return res.text();
+}
+
+interface ContentEntry {
+  name: string;
+  path: string;
+  type: string;
+  download_url: string | null;
+}
+
+/**
+ * Recursively fetches every `*.yaml` file under a repo directory at a git ref
+ * and concatenates them into one multi-document stream (sorted by path for a
+ * deterministic order). For repos that ship CRDs as bare per-kind files with
+ * no release asset or kustomization (e.g. cilium's client/crds tree).
+ */
+export async function fetchCrdDir(repo: string, ref: string, dir: string): Promise<string> {
+  const files = await listYamlFiles(repo, ref, dir);
+  if (files.length === 0) {
+    throw new Error(`${repo}@${ref}: no .yaml files under '${dir}'`);
+  }
+  files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  const docs = await Promise.all(files.map((f) => downloadText(f.download_url!)));
+  return docs.join("\n---\n");
+}
+
+async function listYamlFiles(repo: string, ref: string, dir: string): Promise<ContentEntry[]> {
+  const listing = await apiJson(`/repos/${repo}/contents/${dir}?ref=${ref}`);
+  if (!Array.isArray(listing)) {
+    throw new Error(`${repo}@${ref}: '${dir}' is not a directory`);
+  }
+  const entries = listing as ContentEntry[];
+  const files: ContentEntry[] = [];
+  for (const entry of entries) {
+    if (entry.type === "dir") {
+      files.push(...(await listYamlFiles(repo, ref, entry.path)));
+    } else if (entry.type === "file" && entry.name.endsWith(".yaml") && entry.download_url) {
+      files.push(entry);
+    }
+  }
+  return files;
 }
 
 /** Matches an asset name against a pattern where '*' spans any characters. */

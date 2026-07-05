@@ -1,6 +1,6 @@
 import { $, YAML } from "bun";
 import { repoOf } from "./config.ts";
-import { downloadAsset, findReleaseAsset } from "./github.ts";
+import { downloadAsset, fetchCrdDir, findReleaseAsset } from "./github.ts";
 import { FLUX_SCHEMA_BIN } from "./paths.ts";
 import { bareVersion, openshiftRef } from "./resolve.ts";
 import type { CrdSource, FluxInstance, Source } from "./types.ts";
@@ -54,6 +54,9 @@ async function crdYaml(source: CrdSource, version: string): Promise<string> {
   if ("releaseAsset" in input) {
     const asset = await findReleaseAsset(repoOf(source), version, input.releaseAsset);
     return downloadAsset(asset);
+  }
+  if ("crdDir" in input) {
+    return fetchCrdDir(repoOf(source), version, input.crdDir);
   }
   const manifest = fluxInstanceManifest(input.fluxInstance, version);
   return await $`flux-operator build instance -f - < ${new Response(manifest)}`.quiet().text();

@@ -68,7 +68,10 @@ regenerated from the manifests, optional `--summary` markdown, and a
   itself (`--version 1.36.2` bare, `--ref release-4.20`).
 - `crd` — needs an `input` declaring where the CRD YAML comes from, exactly one
   of: `kustomize` (build `<url>/<path>?ref=<version>` with kubectl),
-  `releaseAsset` (download a GitHub release asset by name or `*` glob), or
+  `releaseAsset` (download a GitHub release asset by name or `*` glob), `crdDir`
+  (recursively fetch every `*.yaml` under a repo directory at the ref and
+  concatenate them — for repos that ship bare per-kind CRD files with no asset
+  or kustomization, e.g. cilium), or
   `fluxInstance` (the Flux special case: the manifest is constructed as a typed
   object with the resolved version in `spec.distribution.version` and piped
   through `flux-operator build instance -f -`). An `input` may also carry an

@@ -100,13 +100,13 @@ describe("parseSources", () => {
   test("rejects multiple input kinds", () => {
     const input = { kustomize: "config/crd", releaseAsset: "crds.yaml" };
     expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
-      "exactly one of: kustomize, releaseAsset, fluxInstance",
+      "exactly one of: kustomize, releaseAsset, crdDir, fluxInstance",
     );
   });
 
   test("rejects unknown input kinds", () => {
     expect(() => parseSources({ sources: [validSource({ input: { helmChart: "x" } })] })).toThrow(
-      "exactly one of: kustomize, releaseAsset, fluxInstance",
+      "exactly one of: kustomize, releaseAsset, crdDir, fluxInstance",
     );
   });
 
@@ -125,13 +125,24 @@ describe("parseSources", () => {
 
   test("rejects input with only a releaseTag and no source kind", () => {
     expect(() => parseSources({ sources: [validSource({ input: { releaseTag: "v*" } })] })).toThrow(
-      "exactly one of: kustomize, releaseAsset, fluxInstance",
+      "exactly one of: kustomize, releaseAsset, crdDir, fluxInstance",
     );
   });
 
   test("rejects an empty kustomize path", () => {
     expect(() => parseSources({ sources: [validSource({ input: { kustomize: "" } })] })).toThrow(
       "non-empty overlay path",
+    );
+  });
+
+  test("accepts a crdDir input", () => {
+    const sources = parseSources({ sources: [validSource({ input: { crdDir: "path/to/crds" } })] });
+    expect(sources[0]!).toMatchObject({ input: { crdDir: "path/to/crds" } });
+  });
+
+  test("rejects an empty crdDir path", () => {
+    expect(() => parseSources({ sources: [validSource({ input: { crdDir: "" } })] })).toThrow(
+      "input.crdDir must be a non-empty repo directory path",
     );
   });
 
