@@ -91,6 +91,7 @@ for the line grammar.
 | Velero | [v1.18.2](build/history/velero.json) | 2026-07-05 |
 | Crossplane | [v2.3.3](build/history/crossplane.json) | 2026-07-05 |
 | Upbound AWS Provider | [v2.6.0](build/history/provider-upjet-aws.json) | 2026-07-05 |
+| Upbound Azure Provider | [v2.6.0](build/history/provider-upjet-azure.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
