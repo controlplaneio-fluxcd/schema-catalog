@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-62-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C124-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-504%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-67-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C151-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-525%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -124,6 +124,11 @@ for the line grammar.
 | Karpenter AWS | [v1.13.0](build/history/karpenter-aws.json) | 1 | 2026-07-05 |
 | Karpenter Azure | [v1.13.1](build/history/karpenter-azure.json) | 2 | 2026-07-05 |
 | SPIRE Controller Manager | [v0.6.6](build/history/spire-controller-manager.json) | 4 | 2026-07-05 |
+| Argo CD | [v3.4.4](build/history/argo-cd.json) | 3 | 2026-07-05 |
+| Argo Rollouts | [v1.9.0](build/history/argo-rollouts.json) | 5 | 2026-07-05 |
+| Argo Workflows | [v4.0.6](build/history/argo-workflows.json) | 8 | 2026-07-05 |
+| Argo Events | [v1.9.10](build/history/argo-events.json) | 3 | 2026-07-05 |
+| Dapr | [v1.18.1](build/history/dapr.json) | 8 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
