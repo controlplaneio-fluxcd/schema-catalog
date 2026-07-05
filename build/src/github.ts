@@ -144,6 +144,20 @@ export async function fetchCrdDir(repo: string, ref: string, dir: string): Promi
   return docs.join("\n---\n");
 }
 
+/**
+ * Fetches a single YAML file from a repo tree at a git ref. For repos that
+ * commit their whole CRD set as one bundled file with no release asset and no
+ * isolated directory (e.g. rook's deploy/examples/crds.yaml, which shares a
+ * directory with ~99 unrelated example manifests).
+ */
+export async function fetchCrdFile(repo: string, ref: string, path: string): Promise<string> {
+  const entry = await apiJson(`/repos/${repo}/contents/${path}?ref=${ref}`);
+  if (Array.isArray(entry) || !(entry as ContentEntry).download_url) {
+    throw new Error(`${repo}@${ref}: '${path}' is not a file`);
+  }
+  return downloadText((entry as ContentEntry).download_url!);
+}
+
 async function listYamlFiles(repo: string, ref: string, dir: string): Promise<ContentEntry[]> {
   const listing = await apiJson(`/repos/${repo}/contents/${dir}?ref=${ref}`);
   if (!Array.isArray(listing)) {

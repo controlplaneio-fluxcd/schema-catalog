@@ -7,6 +7,7 @@ export type CrdInput = CrdInputBase &
     | { kustomize: string }
     | { releaseAsset: string }
     | { crdDir: string }
+    | { crdFile: string }
     | { fluxInstance: FluxInstance }
   );
 

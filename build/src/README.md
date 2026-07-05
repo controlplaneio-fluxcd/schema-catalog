@@ -71,7 +71,10 @@ regenerated from the manifests, optional `--summary` markdown, and a
   `releaseAsset` (download a GitHub release asset by name or `*` glob), `crdDir`
   (recursively fetch every `*.yaml` under a repo directory at the ref and
   concatenate them — for repos that ship bare per-kind CRD files with no asset
-  or kustomization, e.g. cilium), or
+  or kustomization, e.g. cilium), `crdFile` (fetch a single committed file at
+  the ref — for repos that bundle their whole CRD set into one file that shares
+  a directory with unrelated manifests, so `crdDir` would over-collect, e.g.
+  rook's `deploy/examples/crds.yaml`), or
   `fluxInstance` (the Flux special case: the manifest is constructed as a typed
   object with the resolved version in `spec.distribution.version` and piped
   through `flux-operator build instance -f -`). An `input` may also carry an
@@ -84,6 +87,12 @@ Every extraction runs with `--strip-description=false --with-field-index
 --index-source="<alias> <version> <url>"` and the
 `{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. The binary
 lowercases all template variables, so catalog filenames are lowercase.
+
+Before piping, the assembled CRD stream is normalized to drop a leading
+comment/blank banner terminated by `---` (`dropLeadingCommentDoc`): that
+preamble parses as an empty first YAML document, which flux-schema rejects with
+"document is not a YAML mapping". Several bundles ship one as a license or usage
+header (e.g. rook's `crds.yaml`).
 
 **Pipeline stages are separate `$` calls on purpose.** A Bun-shell pipeline,
 like bash without pipefail, reports only the last command's exit code — a
@@ -157,6 +166,15 @@ Add an entry to `build/config/sources.yaml` (see `types.ts` for the shape and
 - **`kustomize`** — a kustomize overlay in the repo (`config/crd` and friends).
 - **`crdDir`** — bare per-kind CRD YAML files under a repo directory, with no
   release asset or kustomization (e.g. cilium's `client/crds` tree).
+- **`crdFile`** — a single committed file bundling the whole CRD set, sharing a
+  directory with unrelated manifests so `crdDir` would over-collect (e.g. rook's
+  `deploy/examples/crds.yaml`).
+
+Repos that maintain two concurrent release lines need `releaseTag` to pin the
+one you want (strimzi ships a `0.x` line that still serves `v1beta2` and a `1.x`
+line that serves `v1` only; the pin keeps `/releases/latest` from flipping
+between them). A resolved tag is used verbatim as the git ref, so bare tags
+(strimzi's `0.51.0`, no `v`) are supported and appear un-prefixed in the table.
 
 No code or test edits. If validation of a popular example repo starts failing
 on a missing schema, that is the signal to add the project here.

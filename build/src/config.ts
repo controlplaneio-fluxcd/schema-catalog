@@ -2,7 +2,7 @@ import { YAML } from "bun";
 import type { CrdInput, FluxInstance, Source } from "./types.ts";
 
 const EXTRACT_KINDS = ["k8s", "openshift", "crd"];
-const INPUT_KINDS = ["kustomize", "releaseAsset", "crdDir", "fluxInstance"];
+const INPUT_KINDS = ["kustomize", "releaseAsset", "crdDir", "crdFile", "fluxInstance"];
 const SOURCE_KEYS = ["name", "alias", "url", "version", "extract", "input"];
 const NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 const REPO_URL_RE = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/;
@@ -126,6 +126,11 @@ function parseInput(input: unknown, ctx: string): CrdInput {
         throw new Error(`${ctx}: input.crdDir must be a non-empty repo directory path`);
       }
       return { releaseTag, crdDir: input.crdDir };
+    case "crdFile":
+      if (typeof input.crdFile !== "string" || input.crdFile === "") {
+        throw new Error(`${ctx}: input.crdFile must be a non-empty repo file path`);
+      }
+      return { releaseTag, crdFile: input.crdFile };
     default:
       return { releaseTag, fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
   }

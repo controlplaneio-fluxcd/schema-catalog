@@ -9,7 +9,10 @@ const ENDOFLIFE_URL = "https://endoflife.date/api/v1/products/red-hat-openshift/
  * set, otherwise the latest OpenShift release from endoflife.date for
  * extract: openshift, otherwise the latest GitHub release of the source repo.
  *
- * Versions are normalized to a 'v' prefix (vX.Y.Z; OpenShift: vX.Y).
+ * A pin and the OpenShift release are normalized to a 'v' prefix (vX.Y.Z;
+ * OpenShift: vX.Y). A resolved GitHub tag is returned verbatim: for crd
+ * sources it doubles as the git ref for the asset/tree/kustomize fetch, so a
+ * bare tag (e.g. strimzi's `1.1.0`) must not be rewritten to `v1.1.0`.
  */
 export async function resolveVersion(source: Source): Promise<string> {
   if (source.version !== undefined) {
@@ -25,9 +28,9 @@ export async function resolveVersion(source: Source): Promise<string> {
   const repo = repoOf(source);
   const releaseTag = source.extract === "crd" ? source.input.releaseTag : undefined;
   if (releaseTag !== undefined) {
-    return normalizeVersion(pickLatestRelease(await listReleases(repo), releaseTag));
+    return pickLatestRelease(await listReleases(repo), releaseTag);
   }
-  return normalizeVersion(await latestReleaseTag(repo));
+  return await latestReleaseTag(repo);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fluxInstanceManifest } from "./extract.ts";
+import { dropLeadingCommentDoc, fluxInstanceManifest } from "./extract.ts";
 import { matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
 import { renderVersionsTable, spliceVersionsTable } from "./readme.ts";
@@ -227,5 +227,26 @@ describe("fluxInstanceManifest", () => {
     expect(doc.kind).toBe("FluxInstance");
     expect(doc.spec.distribution).toEqual({ version: "v2.9.0", registry: "ghcr.io/fluxcd" });
     expect(doc.spec.components).toEqual(["source-controller"]);
+  });
+});
+
+describe("dropLeadingCommentDoc", () => {
+  test("strips a leading comment banner terminated by ---", () => {
+    const yaml = "# banner line 1\n# banner line 2\n---\napiVersion: v1\nkind: Foo\n";
+    expect(dropLeadingCommentDoc(yaml)).toBe("apiVersion: v1\nkind: Foo\n");
+  });
+
+  test("strips a lone leading document marker", () => {
+    expect(dropLeadingCommentDoc("---\nkind: Foo\n")).toBe("kind: Foo\n");
+  });
+
+  test("leaves a stream that opens with content untouched", () => {
+    const yaml = "apiVersion: v1\nkind: Foo\n---\nkind: Bar\n";
+    expect(dropLeadingCommentDoc(yaml)).toBe(yaml);
+  });
+
+  test("does not strip past the first document", () => {
+    const yaml = "kind: Foo\n---\nkind: Bar\n";
+    expect(dropLeadingCommentDoc(yaml)).toBe(yaml);
   });
 });

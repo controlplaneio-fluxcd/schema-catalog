@@ -1,6 +1,6 @@
 import { $, YAML } from "bun";
 import { repoOf } from "./config.ts";
-import { downloadAsset, fetchCrdDir, findReleaseAsset } from "./github.ts";
+import { downloadAsset, fetchCrdDir, fetchCrdFile, findReleaseAsset } from "./github.ts";
 import { FLUX_SCHEMA_BIN } from "./paths.ts";
 import { bareVersion, openshiftRef } from "./resolve.ts";
 import type { CrdSource, FluxInstance, Source } from "./types.ts";
@@ -41,8 +41,19 @@ export async function extractSource(source: Source, version: string, dir: string
  * command's status, letting an upstream failure pass as an empty extraction.
  */
 async function extractCrd(source: CrdSource, version: string, flags: string[]): Promise<void> {
-  const yaml = await crdYaml(source, version);
+  const yaml = dropLeadingCommentDoc(await crdYaml(source, version));
   await $`${FLUX_SCHEMA_BIN} extract crd /dev/stdin ${flags} < ${new Response(yaml)}`.quiet();
+}
+
+/**
+ * Drops a leading comment/blank preamble terminated by a `---` document
+ * marker. Such a preamble is a valid but empty first YAML document that
+ * flux-schema rejects ("document is not a YAML mapping"); many CRD bundles
+ * ship one as a license or usage banner (e.g. rook's crds.yaml). A stream that
+ * opens directly with content (no leading `---`) is left untouched.
+ */
+export function dropLeadingCommentDoc(yaml: string): string {
+  return yaml.replace(/^(?:[ \t]*(?:#[^\n]*)?\r?\n)*---[^\n]*\r?\n/, "");
 }
 
 async function crdYaml(source: CrdSource, version: string): Promise<string> {
@@ -57,6 +68,9 @@ async function crdYaml(source: CrdSource, version: string): Promise<string> {
   }
   if ("crdDir" in input) {
     return fetchCrdDir(repoOf(source), version, input.crdDir);
+  }
+  if ("crdFile" in input) {
+    return fetchCrdFile(repoOf(source), version, input.crdFile);
   }
   const manifest = fluxInstanceManifest(input.fluxInstance, version);
   return await $`flux-operator build instance -f - < ${new Response(manifest)}`.quiet().text();
