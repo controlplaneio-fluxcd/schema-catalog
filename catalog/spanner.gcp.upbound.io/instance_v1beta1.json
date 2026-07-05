@@ -1,0 +1,680 @@
+{
+  "description": "Instance is the Schema for the Instances API. An isolated set of Cloud Spanner resources on which databases can be hosted.\nDeprecated: This API version (v1beta1) has been deprecated in release v2.6.0.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "InstanceSpec defines the desired state of Instance",
+      "properties": {
+        "deletionPolicy": {
+          "default": "Delete",
+          "description": "DeletionPolicy specifies what will happen to the underlying external\nwhen this managed resource is deleted - either \"Delete\" or \"Orphan\" the\nexternal resource.\nThis field is planned to be deprecated in favor of the ManagementPolicies\nfield in a future release. Currently, both could be set independently and\nnon-default values would be honored if the feature flag is enabled.\nSee the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223",
+          "enum": [
+            "Orphan",
+            "Delete"
+          ],
+          "type": "string"
+        },
+        "forProvider": {
+          "additionalProperties": false,
+          "properties": {
+            "autoscalingConfig": {
+              "description": "The autoscaling configuration. Autoscaling is enabled if this field is set.\nWhen autoscaling is enabled, num_nodes and processing_units are treated as,\nOUTPUT_ONLY fields and reflect the current compute capacity allocated to\nthe instance.\nStructure is documented below.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "asymmetricAutoscalingOptions": {
+                    "description": "Asymmetric autoscaling options for specific replicas.\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "overrides": {
+                          "description": "A nested object resource.\nStructure is documented below.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "autoscalingLimits": {
+                                "description": "A nested object resource.\nStructure is documented below.",
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "maxNodes": {
+                                      "description": "The maximum number of nodes for this specific replica.",
+                                      "type": "number"
+                                    },
+                                    "minNodes": {
+                                      "description": "The minimum number of nodes for this specific replica.",
+                                      "type": "number"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "replicaSelection": {
+                          "description": "A nested object resource.\nStructure is documented below.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "location": {
+                                "description": "The location of the replica to apply asymmetric autoscaling options.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "autoscalingLimits": {
+                    "description": "Defines scale in controls to reduce the risk of response latency\nand outages due to abrupt scale-in events. Users can define the minimum and\nmaximum compute capacity allocated to the instance, and the autoscaler will\nonly scale within that range. Users can either use nodes or processing\nunits to specify the limits, but should use the same unit to set both the\nmin_limit and max_limit.\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "maxNodes": {
+                          "description": "The maximum number of nodes for this specific replica.",
+                          "type": "number"
+                        },
+                        "maxProcessingUnits": {
+                          "description": "Specifies maximum number of processing units allocated to the instance.\nIf set, this number should be multiples of 1000 and be greater than or equal to\nmin_processing_units.",
+                          "type": "number"
+                        },
+                        "minNodes": {
+                          "description": "The minimum number of nodes for this specific replica.",
+                          "type": "number"
+                        },
+                        "minProcessingUnits": {
+                          "description": "Specifies minimum number of processing units allocated to the instance.\nIf set, this number should be multiples of 1000.",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "autoscalingTargets": {
+                    "description": "Defines scale in controls to reduce the risk of response latency\nand outages due to abrupt scale-in events\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "highPriorityCpuUtilizationPercent": {
+                          "description": "Specifies the target high priority cpu utilization percentage that the autoscaler\nshould be trying to achieve for the instance.\nThis number is on a scale from 0 (no utilization) to 100 (full utilization)..",
+                          "type": "number"
+                        },
+                        "storageUtilizationPercent": {
+                          "description": "Specifies the target storage utilization percentage that the autoscaler\nshould be trying to achieve for the instance.\nThis number is on a scale from 0 (no utilization) to 100 (full utilization).",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "config": {
+              "description": "The name of the instance's configuration (similar but not\nquite the same as a region) which defines the geographic placement and\nreplication of your databases in this instance. It determines where your data\nis stored. Values are typically of the form regional-europe-west1 , us-central etc.\nIn order to obtain a valid list please consult the\nConfiguration section of the docs.",
+              "type": "string"
+            },
+            "defaultBackupScheduleType": {
+              "description": "Controls the default backup behavior for new databases within the instance.\nNote that AUTOMATIC is not permitted for free instances, as backups and backup schedules are not allowed for free instances.\nif unset or NONE, no default backup schedule will be created for new databases within the instance.\nPossible values are: NONE, AUTOMATIC.",
+              "type": "string"
+            },
+            "displayName": {
+              "description": "The descriptive name for this instance as it appears in UIs. Must be\nunique per project and between 4 and 30 characters in length.",
+              "type": "string"
+            },
+            "edition": {
+              "description": "The edition selected for this instance. Different editions provide different capabilities at different price points.\nPossible values are: EDITION_UNSPECIFIED, STANDARD, ENTERPRISE, ENTERPRISE_PLUS.",
+              "type": "string"
+            },
+            "forceDestroy": {
+              "description": "When deleting a spanner instance, this boolean option will delete all backups of this instance.\nThis must be set to true if you created a backup manually in the console.",
+              "type": "boolean"
+            },
+            "instanceType": {
+              "description": "The type of this instance. The type can be used to distinguish product variants, that can affect aspects like:\nusage restrictions, quotas and billing. Currently this is used to distinguish FREE_INSTANCE vs PROVISIONED instances.\nWhen configured as FREE_INSTANCE, the field edition should not be configured.\nPossible values are: PROVISIONED, FREE_INSTANCE.",
+              "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "An object containing a list of \"key\": value pairs.\nExample: { \"name\": \"wrench\", \"mass\": \"1.3kg\", \"count\": \"3\" }.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "numNodes": {
+              "description": "The number of nodes allocated to this instance.",
+              "type": "number"
+            },
+            "processingUnits": {
+              "description": "The number of processing units allocated to this instance.",
+              "type": "number"
+            },
+            "project": {
+              "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "initProvider": {
+          "additionalProperties": false,
+          "description": "THIS IS A BETA FIELD. It will be honored\nunless the Management Policies feature flag is disabled.\nInitProvider holds the same fields as ForProvider, with the exception\nof Identifier and other resource reference fields. The fields that are\nin InitProvider are merged into ForProvider when the resource is created.\nThe same fields are also added to the terraform ignore_changes hook, to\navoid updating them after creation. This is useful for fields that are\nrequired on creation, but we do not desire to update them after creation,\nfor example because of an external controller is managing them, like an\nautoscaler.",
+          "properties": {
+            "autoscalingConfig": {
+              "description": "The autoscaling configuration. Autoscaling is enabled if this field is set.\nWhen autoscaling is enabled, num_nodes and processing_units are treated as,\nOUTPUT_ONLY fields and reflect the current compute capacity allocated to\nthe instance.\nStructure is documented below.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "asymmetricAutoscalingOptions": {
+                    "description": "Asymmetric autoscaling options for specific replicas.\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "overrides": {
+                          "description": "A nested object resource.\nStructure is documented below.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "autoscalingLimits": {
+                                "description": "A nested object resource.\nStructure is documented below.",
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "maxNodes": {
+                                      "description": "The maximum number of nodes for this specific replica.",
+                                      "type": "number"
+                                    },
+                                    "minNodes": {
+                                      "description": "The minimum number of nodes for this specific replica.",
+                                      "type": "number"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "replicaSelection": {
+                          "description": "A nested object resource.\nStructure is documented below.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "location": {
+                                "description": "The location of the replica to apply asymmetric autoscaling options.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "autoscalingLimits": {
+                    "description": "Defines scale in controls to reduce the risk of response latency\nand outages due to abrupt scale-in events. Users can define the minimum and\nmaximum compute capacity allocated to the instance, and the autoscaler will\nonly scale within that range. Users can either use nodes or processing\nunits to specify the limits, but should use the same unit to set both the\nmin_limit and max_limit.\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "maxNodes": {
+                          "description": "The maximum number of nodes for this specific replica.",
+                          "type": "number"
+                        },
+                        "maxProcessingUnits": {
+                          "description": "Specifies maximum number of processing units allocated to the instance.\nIf set, this number should be multiples of 1000 and be greater than or equal to\nmin_processing_units.",
+                          "type": "number"
+                        },
+                        "minNodes": {
+                          "description": "The minimum number of nodes for this specific replica.",
+                          "type": "number"
+                        },
+                        "minProcessingUnits": {
+                          "description": "Specifies minimum number of processing units allocated to the instance.\nIf set, this number should be multiples of 1000.",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "autoscalingTargets": {
+                    "description": "Defines scale in controls to reduce the risk of response latency\nand outages due to abrupt scale-in events\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "highPriorityCpuUtilizationPercent": {
+                          "description": "Specifies the target high priority cpu utilization percentage that the autoscaler\nshould be trying to achieve for the instance.\nThis number is on a scale from 0 (no utilization) to 100 (full utilization)..",
+                          "type": "number"
+                        },
+                        "storageUtilizationPercent": {
+                          "description": "Specifies the target storage utilization percentage that the autoscaler\nshould be trying to achieve for the instance.\nThis number is on a scale from 0 (no utilization) to 100 (full utilization).",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "config": {
+              "description": "The name of the instance's configuration (similar but not\nquite the same as a region) which defines the geographic placement and\nreplication of your databases in this instance. It determines where your data\nis stored. Values are typically of the form regional-europe-west1 , us-central etc.\nIn order to obtain a valid list please consult the\nConfiguration section of the docs.",
+              "type": "string"
+            },
+            "defaultBackupScheduleType": {
+              "description": "Controls the default backup behavior for new databases within the instance.\nNote that AUTOMATIC is not permitted for free instances, as backups and backup schedules are not allowed for free instances.\nif unset or NONE, no default backup schedule will be created for new databases within the instance.\nPossible values are: NONE, AUTOMATIC.",
+              "type": "string"
+            },
+            "displayName": {
+              "description": "The descriptive name for this instance as it appears in UIs. Must be\nunique per project and between 4 and 30 characters in length.",
+              "type": "string"
+            },
+            "edition": {
+              "description": "The edition selected for this instance. Different editions provide different capabilities at different price points.\nPossible values are: EDITION_UNSPECIFIED, STANDARD, ENTERPRISE, ENTERPRISE_PLUS.",
+              "type": "string"
+            },
+            "forceDestroy": {
+              "description": "When deleting a spanner instance, this boolean option will delete all backups of this instance.\nThis must be set to true if you created a backup manually in the console.",
+              "type": "boolean"
+            },
+            "instanceType": {
+              "description": "The type of this instance. The type can be used to distinguish product variants, that can affect aspects like:\nusage restrictions, quotas and billing. Currently this is used to distinguish FREE_INSTANCE vs PROVISIONED instances.\nWhen configured as FREE_INSTANCE, the field edition should not be configured.\nPossible values are: PROVISIONED, FREE_INSTANCE.",
+              "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "An object containing a list of \"key\": value pairs.\nExample: { \"name\": \"wrench\", \"mass\": \"1.3kg\", \"count\": \"3\" }.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "numNodes": {
+              "description": "The number of nodes allocated to this instance.",
+              "type": "number"
+            },
+            "processingUnits": {
+              "description": "The number of processing units allocated to this instance.",
+              "type": "number"
+            },
+            "project": {
+              "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "managementPolicies": {
+          "default": [
+            "*"
+          ],
+          "description": "THIS IS A BETA FIELD. It is on by default but can be opted out\nthrough a Crossplane feature flag.\nManagementPolicies specify the array of actions Crossplane is allowed to\ntake on the managed and external resources.\nThis field is planned to replace the DeletionPolicy field in a future\nrelease. Currently, both could be set independently and non-default\nvalues would be honored if the feature flag is enabled. If both are\ncustom, the DeletionPolicy field will be ignored.\nSee the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223\nand this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md",
+          "items": {
+            "description": "A ManagementAction represents an action that the Crossplane controllers\ncan take on an external resource.",
+            "enum": [
+              "Observe",
+              "Create",
+              "Update",
+              "Delete",
+              "LateInitialize",
+              "*"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "providerConfigRef": {
+          "additionalProperties": false,
+          "default": {
+            "name": "default"
+          },
+          "description": "ProviderConfigReference specifies how the provider that will be used to\ncreate, observe, update, and delete this managed resource should be\nconfigured.",
+          "properties": {
+            "name": {
+              "description": "Name of the referenced object.",
+              "type": "string"
+            },
+            "policy": {
+              "additionalProperties": false,
+              "description": "Policies for referencing.",
+              "properties": {
+                "resolution": {
+                  "default": "Required",
+                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                  "enum": [
+                    "Required",
+                    "Optional"
+                  ],
+                  "type": "string"
+                },
+                "resolve": {
+                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                  "enum": [
+                    "Always",
+                    "IfNotPresent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "writeConnectionSecretToRef": {
+          "additionalProperties": false,
+          "description": "WriteConnectionSecretToReference specifies the namespace and name of a\nSecret to which any connection details for this managed resource should\nbe written. Connection details frequently include the endpoint, username,\nand password required to connect to the managed resource.",
+          "properties": {
+            "name": {
+              "description": "Name of the secret.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the secret.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "namespace"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "forProvider"
+      ],
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "spec.forProvider.config is a required parameter",
+          "rule": "!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.config) || (has(self.initProvider) && has(self.initProvider.config))"
+        },
+        {
+          "message": "spec.forProvider.displayName is a required parameter",
+          "rule": "!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.displayName) || (has(self.initProvider) && has(self.initProvider.displayName))"
+        }
+      ]
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "InstanceStatus defines the observed state of Instance.",
+      "properties": {
+        "atProvider": {
+          "additionalProperties": false,
+          "properties": {
+            "autoscalingConfig": {
+              "description": "The autoscaling configuration. Autoscaling is enabled if this field is set.\nWhen autoscaling is enabled, num_nodes and processing_units are treated as,\nOUTPUT_ONLY fields and reflect the current compute capacity allocated to\nthe instance.\nStructure is documented below.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "asymmetricAutoscalingOptions": {
+                    "description": "Asymmetric autoscaling options for specific replicas.\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "overrides": {
+                          "description": "A nested object resource.\nStructure is documented below.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "autoscalingLimits": {
+                                "description": "A nested object resource.\nStructure is documented below.",
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "maxNodes": {
+                                      "description": "The maximum number of nodes for this specific replica.",
+                                      "type": "number"
+                                    },
+                                    "minNodes": {
+                                      "description": "The minimum number of nodes for this specific replica.",
+                                      "type": "number"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "replicaSelection": {
+                          "description": "A nested object resource.\nStructure is documented below.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "location": {
+                                "description": "The location of the replica to apply asymmetric autoscaling options.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "autoscalingLimits": {
+                    "description": "Defines scale in controls to reduce the risk of response latency\nand outages due to abrupt scale-in events. Users can define the minimum and\nmaximum compute capacity allocated to the instance, and the autoscaler will\nonly scale within that range. Users can either use nodes or processing\nunits to specify the limits, but should use the same unit to set both the\nmin_limit and max_limit.\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "maxNodes": {
+                          "description": "The maximum number of nodes for this specific replica.",
+                          "type": "number"
+                        },
+                        "maxProcessingUnits": {
+                          "description": "Specifies maximum number of processing units allocated to the instance.\nIf set, this number should be multiples of 1000 and be greater than or equal to\nmin_processing_units.",
+                          "type": "number"
+                        },
+                        "minNodes": {
+                          "description": "The minimum number of nodes for this specific replica.",
+                          "type": "number"
+                        },
+                        "minProcessingUnits": {
+                          "description": "Specifies minimum number of processing units allocated to the instance.\nIf set, this number should be multiples of 1000.",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "autoscalingTargets": {
+                    "description": "Defines scale in controls to reduce the risk of response latency\nand outages due to abrupt scale-in events\nStructure is documented below.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "highPriorityCpuUtilizationPercent": {
+                          "description": "Specifies the target high priority cpu utilization percentage that the autoscaler\nshould be trying to achieve for the instance.\nThis number is on a scale from 0 (no utilization) to 100 (full utilization)..",
+                          "type": "number"
+                        },
+                        "storageUtilizationPercent": {
+                          "description": "Specifies the target storage utilization percentage that the autoscaler\nshould be trying to achieve for the instance.\nThis number is on a scale from 0 (no utilization) to 100 (full utilization).",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "config": {
+              "description": "The name of the instance's configuration (similar but not\nquite the same as a region) which defines the geographic placement and\nreplication of your databases in this instance. It determines where your data\nis stored. Values are typically of the form regional-europe-west1 , us-central etc.\nIn order to obtain a valid list please consult the\nConfiguration section of the docs.",
+              "type": "string"
+            },
+            "defaultBackupScheduleType": {
+              "description": "Controls the default backup behavior for new databases within the instance.\nNote that AUTOMATIC is not permitted for free instances, as backups and backup schedules are not allowed for free instances.\nif unset or NONE, no default backup schedule will be created for new databases within the instance.\nPossible values are: NONE, AUTOMATIC.",
+              "type": "string"
+            },
+            "displayName": {
+              "description": "The descriptive name for this instance as it appears in UIs. Must be\nunique per project and between 4 and 30 characters in length.",
+              "type": "string"
+            },
+            "edition": {
+              "description": "The edition selected for this instance. Different editions provide different capabilities at different price points.\nPossible values are: EDITION_UNSPECIFIED, STANDARD, ENTERPRISE, ENTERPRISE_PLUS.",
+              "type": "string"
+            },
+            "effectiveLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "for all of the labels present on the resource.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "forceDestroy": {
+              "description": "When deleting a spanner instance, this boolean option will delete all backups of this instance.\nThis must be set to true if you created a backup manually in the console.",
+              "type": "boolean"
+            },
+            "id": {
+              "description": "an identifier for the resource with format {{project}}/{{name}}",
+              "type": "string"
+            },
+            "instanceType": {
+              "description": "The type of this instance. The type can be used to distinguish product variants, that can affect aspects like:\nusage restrictions, quotas and billing. Currently this is used to distinguish FREE_INSTANCE vs PROVISIONED instances.\nWhen configured as FREE_INSTANCE, the field edition should not be configured.\nPossible values are: PROVISIONED, FREE_INSTANCE.",
+              "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "An object containing a list of \"key\": value pairs.\nExample: { \"name\": \"wrench\", \"mass\": \"1.3kg\", \"count\": \"3\" }.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "numNodes": {
+              "description": "The number of nodes allocated to this instance.",
+              "type": "number"
+            },
+            "processingUnits": {
+              "description": "The number of processing units allocated to this instance.",
+              "type": "number"
+            },
+            "project": {
+              "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
+              "type": "string"
+            },
+            "state": {
+              "description": "Instance status: CREATING or READY.",
+              "type": "string"
+            },
+            "terraformLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "The combination of labels configured directly on the resource\nand default labels configured on the provider.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            }
+          },
+          "type": "object"
+        },
+        "conditions": {
+          "description": "Conditions of the resource.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A Condition that may apply to a resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "LastTransitionTime is the last time this condition transitioned from one\nstatus to another.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "A Message containing details about this condition's last transition from\none status to another, if any.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "A Reason for this condition's last transition from one status to another.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of this condition; is it currently True, False, or Unknown?",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of this condition. At most one of each condition type may apply to\na resource at any point in time.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the latest metadata.generation\nwhich resulted in either a ready state, or stalled due to error\nit can not recover from without human intervention.",
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}

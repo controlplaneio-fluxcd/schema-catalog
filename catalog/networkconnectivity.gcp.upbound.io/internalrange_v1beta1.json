@@ -1,0 +1,826 @@
+{
+  "description": "InternalRange is the Schema for the InternalRanges API. The internal range resource for IPAM operations within a VPC network.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "InternalRangeSpec defines the desired state of InternalRange",
+      "properties": {
+        "deletionPolicy": {
+          "default": "Delete",
+          "description": "DeletionPolicy specifies what will happen to the underlying external\nwhen this managed resource is deleted - either \"Delete\" or \"Orphan\" the\nexternal resource.\nThis field is planned to be deprecated in favor of the ManagementPolicies\nfield in a future release. Currently, both could be set independently and\nnon-default values would be honored if the feature flag is enabled.\nSee the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223",
+          "enum": [
+            "Orphan",
+            "Delete"
+          ],
+          "type": "string"
+        },
+        "forProvider": {
+          "additionalProperties": false,
+          "properties": {
+            "allocationOptions": {
+              "additionalProperties": false,
+              "description": "Options for automatically allocating a free range with a size given by prefixLength.\nStructure is documented below.",
+              "properties": {
+                "allocationStrategy": {
+                  "description": "Optional. Sets the strategy used to automatically find a free range of a size given by prefixLength. Can be set only when trying to create a reservation that automatically finds the free range to reserve.\nPossible values are: RANDOM, FIRST_AVAILABLE, RANDOM_FIRST_N_AVAILABLE, FIRST_SMALLEST_FITTING.",
+                  "type": "string"
+                },
+                "firstAvailableRangesLookupSize": {
+                  "description": "Must be set when allocation_strategy is RANDOM_FIRST_N_AVAILABLE, otherwise must remain unset. Defines the size of the set of free ranges from which RANDOM_FIRST_N_AVAILABLE strategy randomy selects one,\nin other words it sets the N in the RANDOM_FIRST_N_AVAILABLE.",
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "description": {
+              "description": "An optional description of this resource.",
+              "type": "string"
+            },
+            "excludeCidrRanges": {
+              "description": "Optional. List of IP CIDR ranges to be excluded. Resulting reserved Internal Range will not overlap with any CIDR blocks mentioned in this list.\nOnly IPv4 CIDR ranges are supported.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "immutable": {
+              "description": "Immutable ranges cannot have their fields modified, except for labels and description.",
+              "type": "boolean"
+            },
+            "ipCidrRange": {
+              "description": "The IP range that this internal range defines.\nNOTE: IPv6 ranges are limited to usage=EXTERNAL_TO_VPC and peering=FOR_SELF\nNOTE: For IPv6 Ranges this field is compulsory, i.e. the address range must be specified explicitly.",
+              "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "User-defined labels.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "migration": {
+              "additionalProperties": false,
+              "description": "Specification for migration with source and target resource names.\nStructure is documented below.",
+              "properties": {
+                "source": {
+                  "description": "Resource path as an URI of the source resource, for example a subnet.\nThe project for the source resource should match the project for the\nInternalRange.\nAn example /projects/{project}/regions/{region}/subnetworks/{subnet}",
+                  "type": "string"
+                },
+                "sourceRef": {
+                  "additionalProperties": false,
+                  "description": "Reference to a Subnetwork in compute to populate source.",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the referenced object.",
+                      "type": "string"
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "description": "Policies for referencing.",
+                      "properties": {
+                        "resolution": {
+                          "default": "Required",
+                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                          "enum": [
+                            "Required",
+                            "Optional"
+                          ],
+                          "type": "string"
+                        },
+                        "resolve": {
+                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                          "enum": [
+                            "Always",
+                            "IfNotPresent"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "sourceSelector": {
+                  "additionalProperties": false,
+                  "description": "Selector for a Subnetwork in compute to populate source.",
+                  "properties": {
+                    "matchControllerRef": {
+                      "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                      "type": "boolean"
+                    },
+                    "matchLabels": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "MatchLabels ensures an object with matching labels is selected.",
+                      "type": "object"
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "description": "Policies for selection.",
+                      "properties": {
+                        "resolution": {
+                          "default": "Required",
+                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                          "enum": [
+                            "Required",
+                            "Optional"
+                          ],
+                          "type": "string"
+                        },
+                        "resolve": {
+                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                          "enum": [
+                            "Always",
+                            "IfNotPresent"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "target": {
+                  "description": "Resource path of the target resource. The target project can be\ndifferent, as in the cases when migrating to peer networks. The resource\nmay not exist yet.\nFor example /projects/{project}/regions/{region}/subnetworks/{subnet}",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "network": {
+              "description": "Fully-qualified URL of the network that this route applies to, for example: projects/my-project/global/networks/my-network.",
+              "type": "string"
+            },
+            "networkRef": {
+              "additionalProperties": false,
+              "description": "Reference to a Network in compute to populate network.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "networkSelector": {
+              "additionalProperties": false,
+              "description": "Selector for a Network in compute to populate network.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "overlaps": {
+              "description": "Optional. Types of resources that are allowed to overlap with the current internal range.\nEach value may be one of: OVERLAP_ROUTE_RANGE, OVERLAP_EXISTING_SUBNET_RANGE.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "peering": {
+              "description": "The type of peering set for this internal range.\nPossible values are: FOR_SELF, FOR_PEER, NOT_SHARED.",
+              "type": "string"
+            },
+            "prefixLength": {
+              "description": "An alternate to ipCidrRange. Can be set when trying to create a reservation that automatically finds a free range of the given size.\nIf both ipCidrRange and prefixLength are set, there is an error if the range sizes do not match. Can also be used during updates to change the range size.\nNOTE: For IPv6 this field only works if ip_cidr_range is set as well, and both fields must match. In other words, with IPv6 this field only works as\na redundant parameter.",
+              "type": "number"
+            },
+            "project": {
+              "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
+              "type": "string"
+            },
+            "targetCidrRange": {
+              "description": "Optional. Can be set to narrow down or pick a different address space while searching for a free range.\nIf not set, defaults to the \"10.0.0.0/8\" address space. This can be used to search in other rfc-1918 address spaces like \"172.16.0.0/12\" and \"192.168.0.0/16\" or non-rfc-1918 address spaces used in the VPC.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "usage": {
+              "description": "The type of usage set for this InternalRange.\nPossible values are: FOR_VPC, EXTERNAL_TO_VPC, FOR_MIGRATION.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "initProvider": {
+          "additionalProperties": false,
+          "description": "THIS IS A BETA FIELD. It will be honored\nunless the Management Policies feature flag is disabled.\nInitProvider holds the same fields as ForProvider, with the exception\nof Identifier and other resource reference fields. The fields that are\nin InitProvider are merged into ForProvider when the resource is created.\nThe same fields are also added to the terraform ignore_changes hook, to\navoid updating them after creation. This is useful for fields that are\nrequired on creation, but we do not desire to update them after creation,\nfor example because of an external controller is managing them, like an\nautoscaler.",
+          "properties": {
+            "allocationOptions": {
+              "additionalProperties": false,
+              "description": "Options for automatically allocating a free range with a size given by prefixLength.\nStructure is documented below.",
+              "properties": {
+                "allocationStrategy": {
+                  "description": "Optional. Sets the strategy used to automatically find a free range of a size given by prefixLength. Can be set only when trying to create a reservation that automatically finds the free range to reserve.\nPossible values are: RANDOM, FIRST_AVAILABLE, RANDOM_FIRST_N_AVAILABLE, FIRST_SMALLEST_FITTING.",
+                  "type": "string"
+                },
+                "firstAvailableRangesLookupSize": {
+                  "description": "Must be set when allocation_strategy is RANDOM_FIRST_N_AVAILABLE, otherwise must remain unset. Defines the size of the set of free ranges from which RANDOM_FIRST_N_AVAILABLE strategy randomy selects one,\nin other words it sets the N in the RANDOM_FIRST_N_AVAILABLE.",
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "description": {
+              "description": "An optional description of this resource.",
+              "type": "string"
+            },
+            "excludeCidrRanges": {
+              "description": "Optional. List of IP CIDR ranges to be excluded. Resulting reserved Internal Range will not overlap with any CIDR blocks mentioned in this list.\nOnly IPv4 CIDR ranges are supported.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "immutable": {
+              "description": "Immutable ranges cannot have their fields modified, except for labels and description.",
+              "type": "boolean"
+            },
+            "ipCidrRange": {
+              "description": "The IP range that this internal range defines.\nNOTE: IPv6 ranges are limited to usage=EXTERNAL_TO_VPC and peering=FOR_SELF\nNOTE: For IPv6 Ranges this field is compulsory, i.e. the address range must be specified explicitly.",
+              "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "User-defined labels.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "migration": {
+              "additionalProperties": false,
+              "description": "Specification for migration with source and target resource names.\nStructure is documented below.",
+              "properties": {
+                "source": {
+                  "description": "Resource path as an URI of the source resource, for example a subnet.\nThe project for the source resource should match the project for the\nInternalRange.\nAn example /projects/{project}/regions/{region}/subnetworks/{subnet}",
+                  "type": "string"
+                },
+                "sourceRef": {
+                  "additionalProperties": false,
+                  "description": "Reference to a Subnetwork in compute to populate source.",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the referenced object.",
+                      "type": "string"
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "description": "Policies for referencing.",
+                      "properties": {
+                        "resolution": {
+                          "default": "Required",
+                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                          "enum": [
+                            "Required",
+                            "Optional"
+                          ],
+                          "type": "string"
+                        },
+                        "resolve": {
+                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                          "enum": [
+                            "Always",
+                            "IfNotPresent"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "sourceSelector": {
+                  "additionalProperties": false,
+                  "description": "Selector for a Subnetwork in compute to populate source.",
+                  "properties": {
+                    "matchControllerRef": {
+                      "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                      "type": "boolean"
+                    },
+                    "matchLabels": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "MatchLabels ensures an object with matching labels is selected.",
+                      "type": "object"
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "description": "Policies for selection.",
+                      "properties": {
+                        "resolution": {
+                          "default": "Required",
+                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                          "enum": [
+                            "Required",
+                            "Optional"
+                          ],
+                          "type": "string"
+                        },
+                        "resolve": {
+                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                          "enum": [
+                            "Always",
+                            "IfNotPresent"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "target": {
+                  "description": "Resource path of the target resource. The target project can be\ndifferent, as in the cases when migrating to peer networks. The resource\nmay not exist yet.\nFor example /projects/{project}/regions/{region}/subnetworks/{subnet}",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "network": {
+              "description": "Fully-qualified URL of the network that this route applies to, for example: projects/my-project/global/networks/my-network.",
+              "type": "string"
+            },
+            "networkRef": {
+              "additionalProperties": false,
+              "description": "Reference to a Network in compute to populate network.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "networkSelector": {
+              "additionalProperties": false,
+              "description": "Selector for a Network in compute to populate network.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "overlaps": {
+              "description": "Optional. Types of resources that are allowed to overlap with the current internal range.\nEach value may be one of: OVERLAP_ROUTE_RANGE, OVERLAP_EXISTING_SUBNET_RANGE.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "peering": {
+              "description": "The type of peering set for this internal range.\nPossible values are: FOR_SELF, FOR_PEER, NOT_SHARED.",
+              "type": "string"
+            },
+            "prefixLength": {
+              "description": "An alternate to ipCidrRange. Can be set when trying to create a reservation that automatically finds a free range of the given size.\nIf both ipCidrRange and prefixLength are set, there is an error if the range sizes do not match. Can also be used during updates to change the range size.\nNOTE: For IPv6 this field only works if ip_cidr_range is set as well, and both fields must match. In other words, with IPv6 this field only works as\na redundant parameter.",
+              "type": "number"
+            },
+            "project": {
+              "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
+              "type": "string"
+            },
+            "targetCidrRange": {
+              "description": "Optional. Can be set to narrow down or pick a different address space while searching for a free range.\nIf not set, defaults to the \"10.0.0.0/8\" address space. This can be used to search in other rfc-1918 address spaces like \"172.16.0.0/12\" and \"192.168.0.0/16\" or non-rfc-1918 address spaces used in the VPC.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "usage": {
+              "description": "The type of usage set for this InternalRange.\nPossible values are: FOR_VPC, EXTERNAL_TO_VPC, FOR_MIGRATION.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "managementPolicies": {
+          "default": [
+            "*"
+          ],
+          "description": "THIS IS A BETA FIELD. It is on by default but can be opted out\nthrough a Crossplane feature flag.\nManagementPolicies specify the array of actions Crossplane is allowed to\ntake on the managed and external resources.\nThis field is planned to replace the DeletionPolicy field in a future\nrelease. Currently, both could be set independently and non-default\nvalues would be honored if the feature flag is enabled. If both are\ncustom, the DeletionPolicy field will be ignored.\nSee the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223\nand this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md",
+          "items": {
+            "description": "A ManagementAction represents an action that the Crossplane controllers\ncan take on an external resource.",
+            "enum": [
+              "Observe",
+              "Create",
+              "Update",
+              "Delete",
+              "LateInitialize",
+              "*"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "providerConfigRef": {
+          "additionalProperties": false,
+          "default": {
+            "name": "default"
+          },
+          "description": "ProviderConfigReference specifies how the provider that will be used to\ncreate, observe, update, and delete this managed resource should be\nconfigured.",
+          "properties": {
+            "name": {
+              "description": "Name of the referenced object.",
+              "type": "string"
+            },
+            "policy": {
+              "additionalProperties": false,
+              "description": "Policies for referencing.",
+              "properties": {
+                "resolution": {
+                  "default": "Required",
+                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                  "enum": [
+                    "Required",
+                    "Optional"
+                  ],
+                  "type": "string"
+                },
+                "resolve": {
+                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                  "enum": [
+                    "Always",
+                    "IfNotPresent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "writeConnectionSecretToRef": {
+          "additionalProperties": false,
+          "description": "WriteConnectionSecretToReference specifies the namespace and name of a\nSecret to which any connection details for this managed resource should\nbe written. Connection details frequently include the endpoint, username,\nand password required to connect to the managed resource.",
+          "properties": {
+            "name": {
+              "description": "Name of the secret.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the secret.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "namespace"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "forProvider"
+      ],
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "spec.forProvider.peering is a required parameter",
+          "rule": "!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.peering) || (has(self.initProvider) && has(self.initProvider.peering))"
+        },
+        {
+          "message": "spec.forProvider.usage is a required parameter",
+          "rule": "!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.usage) || (has(self.initProvider) && has(self.initProvider.usage))"
+        }
+      ]
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "InternalRangeStatus defines the observed state of InternalRange.",
+      "properties": {
+        "atProvider": {
+          "additionalProperties": false,
+          "properties": {
+            "allocationOptions": {
+              "additionalProperties": false,
+              "description": "Options for automatically allocating a free range with a size given by prefixLength.\nStructure is documented below.",
+              "properties": {
+                "allocationStrategy": {
+                  "description": "Optional. Sets the strategy used to automatically find a free range of a size given by prefixLength. Can be set only when trying to create a reservation that automatically finds the free range to reserve.\nPossible values are: RANDOM, FIRST_AVAILABLE, RANDOM_FIRST_N_AVAILABLE, FIRST_SMALLEST_FITTING.",
+                  "type": "string"
+                },
+                "firstAvailableRangesLookupSize": {
+                  "description": "Must be set when allocation_strategy is RANDOM_FIRST_N_AVAILABLE, otherwise must remain unset. Defines the size of the set of free ranges from which RANDOM_FIRST_N_AVAILABLE strategy randomy selects one,\nin other words it sets the N in the RANDOM_FIRST_N_AVAILABLE.",
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "description": {
+              "description": "An optional description of this resource.",
+              "type": "string"
+            },
+            "effectiveLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "for all of the labels present on the resource.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "excludeCidrRanges": {
+              "description": "Optional. List of IP CIDR ranges to be excluded. Resulting reserved Internal Range will not overlap with any CIDR blocks mentioned in this list.\nOnly IPv4 CIDR ranges are supported.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "id": {
+              "description": "an identifier for the resource with format projects/{{project}}/locations/global/internalRanges/{{name}}",
+              "type": "string"
+            },
+            "immutable": {
+              "description": "Immutable ranges cannot have their fields modified, except for labels and description.",
+              "type": "boolean"
+            },
+            "ipCidrRange": {
+              "description": "The IP range that this internal range defines.\nNOTE: IPv6 ranges are limited to usage=EXTERNAL_TO_VPC and peering=FOR_SELF\nNOTE: For IPv6 Ranges this field is compulsory, i.e. the address range must be specified explicitly.",
+              "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "User-defined labels.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "migration": {
+              "additionalProperties": false,
+              "description": "Specification for migration with source and target resource names.\nStructure is documented below.",
+              "properties": {
+                "source": {
+                  "description": "Resource path as an URI of the source resource, for example a subnet.\nThe project for the source resource should match the project for the\nInternalRange.\nAn example /projects/{project}/regions/{region}/subnetworks/{subnet}",
+                  "type": "string"
+                },
+                "target": {
+                  "description": "Resource path of the target resource. The target project can be\ndifferent, as in the cases when migrating to peer networks. The resource\nmay not exist yet.\nFor example /projects/{project}/regions/{region}/subnetworks/{subnet}",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "network": {
+              "description": "Fully-qualified URL of the network that this route applies to, for example: projects/my-project/global/networks/my-network.",
+              "type": "string"
+            },
+            "overlaps": {
+              "description": "Optional. Types of resources that are allowed to overlap with the current internal range.\nEach value may be one of: OVERLAP_ROUTE_RANGE, OVERLAP_EXISTING_SUBNET_RANGE.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "peering": {
+              "description": "The type of peering set for this internal range.\nPossible values are: FOR_SELF, FOR_PEER, NOT_SHARED.",
+              "type": "string"
+            },
+            "prefixLength": {
+              "description": "An alternate to ipCidrRange. Can be set when trying to create a reservation that automatically finds a free range of the given size.\nIf both ipCidrRange and prefixLength are set, there is an error if the range sizes do not match. Can also be used during updates to change the range size.\nNOTE: For IPv6 this field only works if ip_cidr_range is set as well, and both fields must match. In other words, with IPv6 this field only works as\na redundant parameter.",
+              "type": "number"
+            },
+            "project": {
+              "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
+              "type": "string"
+            },
+            "targetCidrRange": {
+              "description": "Optional. Can be set to narrow down or pick a different address space while searching for a free range.\nIf not set, defaults to the \"10.0.0.0/8\" address space. This can be used to search in other rfc-1918 address spaces like \"172.16.0.0/12\" and \"192.168.0.0/16\" or non-rfc-1918 address spaces used in the VPC.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "terraformLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "The combination of labels configured directly on the resource\nand default labels configured on the provider.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "usage": {
+              "description": "The type of usage set for this InternalRange.\nPossible values are: FOR_VPC, EXTERNAL_TO_VPC, FOR_MIGRATION.",
+              "type": "string"
+            },
+            "users": {
+              "description": "Output only. The list of resources that refer to this internal range.\nResources that use the internal range for their range allocation are referred to as users of the range.\nOther resources mark themselves as users while doing so by creating a reference to this internal range. Having a user, based on this reference, prevents deletion of the internal range referred to. Can be empty.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "conditions": {
+          "description": "Conditions of the resource.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A Condition that may apply to a resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "LastTransitionTime is the last time this condition transitioned from one\nstatus to another.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "A Message containing details about this condition's last transition from\none status to another, if any.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "A Reason for this condition's last transition from one status to another.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of this condition; is it currently True, False, or Unknown?",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of this condition. At most one of each condition type may apply to\na resource at any point in time.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the latest metadata.generation\nwhich resulted in either a ready state, or stalled due to error\nit can not recover from without human intervention.",
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}
