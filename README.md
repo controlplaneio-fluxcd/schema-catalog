@@ -1,5 +1,9 @@
 #  Kubernetes Ecosystem Schema Catalog
 
+<!-- stats:start -->
+![Projects](https://img.shields.io/badge/Projects-35-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-6%2C114-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-421%20MB-8957E5?style=flat-square)
+<!-- stats:end -->
+
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
 Flux and other CNCF projects, generated with
 [flux-schema](https://github.com/fluxcd/flux-schema) and refreshed daily from
