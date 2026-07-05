@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { loadSources, parseSources, repoOf } from "./config.ts";
+import { CATEGORIES, loadSources, parseSources, repoOf } from "./config.ts";
 
 const SOURCES_YAML = new URL("../config/sources.yaml", import.meta.url).pathname;
 
@@ -7,6 +7,7 @@ function validSource(overrides: Record<string, unknown> = {}): Record<string, un
   return {
     name: "gateway-api",
     alias: "Gateway API",
+    category: "Orchestration & Management",
     url: "https://github.com/kubernetes-sigs/gateway-api",
     extract: "crd",
     input: { kustomize: "config/crd" },
@@ -64,6 +65,18 @@ describe("parseSources", () => {
   test("rejects invalid names", () => {
     expect(() => parseSources({ sources: [validSource({ name: "Gateway API" })] })).toThrow(
       "lowercase alphanumerics and dashes",
+    );
+  });
+
+  test("rejects a missing category", () => {
+    expect(() => parseSources({ sources: [validSource({ category: undefined })] })).toThrow(
+      "category must be a non-empty string",
+    );
+  });
+
+  test("rejects an invalid category", () => {
+    expect(() => parseSources({ sources: [validSource({ category: "Networking" })] })).toThrow(
+      `category must be one of: ${CATEGORIES.join(", ")}`,
     );
   });
 

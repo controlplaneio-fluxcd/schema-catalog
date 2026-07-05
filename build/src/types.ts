@@ -1,6 +1,14 @@
 /** flux-schema extract subcommand; k8s and openshift fetch their own swagger. */
 export type ExtractKind = "k8s" | "openshift" | "crd";
 
+export type SourceCategory =
+  | "Provisioning"
+  | "Runtime"
+  | "Orchestration & Management"
+  | "App Definition & Development"
+  | "Observability & Analysis"
+  | "Platform";
+
 /** Where the CRD YAML piped into `flux-schema extract crd` comes from. */
 export type CrdInput = CrdInputBase &
   (
@@ -35,6 +43,8 @@ interface SourceBase {
   name: string;
   /** Display name for the README versions table and field-index headers. */
   alias: string;
+  /** CNCF landscape top-level group. */
+  category: SourceCategory;
   /** GitHub repository URL; drives version resolution. */
   url: string;
   /** Optional pin; defaults to the latest release (openshift: release branch). */

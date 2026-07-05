@@ -1,9 +1,17 @@
 import { YAML } from "bun";
-import type { CrdInput, FluxInstance, Source } from "./types.ts";
+import type { CrdInput, FluxInstance, Source, SourceCategory } from "./types.ts";
 
 const EXTRACT_KINDS = ["k8s", "openshift", "crd"];
 const INPUT_KINDS = ["kustomize", "releaseAsset", "crdDir", "crdFile", "fluxInstance"];
-const SOURCE_KEYS = ["name", "alias", "url", "version", "extract", "input"];
+const SOURCE_KEYS = ["name", "alias", "category", "url", "version", "extract", "input"];
+export const CATEGORIES = [
+  "Provisioning",
+  "Runtime",
+  "Orchestration & Management",
+  "App Definition & Development",
+  "Observability & Analysis",
+  "Platform",
+] as const satisfies readonly SourceCategory[];
 const NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 const REPO_URL_RE = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/;
 
@@ -71,6 +79,10 @@ function parseSource(entry: unknown, ctx: string): Source {
     throw new Error(`${ctx}: name must be lowercase alphanumerics and dashes`);
   }
   const alias = requireString(entry, "alias", ctx);
+  const category = requireString(entry, "category", ctx);
+  if (!isCategory(category)) {
+    throw new Error(`${ctx}: category must be one of: ${CATEGORIES.join(", ")}`);
+  }
   const url = requireString(entry, "url", ctx);
   if (!REPO_URL_RE.test(url) || url.endsWith(".git")) {
     throw new Error(`${ctx}: url must be https://github.com/<owner>/<name> without a .git suffix`);
@@ -89,9 +101,9 @@ function parseSource(entry: unknown, ctx: string): Source {
     if (entry.input !== undefined) {
       throw new Error(`${ctx}: input is only valid for extract: crd`);
     }
-    return { name, alias, url, version, extract: extract as "k8s" | "openshift" };
+    return { name, alias, category, url, version, extract: extract as "k8s" | "openshift" };
   }
-  return { name, alias, url, version, extract: "crd", input: parseInput(entry.input, ctx) };
+  return { name, alias, category, url, version, extract: "crd", input: parseInput(entry.input, ctx) };
 }
 
 function parseInput(input: unknown, ctx: string): CrdInput {
@@ -175,6 +187,10 @@ function parseFluxInstance(spec: unknown, ctx: string): FluxInstance {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isCategory(value: string): value is SourceCategory {
+  return CATEGORIES.some((category) => category === value);
 }
 
 function requireString(entry: Record<string, unknown>, key: string, ctx: string): string {

@@ -167,8 +167,10 @@ effects get guards or a CI check, not mocks.
 ## Adding a source
 
 Add an entry to `build/config/sources.yaml` (see `types.ts` for the shape and
-`config.ts` for what the validator enforces) and run `make build`. Pick the
-`input` by how the project ships its CRDs:
+`config.ts` for what the validator enforces) and run `make build`. The required
+`category` field is the source's CNCF landscape top-level group; allowed values
+are defined by the `CATEGORIES` const in `config.ts`. Pick the `input` by how
+the project ships its CRDs:
 
 - **`releaseAsset`** — a CRD bundle attached to a GitHub release (preferred).
   Add `releaseTag: "<glob>"` when the repo interleaves unrelated release tags
