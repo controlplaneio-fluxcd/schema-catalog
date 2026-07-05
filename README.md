@@ -73,6 +73,7 @@ for the line grammar.
 | KEDA | [v2.20.1](build/history/keda.json) | 2026-07-05 |
 | Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 2026-07-05 |
 | Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 2026-07-05 |
+| Tekton Pipeline | [v1.14.0](build/history/tekton-pipeline.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
