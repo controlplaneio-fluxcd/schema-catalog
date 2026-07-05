@@ -63,6 +63,15 @@ async function apiJson(path: string): Promise<unknown> {
   return res.json();
 }
 
+async function fetchTarball(repo: string, ref: string): Promise<Uint8Array> {
+  const url = `${API_BASE}/repos/${repo}/tarball/${ref}`;
+  const res = await fetchRetry(url, { headers: headers() });
+  if (!res.ok) {
+    throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+  }
+  return new Uint8Array(await res.arrayBuffer());
+}
+
 /** Returns the tag name of the latest GitHub release of owner/name. */
 export async function latestReleaseTag(repo: string): Promise<string> {
   const release = await apiJson(`/repos/${repo}/releases/latest`);
@@ -135,13 +144,87 @@ interface ContentEntry {
  * no release asset or kustomization (e.g. cilium's client/crds tree).
  */
 export async function fetchCrdDir(repo: string, ref: string, dir: string): Promise<string> {
-  const files = await listYamlFiles(repo, ref, dir);
+  const files = extractTarFiles(await fetchTarball(repo, ref), dir);
   if (files.length === 0) {
     throw new Error(`${repo}@${ref}: no .yaml files under '${dir}'`);
   }
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  const docs = await Promise.all(files.map((f) => downloadText(f.download_url!)));
-  return docs.join("\n---\n");
+  return files.map((f) => f.text).join("\n---\n");
+}
+
+export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; text: string }[] {
+  const tar = Bun.gunzipSync(arrayBufferBytes(gz));
+  const files: { path: string; text: string }[] = [];
+  const decoder = new TextDecoder();
+  const wantedPrefix = `${dir}/`;
+  let offset = 0;
+  let zeroBlocks = 0;
+  let topLevel: string | null = null;
+
+  while (offset < tar.length) {
+    if (offset + 512 > tar.length) {
+      throw new Error("truncated tar archive");
+    }
+    const header = tar.subarray(offset, offset + 512);
+    if (isZeroBlock(header)) {
+      zeroBlocks++;
+      offset += 512;
+      if (zeroBlocks === 2) {
+        return files;
+      }
+      continue;
+    }
+    zeroBlocks = 0;
+
+    const name = tarString(header, 0, 100);
+    const typeflag = header[156]!;
+    const prefix = tarString(header, 345, 500);
+    const path = prefix ? `${prefix}/${name}` : name;
+    const size = tarSize(header);
+    const bodyStart = offset + 512;
+    const bodyEnd = bodyStart + size;
+    const nextOffset = bodyStart + Math.ceil(size / 512) * 512;
+    if (bodyEnd > tar.length || nextOffset > tar.length) {
+      throw new Error("truncated tar archive");
+    }
+
+    if (typeflag === 0x67) {
+      offset = nextOffset;
+      continue;
+    }
+    if (typeflag === 0x78) {
+      if (paxHasPath(decoder.decode(arrayBufferBytes(tar.subarray(bodyStart, bodyEnd))))) {
+        throw new Error("unsupported tar long-name entry (pax/GNU); ustar-only parser");
+      }
+      offset = nextOffset;
+      continue;
+    }
+    if (typeflag === 0x4c) {
+      throw new Error("unsupported tar long-name entry (pax/GNU); ustar-only parser");
+    }
+    if (topLevel === null) {
+      const slash = path.indexOf("/");
+      if (slash < 0) {
+        throw new Error("tar archive missing top-level directory");
+      }
+      topLevel = path.slice(0, slash);
+    }
+    if (typeflag !== 0x30 && typeflag !== 0x00) {
+      offset = nextOffset;
+      continue;
+    }
+
+    const repoRelativePath = path.startsWith(`${topLevel}/`) ? path.slice(topLevel.length + 1) : path;
+    if (repoRelativePath.startsWith(wantedPrefix) && repoRelativePath.endsWith(".yaml")) {
+      files.push({
+        path: repoRelativePath,
+        text: decoder.decode(arrayBufferBytes(tar.subarray(bodyStart, bodyEnd))),
+      });
+    }
+    offset = nextOffset;
+  }
+
+  throw new Error("truncated tar archive");
 }
 
 /**
@@ -158,23 +241,6 @@ export async function fetchCrdFile(repo: string, ref: string, path: string): Pro
   return downloadText((entry as ContentEntry).download_url!);
 }
 
-async function listYamlFiles(repo: string, ref: string, dir: string): Promise<ContentEntry[]> {
-  const listing = await apiJson(`/repos/${repo}/contents/${dir}?ref=${ref}`);
-  if (!Array.isArray(listing)) {
-    throw new Error(`${repo}@${ref}: '${dir}' is not a directory`);
-  }
-  const entries = listing as ContentEntry[];
-  const files: ContentEntry[] = [];
-  for (const entry of entries) {
-    if (entry.type === "dir") {
-      files.push(...(await listYamlFiles(repo, ref, entry.path)));
-    } else if (entry.type === "file" && entry.name.endsWith(".yaml") && entry.download_url) {
-      files.push(entry);
-    }
-  }
-  return files;
-}
-
 /** Matches an asset name against a pattern where '*' spans any characters. */
 export function matchAsset(pattern: string, name: string): boolean {
   const re = pattern
@@ -182,4 +248,58 @@ export function matchAsset(pattern: string, name: string): boolean {
     .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join(".*");
   return new RegExp(`^${re}$`).test(name);
+}
+
+function isZeroBlock(block: Uint8Array): boolean {
+  return block.every((byte) => byte === 0);
+}
+
+function tarString(block: Uint8Array, start: number, end: number): string {
+  let stop = start;
+  while (stop < end && block[stop] !== 0) {
+    stop++;
+  }
+  return new TextDecoder().decode(block.subarray(start, stop));
+}
+
+function tarSize(header: Uint8Array): number {
+  if ((header[124]! & 0x80) !== 0) {
+    throw new Error("unsupported base-256 tar size");
+  }
+  const raw = Array.from(header.subarray(124, 136))
+    .filter((byte) => byte !== 0 && byte !== 0x20)
+    .map((byte) => String.fromCharCode(byte))
+    .join("");
+  if (raw === "") {
+    return 0;
+  }
+  if (!/^[0-7]+$/.test(raw)) {
+    throw new Error("invalid tar size");
+  }
+  return Number.parseInt(raw, 8);
+}
+
+function paxHasPath(body: string): boolean {
+  let offset = 0;
+  while (offset < body.length) {
+    const space = body.indexOf(" ", offset);
+    if (space < 0) {
+      throw new Error("invalid pax header");
+    }
+    const length = Number.parseInt(body.slice(offset, space), 10);
+    if (!Number.isFinite(length) || length <= 0 || offset + length > body.length) {
+      throw new Error("invalid pax header");
+    }
+    if (body.slice(space + 1, offset + length).startsWith("path=")) {
+      return true;
+    }
+    offset += length;
+  }
+  return false;
+}
+
+function arrayBufferBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
+  const out: Uint8Array<ArrayBuffer> = new Uint8Array(bytes.length);
+  out.set(bytes);
+  return out;
 }

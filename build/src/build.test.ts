@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
-import { matchAsset } from "./github.ts";
+import { extractTarFiles, matchAsset } from "./github.ts";
 import { removedFiles } from "./history.ts";
 import { renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
@@ -27,6 +27,43 @@ describe("matchAsset", () => {
 
   test("treats regex metacharacters literally", () => {
     expect(matchAsset("a.b.yaml", "aXb.yaml")).toBe(false);
+  });
+});
+
+describe("extractTarFiles", () => {
+  test("extracts YAML files under a directory from a git archive", async () => {
+    const fixture = Bun.file(new URL("./testdata/crds-fixture.tar.gz", import.meta.url));
+    const gz = new Uint8Array(await fixture.arrayBuffer());
+    const files = extractTarFiles(gz, "package/crds");
+    files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+
+    expect(files).toEqual([
+      { path: "package/crds/a.yaml", text: "kind: A\n" },
+      {
+        path: "package/crds/really/deeply/nested/subtree/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.yaml",
+        text: "kind: Deep\n",
+      },
+    ]);
+  });
+
+  test("throws on pax extended headers", () => {
+    expect(() => extractTarFiles(tarGz([{ name: "pax", typeflag: "x", text: "17 path=top/file\n" }]), "package/crds")).toThrow(
+      "unsupported tar long-name entry (pax/GNU); ustar-only parser",
+    );
+  });
+
+  test("throws on GNU long-name headers", () => {
+    expect(() => extractTarFiles(tarGz([{ name: "././@LongLink", typeflag: "L", text: "top/file\n" }]), "package/crds")).toThrow(
+      "unsupported tar long-name entry (pax/GNU); ustar-only parser",
+    );
+  });
+
+  test("throws on truncated bodies", () => {
+    const header = tarHeader("top/package/crds/a.yaml", "0", 10);
+    const body = new TextEncoder().encode("kind");
+    expect(() => extractTarFiles(new Uint8Array(Bun.gzipSync(concatBytes([header, body]))), "package/crds")).toThrow(
+      "truncated tar archive",
+    );
   });
 });
 
@@ -277,3 +314,48 @@ describe("dropEmptyDocs", () => {
     expect(dropEmptyDocs(yaml)).toBe(yaml);
   });
 });
+
+function tarGz(entries: { name: string; typeflag: string; text: string }[]): Uint8Array {
+  const chunks: Uint8Array[] = [];
+  for (const entry of entries) {
+    const body = new TextEncoder().encode(entry.text);
+    chunks.push(tarHeader(entry.name, entry.typeflag, body.length));
+    chunks.push(padded(body));
+  }
+  chunks.push(new Uint8Array(1024));
+  return new Uint8Array(Bun.gzipSync(concatBytes(chunks)));
+}
+
+function tarHeader(name: string, typeflag: string, size: number): Uint8Array {
+  const header = new Uint8Array(512);
+  writeAscii(header, 0, name);
+  writeOctal(header, 124, 12, size);
+  header[156] = typeflag.charCodeAt(0);
+  writeAscii(header, 257, "ustar\0");
+  return header;
+}
+
+function writeAscii(buf: Uint8Array, offset: number, value: string): void {
+  buf.set(new TextEncoder().encode(value), offset);
+}
+
+function writeOctal(buf: Uint8Array, offset: number, length: number, value: number): void {
+  writeAscii(buf, offset, value.toString(8).padStart(length - 1, "0"));
+  buf[offset + length - 1] = 0;
+}
+
+function padded(body: Uint8Array): Uint8Array {
+  const out = new Uint8Array(Math.ceil(body.length / 512) * 512);
+  out.set(body);
+  return out;
+}
+
+function concatBytes(chunks: Uint8Array[]): Uint8Array<ArrayBuffer> {
+  const out: Uint8Array<ArrayBuffer> = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
+}
