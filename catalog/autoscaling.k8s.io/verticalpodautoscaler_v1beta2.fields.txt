@@ -1,0 +1,32 @@
+# schema source: Vertical Pod Autoscaler vertical-pod-autoscaler-1.7.0 https://github.com/kubernetes/autoscaler
+apiVersion <string> enum=autoscaling.k8s.io/v1beta2 (deprecated)	# autoscaling.k8s.io/v1beta2 API is deprecated
+kind <string> enum=VerticalPodAutoscaler
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Specification of the behavior of the autoscaler. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status.
+spec.resourcePolicy <object>	# Controls how the autoscaler computes recommended resources. The resource policy may be used to set constraints on the recommendations for individual containers. If not specified, the autoscaler computes recommended resources for all containers in the pod, without additional constraints.
+spec.resourcePolicy.containerPolicies <[]object>	# Per-container resource policies.
+spec.resourcePolicy.containerPolicies[].containerName <string>	# Name of the container or DefaultContainerResourcePolicy, in which case the policy is used by the containers that don't have their own policy specified.
+spec.resourcePolicy.containerPolicies[].maxAllowed <object (free-form)>	# Specifies the maximum amount of resources that will be recommended for the container. The default is no maximum.
+spec.resourcePolicy.containerPolicies[].minAllowed <object (free-form)>	# Specifies the minimal amount of resources that will be recommended for the container. The default is no minimum.
+spec.resourcePolicy.containerPolicies[].mode <string> enum=Auto|Off	# Whether autoscaler is enabled for the container. The default is "Auto".
+spec.targetRef <object> (required)	# TargetRef points to the controller managing the set of pods for the autoscaler to control - e.g. Deployment, StatefulSet. VerticalPodAutoscaler can be targeted at controller implementing scale subresource (the pod set is retrieved from the controller's ScaleStatus) or some well known controllers (e.g. for DaemonSet the pod set is read from the controller's spec). If VerticalPodAutoscaler cannot use specified target it will report ConfigUnsupported condition. Note that VerticalPodAutoscaler does not require full implementation of scale subresource - it will not use it to modify the replica count. The only thing retrieved is a label selector matching pods grouped by the target resource.
+spec.targetRef.apiVersion <string>	# apiVersion is the API version of the referent
+spec.targetRef.kind <string> (required)	# kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+spec.targetRef.name <string> (required)	# name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.updatePolicy <object>	# Describes the rules on how changes are applied to the pods. If not specified, all fields in the `PodUpdatePolicy` are set to their default values.
+spec.updatePolicy.updateMode <string> enum=Off|Initial|Recreate|Auto	# Controls when autoscaler applies changes to the pod resources. The default is 'Auto'.
+status <object>	# Current information about the autoscaler.
+status.conditions <[]object>	# Conditions is the set of conditions required for this autoscaler to scale its target, and indicates whether or not those conditions are met.
+status.conditions[].lastTransitionTime <string> format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another
+status.conditions[].message <string>	# message is a human-readable explanation containing details about the transition
+status.conditions[].reason <string>	# reason is the reason for the condition's last transition.
+status.conditions[].status <string> (required)	# status is the status of the condition (True, False, Unknown)
+status.conditions[].type <string> (required)	# type describes the current condition
+status.recommendation <object>	# The most recently computed amount of resources recommended by the autoscaler for the controlled pods.
+status.recommendation.containerRecommendations <[]object>	# Resources recommended by the autoscaler for each container.
+status.recommendation.containerRecommendations[].containerName <string>	# Name of the container.
+status.recommendation.containerRecommendations[].lowerBound <object (free-form)>	# Minimum recommended amount of resources. Observes ContainerResourcePolicy. This amount is not guaranteed to be sufficient for the application to operate in a stable way, however running with less resources is likely to have significant impact on performance/availability.
+status.recommendation.containerRecommendations[].target <object (free-form)> (required)	# Recommended amount of resources. Observes ContainerResourcePolicy.
+status.recommendation.containerRecommendations[].uncappedTarget <object (free-form)>	# The most recent recommended resources target computed by the autoscaler for the controlled pods, based only on actual resource usage, not taking into account the ContainerResourcePolicy. May differ from the Recommendation if the actual resource usage causes the target to violate the ContainerResourcePolicy (lower than MinAllowed or higher that MaxAllowed). Used only as status indication, will not affect actual resource assignment.
+status.recommendation.containerRecommendations[].upperBound <object (free-form)>	# Maximum recommended amount of resources. Observes ContainerResourcePolicy. Any resources allocated beyond this value are likely wasted. This value may be larger than the maximum amount of application is actually capable of consuming.

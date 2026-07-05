@@ -84,6 +84,7 @@ for the line grammar.
 | OPA Gatekeeper | [v3.22.2](build/history/gatekeeper.json) | 2026-07-05 |
 | Envoy Gateway | [v1.8.2](build/history/envoy-gateway.json) | 2026-07-05 |
 | Longhorn | [v1.12.0](build/history/longhorn.json) | 2026-07-05 |
+| Vertical Pod Autoscaler | [vertical-pod-autoscaler-1.7.0](build/history/vertical-pod-autoscaler.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
