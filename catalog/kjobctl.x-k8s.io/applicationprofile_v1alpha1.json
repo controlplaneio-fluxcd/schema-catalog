@@ -1,0 +1,198 @@
+{
+  "description": "ApplicationProfile is the Schema for the applicationprofiles API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "ApplicationProfileSpec defines the desired state of ApplicationProfile",
+      "properties": {
+        "supportedModes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "description": "name determines which template will be used and which object will eventually be created.\nPossible values are Interactive, Job, RayJob, RayCluster and Slurm.",
+                "enum": [
+                  "Interactive",
+                  "Job",
+                  "RayJob",
+                  "RayCluster",
+                  "Slurm"
+                ],
+                "type": "string"
+              },
+              "requiredFlags": {
+                "description": "requiredFlags point which cli flags are required to be passed in order to fill the gaps in the templates.\nPossible values are cmd, parallelism, completions, replicas, min-replicas, max-replicas, request, localqueue, and raycluster.\nreplicas, min-replicas, and max-replicas flags used only for RayJob and RayCluster mode.\nThe raycluster flag used only for the RayJob mode.\nThe request flag used only for Interactive and Job modes.\nThe cmd flag used only for Interactive, Job, and RayJob.\nThe time and priority flags can be used in all modes.\nIf the raycluster flag are set, none of localqueue, replicas, min-replicas, or max-replicas can be set.\nFor the Slurm mode, the possible values are: array, cpus-per-task, error, gpus-per-task, input, job-name, mem, mem-per-cpu,\nmem-per-gpu, mem-per-task, nodes, ntasks, output, partition, localqueue.\n\ncmd and requests values are going to be added only to the first primary container.",
+                "items": {
+                  "enum": [
+                    "cmd",
+                    "parallelism",
+                    "completions",
+                    "replicas",
+                    "min-replicas",
+                    "max-replicas",
+                    "request",
+                    "localqueue",
+                    "raycluster",
+                    "array",
+                    "cpus-per-task",
+                    "error",
+                    "gpus-per-task",
+                    "input",
+                    "job-name",
+                    "mem-per-cpu",
+                    "mem-per-gpu",
+                    "mem-per-task",
+                    "nodes",
+                    "ntasks",
+                    "output",
+                    "partition"
+                  ],
+                  "type": "string"
+                },
+                "maxItems": 14,
+                "type": "array",
+                "x-kubernetes-list-type": "set"
+              },
+              "template": {
+                "description": "template is the name of the template.\nTemplate type depends on ApplicationProfileMode:\n  - on Interactive mode it must be v1/PodTemplate\n  - on Job mode it must be kjobctl.x-k8s.io/v1alpha1/JobTemplate\n  - on RayJob mode it must be kjobctl.x-k8s.io/v1alpha1/RayJobTemplate\n  - on RayCluster mode it must be kjobctl.x-k8s.io/v1alpha1/RayClusterTemplate\n  - on Slurm mode it must be kjobctl.x-k8s.io/v1alpha1/JobTemplate",
+                "maxLength": 253,
+                "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "template"
+            ],
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "replicas flag can be used only on RayJob and RayCluster modes",
+                "rule": "!has(self.requiredFlags) || !('replicas' in self.requiredFlags) || self.name in ['RayJob', 'RayCluster']"
+              },
+              {
+                "message": "min-replicas flag can be used only on RayJob and RayCluster modes",
+                "rule": "!has(self.requiredFlags) || !('min-replicas' in self.requiredFlags) || self.name in ['RayJob', 'RayCluster']"
+              },
+              {
+                "message": "max-replicas flag can be used only on RayJob and RayCluster modes",
+                "rule": "!has(self.requiredFlags) || !('max-replicas' in self.requiredFlags) || self.name in ['RayJob', 'RayCluster']"
+              },
+              {
+                "message": "request flag can be used only on Job and Interactive modes",
+                "rule": "!has(self.requiredFlags) || !('request' in self.requiredFlags) || self.name in ['Job', 'Interactive', 'RayJob']"
+              },
+              {
+                "message": "cmd flag can be used only on Job, Interactive and RayJob modes",
+                "rule": "!has(self.requiredFlags) || !('cmd' in self.requiredFlags) || self.name in ['Job', 'Interactive', 'RayJob']"
+              },
+              {
+                "message": "raycluster flag can be used only on RayJob mode",
+                "rule": "!has(self.requiredFlags) || !('raycluster' in self.requiredFlags) || self.name == 'RayJob'"
+              },
+              {
+                "message": "if raycluster flag are set none of localqueue, replicas, min-replicas and max-replicas can be",
+                "rule": "!has(self.requiredFlags) || !('raycluster' in self.requiredFlags) || !('localqueue' in self.requiredFlags || 'replicas' in self.requiredFlags  || 'min-replicas' in self.requiredFlags || 'max-replicas' in self.requiredFlags)"
+              },
+              {
+                "message": "array flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('array' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "cpus-per-task flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('cpus-per-task' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "error flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('error' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "gpus-per-task flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('gpus-per-task' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "input flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('input' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "job-name flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('job-name' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "mem flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('mem' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "mem-per-cpu flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('mem-per-cpu' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "mem-per-gpu flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('mem-per-gpu' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "mem-per-task flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('mem-per-task' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "nodes flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('nodes' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "ntasks flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('ntasks' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "output flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('output' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "partition flag can be used only on Slurm mode",
+                "rule": "!has(self.requiredFlags) || !('partition' in self.requiredFlags) || self.name == 'Slurm'"
+              },
+              {
+                "message": "parallelism flag can't be used on Slurm mode",
+                "rule": "!has(self.requiredFlags) || self.name != 'Slurm' || !('parallelism' in self.requiredFlags)"
+              },
+              {
+                "message": "completions flag can't be used on Slurm mode",
+                "rule": "!has(self.requiredFlags) || self.name != 'Slurm' || !('completions' in self.requiredFlags)"
+              }
+            ]
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "volumeBundles": {
+          "items": {
+            "description": "VolumeBundleReference is the name of the VolumeBundle.",
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+            "type": "string"
+          },
+          "type": "array",
+          "x-kubernetes-list-type": "set"
+        }
+      },
+      "required": [
+        "supportedModes"
+      ],
+      "type": "object"
+    }
+  },
+  "type": "object"
+}
