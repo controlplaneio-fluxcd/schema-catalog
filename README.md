@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-88-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C270-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-551%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-89-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C288-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-551%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -150,6 +150,7 @@ for the line grammar.
 | Container Object Storage Interface | [v0.2.2](build/history/cosi.json) | 5 | 2026-07-05 |
 | kjob | [v0.1.0](build/history/kjob.json) | 5 | 2026-07-05 |
 | Istio | [1.30.2](build/history/istio.json) | 33 | 2026-07-05 |
+| KubeEdge | [v1.23.0](build/history/kubeedge.json) | 18 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation

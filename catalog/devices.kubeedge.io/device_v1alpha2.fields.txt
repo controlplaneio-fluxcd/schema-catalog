@@ -1,0 +1,95 @@
+# schema source: KubeEdge v1.23.0 https://github.com/kubeedge/kubeedge
+apiVersion <string> enum=devices.kubeedge.io/v1alpha2
+kind <string> enum=Device
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# DeviceSpec represents a single device instance. It is an instantiation of a device model.
+spec.data <object>	# Data section describe a list of time-series properties which should be processed on edge node.
+spec.data.dataProperties <[]object>	# Required: A list of data properties, which are not required to be processed by edgecore
+spec.data.dataProperties[].metadata <map[string]string>	# Additional metadata like timestamp when the value was reported etc.
+spec.data.dataProperties[].propertyName <string>	# Required: The property name for which should be processed by external apps. This property should be present in the device model.
+spec.data.dataTopic <string>	# Topic used by mapper, all data collected from dataProperties should be published to this topic, the default value is $ke/events/device/+/data/update
+spec.deviceModelRef <object>	# Required: DeviceModelRef is reference to the device model used as a template to create the device instance.
+spec.deviceModelRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.nodeSelector <object>	# NodeSelector indicates the binding preferences between devices and nodes. Refer to k8s.io/kubernetes/pkg/apis/core NodeSelector for more details
+spec.nodeSelector.nodeSelectorTerms <[]object> (required)	# Required. A list of node selector terms. The terms are ORed.
+spec.nodeSelector.nodeSelectorTerms[].matchExpressions <[]object>	# A list of node selector requirements by node's labels.
+spec.nodeSelector.nodeSelectorTerms[].matchExpressions[].key <string> (required)	# The label key that the selector applies to.
+spec.nodeSelector.nodeSelectorTerms[].matchExpressions[].operator <string> (required)	# Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+spec.nodeSelector.nodeSelectorTerms[].matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
+spec.nodeSelector.nodeSelectorTerms[].matchFields <[]object>	# A list of node selector requirements by node's fields.
+spec.nodeSelector.nodeSelectorTerms[].matchFields[].key <string> (required)	# The label key that the selector applies to.
+spec.nodeSelector.nodeSelectorTerms[].matchFields[].operator <string> (required)	# Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+spec.nodeSelector.nodeSelectorTerms[].matchFields[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
+spec.propertyVisitors <[]object>	# List of property visitors which describe how to access the device properties. PropertyVisitors must unique by propertyVisitor.propertyName.
+spec.propertyVisitors[].bluetooth <object>	# Bluetooth represents a set of additional visitor config fields of bluetooth protocol.
+spec.propertyVisitors[].bluetooth.characteristicUUID <string>	# Required: Unique ID of the corresponding operation
+spec.propertyVisitors[].bluetooth.dataConverter <object>	# Responsible for converting the data being read from the bluetooth device into a form that is understandable by the platform
+spec.propertyVisitors[].bluetooth.dataConverter.endIndex <integer>	# Required: Specifies the end index of incoming byte stream to be considered to convert the data the value specified should be inclusive for example if 3 is specified it includes the third index
+spec.propertyVisitors[].bluetooth.dataConverter.orderOfOperations <[]object>	# Specifies in what order the operations(which are required to be performed to convert incoming data into understandable form) are performed
+spec.propertyVisitors[].bluetooth.dataConverter.orderOfOperations[].operationType <string>	# Required: Specifies the operation to be performed to convert incoming data
+spec.propertyVisitors[].bluetooth.dataConverter.orderOfOperations[].operationValue <number>	# Required: Specifies with what value the operation is to be performed
+spec.propertyVisitors[].bluetooth.dataConverter.shiftLeft <integer>	# Refers to the number of bits to shift left, if left-shift operation is necessary for conversion
+spec.propertyVisitors[].bluetooth.dataConverter.shiftRight <integer>	# Refers to the number of bits to shift right, if right-shift operation is necessary for conversion
+spec.propertyVisitors[].bluetooth.dataConverter.startIndex <integer>	# Required: Specifies the start index of the incoming byte stream to be considered to convert the data. For example: start-index:2, end-index:3 concatenates the value present at second and third index of the incoming byte stream. If we want to reverse the order we can give it as start-index:3, end-index:2
+spec.propertyVisitors[].bluetooth.dataWrite <map[string]string>	# Responsible for converting the data coming from the platform into a form that is understood by the bluetooth device For example: "ON":[1], "OFF":[0]
+spec.propertyVisitors[].collectCycle <integer> format=int64	# Define how frequent mapper will collect from device.
+spec.propertyVisitors[].customizedProtocol <object>	# CustomizedProtocol represents a set of visitor config fields of bluetooth protocol.
+spec.propertyVisitors[].customizedProtocol.configData <object (free-form)>	# Required: The configData of customized protocol
+spec.propertyVisitors[].customizedProtocol.protocolName <string>	# Required: name of customized protocol
+spec.propertyVisitors[].customizedValues <object (free-form)>	# Customized values for visitor of provided protocols
+spec.propertyVisitors[].modbus <object>	# Modbus represents a set of additional visitor config fields of modbus protocol.
+spec.propertyVisitors[].modbus.isRegisterSwap <boolean>	# Indicates whether the high and low register swapped. Defaults to false.
+spec.propertyVisitors[].modbus.isSwap <boolean>	# Indicates whether the high and low byte swapped. Defaults to false.
+spec.propertyVisitors[].modbus.limit <integer> format=int64	# Required: Limit number of registers to read/write.
+spec.propertyVisitors[].modbus.offset <integer> format=int64	# Required: Offset indicates the starting register number to read/write data.
+spec.propertyVisitors[].modbus.register <string> enum=CoilRegister|DiscreteInputRegister|InputRegister|HoldingRegister	# Required: Type of register
+spec.propertyVisitors[].modbus.scale <number>	# The scale to convert raw property data into final units. Defaults to 1.0
+spec.propertyVisitors[].opcua <object>	# Opcua represents a set of additional visitor config fields of opc-ua protocol.
+spec.propertyVisitors[].opcua.browseName <string>	# The name of opc-ua node
+spec.propertyVisitors[].opcua.nodeID <string>	# Required: The ID of opc-ua node, e.g. "ns=1,i=1005"
+spec.propertyVisitors[].propertyName <string>	# Required: The device property name to be accessed. This should refer to one of the device properties defined in the device model.
+spec.propertyVisitors[].reportCycle <integer> format=int64	# Define how frequent mapper will report the value.
+spec.protocol <object>	# Required: The protocol configuration used to connect to the device.
+spec.protocol.bluetooth <object>	# Protocol configuration for bluetooth
+spec.protocol.bluetooth.macAddress <string>	# Unique identifier assigned to the device.
+spec.protocol.common <object>	# Configuration for protocol common part
+spec.protocol.common.collectRetryTimes <integer> format=int64	# Define retry times of mapper will collect from device.
+spec.protocol.common.collectTimeout <integer> format=int64	# Define timeout of mapper collect from device.
+spec.protocol.common.collectType <string> enum=sync|async	# Define collect type, sync or async.
+spec.protocol.common.com <object>
+spec.protocol.common.com.baudRate <integer> enum=115200|57600|38400|19200|9600|4800|2400|1800|1200|600|300|200|150|134|110|75|50 format=int64	# Required. BaudRate 115200|57600|38400|19200|9600|4800|2400|1800|1200|600|300|200|150|134|110|75|50
+spec.protocol.common.com.dataBits <integer> enum=8|7|6|5 format=int64	# Required. Valid values are 8, 7, 6, 5.
+spec.protocol.common.com.parity <string> enum=none|even|odd	# Required. Valid options are "none", "even", "odd". Defaults to "none".
+spec.protocol.common.com.serialPort <string>	# Required.
+spec.protocol.common.com.stopBits <integer> enum=1|2 format=int64	# Required. Bit that stops 1|2
+spec.protocol.common.commType <string>	# Communication type, like tcp client, tcp server or COM
+spec.protocol.common.customizedValues <object (free-form)>	# Customized values for provided protocol
+spec.protocol.common.reconnRetryTimes <integer> format=int64	# Reconnecting retry times
+spec.protocol.common.reconnTimeout <integer> format=int64	# Reconnection timeout
+spec.protocol.common.tcp <object>
+spec.protocol.common.tcp.ip <string>	# Required.
+spec.protocol.common.tcp.port <integer> format=int64	# Required.
+spec.protocol.customizedProtocol <object>	# Configuration for customized protocol
+spec.protocol.customizedProtocol.configData <object (free-form)>	# Any config data
+spec.protocol.customizedProtocol.protocolName <string>	# Unique protocol name Required.
+spec.protocol.modbus <object>	# Protocol configuration for modbus
+spec.protocol.modbus.slaveID <integer> format=int64	# Required. 0-255
+spec.protocol.opcua <object>	# Protocol configuration for opc-ua
+spec.protocol.opcua.certificate <string>	# Certificate for access opc server.
+spec.protocol.opcua.password <string>	# Password for access opc server.
+spec.protocol.opcua.privateKey <string>	# PrivateKey for access opc server.
+spec.protocol.opcua.securityMode <string>	# Defaults to "none".
+spec.protocol.opcua.securityPolicy <string>	# Defaults to "none".
+spec.protocol.opcua.timeout <integer> format=int64	# Timeout seconds for the opc server connection.???
+spec.protocol.opcua.url <string>	# Required: The URL for opc server endpoint.
+spec.protocol.opcua.userName <string>	# Username for access opc server.
+status <object>	# DeviceStatus reports the device state and the desired/reported values of twin attributes.
+status.twins <[]object>	# A list of device twins containing desired/reported desired/reported values of twin properties. Optional: A passive device won't have twin properties and this list could be empty.
+status.twins[].desired <object>	# Required: the desired property value.
+status.twins[].desired.metadata <map[string]string>	# Additional metadata like timestamp when the value was reported etc.
+status.twins[].desired.value <string> (required)	# Required: The value for this property.
+status.twins[].propertyName <string>	# Required: The property name for which the desired/reported values are specified. This property should be present in the device model.
+status.twins[].reported <object>	# Required: the reported property value.
+status.twins[].reported.metadata <map[string]string>	# Additional metadata like timestamp when the value was reported etc.
+status.twins[].reported.value <string> (required)	# Required: The value for this property.
