@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-73-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C185-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-538%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-74-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C187-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-541%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -135,6 +135,7 @@ for the line grammar.
 | Volcano JobFlow | [v1.15.0](build/history/volcano-jobflow.json) | 2 | 2026-07-05 |
 | Capsule | [v0.13.8](build/history/capsule.json) | 12 | 2026-07-05 |
 | JobSet | [v0.12.0](build/history/jobset.json) | 1 | 2026-07-05 |
+| LeaderWorkerSet | [v0.9.0](build/history/lws.json) | 2 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
