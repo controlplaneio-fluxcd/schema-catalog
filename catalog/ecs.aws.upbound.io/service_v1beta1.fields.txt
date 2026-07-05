@@ -1,0 +1,527 @@
+# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+apiVersion <string> enum=ecs.aws.upbound.io/v1beta1 (deprecated)	# This API version is deprecated. Deprecated since v2.6.0.
+kind <string> enum=Service (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# ServiceSpec defines the desired state of Service
+spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+spec.forProvider <object> (required)
+spec.forProvider.alarms <[]object>	# Information about the CloudWatch alarms. See below.
+spec.forProvider.alarms[].alarmNames <[]string>	# One or more CloudWatch alarm names.
+spec.forProvider.alarms[].enable <boolean>	# Whether to use the CloudWatch alarm option in the service deployment process.
+spec.forProvider.alarms[].rollback <boolean>	# Whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+spec.forProvider.availabilityZoneRebalancing <string>	# ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are ENABLED and DISABLED. When creating a new service, if no value is specified, it defaults to ENABLED if the service is compatible with AvailabilityZoneRebalancing. When updating an existing service, if no value is specified it defaults to the existing service's AvailabilityZoneRebalancing value. If the service never had an AvailabilityZoneRebalancing value set, Amazon ECS treats this as DISABLED.
+spec.forProvider.capacityProviderStrategy <[]object>	# Capacity provider strategies to use for the service. Can be one or more. Updating this argument requires force_new_deployment = true. See below. Conflicts with launch_type.
+spec.forProvider.capacityProviderStrategy[].base <number>	# Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
+spec.forProvider.capacityProviderStrategy[].capacityProvider <string>	# Short name of the capacity provider.
+spec.forProvider.capacityProviderStrategy[].weight <number>	# Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+spec.forProvider.cluster <string>	# Name of an ECS cluster.
+spec.forProvider.clusterRef <object>	# Reference to a Cluster in ecs to populate cluster.
+spec.forProvider.clusterRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.clusterRef.policy <object>	# Policies for referencing.
+spec.forProvider.clusterRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.clusterRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.clusterSelector <object>	# Selector for a Cluster in ecs to populate cluster.
+spec.forProvider.clusterSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.clusterSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.clusterSelector.policy <object>	# Policies for selection.
+spec.forProvider.clusterSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.clusterSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.deploymentCircuitBreaker <[]object>	# Configuration block for deployment circuit breaker. See below.
+spec.forProvider.deploymentCircuitBreaker[].enable <boolean>	# Whether to enable the deployment circuit breaker logic for the service.
+spec.forProvider.deploymentCircuitBreaker[].rollback <boolean>	# Whether to enable Amazon ECS to roll back the service if a service deployment fails. If rollback is enabled, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+spec.forProvider.deploymentConfiguration <[]object>	# Configuration block for deployment settings. See below.
+spec.forProvider.deploymentConfiguration[].bakeTimeInMinutes <string>	# Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Valid range: 0-1440 minutes. Used with BLUE_GREEN, LINEAR, and CANARY strategies.
+spec.forProvider.deploymentConfiguration[].canaryConfiguration <[]object>	# Configuration block for canary deployment strategy. Required when strategy is set to CANARY. See below.
+spec.forProvider.deploymentConfiguration[].canaryConfiguration[].canaryBakeTimeInMinutes <string>	# Number of minutes to wait before shifting all traffic to the new deployment. Valid range: 0-1440 minutes.
+spec.forProvider.deploymentConfiguration[].canaryConfiguration[].canaryPercent <number>	# Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
+spec.forProvider.deploymentConfiguration[].lifecycleHook <[]object>	# Configuration block for lifecycle hooks that are invoked during deployments. See below.
+spec.forProvider.deploymentConfiguration[].lifecycleHook[].hookDetails <string>	# Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
+spec.forProvider.deploymentConfiguration[].lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook.
+spec.forProvider.deploymentConfiguration[].lifecycleHook[].lifecycleStages <[]string>	# Stages during the deployment when the hook should be invoked. Valid values: RECONCILE_SERVICE, PRE_SCALE_UP, POST_SCALE_UP, TEST_TRAFFIC_SHIFT, POST_TEST_TRAFFIC_SHIFT, PRODUCTION_TRAFFIC_SHIFT, POST_PRODUCTION_TRAFFIC_SHIFT.
+spec.forProvider.deploymentConfiguration[].lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function.
+spec.forProvider.deploymentConfiguration[].linearConfiguration <[]object>	# Configuration block for linear deployment strategy. Required when strategy is set to LINEAR. See below.
+spec.forProvider.deploymentConfiguration[].linearConfiguration[].stepBakeTimeInMinutes <string>	# Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
+spec.forProvider.deploymentConfiguration[].linearConfiguration[].stepPercent <number>	# Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
+spec.forProvider.deploymentConfiguration[].strategy <string>	# Type of deployment strategy. Valid values: ROLLING, BLUE_GREEN, LINEAR, CANARY. Default: ROLLING.
+spec.forProvider.deploymentController <[]object>	# Configuration block for deployment controller configuration. See below.
+spec.forProvider.deploymentController[].type <string>	# Type of deployment controller. Valid values: CODE_DEPLOY, ECS, EXTERNAL. Default: ECS.
+spec.forProvider.deploymentMaximumPercent <number>	# Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the DAEMON scheduling strategy.
+spec.forProvider.deploymentMinimumHealthyPercent <number>	# Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
+spec.forProvider.desiredCount <number>	# Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the DAEMON scheduling strategy.
+spec.forProvider.enableEcsManagedTags <boolean>	# Whether to enable Amazon ECS managed tags for the tasks within the service.
+spec.forProvider.enableExecuteCommand <boolean>	# Whether to enable Amazon ECS Exec for the tasks within the service.
+spec.forProvider.forceDelete <boolean>	# Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the REPLICA scheduling strategy.
+spec.forProvider.forceNewDeployment <boolean>	# Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., myimage:latest), roll Fargate tasks onto a newer platform version, or immediately deploy ordered_placement_strategy and placement_constraints updates.
+spec.forProvider.healthCheckGracePeriodSeconds <number>	# Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
+spec.forProvider.iamRole <string>	# ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the awsvpc network mode. If using awsvpc network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
+spec.forProvider.iamRoleRef <object>	# Reference to a Role in iam to populate iamRole.
+spec.forProvider.iamRoleRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.iamRoleRef.policy <object>	# Policies for referencing.
+spec.forProvider.iamRoleRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.iamRoleRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.iamRoleSelector <object>	# Selector for a Role in iam to populate iamRole.
+spec.forProvider.iamRoleSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.iamRoleSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.iamRoleSelector.policy <object>	# Policies for selection.
+spec.forProvider.iamRoleSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.iamRoleSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.launchType <string>	# Launch type on which to run your service. The valid values are EC2, FARGATE, and EXTERNAL. Defaults to EC2. Conflicts with capacity_provider_strategy.
+spec.forProvider.loadBalancer <[]object>	# Configuration block for load balancers. See below.
+spec.forProvider.loadBalancer[].advancedConfiguration <[]object>	# Configuration block for Blue/Green deployment settings. Required when using BLUE_GREEN deployment strategy. See below.
+spec.forProvider.loadBalancer[].advancedConfiguration[].alternateTargetGroupArn <string>	# ARN of the alternate target group to use for Blue/Green deployments.
+spec.forProvider.loadBalancer[].advancedConfiguration[].productionListenerRule <string>	# ARN of the listener rule that routes production traffic.
+spec.forProvider.loadBalancer[].advancedConfiguration[].roleArn <string>	# ARN of the IAM role that allows ECS to manage the target groups.
+spec.forProvider.loadBalancer[].advancedConfiguration[].testListenerRule <string>	# ARN of the listener rule that routes test traffic.
+spec.forProvider.loadBalancer[].containerName <string>	# Name of the container to associate with the load balancer (as it appears in a container definition).
+spec.forProvider.loadBalancer[].containerPort <number>	# Port on the container to associate with the load balancer.
+spec.forProvider.loadBalancer[].elbName <string>	# Name of the ELB (Classic) to associate with the service.
+spec.forProvider.loadBalancer[].targetGroupArn <string>	# ARN of the Load Balancer target group to associate with the service.
+spec.forProvider.loadBalancer[].targetGroupArnRef <object>	# Reference to a LBTargetGroup in elbv2 to populate targetGroupArn.
+spec.forProvider.loadBalancer[].targetGroupArnRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.loadBalancer[].targetGroupArnRef.policy <object>	# Policies for referencing.
+spec.forProvider.loadBalancer[].targetGroupArnRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.loadBalancer[].targetGroupArnRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.loadBalancer[].targetGroupArnSelector <object>	# Selector for a LBTargetGroup in elbv2 to populate targetGroupArn.
+spec.forProvider.loadBalancer[].targetGroupArnSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.loadBalancer[].targetGroupArnSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.loadBalancer[].targetGroupArnSelector.policy <object>	# Policies for selection.
+spec.forProvider.loadBalancer[].targetGroupArnSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.loadBalancer[].targetGroupArnSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.networkConfiguration <[]object>	# Network configuration for the service. This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. See below.
+spec.forProvider.networkConfiguration[].assignPublicIp <boolean>	# Assign a public IP address to the ENI (Fargate launch type only). Valid values are true or false. Default false.
+spec.forProvider.networkConfiguration[].securityGroupRefs <[]object>	# References to SecurityGroup in ec2 to populate securityGroups.
+spec.forProvider.networkConfiguration[].securityGroupRefs[].name <string> (required)	# Name of the referenced object.
+spec.forProvider.networkConfiguration[].securityGroupRefs[].policy <object>	# Policies for referencing.
+spec.forProvider.networkConfiguration[].securityGroupRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.networkConfiguration[].securityGroupRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.networkConfiguration[].securityGroupSelector <object>	# Selector for a list of SecurityGroup in ec2 to populate securityGroups.
+spec.forProvider.networkConfiguration[].securityGroupSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.networkConfiguration[].securityGroupSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.networkConfiguration[].securityGroupSelector.policy <object>	# Policies for selection.
+spec.forProvider.networkConfiguration[].securityGroupSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.networkConfiguration[].securityGroupSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.networkConfiguration[].securityGroups <[]string>	# Security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
+spec.forProvider.networkConfiguration[].subnetRefs <[]object>	# References to Subnet in ec2 to populate subnets.
+spec.forProvider.networkConfiguration[].subnetRefs[].name <string> (required)	# Name of the referenced object.
+spec.forProvider.networkConfiguration[].subnetRefs[].policy <object>	# Policies for referencing.
+spec.forProvider.networkConfiguration[].subnetRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.networkConfiguration[].subnetRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.networkConfiguration[].subnetSelector <object>	# Selector for a list of Subnet in ec2 to populate subnets.
+spec.forProvider.networkConfiguration[].subnetSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.networkConfiguration[].subnetSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.networkConfiguration[].subnetSelector.policy <object>	# Policies for selection.
+spec.forProvider.networkConfiguration[].subnetSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.networkConfiguration[].subnetSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.networkConfiguration[].subnets <[]string>	# Subnets associated with the task or service.
+spec.forProvider.orderedPlacementStrategy <[]object>	# Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless force_new_deployment is enabled. The maximum number of ordered_placement_strategy blocks is 5. See below.
+spec.forProvider.orderedPlacementStrategy[].field <string>	# For the spread placement strategy, valid values are instanceId (or host, which has the same effect), or any platform or custom attribute that is applied to a container instance. For the binpack type, valid values are memory and cpu. For the random type, this attribute is not needed. For more information, see Placement Strategy.
+spec.forProvider.orderedPlacementStrategy[].type <string>	# Type of placement strategy. Must be one of: binpack, random, or spread
+spec.forProvider.placementConstraints <[]object>	# Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless force_new_deployment is enabled. Maximum number of placement_constraints is 10. See below.
+spec.forProvider.placementConstraints[].expression <string>	# Cluster Query Language expression to apply to the constraint. Does not need to be specified for the distinctInstance type. For more information, see Cluster Query Language in the Amazon EC2 Container Service Developer Guide.
+spec.forProvider.placementConstraints[].type <string>	# Type of constraint. The only valid values at this time are memberOf and distinctInstance.
+spec.forProvider.platformVersion <string>	# Platform version on which to run your service. Only applicable for launch_type set to FARGATE. Defaults to LATEST. More information about Fargate platform versions can be found in the AWS ECS User Guide.
+spec.forProvider.propagateTags <string>	# Whether to propagate the tags from the task definition or the service to the tasks. The valid values are SERVICE and TASK_DEFINITION.
+spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
+spec.forProvider.schedulingStrategy <string>	# Scheduling strategy to use for the service. The valid values are REPLICA and DAEMON. Defaults to REPLICA. Note that Tasks using the Fargate launch type or the .
+spec.forProvider.serviceConnectConfiguration <[]object>	# ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. See below.
+spec.forProvider.serviceConnectConfiguration[].accessLogConfiguration <[]object>	# Configuration for Service Connect access logs. See below.
+spec.forProvider.serviceConnectConfiguration[].accessLogConfiguration[].format <string>	# The format for Service Connect access log output. Valid values: TEXT, JSON. See AWS documentation for format details.
+spec.forProvider.serviceConnectConfiguration[].accessLogConfiguration[].includeQueryParameters <string>	# Specifies whether to include query parameters in Service Connect access logs. Valid values: ENABLED, DISABLED. Default: DISABLED. Query parameters may contain sensitive information.
+spec.forProvider.serviceConnectConfiguration[].enabled <boolean>	# Whether to use Service Connect with this service.
+spec.forProvider.serviceConnectConfiguration[].logConfiguration <[]object>	# Log configuration for the container. See below.
+spec.forProvider.serviceConnectConfiguration[].logConfiguration[].logDriver <string>	# Log driver to use for the container.
+spec.forProvider.serviceConnectConfiguration[].logConfiguration[].options <map[string]string>	# Configuration options to send to the log driver.
+spec.forProvider.serviceConnectConfiguration[].logConfiguration[].secretOption <[]object>	# Secrets to pass to the log configuration. See below.
+spec.forProvider.serviceConnectConfiguration[].logConfiguration[].secretOption[].name <string>	# Name of the secret.
+spec.forProvider.serviceConnectConfiguration[].logConfiguration[].secretOption[].valueFrom <string>	# Secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+spec.forProvider.serviceConnectConfiguration[].namespace <string>	# Namespace name or ARN of the aws_service_discovery_http_namespace for use with Service Connect.
+spec.forProvider.serviceConnectConfiguration[].service <[]object>	# List of Service Connect service objects. See below.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias <[]object>	# List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. For each service block where enabled is true, exactly one client_alias with one port should be specified. See below.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].dnsName <string>	# Name that you use in the applications of client tasks to connect to this service.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].port <number>	# Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules <[]object>	# Configuration block for test traffic routing rules. See below.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header <[]object>	# Configuration block for header-based routing rules. See below.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].name <string>	# Name of the HTTP header to match.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].value <[]object>	# Configuration block for header value matching criteria. See below.
+spec.forProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].value[].exact <string>	# Exact string value to match in the header.
+spec.forProvider.serviceConnectConfiguration[].service[].discoveryName <string>	# Name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
+spec.forProvider.serviceConnectConfiguration[].service[].ingressPortOverride <number>	# Port number for the Service Connect proxy to listen on.
+spec.forProvider.serviceConnectConfiguration[].service[].portName <string>	# Name of one of the portMappings from all the containers in the task definition of this Amazon ECS service.
+spec.forProvider.serviceConnectConfiguration[].service[].timeout <[]object>	# Configuration timeouts for Service Connect
+spec.forProvider.serviceConnectConfiguration[].service[].timeout[].idleTimeoutSeconds <number>	# Amount of time in seconds a connection will stay active while idle. A value of 0 can be set to disable idleTimeout.
+spec.forProvider.serviceConnectConfiguration[].service[].timeout[].perRequestTimeoutSeconds <number>	# Amount of time in seconds for the upstream to respond with a complete response per request. A value of 0 can be set to disable perRequestTimeout. Can only be set when appProtocol isn't TCP.
+spec.forProvider.serviceConnectConfiguration[].service[].tls <[]object>	# Configuration for enabling Transport Layer Security (TLS)
+spec.forProvider.serviceConnectConfiguration[].service[].tls[].issuerCertAuthority <[]object>	# Details of the certificate authority which will issue the certificate.
+spec.forProvider.serviceConnectConfiguration[].service[].tls[].issuerCertAuthority[].awsPcaAuthorityArn <string>	# ARN of the aws_acmpca_certificate_authority used to create the TLS Certificates.
+spec.forProvider.serviceConnectConfiguration[].service[].tls[].kmsKey <string>	# KMS key used to encrypt the private key in Secrets Manager.
+spec.forProvider.serviceConnectConfiguration[].service[].tls[].roleArn <string>	# ARN of the IAM Role that's associated with the Service Connect TLS.
+spec.forProvider.serviceRegistries <[]object>	# Service discovery registries for the service. The maximum number of service_registries blocks is 1. See below.
+spec.forProvider.serviceRegistries[].containerName <string>	# Container name value, already specified in the task definition, to be used for your service discovery service.
+spec.forProvider.serviceRegistries[].containerPort <number>	# Port value, already specified in the task definition, to be used for your service discovery service.
+spec.forProvider.serviceRegistries[].port <number>	# Port value used if your Service Discovery service specified an SRV record.
+spec.forProvider.serviceRegistries[].registryArn <string>	# ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service(aws_service_discovery_service). For more information, see Service
+spec.forProvider.sigintRollback <boolean>	# Whether to enable graceful termination of deployments using SIGINT signals. When enabled, allows customers to safely cancel an in-progress deployment and automatically trigger a rollback to the previous stable state. Defaults to false. Only applicable when using ECS deployment controller and requires wait_for_steady_state = true.
+spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
+spec.forProvider.taskDefinition <string>	# Family and revision (family:revision) or full ARN of the task definition that you want to run in your service. Required unless using the EXTERNAL deployment controller. If a revision is not specified, the latest ACTIVE revision is used.
+spec.forProvider.taskDefinitionRef <object>	# Reference to a TaskDefinition in ecs to populate taskDefinition.
+spec.forProvider.taskDefinitionRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.taskDefinitionRef.policy <object>	# Policies for referencing.
+spec.forProvider.taskDefinitionRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.taskDefinitionRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.taskDefinitionSelector <object>	# Selector for a TaskDefinition in ecs to populate taskDefinition.
+spec.forProvider.taskDefinitionSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.taskDefinitionSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.taskDefinitionSelector.policy <object>	# Policies for selection.
+spec.forProvider.taskDefinitionSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.taskDefinitionSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.triggers <map[string]string>	# Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with plantimestamp(). See example above.
+spec.forProvider.volumeConfiguration <[]object>	# Configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. See below.
+spec.forProvider.volumeConfiguration[].managedEbsVolume <[]object>	# Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. See below.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].encrypted <boolean>	# Whether the volume should be encrypted. Default value is true.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].fileSystemType <string>	# Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are ext3, ext4, xfs. Default value is xfs.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].iops <number>	# Number of I/O operations per second (IOPS).
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].kmsKeyId <string>	# Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].roleArn <string>	# The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].sizeInGb <number>	# Size of the volume in GiB. You must specify either a size_in_gb or a snapshot_id. You can optionally specify a volume size greater than or equal to the snapshot size.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].snapshotId <string>	# Snapshot that Amazon ECS uses to create the volume. You must specify either a size_in_gb or a snapshot_id.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications <[]object>	# The tags to apply to the volume. See below.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].propagateTags <string>	# Whether to propagate the tags from the task definition or the service to the tasks. The valid values are SERVICE and TASK_DEFINITION.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].resourceType <string>	# The type of volume resource. Valid values, volume.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].tags <map[string]string>	# Key-value map of resource tags.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].throughput <number>	# Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].volumeInitializationRate <number>	# Volume Initialization Rate in MiB/s. You must also specify a snapshot_id.
+spec.forProvider.volumeConfiguration[].managedEbsVolume[].volumeType <string>	# Volume type.
+spec.forProvider.volumeConfiguration[].name <string>	# Name of the volume.
+spec.forProvider.vpcLatticeConfigurations <[]object>	# The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. See below.
+spec.forProvider.vpcLatticeConfigurations[].portName <string>	# The name of the port for a target group associated with the VPC Lattice configuration.
+spec.forProvider.vpcLatticeConfigurations[].roleArn <string>	# The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+spec.forProvider.vpcLatticeConfigurations[].targetGroupArn <string>	# The full ARN of the target group or groups associated with the VPC Lattice configuration.
+spec.forProvider.waitForSteadyState <boolean>	# Default false.
+spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
+spec.initProvider.alarms <[]object>	# Information about the CloudWatch alarms. See below.
+spec.initProvider.alarms[].alarmNames <[]string>	# One or more CloudWatch alarm names.
+spec.initProvider.alarms[].enable <boolean>	# Whether to use the CloudWatch alarm option in the service deployment process.
+spec.initProvider.alarms[].rollback <boolean>	# Whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+spec.initProvider.availabilityZoneRebalancing <string>	# ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are ENABLED and DISABLED. When creating a new service, if no value is specified, it defaults to ENABLED if the service is compatible with AvailabilityZoneRebalancing. When updating an existing service, if no value is specified it defaults to the existing service's AvailabilityZoneRebalancing value. If the service never had an AvailabilityZoneRebalancing value set, Amazon ECS treats this as DISABLED.
+spec.initProvider.capacityProviderStrategy <[]object>	# Capacity provider strategies to use for the service. Can be one or more. Updating this argument requires force_new_deployment = true. See below. Conflicts with launch_type.
+spec.initProvider.capacityProviderStrategy[].base <number>	# Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
+spec.initProvider.capacityProviderStrategy[].capacityProvider <string>	# Short name of the capacity provider.
+spec.initProvider.capacityProviderStrategy[].weight <number>	# Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+spec.initProvider.deploymentCircuitBreaker <[]object>	# Configuration block for deployment circuit breaker. See below.
+spec.initProvider.deploymentCircuitBreaker[].enable <boolean>	# Whether to enable the deployment circuit breaker logic for the service.
+spec.initProvider.deploymentCircuitBreaker[].rollback <boolean>	# Whether to enable Amazon ECS to roll back the service if a service deployment fails. If rollback is enabled, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+spec.initProvider.deploymentConfiguration <[]object>	# Configuration block for deployment settings. See below.
+spec.initProvider.deploymentConfiguration[].bakeTimeInMinutes <string>	# Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Valid range: 0-1440 minutes. Used with BLUE_GREEN, LINEAR, and CANARY strategies.
+spec.initProvider.deploymentConfiguration[].canaryConfiguration <[]object>	# Configuration block for canary deployment strategy. Required when strategy is set to CANARY. See below.
+spec.initProvider.deploymentConfiguration[].canaryConfiguration[].canaryBakeTimeInMinutes <string>	# Number of minutes to wait before shifting all traffic to the new deployment. Valid range: 0-1440 minutes.
+spec.initProvider.deploymentConfiguration[].canaryConfiguration[].canaryPercent <number>	# Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
+spec.initProvider.deploymentConfiguration[].lifecycleHook <[]object>	# Configuration block for lifecycle hooks that are invoked during deployments. See below.
+spec.initProvider.deploymentConfiguration[].lifecycleHook[].hookDetails <string>	# Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
+spec.initProvider.deploymentConfiguration[].lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook.
+spec.initProvider.deploymentConfiguration[].lifecycleHook[].lifecycleStages <[]string>	# Stages during the deployment when the hook should be invoked. Valid values: RECONCILE_SERVICE, PRE_SCALE_UP, POST_SCALE_UP, TEST_TRAFFIC_SHIFT, POST_TEST_TRAFFIC_SHIFT, PRODUCTION_TRAFFIC_SHIFT, POST_PRODUCTION_TRAFFIC_SHIFT.
+spec.initProvider.deploymentConfiguration[].lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function.
+spec.initProvider.deploymentConfiguration[].linearConfiguration <[]object>	# Configuration block for linear deployment strategy. Required when strategy is set to LINEAR. See below.
+spec.initProvider.deploymentConfiguration[].linearConfiguration[].stepBakeTimeInMinutes <string>	# Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
+spec.initProvider.deploymentConfiguration[].linearConfiguration[].stepPercent <number>	# Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
+spec.initProvider.deploymentConfiguration[].strategy <string>	# Type of deployment strategy. Valid values: ROLLING, BLUE_GREEN, LINEAR, CANARY. Default: ROLLING.
+spec.initProvider.deploymentController <[]object>	# Configuration block for deployment controller configuration. See below.
+spec.initProvider.deploymentController[].type <string>	# Type of deployment controller. Valid values: CODE_DEPLOY, ECS, EXTERNAL. Default: ECS.
+spec.initProvider.deploymentMaximumPercent <number>	# Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the DAEMON scheduling strategy.
+spec.initProvider.deploymentMinimumHealthyPercent <number>	# Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
+spec.initProvider.desiredCount <number>	# Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the DAEMON scheduling strategy.
+spec.initProvider.enableEcsManagedTags <boolean>	# Whether to enable Amazon ECS managed tags for the tasks within the service.
+spec.initProvider.enableExecuteCommand <boolean>	# Whether to enable Amazon ECS Exec for the tasks within the service.
+spec.initProvider.forceDelete <boolean>	# Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the REPLICA scheduling strategy.
+spec.initProvider.forceNewDeployment <boolean>	# Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., myimage:latest), roll Fargate tasks onto a newer platform version, or immediately deploy ordered_placement_strategy and placement_constraints updates.
+spec.initProvider.healthCheckGracePeriodSeconds <number>	# Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
+spec.initProvider.iamRole <string>	# ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the awsvpc network mode. If using awsvpc network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
+spec.initProvider.iamRoleRef <object>	# Reference to a Role in iam to populate iamRole.
+spec.initProvider.iamRoleRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.iamRoleRef.policy <object>	# Policies for referencing.
+spec.initProvider.iamRoleRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.iamRoleRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.iamRoleSelector <object>	# Selector for a Role in iam to populate iamRole.
+spec.initProvider.iamRoleSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.iamRoleSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.iamRoleSelector.policy <object>	# Policies for selection.
+spec.initProvider.iamRoleSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.iamRoleSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.launchType <string>	# Launch type on which to run your service. The valid values are EC2, FARGATE, and EXTERNAL. Defaults to EC2. Conflicts with capacity_provider_strategy.
+spec.initProvider.loadBalancer <[]object>	# Configuration block for load balancers. See below.
+spec.initProvider.loadBalancer[].advancedConfiguration <[]object>	# Configuration block for Blue/Green deployment settings. Required when using BLUE_GREEN deployment strategy. See below.
+spec.initProvider.loadBalancer[].advancedConfiguration[].alternateTargetGroupArn <string>	# ARN of the alternate target group to use for Blue/Green deployments.
+spec.initProvider.loadBalancer[].advancedConfiguration[].productionListenerRule <string>	# ARN of the listener rule that routes production traffic.
+spec.initProvider.loadBalancer[].advancedConfiguration[].roleArn <string>	# ARN of the IAM role that allows ECS to manage the target groups.
+spec.initProvider.loadBalancer[].advancedConfiguration[].testListenerRule <string>	# ARN of the listener rule that routes test traffic.
+spec.initProvider.loadBalancer[].containerName <string>	# Name of the container to associate with the load balancer (as it appears in a container definition).
+spec.initProvider.loadBalancer[].containerPort <number>	# Port on the container to associate with the load balancer.
+spec.initProvider.loadBalancer[].elbName <string>	# Name of the ELB (Classic) to associate with the service.
+spec.initProvider.loadBalancer[].targetGroupArn <string>	# ARN of the Load Balancer target group to associate with the service.
+spec.initProvider.loadBalancer[].targetGroupArnRef <object>	# Reference to a LBTargetGroup in elbv2 to populate targetGroupArn.
+spec.initProvider.loadBalancer[].targetGroupArnRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.loadBalancer[].targetGroupArnRef.policy <object>	# Policies for referencing.
+spec.initProvider.loadBalancer[].targetGroupArnRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.loadBalancer[].targetGroupArnRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.loadBalancer[].targetGroupArnSelector <object>	# Selector for a LBTargetGroup in elbv2 to populate targetGroupArn.
+spec.initProvider.loadBalancer[].targetGroupArnSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.loadBalancer[].targetGroupArnSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.loadBalancer[].targetGroupArnSelector.policy <object>	# Policies for selection.
+spec.initProvider.loadBalancer[].targetGroupArnSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.loadBalancer[].targetGroupArnSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.networkConfiguration <[]object>	# Network configuration for the service. This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. See below.
+spec.initProvider.networkConfiguration[].assignPublicIp <boolean>	# Assign a public IP address to the ENI (Fargate launch type only). Valid values are true or false. Default false.
+spec.initProvider.networkConfiguration[].securityGroupRefs <[]object>	# References to SecurityGroup in ec2 to populate securityGroups.
+spec.initProvider.networkConfiguration[].securityGroupRefs[].name <string> (required)	# Name of the referenced object.
+spec.initProvider.networkConfiguration[].securityGroupRefs[].policy <object>	# Policies for referencing.
+spec.initProvider.networkConfiguration[].securityGroupRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.networkConfiguration[].securityGroupRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.networkConfiguration[].securityGroupSelector <object>	# Selector for a list of SecurityGroup in ec2 to populate securityGroups.
+spec.initProvider.networkConfiguration[].securityGroupSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.networkConfiguration[].securityGroupSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.networkConfiguration[].securityGroupSelector.policy <object>	# Policies for selection.
+spec.initProvider.networkConfiguration[].securityGroupSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.networkConfiguration[].securityGroupSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.networkConfiguration[].securityGroups <[]string>	# Security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
+spec.initProvider.networkConfiguration[].subnetRefs <[]object>	# References to Subnet in ec2 to populate subnets.
+spec.initProvider.networkConfiguration[].subnetRefs[].name <string> (required)	# Name of the referenced object.
+spec.initProvider.networkConfiguration[].subnetRefs[].policy <object>	# Policies for referencing.
+spec.initProvider.networkConfiguration[].subnetRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.networkConfiguration[].subnetRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.networkConfiguration[].subnetSelector <object>	# Selector for a list of Subnet in ec2 to populate subnets.
+spec.initProvider.networkConfiguration[].subnetSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.networkConfiguration[].subnetSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.networkConfiguration[].subnetSelector.policy <object>	# Policies for selection.
+spec.initProvider.networkConfiguration[].subnetSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.networkConfiguration[].subnetSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.networkConfiguration[].subnets <[]string>	# Subnets associated with the task or service.
+spec.initProvider.orderedPlacementStrategy <[]object>	# Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless force_new_deployment is enabled. The maximum number of ordered_placement_strategy blocks is 5. See below.
+spec.initProvider.orderedPlacementStrategy[].field <string>	# For the spread placement strategy, valid values are instanceId (or host, which has the same effect), or any platform or custom attribute that is applied to a container instance. For the binpack type, valid values are memory and cpu. For the random type, this attribute is not needed. For more information, see Placement Strategy.
+spec.initProvider.orderedPlacementStrategy[].type <string>	# Type of placement strategy. Must be one of: binpack, random, or spread
+spec.initProvider.placementConstraints <[]object>	# Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless force_new_deployment is enabled. Maximum number of placement_constraints is 10. See below.
+spec.initProvider.placementConstraints[].expression <string>	# Cluster Query Language expression to apply to the constraint. Does not need to be specified for the distinctInstance type. For more information, see Cluster Query Language in the Amazon EC2 Container Service Developer Guide.
+spec.initProvider.placementConstraints[].type <string>	# Type of constraint. The only valid values at this time are memberOf and distinctInstance.
+spec.initProvider.platformVersion <string>	# Platform version on which to run your service. Only applicable for launch_type set to FARGATE. Defaults to LATEST. More information about Fargate platform versions can be found in the AWS ECS User Guide.
+spec.initProvider.propagateTags <string>	# Whether to propagate the tags from the task definition or the service to the tasks. The valid values are SERVICE and TASK_DEFINITION.
+spec.initProvider.schedulingStrategy <string>	# Scheduling strategy to use for the service. The valid values are REPLICA and DAEMON. Defaults to REPLICA. Note that Tasks using the Fargate launch type or the .
+spec.initProvider.serviceConnectConfiguration <[]object>	# ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. See below.
+spec.initProvider.serviceConnectConfiguration[].accessLogConfiguration <[]object>	# Configuration for Service Connect access logs. See below.
+spec.initProvider.serviceConnectConfiguration[].accessLogConfiguration[].format <string>	# The format for Service Connect access log output. Valid values: TEXT, JSON. See AWS documentation for format details.
+spec.initProvider.serviceConnectConfiguration[].accessLogConfiguration[].includeQueryParameters <string>	# Specifies whether to include query parameters in Service Connect access logs. Valid values: ENABLED, DISABLED. Default: DISABLED. Query parameters may contain sensitive information.
+spec.initProvider.serviceConnectConfiguration[].enabled <boolean>	# Whether to use Service Connect with this service.
+spec.initProvider.serviceConnectConfiguration[].logConfiguration <[]object>	# Log configuration for the container. See below.
+spec.initProvider.serviceConnectConfiguration[].logConfiguration[].logDriver <string>	# Log driver to use for the container.
+spec.initProvider.serviceConnectConfiguration[].logConfiguration[].options <map[string]string>	# Configuration options to send to the log driver.
+spec.initProvider.serviceConnectConfiguration[].logConfiguration[].secretOption <[]object>	# Secrets to pass to the log configuration. See below.
+spec.initProvider.serviceConnectConfiguration[].logConfiguration[].secretOption[].name <string>	# Name of the secret.
+spec.initProvider.serviceConnectConfiguration[].logConfiguration[].secretOption[].valueFrom <string>	# Secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+spec.initProvider.serviceConnectConfiguration[].namespace <string>	# Namespace name or ARN of the aws_service_discovery_http_namespace for use with Service Connect.
+spec.initProvider.serviceConnectConfiguration[].service <[]object>	# List of Service Connect service objects. See below.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias <[]object>	# List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. For each service block where enabled is true, exactly one client_alias with one port should be specified. See below.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].dnsName <string>	# Name that you use in the applications of client tasks to connect to this service.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].port <number>	# Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules <[]object>	# Configuration block for test traffic routing rules. See below.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header <[]object>	# Configuration block for header-based routing rules. See below.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].name <string>	# Name of the HTTP header to match.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].value <[]object>	# Configuration block for header value matching criteria. See below.
+spec.initProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].value[].exact <string>	# Exact string value to match in the header.
+spec.initProvider.serviceConnectConfiguration[].service[].discoveryName <string>	# Name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
+spec.initProvider.serviceConnectConfiguration[].service[].ingressPortOverride <number>	# Port number for the Service Connect proxy to listen on.
+spec.initProvider.serviceConnectConfiguration[].service[].portName <string>	# Name of one of the portMappings from all the containers in the task definition of this Amazon ECS service.
+spec.initProvider.serviceConnectConfiguration[].service[].timeout <[]object>	# Configuration timeouts for Service Connect
+spec.initProvider.serviceConnectConfiguration[].service[].timeout[].idleTimeoutSeconds <number>	# Amount of time in seconds a connection will stay active while idle. A value of 0 can be set to disable idleTimeout.
+spec.initProvider.serviceConnectConfiguration[].service[].timeout[].perRequestTimeoutSeconds <number>	# Amount of time in seconds for the upstream to respond with a complete response per request. A value of 0 can be set to disable perRequestTimeout. Can only be set when appProtocol isn't TCP.
+spec.initProvider.serviceConnectConfiguration[].service[].tls <[]object>	# Configuration for enabling Transport Layer Security (TLS)
+spec.initProvider.serviceConnectConfiguration[].service[].tls[].issuerCertAuthority <[]object>	# Details of the certificate authority which will issue the certificate.
+spec.initProvider.serviceConnectConfiguration[].service[].tls[].issuerCertAuthority[].awsPcaAuthorityArn <string>	# ARN of the aws_acmpca_certificate_authority used to create the TLS Certificates.
+spec.initProvider.serviceConnectConfiguration[].service[].tls[].kmsKey <string>	# KMS key used to encrypt the private key in Secrets Manager.
+spec.initProvider.serviceConnectConfiguration[].service[].tls[].roleArn <string>	# ARN of the IAM Role that's associated with the Service Connect TLS.
+spec.initProvider.serviceRegistries <[]object>	# Service discovery registries for the service. The maximum number of service_registries blocks is 1. See below.
+spec.initProvider.serviceRegistries[].containerName <string>	# Container name value, already specified in the task definition, to be used for your service discovery service.
+spec.initProvider.serviceRegistries[].containerPort <number>	# Port value, already specified in the task definition, to be used for your service discovery service.
+spec.initProvider.serviceRegistries[].port <number>	# Port value used if your Service Discovery service specified an SRV record.
+spec.initProvider.serviceRegistries[].registryArn <string>	# ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service(aws_service_discovery_service). For more information, see Service
+spec.initProvider.sigintRollback <boolean>	# Whether to enable graceful termination of deployments using SIGINT signals. When enabled, allows customers to safely cancel an in-progress deployment and automatically trigger a rollback to the previous stable state. Defaults to false. Only applicable when using ECS deployment controller and requires wait_for_steady_state = true.
+spec.initProvider.tags <map[string]string>	# Key-value map of resource tags.
+spec.initProvider.taskDefinition <string>	# Family and revision (family:revision) or full ARN of the task definition that you want to run in your service. Required unless using the EXTERNAL deployment controller. If a revision is not specified, the latest ACTIVE revision is used.
+spec.initProvider.taskDefinitionRef <object>	# Reference to a TaskDefinition in ecs to populate taskDefinition.
+spec.initProvider.taskDefinitionRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.taskDefinitionRef.policy <object>	# Policies for referencing.
+spec.initProvider.taskDefinitionRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.taskDefinitionRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.taskDefinitionSelector <object>	# Selector for a TaskDefinition in ecs to populate taskDefinition.
+spec.initProvider.taskDefinitionSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.taskDefinitionSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.taskDefinitionSelector.policy <object>	# Policies for selection.
+spec.initProvider.taskDefinitionSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.taskDefinitionSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.triggers <map[string]string>	# Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with plantimestamp(). See example above.
+spec.initProvider.volumeConfiguration <[]object>	# Configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. See below.
+spec.initProvider.volumeConfiguration[].managedEbsVolume <[]object>	# Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. See below.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].encrypted <boolean>	# Whether the volume should be encrypted. Default value is true.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].fileSystemType <string>	# Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are ext3, ext4, xfs. Default value is xfs.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].iops <number>	# Number of I/O operations per second (IOPS).
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].kmsKeyId <string>	# Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].roleArn <string>	# The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].sizeInGb <number>	# Size of the volume in GiB. You must specify either a size_in_gb or a snapshot_id. You can optionally specify a volume size greater than or equal to the snapshot size.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].snapshotId <string>	# Snapshot that Amazon ECS uses to create the volume. You must specify either a size_in_gb or a snapshot_id.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications <[]object>	# The tags to apply to the volume. See below.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].propagateTags <string>	# Whether to propagate the tags from the task definition or the service to the tasks. The valid values are SERVICE and TASK_DEFINITION.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].resourceType <string>	# The type of volume resource. Valid values, volume.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].tags <map[string]string>	# Key-value map of resource tags.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].throughput <number>	# Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].volumeInitializationRate <number>	# Volume Initialization Rate in MiB/s. You must also specify a snapshot_id.
+spec.initProvider.volumeConfiguration[].managedEbsVolume[].volumeType <string>	# Volume type.
+spec.initProvider.volumeConfiguration[].name <string>	# Name of the volume.
+spec.initProvider.vpcLatticeConfigurations <[]object>	# The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. See below.
+spec.initProvider.vpcLatticeConfigurations[].portName <string>	# The name of the port for a target group associated with the VPC Lattice configuration.
+spec.initProvider.vpcLatticeConfigurations[].roleArn <string>	# The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+spec.initProvider.vpcLatticeConfigurations[].targetGroupArn <string>	# The full ARN of the target group or groups associated with the VPC Lattice configuration.
+spec.initProvider.waitForSteadyState <boolean>	# Default false.
+spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. This field is planned to replace the DeletionPolicy field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. If both are custom, the DeletionPolicy field will be ignored. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
+spec.providerConfigRef <object> default={"name":"default"}	# ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
+spec.providerConfigRef.name <string> (required)	# Name of the referenced object.
+spec.providerConfigRef.policy <object>	# Policies for referencing.
+spec.providerConfigRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.providerConfigRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.writeConnectionSecretToRef <object>	# WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
+spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
+spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the secret.
+status <object>	# ServiceStatus defines the observed state of Service.
+status.atProvider <object>
+status.atProvider.alarms <[]object>	# Information about the CloudWatch alarms. See below.
+status.atProvider.alarms[].alarmNames <[]string>	# One or more CloudWatch alarm names.
+status.atProvider.alarms[].enable <boolean>	# Whether to use the CloudWatch alarm option in the service deployment process.
+status.atProvider.alarms[].rollback <boolean>	# Whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+status.atProvider.arn <string>	# ARN that identifies the service.
+status.atProvider.availabilityZoneRebalancing <string>	# ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are ENABLED and DISABLED. When creating a new service, if no value is specified, it defaults to ENABLED if the service is compatible with AvailabilityZoneRebalancing. When updating an existing service, if no value is specified it defaults to the existing service's AvailabilityZoneRebalancing value. If the service never had an AvailabilityZoneRebalancing value set, Amazon ECS treats this as DISABLED.
+status.atProvider.capacityProviderStrategy <[]object>	# Capacity provider strategies to use for the service. Can be one or more. Updating this argument requires force_new_deployment = true. See below. Conflicts with launch_type.
+status.atProvider.capacityProviderStrategy[].base <number>	# Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
+status.atProvider.capacityProviderStrategy[].capacityProvider <string>	# Short name of the capacity provider.
+status.atProvider.capacityProviderStrategy[].weight <number>	# Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+status.atProvider.cluster <string>	# Name of an ECS cluster.
+status.atProvider.deploymentCircuitBreaker <[]object>	# Configuration block for deployment circuit breaker. See below.
+status.atProvider.deploymentCircuitBreaker[].enable <boolean>	# Whether to enable the deployment circuit breaker logic for the service.
+status.atProvider.deploymentCircuitBreaker[].rollback <boolean>	# Whether to enable Amazon ECS to roll back the service if a service deployment fails. If rollback is enabled, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+status.atProvider.deploymentConfiguration <[]object>	# Configuration block for deployment settings. See below.
+status.atProvider.deploymentConfiguration[].bakeTimeInMinutes <string>	# Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Valid range: 0-1440 minutes. Used with BLUE_GREEN, LINEAR, and CANARY strategies.
+status.atProvider.deploymentConfiguration[].canaryConfiguration <[]object>	# Configuration block for canary deployment strategy. Required when strategy is set to CANARY. See below.
+status.atProvider.deploymentConfiguration[].canaryConfiguration[].canaryBakeTimeInMinutes <string>	# Number of minutes to wait before shifting all traffic to the new deployment. Valid range: 0-1440 minutes.
+status.atProvider.deploymentConfiguration[].canaryConfiguration[].canaryPercent <number>	# Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
+status.atProvider.deploymentConfiguration[].lifecycleHook <[]object>	# Configuration block for lifecycle hooks that are invoked during deployments. See below.
+status.atProvider.deploymentConfiguration[].lifecycleHook[].hookDetails <string>	# Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
+status.atProvider.deploymentConfiguration[].lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook.
+status.atProvider.deploymentConfiguration[].lifecycleHook[].lifecycleStages <[]string>	# Stages during the deployment when the hook should be invoked. Valid values: RECONCILE_SERVICE, PRE_SCALE_UP, POST_SCALE_UP, TEST_TRAFFIC_SHIFT, POST_TEST_TRAFFIC_SHIFT, PRODUCTION_TRAFFIC_SHIFT, POST_PRODUCTION_TRAFFIC_SHIFT.
+status.atProvider.deploymentConfiguration[].lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function.
+status.atProvider.deploymentConfiguration[].linearConfiguration <[]object>	# Configuration block for linear deployment strategy. Required when strategy is set to LINEAR. See below.
+status.atProvider.deploymentConfiguration[].linearConfiguration[].stepBakeTimeInMinutes <string>	# Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
+status.atProvider.deploymentConfiguration[].linearConfiguration[].stepPercent <number>	# Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
+status.atProvider.deploymentConfiguration[].strategy <string>	# Type of deployment strategy. Valid values: ROLLING, BLUE_GREEN, LINEAR, CANARY. Default: ROLLING.
+status.atProvider.deploymentController <[]object>	# Configuration block for deployment controller configuration. See below.
+status.atProvider.deploymentController[].type <string>	# Type of deployment controller. Valid values: CODE_DEPLOY, ECS, EXTERNAL. Default: ECS.
+status.atProvider.deploymentMaximumPercent <number>	# Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the DAEMON scheduling strategy.
+status.atProvider.deploymentMinimumHealthyPercent <number>	# Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
+status.atProvider.desiredCount <number>	# Number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the DAEMON scheduling strategy.
+status.atProvider.enableEcsManagedTags <boolean>	# Whether to enable Amazon ECS managed tags for the tasks within the service.
+status.atProvider.enableExecuteCommand <boolean>	# Whether to enable Amazon ECS Exec for the tasks within the service.
+status.atProvider.forceDelete <boolean>	# Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the REPLICA scheduling strategy.
+status.atProvider.forceNewDeployment <boolean>	# Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., myimage:latest), roll Fargate tasks onto a newer platform version, or immediately deploy ordered_placement_strategy and placement_constraints updates.
+status.atProvider.healthCheckGracePeriodSeconds <number>	# Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
+status.atProvider.iamRole <string>	# ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the awsvpc network mode. If using awsvpc network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
+status.atProvider.id <string>
+status.atProvider.launchType <string>	# Launch type on which to run your service. The valid values are EC2, FARGATE, and EXTERNAL. Defaults to EC2. Conflicts with capacity_provider_strategy.
+status.atProvider.loadBalancer <[]object>	# Configuration block for load balancers. See below.
+status.atProvider.loadBalancer[].advancedConfiguration <[]object>	# Configuration block for Blue/Green deployment settings. Required when using BLUE_GREEN deployment strategy. See below.
+status.atProvider.loadBalancer[].advancedConfiguration[].alternateTargetGroupArn <string>	# ARN of the alternate target group to use for Blue/Green deployments.
+status.atProvider.loadBalancer[].advancedConfiguration[].productionListenerRule <string>	# ARN of the listener rule that routes production traffic.
+status.atProvider.loadBalancer[].advancedConfiguration[].roleArn <string>	# ARN of the IAM role that allows ECS to manage the target groups.
+status.atProvider.loadBalancer[].advancedConfiguration[].testListenerRule <string>	# ARN of the listener rule that routes test traffic.
+status.atProvider.loadBalancer[].containerName <string>	# Name of the container to associate with the load balancer (as it appears in a container definition).
+status.atProvider.loadBalancer[].containerPort <number>	# Port on the container to associate with the load balancer.
+status.atProvider.loadBalancer[].elbName <string>	# Name of the ELB (Classic) to associate with the service.
+status.atProvider.loadBalancer[].targetGroupArn <string>	# ARN of the Load Balancer target group to associate with the service.
+status.atProvider.networkConfiguration <[]object>	# Network configuration for the service. This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. See below.
+status.atProvider.networkConfiguration[].assignPublicIp <boolean>	# Assign a public IP address to the ENI (Fargate launch type only). Valid values are true or false. Default false.
+status.atProvider.networkConfiguration[].securityGroups <[]string>	# Security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
+status.atProvider.networkConfiguration[].subnets <[]string>	# Subnets associated with the task or service.
+status.atProvider.orderedPlacementStrategy <[]object>	# Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless force_new_deployment is enabled. The maximum number of ordered_placement_strategy blocks is 5. See below.
+status.atProvider.orderedPlacementStrategy[].field <string>	# For the spread placement strategy, valid values are instanceId (or host, which has the same effect), or any platform or custom attribute that is applied to a container instance. For the binpack type, valid values are memory and cpu. For the random type, this attribute is not needed. For more information, see Placement Strategy.
+status.atProvider.orderedPlacementStrategy[].type <string>	# Type of placement strategy. Must be one of: binpack, random, or spread
+status.atProvider.placementConstraints <[]object>	# Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless force_new_deployment is enabled. Maximum number of placement_constraints is 10. See below.
+status.atProvider.placementConstraints[].expression <string>	# Cluster Query Language expression to apply to the constraint. Does not need to be specified for the distinctInstance type. For more information, see Cluster Query Language in the Amazon EC2 Container Service Developer Guide.
+status.atProvider.placementConstraints[].type <string>	# Type of constraint. The only valid values at this time are memberOf and distinctInstance.
+status.atProvider.platformVersion <string>	# Platform version on which to run your service. Only applicable for launch_type set to FARGATE. Defaults to LATEST. More information about Fargate platform versions can be found in the AWS ECS User Guide.
+status.atProvider.propagateTags <string>	# Whether to propagate the tags from the task definition or the service to the tasks. The valid values are SERVICE and TASK_DEFINITION.
+status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
+status.atProvider.schedulingStrategy <string>	# Scheduling strategy to use for the service. The valid values are REPLICA and DAEMON. Defaults to REPLICA. Note that Tasks using the Fargate launch type or the .
+status.atProvider.serviceConnectConfiguration <[]object>	# ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. See below.
+status.atProvider.serviceConnectConfiguration[].accessLogConfiguration <[]object>	# Configuration for Service Connect access logs. See below.
+status.atProvider.serviceConnectConfiguration[].accessLogConfiguration[].format <string>	# The format for Service Connect access log output. Valid values: TEXT, JSON. See AWS documentation for format details.
+status.atProvider.serviceConnectConfiguration[].accessLogConfiguration[].includeQueryParameters <string>	# Specifies whether to include query parameters in Service Connect access logs. Valid values: ENABLED, DISABLED. Default: DISABLED. Query parameters may contain sensitive information.
+status.atProvider.serviceConnectConfiguration[].enabled <boolean>	# Whether to use Service Connect with this service.
+status.atProvider.serviceConnectConfiguration[].logConfiguration <[]object>	# Log configuration for the container. See below.
+status.atProvider.serviceConnectConfiguration[].logConfiguration[].logDriver <string>	# Log driver to use for the container.
+status.atProvider.serviceConnectConfiguration[].logConfiguration[].options <map[string]string>	# Configuration options to send to the log driver.
+status.atProvider.serviceConnectConfiguration[].logConfiguration[].secretOption <[]object>	# Secrets to pass to the log configuration. See below.
+status.atProvider.serviceConnectConfiguration[].logConfiguration[].secretOption[].name <string>	# Name of the secret.
+status.atProvider.serviceConnectConfiguration[].logConfiguration[].secretOption[].valueFrom <string>	# Secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+status.atProvider.serviceConnectConfiguration[].namespace <string>	# Namespace name or ARN of the aws_service_discovery_http_namespace for use with Service Connect.
+status.atProvider.serviceConnectConfiguration[].service <[]object>	# List of Service Connect service objects. See below.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias <[]object>	# List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. For each service block where enabled is true, exactly one client_alias with one port should be specified. See below.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].dnsName <string>	# Name that you use in the applications of client tasks to connect to this service.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].port <number>	# Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules <[]object>	# Configuration block for test traffic routing rules. See below.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header <[]object>	# Configuration block for header-based routing rules. See below.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].name <string>	# Name of the HTTP header to match.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].value <[]object>	# Configuration block for header value matching criteria. See below.
+status.atProvider.serviceConnectConfiguration[].service[].clientAlias[].testTrafficRules[].header[].value[].exact <string>	# Exact string value to match in the header.
+status.atProvider.serviceConnectConfiguration[].service[].discoveryName <string>	# Name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
+status.atProvider.serviceConnectConfiguration[].service[].ingressPortOverride <number>	# Port number for the Service Connect proxy to listen on.
+status.atProvider.serviceConnectConfiguration[].service[].portName <string>	# Name of one of the portMappings from all the containers in the task definition of this Amazon ECS service.
+status.atProvider.serviceConnectConfiguration[].service[].timeout <[]object>	# Configuration timeouts for Service Connect
+status.atProvider.serviceConnectConfiguration[].service[].timeout[].idleTimeoutSeconds <number>	# Amount of time in seconds a connection will stay active while idle. A value of 0 can be set to disable idleTimeout.
+status.atProvider.serviceConnectConfiguration[].service[].timeout[].perRequestTimeoutSeconds <number>	# Amount of time in seconds for the upstream to respond with a complete response per request. A value of 0 can be set to disable perRequestTimeout. Can only be set when appProtocol isn't TCP.
+status.atProvider.serviceConnectConfiguration[].service[].tls <[]object>	# Configuration for enabling Transport Layer Security (TLS)
+status.atProvider.serviceConnectConfiguration[].service[].tls[].issuerCertAuthority <[]object>	# Details of the certificate authority which will issue the certificate.
+status.atProvider.serviceConnectConfiguration[].service[].tls[].issuerCertAuthority[].awsPcaAuthorityArn <string>	# ARN of the aws_acmpca_certificate_authority used to create the TLS Certificates.
+status.atProvider.serviceConnectConfiguration[].service[].tls[].kmsKey <string>	# KMS key used to encrypt the private key in Secrets Manager.
+status.atProvider.serviceConnectConfiguration[].service[].tls[].roleArn <string>	# ARN of the IAM Role that's associated with the Service Connect TLS.
+status.atProvider.serviceRegistries <[]object>	# Service discovery registries for the service. The maximum number of service_registries blocks is 1. See below.
+status.atProvider.serviceRegistries[].containerName <string>	# Container name value, already specified in the task definition, to be used for your service discovery service.
+status.atProvider.serviceRegistries[].containerPort <number>	# Port value, already specified in the task definition, to be used for your service discovery service.
+status.atProvider.serviceRegistries[].port <number>	# Port value used if your Service Discovery service specified an SRV record.
+status.atProvider.serviceRegistries[].registryArn <string>	# ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service(aws_service_discovery_service). For more information, see Service
+status.atProvider.sigintRollback <boolean>	# Whether to enable graceful termination of deployments using SIGINT signals. When enabled, allows customers to safely cancel an in-progress deployment and automatically trigger a rollback to the previous stable state. Defaults to false. Only applicable when using ECS deployment controller and requires wait_for_steady_state = true.
+status.atProvider.tags <map[string]string>	# Key-value map of resource tags.
+status.atProvider.tagsAll <map[string]string>	# A map of tags assigned to the resource, including those inherited from the provider default_tags configuration block.
+status.atProvider.taskDefinition <string>	# Family and revision (family:revision) or full ARN of the task definition that you want to run in your service. Required unless using the EXTERNAL deployment controller. If a revision is not specified, the latest ACTIVE revision is used.
+status.atProvider.triggers <map[string]string>	# Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with plantimestamp(). See example above.
+status.atProvider.volumeConfiguration <[]object>	# Configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. See below.
+status.atProvider.volumeConfiguration[].managedEbsVolume <[]object>	# Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. See below.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].encrypted <boolean>	# Whether the volume should be encrypted. Default value is true.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].fileSystemType <string>	# Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are ext3, ext4, xfs. Default value is xfs.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].iops <number>	# Number of I/O operations per second (IOPS).
+status.atProvider.volumeConfiguration[].managedEbsVolume[].kmsKeyId <string>	# Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].roleArn <string>	# The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].sizeInGb <number>	# Size of the volume in GiB. You must specify either a size_in_gb or a snapshot_id. You can optionally specify a volume size greater than or equal to the snapshot size.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].snapshotId <string>	# Snapshot that Amazon ECS uses to create the volume. You must specify either a size_in_gb or a snapshot_id.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications <[]object>	# The tags to apply to the volume. See below.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].propagateTags <string>	# Whether to propagate the tags from the task definition or the service to the tasks. The valid values are SERVICE and TASK_DEFINITION.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].resourceType <string>	# The type of volume resource. Valid values, volume.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].tagSpecifications[].tags <map[string]string>	# Key-value map of resource tags.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].throughput <number>	# Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].volumeInitializationRate <number>	# Volume Initialization Rate in MiB/s. You must also specify a snapshot_id.
+status.atProvider.volumeConfiguration[].managedEbsVolume[].volumeType <string>	# Volume type.
+status.atProvider.volumeConfiguration[].name <string>	# Name of the volume.
+status.atProvider.vpcLatticeConfigurations <[]object>	# The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. See below.
+status.atProvider.vpcLatticeConfigurations[].portName <string>	# The name of the port for a target group associated with the VPC Lattice configuration.
+status.atProvider.vpcLatticeConfigurations[].roleArn <string>	# The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+status.atProvider.vpcLatticeConfigurations[].targetGroupArn <string>	# The full ARN of the target group or groups associated with the VPC Lattice configuration.
+status.atProvider.waitForSteadyState <boolean>	# Default false.
+status.conditions <[]object>	# Conditions of the resource.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
+status.conditions[].message <string>	# A Message containing details about this condition's last transition from one status to another, if any.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
+status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
+status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.
