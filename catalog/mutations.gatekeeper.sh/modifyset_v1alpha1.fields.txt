@@ -1,0 +1,47 @@
+# schema source: OPA Gatekeeper v3.22.2 https://github.com/open-policy-agent/gatekeeper
+apiVersion <string> enum=mutations.gatekeeper.sh/v1alpha1
+kind <string> enum=ModifySet (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# ModifySetSpec defines the desired state of ModifySet.
+spec.applyTo <[]object>	# ApplyTo lists the specific groups, versions and kinds a mutation will be applied to. This is necessary because every mutation implies part of an object schema and object schemas are associated with specific GVKs.
+spec.applyTo[].groups <[]string>
+spec.applyTo[].kinds <[]string>
+spec.applyTo[].versions <[]string>
+spec.location <string>	# Location describes the path to be mutated, for example: `spec.containers[name: main].args`.
+spec.match <object>	# Match allows the user to limit which resources get mutated. Individual match criteria are AND-ed together. An undefined match criteria matches everything.
+spec.match.excludedNamespaces <[]string>	# ExcludedNamespaces is a list of namespace names. If defined, a constraint only applies to resources not in a listed namespace. ExcludedNamespaces also supports a prefix or suffix based glob. For example, `excludedNamespaces: [kube-*]` matches both `kube-system` and `kube-public`, and `excludedNamespaces: [*-system]` matches both `kube-system` and `gatekeeper-system`.
+spec.match.kinds <[]object>
+spec.match.kinds[].apiGroups <[]string>	# APIGroups is the API groups the resources belong to. '*' is all groups. If '*' is present, the length of the slice must be one. Required.
+spec.match.kinds[].kinds <[]string>
+spec.match.labelSelector <object>	# LabelSelector is the combination of two optional fields: `matchLabels` and `matchExpressions`. These two fields provide different methods of selecting or excluding k8s objects based on the label keys and values included in object metadata. All selection expressions from both sections are ANDed to determine if an object meets the cumulative requirements of the selector.
+spec.match.labelSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.match.labelSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.match.labelSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.match.labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.match.labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.match.name <string> pattern="^\\*?[-:a-z0-9]*\\*?$"	# Name is the name of an object. If defined, it will match against objects with the specified name. Name also supports a prefix or suffix glob. For example, `name: pod-*` would match both `pod-a` and `pod-b`, and `name: *-pod` would match both `a-pod` and `b-pod`.
+spec.match.namespaceSelector <object>	# NamespaceSelector is a label selector against an object's containing namespace or the object itself, if the object is a namespace.
+spec.match.namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.match.namespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.match.namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.match.namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.match.namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.match.namespaces <[]string>	# Namespaces is a list of namespace names. If defined, a constraint only applies to resources in a listed namespace. Namespaces also supports a prefix or suffix based glob. For example, `namespaces: [kube-*]` matches both `kube-system` and `kube-public`, and `namespaces: [*-system]` matches both `kube-system` and `gatekeeper-system`.
+spec.match.scope <string>	# Scope determines if cluster-scoped and/or namespaced-scoped resources are matched. Accepts `*`, `Cluster`, or `Namespaced`. (defaults to `*`)
+spec.match.source <string> enum=All|Generated|Original	# Source determines whether generated or original resources are matched. Accepts `Generated`|`Original`|`All` (defaults to `All`). A value of `Generated` will only match generated resources, while `Original` will only match regular resources.
+spec.parameters <object>	# Parameters define the behavior of the mutator.
+spec.parameters.operation <string> enum=merge|prune default="merge"	# Operation describes whether values should be merged in ("merge"), or pruned ("prune"). Default value is "merge"
+spec.parameters.pathTests <[]object>	# PathTests are a series of existence tests that can be checked before a mutation is applied
+spec.parameters.pathTests[].condition <string> enum=MustExist|MustNotExist	# Condition describes whether the path either MustExist or MustNotExist in the original object
+spec.parameters.pathTests[].subPath <string>
+spec.parameters.values <object (free-form)>	# Values describes the values provided to the operation as `values.fromList`.
+status <object>	# ModifySetStatus defines the observed state of ModifySet.
+status.byPod <[]object>
+status.byPod[].enforced <boolean>
+status.byPod[].errors <[]object>
+status.byPod[].errors[].message <string> (required)
+status.byPod[].errors[].type <string>	# Type indicates a specific class of error for use by controller code. If not present, the error should be treated as not matching any known type.
+status.byPod[].id <string>
+status.byPod[].mutatorUID <string>	# Storing the mutator UID allows us to detect drift, such as when a mutator has been recreated after its CRD was deleted out from under it, interrupting the watch
+status.byPod[].observedGeneration <integer> format=int64
+status.byPod[].operations <[]string>
