@@ -1,0 +1,37 @@
+# schema source: Volcano v1.15.0 https://github.com/volcano-sh/volcano
+apiVersion <string> enum=scheduling.volcano.sh/v1beta1
+kind <string> enum=Queue (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# Specification of the desired behavior of the queue. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+spec.affinity <object>	# If specified, the pod owned by the queue will be scheduled with constraint
+spec.affinity.nodeGroupAffinity <object>	# Describes nodegroup affinity scheduling rules for the queue(e.g. putting pods of the queue in the nodes of the nodegroup)
+spec.affinity.nodeGroupAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]string>
+spec.affinity.nodeGroupAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]string>
+spec.affinity.nodeGroupAntiAffinity <object>	# Describes nodegroup anti-affinity scheduling rules for the queue(e.g. avoid putting pods of the queue in the nodes of the nodegroup).
+spec.affinity.nodeGroupAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]string>
+spec.affinity.nodeGroupAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]string>
+spec.capability <object (free-form)>	# ResourceList is a set of (resource name, quantity) pairs.
+spec.dequeueStrategy <string> enum=fifo|traverse default="traverse"	# DequeueStrategy defines the dequeue strategy of queue
+spec.deserved <object (free-form)>	# The amount of resources configured by the user. This part of resource can be shared with other queues and reclaimed back.
+spec.extendClusters <[]object>	# extendCluster indicate the jobs in this Queue will be dispatched to these clusters.
+spec.extendClusters[].capacity <object (free-form)>	# ResourceList is a set of (resource name, quantity) pairs.
+spec.extendClusters[].name <string>
+spec.extendClusters[].weight <integer> format=int32
+spec.guarantee <object>	# Guarantee indicate configuration about resource reservation
+spec.guarantee.resource <object (free-form)>	# The amount of cluster resource reserved for queue. Just set either `percentage` or `resource`
+spec.parent <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Parent define the parent of queue
+spec.priority <integer> format=int32 min=0	# Priority define the priority of queue. Higher values are prioritized for scheduling and considered later during reclamation.
+spec.reclaimable <boolean>	# Reclaimable indicate whether the queue can be reclaimed by other queue
+spec.type <string> max=253	# Type define the type of queue
+spec.weight <integer> default=1 format=int32 min=1 max=65535
+status <object>	# The status of queue.
+status.allocated <object (free-form)>	# Allocated is allocated resources in queue
+status.completed <integer> format=int32 min=0	# The number of `Completed` PodGroup in this queue.
+status.inqueue <integer> format=int32 min=0	# The number of `Inqueue` PodGroup in this queue.
+status.pending <integer> format=int32 min=0	# The number of 'Pending' PodGroup in this queue.
+status.reservation <object>	# Reservation is the profile of resource reservation for queue
+status.reservation.nodes <[]string>	# Nodes are Locked nodes for queue
+status.reservation.resource <object (free-form)>	# Resource is a list of total idle resource in locked nodes.
+status.running <integer> format=int32 min=0	# The number of 'Running' PodGroup in this queue.
+status.state <string> enum=Open|Closed|Closing|Unknown	# State is state of queue
+status.unknown <integer> format=int32 min=0	# The number of 'Unknown' PodGroup in this queue.

@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-69-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C161-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-534%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-71-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C172-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-536%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -131,6 +131,8 @@ for the line grammar.
 | Dapr | [v1.18.1](build/history/dapr.json) | 8 | 2026-07-05 |
 | KServe | [v0.19.0](build/history/kserve.json) | 6 | 2026-07-05 |
 | KServe LLM | [v0.19.0](build/history/kserve-llmisvc.json) | 4 | 2026-07-05 |
+| Volcano | [v1.15.0](build/history/volcano.json) | 9 | 2026-07-05 |
+| Volcano JobFlow | [v1.15.0](build/history/volcano-jobflow.json) | 2 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
