@@ -1,5 +1,11 @@
 import type { Env } from "./index.ts";
 
+/**
+ * Accepts only generated catalog object names:
+ * `<lowercase-group>/<lowercase-kind>_<version>.json|fields.txt`. The build and
+ * `flux-schema` output lowercase group/kind filenames, so uppercase or path
+ * traversal probes are rejected before touching R2.
+ */
 const keyPattern = /^[a-z0-9.-]+\/[a-z0-9.-]+_[a-z0-9]+\.(json|fields\.txt)$/;
 
 function corsHeaders(): HeadersInit {
@@ -23,6 +29,13 @@ function stripHead(req: Request, resp: Response): Response {
   return req.method === "HEAD" ? new Response(null, resp) : resp;
 }
 
+/**
+ * Serves `/catalog/*` objects with public CORS and edge caching. Only GET,
+ * HEAD, and OPTIONS are supported; invalid keys and R2 misses return cacheable
+ * 404s because `flux-schema` performs fall-through probes for alternate schema
+ * names. Cache keys include `CATALOG_VERSION`, so deploys invalidate without
+ * purging old edge entries.
+ */
 export async function serveCatalog(
   req: Request,
   env: Env,
@@ -68,7 +81,7 @@ export async function serveCatalog(
     return stripHead(req, cached);
   }
 
-  const obj = await env.CATALOG.get(key);
+  const obj = await getCatalogObject(env, key);
 
   if (obj === null) {
     const resp = notFound();
@@ -82,7 +95,7 @@ export async function serveCatalog(
       "Content-Type": key.endsWith(".json")
         ? "application/json; charset=utf-8"
         : "text/plain; charset=utf-8",
-      ETag: obj.httpEtag,
+      ETag: obj.etag,
       "Cache-Control": "public, max-age=3600, s-maxage=604800",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Expose-Headers": "ETag",
@@ -91,4 +104,36 @@ export async function serveCatalog(
   ctx.waitUntil(cache.put(cacheKey, resp.clone()));
 
   return stripHead(req, resp);
+}
+
+/**
+ * Loads a catalog object from R2 in production or from `CATALOG_DEV_ORIGIN` in
+ * local development. The dev-origin swap is set by `scripts/dev.ts` so
+ * `make web-run` can exercise `/catalog/*` against the repo-local catalog tree
+ * without Cloudflare credentials.
+ */
+export async function getCatalogObject(
+  env: Env,
+  key: string,
+): Promise<{ body: ReadableStream; etag: string; size: number | null } | null> {
+  if (env.CATALOG_DEV_ORIGIN) {
+    const resp = await fetch(`${env.CATALOG_DEV_ORIGIN.replace(/\/$/, "")}/${key}`);
+    if (!resp.ok || resp.body === null) {
+      return null;
+    }
+    const size = Number(resp.headers.get("Content-Length"));
+    return {
+      body: resp.body,
+      etag: resp.headers.get("ETag") ?? '"dev"',
+      size: Number.isSafeInteger(size) && size >= 0 ? size : null,
+    };
+  }
+  const obj = await env.CATALOG.get(key);
+  return obj === null
+    ? null
+    : {
+        body: obj.body,
+        etag: obj.httpEtag,
+        size: typeof obj.size === "number" ? obj.size : null,
+      };
 }

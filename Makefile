@@ -1,4 +1,4 @@
-.PHONY: deps lint test build web-build web-sync web-deploy
+.PHONY: deps lint test build web-build web-sync web-deploy web-run
 
 deps:
 	cd build && bun install
@@ -20,7 +20,7 @@ RCLONE_VERSION := v1.74.3
 RCLONE := $(or $(shell command -v rclone 2>/dev/null),/tmp/rclone-$(RCLONE_VERSION)-linux-amd64/rclone)
 
 web-build:
-	cd web && bun install --frozen-lockfile && bun run lint && bun test
+	cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build
 
 # Needs RCLONE_CONFIG_R2_* env vars pointing at the R2 bucket's S3 endpoint;
 # the CF build image has no rclone, so fetch the pinned static binary when missing.
@@ -30,3 +30,8 @@ web-sync:
 
 web-deploy:
 	cd web && bunx wrangler deploy --var CATALOG_VERSION:$(WORKERS_CI_COMMIT_SHA)
+
+# Run the Worker fully locally (no Cloudflare credentials): the UI and MCP on
+# http://localhost:8787, with /catalog/* served from the local catalog/ tree.
+web-run:
+	cd web && bun install --frozen-lockfile && bun run build && bun scripts/dev.ts

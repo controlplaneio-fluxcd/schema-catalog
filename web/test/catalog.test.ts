@@ -51,7 +51,7 @@ function createEnv(version = "dev"): { env: Env; getCount: () => number } {
   } as R2Bucket;
 
   return {
-    env: { CATALOG: bucket, CATALOG_VERSION: version },
+    env: { CATALOG: bucket, CATALOG_VERSION: version, ASSETS: { fetch } as unknown as Fetcher },
     getCount: () => getCalls,
   };
 }
