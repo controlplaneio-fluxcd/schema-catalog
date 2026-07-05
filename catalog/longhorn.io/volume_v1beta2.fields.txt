@@ -1,0 +1,96 @@
+# schema source: Longhorn v1.12.0 https://github.com/longhorn/longhorn
+apiVersion <string> enum=longhorn.io/v1beta2
+kind <string> enum=Volume
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# VolumeSpec defines the desired state of the Longhorn volume
+spec.Standby <boolean>
+spec.accessMode <string> enum=rwo|rwop|rwx
+spec.backingImage <string> (immutable)
+spec.backupBlockSize <string> enum=2097152|16777216 format=int64	# BackupBlockSize indicate the block size to create backups. The block size is immutable.
+spec.backupCompressionMethod <string> enum=none|lz4|gzip
+spec.backupTargetName <string>	# The backup target name that the volume will be backed up to or is synced.
+spec.cloneMode <string> enum=|full-copy|linked-clone
+spec.dataEngine <string> enum=v1|v2
+spec.dataLocality <string> enum=disabled|best-effort|strict-local
+spec.dataSource <string>
+spec.disableFrontend <boolean>
+spec.diskSelector <[]string>
+spec.encrypted <boolean> (immutable)
+spec.engineNodeID <string>	# engineNodeID defines the node where the backend engine (target) runs. If empty, falls back to NodeID.
+spec.freezeFilesystemForSnapshot <string> enum=ignored|enabled|disabled	# Setting that freezes the filesystem on the root partition before a snapshot is created.
+spec.fromBackup <string>
+spec.frontend <string> enum=blockdev|iscsi|nvmf|ublk|
+spec.image <string>
+spec.lastAttachedBy <string>
+spec.migratable <boolean>
+spec.migrationNodeID <string>
+spec.nodeID <string>	# nodeID defines the node where the volume is attached (where the frontend initiator runs).
+spec.nodeSelector <[]string>
+spec.numberOfReplicas <integer>
+spec.offlineRebuilding <string> enum=ignored|disabled|enabled	# Specifies whether Longhorn should rebuild replicas while the detached volume is degraded. - ignored: Use the global setting for offline replica rebuilding. - enabled: Enable offline rebuilding for this volume, regardless of the global setting. - disabled: Disable offline rebuilding for this volume, regardless of the global setting
+spec.rebuildConcurrentSyncLimit <integer> min=0 max=5	# RebuildConcurrentSyncLimit controls the maximum number of file synchronization operations that can run concurrently during a single replica rebuild. When set to 0, it means following the global setting.
+spec.replicaAutoBalance <string> enum=ignored|disabled|least-effort|best-effort
+spec.replicaDiskSoftAntiAffinity <string> enum=ignored|enabled|disabled	# Replica disk soft anti affinity of the volume. Set enabled to allow replicas to be scheduled in the same disk.
+spec.replicaRebuildingBandwidthLimit <integer> format=int64 min=0	# ReplicaRebuildingBandwidthLimit controls the maximum write bandwidth (in megabytes per second) allowed on the destination replica during the rebuilding process. Set this value to 0 to disable bandwidth limiting.
+spec.replicaSoftAntiAffinity <string> enum=ignored|enabled|disabled	# Replica soft anti affinity of the volume. Set enabled to allow replicas to be scheduled on the same node.
+spec.replicaZoneSoftAntiAffinity <string> enum=ignored|enabled|disabled	# Replica zone soft anti affinity of the volume. Set enabled to allow replicas to be scheduled in the same zone.
+spec.restoreVolumeRecurringJob <string> enum=ignored|enabled|disabled
+spec.revisionCounterDisabled <boolean>
+spec.size <string> format=int64
+spec.snapshotDataIntegrity <string> enum=ignored|disabled|enabled|fast-check
+spec.snapshotHashingRequestedAt <string>	# SnapshotHashingRequestedAt is the RFC3339 timestamp (e.g., "2026-03-16T10:30:00Z") when an on-demand snapshot checksum calculation is requested. When this value is set and is later than LastOnDemandSnapshotHashingCompleteAt, the system will calculate checksums for all user snapshots. If SnapshotHashingRequestedAt differs from LastOnDemandSnapshotHashingCompleteAt, it indicates that a hashing request is still in progress, and a new request will be rejected.
+spec.snapshotMaxCount <integer>
+spec.snapshotMaxSize <string> format=int64
+spec.staleReplicaTimeout <integer>
+spec.ublkNumberOfQueue <integer>	# ublkNumberOfQueue controls the number of queues for ublk frontend.
+spec.ublkQueueDepth <integer>	# ublkQueueDepth controls the depth of each queue for ublk frontend.
+spec.unmapMarkSnapChainRemoved <string> enum=ignored|disabled|enabled
+status <object>	# VolumeStatus defines the observed state of the Longhorn volume
+status.actualSize <integer> format=int64
+status.cloneStatus <object>
+status.cloneStatus.attemptCount <integer>
+status.cloneStatus.nextAllowedAttemptAt <string>
+status.cloneStatus.snapshot <string>
+status.cloneStatus.sourceVolume <string>
+status.cloneStatus.state <string>
+status.conditions <[]object>
+status.conditions[].lastProbeTime <string>	# Last time we probed the condition.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.currentEngineNodeID <string>	# the node that the engine (target) is currently running on.
+status.currentImage <string>
+status.currentMigrationNodeID <string>	# the node that this volume is currently migrating to
+status.currentNodeID <string>
+status.expansionRequired <boolean>
+status.frontendDisabled <boolean>
+status.isStandby <boolean>
+status.kubernetesStatus <object>
+status.kubernetesStatus.lastPVCRefAt <string>
+status.kubernetesStatus.lastPodRefAt <string>
+status.kubernetesStatus.namespace <string>	# determine if PVC/Namespace is history or not
+status.kubernetesStatus.pvName <string>
+status.kubernetesStatus.pvStatus <string>
+status.kubernetesStatus.pvcName <string>
+status.kubernetesStatus.workloadsStatus <[]object>	# determine if Pod/Workload is history or not
+status.kubernetesStatus.workloadsStatus[].podName <string>
+status.kubernetesStatus.workloadsStatus[].podStatus <string>
+status.kubernetesStatus.workloadsStatus[].workloadName <string>
+status.kubernetesStatus.workloadsStatus[].workloadType <string>
+status.lastAutoSalvagedAt <string>
+status.lastBackup <string>
+status.lastBackupAt <string>
+status.lastDegradedAt <string>
+status.lastOnDemandSnapshotHashingCompleteAt <string>	# LastOnDemandSnapshotHashingCompleteAt is the RFC3339 timestamp (e.g., "2026-03-16T10:30:00Z") when the most recent on-demand snapshot checksum calculation completed. When this value matches SnapshotHashingRequestedAt, the requested on-demand checksum calculation is considered complete.
+status.ownerID <string>
+status.remountRequestedAt <string>
+status.restoreInitiated <boolean>
+status.restoreRequired <boolean>
+status.robustness <string>
+status.shareEndpoint <string>
+status.shareState <string>
+status.state <string>
+status.switchoverState <string>	# SwitchoverState describes the current progress of a v2 engine live switchover. Empty when no switchover is in progress.
