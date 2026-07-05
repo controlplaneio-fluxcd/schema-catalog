@@ -80,6 +80,7 @@ for the line grammar.
 | Vitess Operator | [v2.17.0](build/history/vitess-operator.json) | 2026-07-05 |
 | Strimzi | [0.51.0](build/history/strimzi.json) | 2026-07-05 |
 | NATS | [v0.23.0](build/history/nats.json) | 2026-07-05 |
+| OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
