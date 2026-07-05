@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-67-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C151-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-525%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-69-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C161-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-534%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -129,6 +129,8 @@ for the line grammar.
 | Argo Workflows | [v4.0.6](build/history/argo-workflows.json) | 8 | 2026-07-05 |
 | Argo Events | [v1.9.10](build/history/argo-events.json) | 3 | 2026-07-05 |
 | Dapr | [v1.18.1](build/history/dapr.json) | 8 | 2026-07-05 |
+| KServe | [v0.19.0](build/history/kserve.json) | 6 | 2026-07-05 |
+| KServe LLM | [v0.19.0](build/history/kserve-llmisvc.json) | 4 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
