@@ -82,6 +82,7 @@ for the line grammar.
 | NATS | [v0.23.0](build/history/nats.json) | 2026-07-05 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 2026-07-05 |
 | OPA Gatekeeper | [v3.22.2](build/history/gatekeeper.json) | 2026-07-05 |
+| Envoy Gateway | [v1.8.2](build/history/envoy-gateway.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
