@@ -1,0 +1,138 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=datafactory.azure.com/v20180601
+kind <string> enum=Factory
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.additionalProperties <object (free-form)>
+spec.azureName <string> pattern="^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$" min=3 max=63	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.encryption <object>	# Encryption: Properties to enable Customer Managed Key for the factory.
+spec.encryption.identity <object>	# Identity: User assigned identity to use to authenticate to customer's key vault. If not provided Managed Service Identity will be used.
+spec.encryption.identity.userAssignedIdentityReference <object>	# UserAssignedIdentityReference: The resource id of the user assigned identity to authenticate to customer's key vault.
+spec.encryption.identity.userAssignedIdentityReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.encryption.identity.userAssignedIdentityReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.encryption.identity.userAssignedIdentityReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.encryption.identity.userAssignedIdentityReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.encryption.keyName <string> (required)	# KeyName: The name of the key in Azure Key Vault to use as Customer Managed Key.
+spec.encryption.keyVersion <string>	# KeyVersion: The version of the key used for CMK. If not provided, latest version will be used.
+spec.encryption.vaultBaseUrl <string> (required)	# VaultBaseUrl: The url of the Azure Key Vault used for CMK.
+spec.globalParameters <map[string]object>	# GlobalParameters: List of parameters for factory.
+spec.globalParameters.<key>.type <string> (required) enum=Array|Bool|Float|Int|Object|String	# Type: Global Parameter type.
+spec.globalParameters.<key>.value <object (free-form)> (required)	# Value: Value of parameter.
+spec.identity <object>	# Identity: Managed service identity of the factory.
+spec.identity.type <string> (required) enum=SystemAssigned|SystemAssigned,UserAssigned|UserAssigned	# Type: The identity type.
+spec.identity.userAssignedIdentities <[]object>	# UserAssignedIdentities: List of user assigned identities for the factory.
+spec.identity.userAssignedIdentities[].reference <object>	# ResourceReference represents a resource reference, either to a Kubernetes resource or directly to an Azure resource via ARMID
+spec.identity.userAssignedIdentities[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.identity.userAssignedIdentities[].reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.identity.userAssignedIdentities[].reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.identity.userAssignedIdentities[].reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.location <string>	# Location: The resource location.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a resources.azure.com/ResourceGroup resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.publicNetworkAccess <string> enum=Disabled|Enabled	# PublicNetworkAccess: Whether or not public network access is allowed for the data factory.
+spec.purviewConfiguration <object>	# PurviewConfiguration: Purview information of the factory.
+spec.purviewConfiguration.purviewResourceReference <object>	# PurviewResourceReference: Purview resource id.
+spec.purviewConfiguration.purviewResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.purviewConfiguration.purviewResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.purviewConfiguration.purviewResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.purviewConfiguration.purviewResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.repoConfiguration <object>	# RepoConfiguration: Git repo information of the factory.
+spec.repoConfiguration.factoryGitHubConfiguration <object>	# FactoryGitHub: Mutually exclusive with all other properties
+spec.repoConfiguration.factoryGitHubConfiguration.accountName <string> (required)	# AccountName: Account name.
+spec.repoConfiguration.factoryGitHubConfiguration.clientId <string>	# ClientId: GitHub bring your own app client id.
+spec.repoConfiguration.factoryGitHubConfiguration.clientSecret <object>	# ClientSecret: GitHub bring your own app client secret information.
+spec.repoConfiguration.factoryGitHubConfiguration.clientSecret.byoaSecretAkvUrl <string>	# ByoaSecretAkvUrl: Bring your own app client secret AKV URL.
+spec.repoConfiguration.factoryGitHubConfiguration.clientSecret.byoaSecretName <string>	# ByoaSecretName: Bring your own app client secret name in AKV.
+spec.repoConfiguration.factoryGitHubConfiguration.collaborationBranch <string> (required)	# CollaborationBranch: Collaboration branch.
+spec.repoConfiguration.factoryGitHubConfiguration.disablePublish <boolean>	# DisablePublish: Disable manual publish operation in ADF studio to favor automated publish.
+spec.repoConfiguration.factoryGitHubConfiguration.hostName <string>	# HostName: GitHub Enterprise host name. For example: `https://github.mydomain.com`
+spec.repoConfiguration.factoryGitHubConfiguration.lastCommitId <string>	# LastCommitId: Last commit id.
+spec.repoConfiguration.factoryGitHubConfiguration.repositoryName <string> (required)	# RepositoryName: Repository name.
+spec.repoConfiguration.factoryGitHubConfiguration.rootFolder <string> (required)	# RootFolder: Root folder.
+spec.repoConfiguration.factoryGitHubConfiguration.type <string> (required) enum=FactoryGitHubConfiguration	# Type: Type of repo configuration.
+spec.repoConfiguration.factoryVSTSConfiguration <object>	# FactoryVSTS: Mutually exclusive with all other properties
+spec.repoConfiguration.factoryVSTSConfiguration.accountName <string> (required)	# AccountName: Account name.
+spec.repoConfiguration.factoryVSTSConfiguration.collaborationBranch <string> (required)	# CollaborationBranch: Collaboration branch.
+spec.repoConfiguration.factoryVSTSConfiguration.disablePublish <boolean>	# DisablePublish: Disable manual publish operation in ADF studio to favor automated publish.
+spec.repoConfiguration.factoryVSTSConfiguration.lastCommitId <string>	# LastCommitId: Last commit id.
+spec.repoConfiguration.factoryVSTSConfiguration.projectName <string> (required)	# ProjectName: VSTS project name.
+spec.repoConfiguration.factoryVSTSConfiguration.repositoryName <string> (required)	# RepositoryName: Repository name.
+spec.repoConfiguration.factoryVSTSConfiguration.rootFolder <string> (required)	# RootFolder: Root folder.
+spec.repoConfiguration.factoryVSTSConfiguration.tenantId <string>	# TenantId: VSTS tenant id.
+spec.repoConfiguration.factoryVSTSConfiguration.type <string> (required) enum=FactoryVSTSConfiguration	# Type: Type of repo configuration.
+spec.tags <map[string]string>	# Tags: The resource tags.
+status <object>	# Factory resource type.
+status.additionalProperties <object (free-form)>
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.createTime <string>	# CreateTime: Time the factory was created in ISO8601 format.
+status.eTag <string>	# ETag: Etag identifies change in the resource.
+status.encryption <object>	# Encryption: Properties to enable Customer Managed Key for the factory.
+status.encryption.identity <object>	# Identity: User assigned identity to use to authenticate to customer's key vault. If not provided Managed Service Identity will be used.
+status.encryption.identity.userAssignedIdentity <string>	# UserAssignedIdentity: The resource id of the user assigned identity to authenticate to customer's key vault.
+status.encryption.keyName <string>	# KeyName: The name of the key in Azure Key Vault to use as Customer Managed Key.
+status.encryption.keyVersion <string>	# KeyVersion: The version of the key used for CMK. If not provided, latest version will be used.
+status.encryption.vaultBaseUrl <string>	# VaultBaseUrl: The url of the Azure Key Vault used for CMK.
+status.globalParameters <map[string]object>	# GlobalParameters: List of parameters for factory.
+status.globalParameters.<key>.type <string>	# Type: Global Parameter type.
+status.globalParameters.<key>.value <object (free-form)>	# Value: Value of parameter.
+status.id <string>	# Id: The resource identifier.
+status.identity <object>	# Identity: Managed service identity of the factory.
+status.identity.principalId <string>	# PrincipalId: The principal id of the identity.
+status.identity.tenantId <string>	# TenantId: The client tenant id of the identity.
+status.identity.type <string>	# Type: The identity type.
+status.identity.userAssignedIdentities <object (free-form)>	# UserAssignedIdentities: List of user assigned identities for the factory.
+status.location <string>	# Location: The resource location.
+status.name <string>	# Name: The resource name.
+status.provisioningState <string>	# ProvisioningState: Factory provisioning state, example Succeeded.
+status.publicNetworkAccess <string>	# PublicNetworkAccess: Whether or not public network access is allowed for the data factory.
+status.purviewConfiguration <object>	# PurviewConfiguration: Purview information of the factory.
+status.purviewConfiguration.purviewResourceId <string>	# PurviewResourceId: Purview resource id.
+status.repoConfiguration <object>	# RepoConfiguration: Git repo information of the factory.
+status.repoConfiguration.factoryGitHubConfiguration <object>	# FactoryGitHub: Mutually exclusive with all other properties
+status.repoConfiguration.factoryGitHubConfiguration.accountName <string>	# AccountName: Account name.
+status.repoConfiguration.factoryGitHubConfiguration.clientId <string>	# ClientId: GitHub bring your own app client id.
+status.repoConfiguration.factoryGitHubConfiguration.clientSecret <object>	# ClientSecret: GitHub bring your own app client secret information.
+status.repoConfiguration.factoryGitHubConfiguration.clientSecret.byoaSecretAkvUrl <string>	# ByoaSecretAkvUrl: Bring your own app client secret AKV URL.
+status.repoConfiguration.factoryGitHubConfiguration.clientSecret.byoaSecretName <string>	# ByoaSecretName: Bring your own app client secret name in AKV.
+status.repoConfiguration.factoryGitHubConfiguration.collaborationBranch <string>	# CollaborationBranch: Collaboration branch.
+status.repoConfiguration.factoryGitHubConfiguration.disablePublish <boolean>	# DisablePublish: Disable manual publish operation in ADF studio to favor automated publish.
+status.repoConfiguration.factoryGitHubConfiguration.hostName <string>	# HostName: GitHub Enterprise host name. For example: `https://github.mydomain.com`
+status.repoConfiguration.factoryGitHubConfiguration.lastCommitId <string>	# LastCommitId: Last commit id.
+status.repoConfiguration.factoryGitHubConfiguration.repositoryName <string>	# RepositoryName: Repository name.
+status.repoConfiguration.factoryGitHubConfiguration.rootFolder <string>	# RootFolder: Root folder.
+status.repoConfiguration.factoryGitHubConfiguration.type <string>	# Type: Type of repo configuration.
+status.repoConfiguration.factoryVSTSConfiguration <object>	# FactoryVSTS: Mutually exclusive with all other properties
+status.repoConfiguration.factoryVSTSConfiguration.accountName <string>	# AccountName: Account name.
+status.repoConfiguration.factoryVSTSConfiguration.collaborationBranch <string>	# CollaborationBranch: Collaboration branch.
+status.repoConfiguration.factoryVSTSConfiguration.disablePublish <boolean>	# DisablePublish: Disable manual publish operation in ADF studio to favor automated publish.
+status.repoConfiguration.factoryVSTSConfiguration.lastCommitId <string>	# LastCommitId: Last commit id.
+status.repoConfiguration.factoryVSTSConfiguration.projectName <string>	# ProjectName: VSTS project name.
+status.repoConfiguration.factoryVSTSConfiguration.repositoryName <string>	# RepositoryName: Repository name.
+status.repoConfiguration.factoryVSTSConfiguration.rootFolder <string>	# RootFolder: Root folder.
+status.repoConfiguration.factoryVSTSConfiguration.tenantId <string>	# TenantId: VSTS tenant id.
+status.repoConfiguration.factoryVSTSConfiguration.type <string>	# Type: Type of repo configuration.
+status.tags <map[string]string>	# Tags: The resource tags.
+status.type <string>	# Type: The resource type.
+status.version <string>	# Version: Version of the factory.

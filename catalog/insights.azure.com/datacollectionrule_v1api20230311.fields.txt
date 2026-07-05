@@ -1,0 +1,346 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=insights.azure.com/v1api20230311
+kind <string> enum=DataCollectionRule
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.agentSettings <object>	# AgentSettings: Agent settings used to modify agent behavior on a given host
+spec.agentSettings.logs <[]object>	# Logs: All the settings that are applicable to the logs agent (AMA)
+spec.agentSettings.logs[].name <string> enum=MaxDiskQuotaInMB|UseTimeReceivedForForwardedEvents	# Name: The name of the setting. Must be part of the list of supported settings
+spec.agentSettings.logs[].value <string>	# Value: The value of the setting
+spec.azureName <string>	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.dataCollectionEndpointReference <object>	# DataCollectionEndpointReference: The resource ID of the data collection endpoint that this rule can be used with.
+spec.dataCollectionEndpointReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.dataCollectionEndpointReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.dataCollectionEndpointReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.dataCollectionEndpointReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.dataFlows <[]object>	# DataFlows: The specification of data flows.
+spec.dataFlows[].builtInTransform <string>	# BuiltInTransform: The builtIn transform to transform stream data
+spec.dataFlows[].captureOverflow <boolean>	# CaptureOverflow: Flag to enable overflow column in LA destinations
+spec.dataFlows[].destinations <[]string>	# Destinations: List of destinations for this data flow.
+spec.dataFlows[].outputStream <string>	# OutputStream: The output stream of the transform. Only required if the transform changes data to a different stream.
+spec.dataFlows[].streams <[]string>	# Streams: List of streams for this data flow.
+spec.dataFlows[].transformKql <string>	# TransformKql: The KQL query to transform stream data.
+spec.dataSources <object>	# DataSources: The specification of data sources. This property is optional and can be omitted if the rule is meant to be used via direct calls to the provisioned endpoint.
+spec.dataSources.dataImports <object>	# DataImports: Specifications of pull based data sources
+spec.dataSources.dataImports.eventHub <object>	# EventHub: Definition of Event Hub configuration.
+spec.dataSources.dataImports.eventHub.consumerGroup <string>	# ConsumerGroup: Event Hub consumer group name
+spec.dataSources.dataImports.eventHub.name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.dataImports.eventHub.stream <string>	# Stream: The stream to collect from EventHub
+spec.dataSources.extensions <[]object>	# Extensions: The list of Azure VM extension data source configurations.
+spec.dataSources.extensions[].extensionName <string> (required)	# ExtensionName: The name of the VM extension.
+spec.dataSources.extensions[].extensionSettings <object (free-form)>	# ExtensionSettings: The extension settings. The format is specific for particular extension.
+spec.dataSources.extensions[].inputDataSources <[]string>	# InputDataSources: The list of data sources this extension needs data from.
+spec.dataSources.extensions[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.extensions[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+spec.dataSources.iisLogs <[]object>	# IisLogs: The list of IIS logs source configurations.
+spec.dataSources.iisLogs[].logDirectories <[]string>	# LogDirectories: Absolute paths file location
+spec.dataSources.iisLogs[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.iisLogs[].streams <[]string> (required)	# Streams: IIS streams
+spec.dataSources.iisLogs[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+spec.dataSources.logFiles <[]object>	# LogFiles: The list of Log files source configurations.
+spec.dataSources.logFiles[].filePatterns <[]string> (required)	# FilePatterns: File Patterns where the log files are located
+spec.dataSources.logFiles[].format <string> (required) enum=json|text	# Format: The data format of the log files
+spec.dataSources.logFiles[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.logFiles[].settings <object>	# Settings: The log files specific settings.
+spec.dataSources.logFiles[].settings.text <object>	# Text: Text settings
+spec.dataSources.logFiles[].settings.text.recordStartTimestampFormat <string> (required) enum="dd/MMM/yyyy:HH:mm:ss zzz"|"ddMMyy HH:mm:ss"|"ISO 8601"|"M/D/YYYY HH:MM:SS AM/PM"|"MMM d hh:mm:ss"|"Mon DD, YYYY HH:MM:SS"|"YYYY-MM-DD HH:MM:SS"|"yyMMdd HH:mm:ss"|yyyy-MM-ddTHH:mm:ssK	# RecordStartTimestampFormat: One of the supported timestamp formats
+spec.dataSources.logFiles[].streams <[]string> (required)	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data source
+spec.dataSources.logFiles[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+spec.dataSources.performanceCounters <[]object>	# PerformanceCounters: The list of performance counter data source configurations.
+spec.dataSources.performanceCounters[].counterSpecifiers <[]string>	# CounterSpecifiers: A list of specifier names of the performance counters you want to collect. Use a wildcard (*) to collect a counter for all instances. To get a list of performance counters on Windows, run the command 'typeperf'.
+spec.dataSources.performanceCounters[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.performanceCounters[].samplingFrequencyInSeconds <integer>	# SamplingFrequencyInSeconds: The number of seconds between consecutive counter measurements (samples).
+spec.dataSources.performanceCounters[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+spec.dataSources.performanceCounters[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+spec.dataSources.platformTelemetry <[]object>	# PlatformTelemetry: The list of platform telemetry configurations
+spec.dataSources.platformTelemetry[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.platformTelemetry[].streams <[]string> (required)	# Streams: List of platform telemetry streams to collect
+spec.dataSources.prometheusForwarder <[]object>	# PrometheusForwarder: The list of Prometheus forwarder data source configurations.
+spec.dataSources.prometheusForwarder[].labelIncludeFilter <map[string]string>	# LabelIncludeFilter: The list of label inclusion filters in the form of label "name-value" pairs. Currently only one label is supported: 'microsoft_metrics_include_label'. Label values are matched case-insensitively.
+spec.dataSources.prometheusForwarder[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.prometheusForwarder[].streams <[]string>	# Streams: List of streams that this data source will be sent to.
+spec.dataSources.syslog <[]object>	# Syslog: The list of Syslog data source configurations.
+spec.dataSources.syslog[].facilityNames <[]string>	# FacilityNames: The list of facility names.
+spec.dataSources.syslog[].logLevels <[]string>	# LogLevels: The log levels to collect.
+spec.dataSources.syslog[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.syslog[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+spec.dataSources.syslog[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+spec.dataSources.windowsEventLogs <[]object>	# WindowsEventLogs: The list of Windows Event Log data source configurations.
+spec.dataSources.windowsEventLogs[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.windowsEventLogs[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+spec.dataSources.windowsEventLogs[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+spec.dataSources.windowsEventLogs[].xPathQueries <[]string>	# XPathQueries: A list of Windows Event Log queries in XPATH format.
+spec.dataSources.windowsFirewallLogs <[]object>	# WindowsFirewallLogs: The list of Windows Firewall logs source configurations.
+spec.dataSources.windowsFirewallLogs[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+spec.dataSources.windowsFirewallLogs[].profileFilter <[]string>	# ProfileFilter: Firewall logs profile filter
+spec.dataSources.windowsFirewallLogs[].streams <[]string> (required)	# Streams: Firewall logs streams
+spec.description <string>	# Description: Description of the data collection rule.
+spec.destinations <object>	# Destinations: The specification of destinations.
+spec.destinations.azureDataExplorer <[]object>	# AzureDataExplorer: List of Azure Data Explorer destinations.
+spec.destinations.azureDataExplorer[].databaseName <string>	# DatabaseName: The name of the database to which data will be ingested.
+spec.destinations.azureDataExplorer[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.azureDataExplorer[].resourceReference <object>	# ResourceReference: The ARM resource id of the Adx resource.
+spec.destinations.azureDataExplorer[].resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.azureDataExplorer[].resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.azureDataExplorer[].resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.azureDataExplorer[].resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.azureMonitorMetrics <object>	# AzureMonitorMetrics: Azure Monitor Metrics destination.
+spec.destinations.azureMonitorMetrics.name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.eventHubs <[]object>	# EventHubs: List of Event Hubs destinations.
+spec.destinations.eventHubs[].eventHubResourceReference <object>	# EventHubResourceReference: The resource ID of the event hub.
+spec.destinations.eventHubs[].eventHubResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.eventHubs[].eventHubResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.eventHubs[].eventHubResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.eventHubs[].eventHubResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.eventHubs[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.eventHubsDirect <[]object>	# EventHubsDirect: List of Event Hubs Direct destinations.
+spec.destinations.eventHubsDirect[].eventHubResourceReference <object>	# EventHubResourceReference: The resource ID of the event hub.
+spec.destinations.eventHubsDirect[].eventHubResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.eventHubsDirect[].eventHubResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.eventHubsDirect[].eventHubResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.eventHubsDirect[].eventHubResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.eventHubsDirect[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.logAnalytics <[]object>	# LogAnalytics: List of Log Analytics destinations.
+spec.destinations.logAnalytics[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.logAnalytics[].workspaceResourceReference <object>	# WorkspaceResourceReference: The resource ID of the Log Analytics workspace.
+spec.destinations.logAnalytics[].workspaceResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.logAnalytics[].workspaceResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.logAnalytics[].workspaceResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.logAnalytics[].workspaceResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.microsoftFabric <[]object>	# MicrosoftFabric: List of Microsoft Fabric destinations.
+spec.destinations.microsoftFabric[].artifactId <string>	# ArtifactId: The artifact id of the Microsoft Fabric resource.
+spec.destinations.microsoftFabric[].databaseName <string>	# DatabaseName: The name of the database to which data will be ingested.
+spec.destinations.microsoftFabric[].ingestionUri <string>	# IngestionUri: The ingestion uri of the Microsoft Fabric resource.
+spec.destinations.microsoftFabric[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.microsoftFabric[].tenantId <string>	# TenantId: The tenant id of the Microsoft Fabric resource.
+spec.destinations.monitoringAccounts <[]object>	# MonitoringAccounts: List of monitoring account destinations.
+spec.destinations.monitoringAccounts[].accountResourceReference <object>	# AccountResourceReference: The resource ID of the monitoring account.
+spec.destinations.monitoringAccounts[].accountResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.monitoringAccounts[].accountResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.monitoringAccounts[].accountResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.monitoringAccounts[].accountResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.monitoringAccounts[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.storageAccounts <[]object>	# StorageAccounts: List of storage accounts destinations.
+spec.destinations.storageAccounts[].containerName <string>	# ContainerName: The container name of the Storage Blob.
+spec.destinations.storageAccounts[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.storageAccounts[].storageAccountResourceReference <object>	# StorageAccountResourceReference: The resource ID of the storage account.
+spec.destinations.storageAccounts[].storageAccountResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.storageAccounts[].storageAccountResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.storageAccounts[].storageAccountResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.storageAccounts[].storageAccountResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.storageBlobsDirect <[]object>	# StorageBlobsDirect: List of Storage Blob Direct destinations. To be used only for sending data directly to store from the agent.
+spec.destinations.storageBlobsDirect[].containerName <string>	# ContainerName: The container name of the Storage Blob.
+spec.destinations.storageBlobsDirect[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.storageBlobsDirect[].storageAccountResourceReference <object>	# StorageAccountResourceReference: The resource ID of the storage account.
+spec.destinations.storageBlobsDirect[].storageAccountResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.storageBlobsDirect[].storageAccountResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.storageBlobsDirect[].storageAccountResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.storageBlobsDirect[].storageAccountResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.storageTablesDirect <[]object>	# StorageTablesDirect: List of Storage Table Direct destinations.
+spec.destinations.storageTablesDirect[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+spec.destinations.storageTablesDirect[].storageAccountResourceReference <object>	# StorageAccountResourceReference: The resource ID of the storage account.
+spec.destinations.storageTablesDirect[].storageAccountResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.destinations.storageTablesDirect[].storageAccountResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.destinations.storageTablesDirect[].storageAccountResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.destinations.storageTablesDirect[].storageAccountResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.destinations.storageTablesDirect[].tableName <string>	# TableName: The name of the Storage Table.
+spec.identity <object>	# Identity: Managed service identity of the resource.
+spec.identity.type <string> (required) enum=None|SystemAssigned|SystemAssigned,UserAssigned|UserAssigned	# Type: Type of managed service identity (where both SystemAssigned and UserAssigned types are allowed).
+spec.identity.userAssignedIdentities <[]object>
+spec.identity.userAssignedIdentities[].reference <object>	# ResourceReference represents a resource reference, either to a Kubernetes resource or directly to an Azure resource via ARMID
+spec.identity.userAssignedIdentities[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.identity.userAssignedIdentities[].reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.identity.userAssignedIdentities[].reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.identity.userAssignedIdentities[].reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.kind <string> enum=Linux|Windows	# Kind: The kind of the resource.
+spec.location <string> (required)	# Location: The geo-location where the resource lives.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a resources.azure.com/ResourceGroup resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.references <object>	# References: Defines all the references that may be used in other sections of the DCR
+spec.references.enrichmentData <object>	# EnrichmentData: All the enrichment data sources referenced in data flows
+spec.references.enrichmentData.storageBlobs <[]object>	# StorageBlobs: All the storage blobs used as enrichment data sources
+spec.references.enrichmentData.storageBlobs[].blobUrl <string>	# BlobUrl: Url of the storage blob
+spec.references.enrichmentData.storageBlobs[].lookupType <string> enum=Cidr|String	# LookupType: The type of lookup to perform on the blob
+spec.references.enrichmentData.storageBlobs[].name <string>	# Name: The name of the enrichment data source used as an alias when referencing this data source in data flows
+spec.references.enrichmentData.storageBlobs[].resourceReference <object>	# ResourceReference: Resource Id of the storage account that hosts the blob
+spec.references.enrichmentData.storageBlobs[].resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.references.enrichmentData.storageBlobs[].resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.references.enrichmentData.storageBlobs[].resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.references.enrichmentData.storageBlobs[].resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.streamDeclarations <map[string]object>	# StreamDeclarations: Declaration of custom streams used in this rule.
+spec.streamDeclarations.<key>.columns <[]object>	# Columns: List of columns used by data in this stream.
+spec.streamDeclarations.<key>.columns[].name <string>	# Name: The name of the column.
+spec.streamDeclarations.<key>.columns[].type <string> enum=boolean|datetime|dynamic|int|long|real|string	# Type: The type of the column data.
+spec.tags <map[string]string>	# Tags: Resource tags.
+status <object>	# Definition of ARM tracked top level resource.
+status.agentSettings <object>	# AgentSettings: Agent settings used to modify agent behavior on a given host
+status.agentSettings.logs <[]object>	# Logs: All the settings that are applicable to the logs agent (AMA)
+status.agentSettings.logs[].name <string>	# Name: The name of the setting. Must be part of the list of supported settings
+status.agentSettings.logs[].value <string>	# Value: The value of the setting
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.dataCollectionEndpointId <string>	# DataCollectionEndpointId: The resource ID of the data collection endpoint that this rule can be used with.
+status.dataFlows <[]object>	# DataFlows: The specification of data flows.
+status.dataFlows[].builtInTransform <string>	# BuiltInTransform: The builtIn transform to transform stream data
+status.dataFlows[].captureOverflow <boolean>	# CaptureOverflow: Flag to enable overflow column in LA destinations
+status.dataFlows[].destinations <[]string>	# Destinations: List of destinations for this data flow.
+status.dataFlows[].outputStream <string>	# OutputStream: The output stream of the transform. Only required if the transform changes data to a different stream.
+status.dataFlows[].streams <[]string>	# Streams: List of streams for this data flow.
+status.dataFlows[].transformKql <string>	# TransformKql: The KQL query to transform stream data.
+status.dataSources <object>	# DataSources: The specification of data sources. This property is optional and can be omitted if the rule is meant to be used via direct calls to the provisioned endpoint.
+status.dataSources.dataImports <object>	# DataImports: Specifications of pull based data sources
+status.dataSources.dataImports.eventHub <object>	# EventHub: Definition of Event Hub configuration.
+status.dataSources.dataImports.eventHub.consumerGroup <string>	# ConsumerGroup: Event Hub consumer group name
+status.dataSources.dataImports.eventHub.name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.dataImports.eventHub.stream <string>	# Stream: The stream to collect from EventHub
+status.dataSources.extensions <[]object>	# Extensions: The list of Azure VM extension data source configurations.
+status.dataSources.extensions[].extensionName <string>	# ExtensionName: The name of the VM extension.
+status.dataSources.extensions[].extensionSettings <object (free-form)>	# ExtensionSettings: The extension settings. The format is specific for particular extension.
+status.dataSources.extensions[].inputDataSources <[]string>	# InputDataSources: The list of data sources this extension needs data from.
+status.dataSources.extensions[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.extensions[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+status.dataSources.iisLogs <[]object>	# IisLogs: The list of IIS logs source configurations.
+status.dataSources.iisLogs[].logDirectories <[]string>	# LogDirectories: Absolute paths file location
+status.dataSources.iisLogs[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.iisLogs[].streams <[]string>	# Streams: IIS streams
+status.dataSources.iisLogs[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+status.dataSources.logFiles <[]object>	# LogFiles: The list of Log files source configurations.
+status.dataSources.logFiles[].filePatterns <[]string>	# FilePatterns: File Patterns where the log files are located
+status.dataSources.logFiles[].format <string>	# Format: The data format of the log files
+status.dataSources.logFiles[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.logFiles[].settings <object>	# Settings: The log files specific settings.
+status.dataSources.logFiles[].settings.text <object>	# Text: Text settings
+status.dataSources.logFiles[].settings.text.recordStartTimestampFormat <string>	# RecordStartTimestampFormat: One of the supported timestamp formats
+status.dataSources.logFiles[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data source
+status.dataSources.logFiles[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+status.dataSources.performanceCounters <[]object>	# PerformanceCounters: The list of performance counter data source configurations.
+status.dataSources.performanceCounters[].counterSpecifiers <[]string>	# CounterSpecifiers: A list of specifier names of the performance counters you want to collect. Use a wildcard (*) to collect a counter for all instances. To get a list of performance counters on Windows, run the command 'typeperf'.
+status.dataSources.performanceCounters[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.performanceCounters[].samplingFrequencyInSeconds <integer>	# SamplingFrequencyInSeconds: The number of seconds between consecutive counter measurements (samples).
+status.dataSources.performanceCounters[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+status.dataSources.performanceCounters[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+status.dataSources.platformTelemetry <[]object>	# PlatformTelemetry: The list of platform telemetry configurations
+status.dataSources.platformTelemetry[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.platformTelemetry[].streams <[]string>	# Streams: List of platform telemetry streams to collect
+status.dataSources.prometheusForwarder <[]object>	# PrometheusForwarder: The list of Prometheus forwarder data source configurations.
+status.dataSources.prometheusForwarder[].labelIncludeFilter <map[string]string>	# LabelIncludeFilter: The list of label inclusion filters in the form of label "name-value" pairs. Currently only one label is supported: 'microsoft_metrics_include_label'. Label values are matched case-insensitively.
+status.dataSources.prometheusForwarder[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.prometheusForwarder[].streams <[]string>	# Streams: List of streams that this data source will be sent to.
+status.dataSources.syslog <[]object>	# Syslog: The list of Syslog data source configurations.
+status.dataSources.syslog[].facilityNames <[]string>	# FacilityNames: The list of facility names.
+status.dataSources.syslog[].logLevels <[]string>	# LogLevels: The log levels to collect.
+status.dataSources.syslog[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.syslog[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+status.dataSources.syslog[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+status.dataSources.windowsEventLogs <[]object>	# WindowsEventLogs: The list of Windows Event Log data source configurations.
+status.dataSources.windowsEventLogs[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.windowsEventLogs[].streams <[]string>	# Streams: List of streams that this data source will be sent to. A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.
+status.dataSources.windowsEventLogs[].transformKql <string>	# TransformKql: The KQL query to transform the data source.
+status.dataSources.windowsEventLogs[].xPathQueries <[]string>	# XPathQueries: A list of Windows Event Log queries in XPATH format.
+status.dataSources.windowsFirewallLogs <[]object>	# WindowsFirewallLogs: The list of Windows Firewall logs source configurations.
+status.dataSources.windowsFirewallLogs[].name <string>	# Name: A friendly name for the data source. This name should be unique across all data sources (regardless of type) within the data collection rule.
+status.dataSources.windowsFirewallLogs[].profileFilter <[]string>	# ProfileFilter: Firewall logs profile filter
+status.dataSources.windowsFirewallLogs[].streams <[]string>	# Streams: Firewall logs streams
+status.description <string>	# Description: Description of the data collection rule.
+status.destinations <object>	# Destinations: The specification of destinations.
+status.destinations.azureDataExplorer <[]object>	# AzureDataExplorer: List of Azure Data Explorer destinations.
+status.destinations.azureDataExplorer[].databaseName <string>	# DatabaseName: The name of the database to which data will be ingested.
+status.destinations.azureDataExplorer[].ingestionUri <string>	# IngestionUri: The ingestion uri of the Adx resource.
+status.destinations.azureDataExplorer[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.azureDataExplorer[].resourceId <string>	# ResourceId: The ARM resource id of the Adx resource.
+status.destinations.azureMonitorMetrics <object>	# AzureMonitorMetrics: Azure Monitor Metrics destination.
+status.destinations.azureMonitorMetrics.name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.eventHubs <[]object>	# EventHubs: List of Event Hubs destinations.
+status.destinations.eventHubs[].eventHubResourceId <string>	# EventHubResourceId: The resource ID of the event hub.
+status.destinations.eventHubs[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.eventHubsDirect <[]object>	# EventHubsDirect: List of Event Hubs Direct destinations.
+status.destinations.eventHubsDirect[].eventHubResourceId <string>	# EventHubResourceId: The resource ID of the event hub.
+status.destinations.eventHubsDirect[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.logAnalytics <[]object>	# LogAnalytics: List of Log Analytics destinations.
+status.destinations.logAnalytics[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.logAnalytics[].workspaceId <string>	# WorkspaceId: The Customer ID of the Log Analytics workspace.
+status.destinations.logAnalytics[].workspaceResourceId <string>	# WorkspaceResourceId: The resource ID of the Log Analytics workspace.
+status.destinations.microsoftFabric <[]object>	# MicrosoftFabric: List of Microsoft Fabric destinations.
+status.destinations.microsoftFabric[].artifactId <string>	# ArtifactId: The artifact id of the Microsoft Fabric resource.
+status.destinations.microsoftFabric[].databaseName <string>	# DatabaseName: The name of the database to which data will be ingested.
+status.destinations.microsoftFabric[].ingestionUri <string>	# IngestionUri: The ingestion uri of the Microsoft Fabric resource.
+status.destinations.microsoftFabric[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.microsoftFabric[].tenantId <string>	# TenantId: The tenant id of the Microsoft Fabric resource.
+status.destinations.monitoringAccounts <[]object>	# MonitoringAccounts: List of monitoring account destinations.
+status.destinations.monitoringAccounts[].accountId <string>	# AccountId: The immutable ID of the account.
+status.destinations.monitoringAccounts[].accountResourceId <string>	# AccountResourceId: The resource ID of the monitoring account.
+status.destinations.monitoringAccounts[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.storageAccounts <[]object>	# StorageAccounts: List of storage accounts destinations.
+status.destinations.storageAccounts[].containerName <string>	# ContainerName: The container name of the Storage Blob.
+status.destinations.storageAccounts[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.storageAccounts[].storageAccountResourceId <string>	# StorageAccountResourceId: The resource ID of the storage account.
+status.destinations.storageBlobsDirect <[]object>	# StorageBlobsDirect: List of Storage Blob Direct destinations. To be used only for sending data directly to store from the agent.
+status.destinations.storageBlobsDirect[].containerName <string>	# ContainerName: The container name of the Storage Blob.
+status.destinations.storageBlobsDirect[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.storageBlobsDirect[].storageAccountResourceId <string>	# StorageAccountResourceId: The resource ID of the storage account.
+status.destinations.storageTablesDirect <[]object>	# StorageTablesDirect: List of Storage Table Direct destinations.
+status.destinations.storageTablesDirect[].name <string>	# Name: A friendly name for the destination. This name should be unique across all destinations (regardless of type) within the data collection rule.
+status.destinations.storageTablesDirect[].storageAccountResourceId <string>	# StorageAccountResourceId: The resource ID of the storage account.
+status.destinations.storageTablesDirect[].tableName <string>	# TableName: The name of the Storage Table.
+status.endpoints <object>	# Endpoints: Defines the ingestion endpoints to send data to via this rule.
+status.endpoints.logsIngestion <string>	# LogsIngestion: The ingestion endpoint for logs
+status.endpoints.metricsIngestion <string>	# MetricsIngestion: The ingestion endpoint for metrics
+status.etag <string>	# Etag: Resource entity tag (ETag).
+status.id <string>	# Id: Fully qualified ID of the resource.
+status.identity <object>	# Identity: Managed service identity of the resource.
+status.identity.principalId <string>	# PrincipalId: The service principal ID of the system assigned identity. This property will only be provided for a system assigned identity.
+status.identity.tenantId <string>	# TenantId: The tenant ID of the system assigned identity. This property will only be provided for a system assigned identity.
+status.identity.type <string>	# Type: Type of managed service identity (where both SystemAssigned and UserAssigned types are allowed).
+status.identity.userAssignedIdentities <map[string]object>
+status.identity.userAssignedIdentities.<key>.clientId <string>	# ClientId: The client ID of the assigned identity.
+status.identity.userAssignedIdentities.<key>.principalId <string>	# PrincipalId: The principal ID of the assigned identity.
+status.immutableId <string>	# ImmutableId: The immutable ID of this data collection rule. This property is READ-ONLY.
+status.kind <string>	# Kind: The kind of the resource.
+status.location <string>	# Location: The geo-location where the resource lives.
+status.metadata <object>	# Metadata: Metadata about the resource
+status.metadata.provisionedBy <string>	# ProvisionedBy: Azure offering managing this resource on-behalf-of customer.
+status.metadata.provisionedByImmutableId <string>	# ProvisionedByImmutableId: Immutable Id of azure offering managing this resource on-behalf-of customer.
+status.metadata.provisionedByResourceId <string>	# ProvisionedByResourceId: Resource Id of azure offering managing this resource on-behalf-of customer.
+status.name <string>	# Name: The name of the resource.
+status.provisioningState <string>	# ProvisioningState: The resource provisioning state.
+status.references <object>	# References: Defines all the references that may be used in other sections of the DCR
+status.references.enrichmentData <object>	# EnrichmentData: All the enrichment data sources referenced in data flows
+status.references.enrichmentData.storageBlobs <[]object>	# StorageBlobs: All the storage blobs used as enrichment data sources
+status.references.enrichmentData.storageBlobs[].blobUrl <string>	# BlobUrl: Url of the storage blob
+status.references.enrichmentData.storageBlobs[].lookupType <string>	# LookupType: The type of lookup to perform on the blob
+status.references.enrichmentData.storageBlobs[].name <string>	# Name: The name of the enrichment data source used as an alias when referencing this data source in data flows
+status.references.enrichmentData.storageBlobs[].resourceId <string>	# ResourceId: Resource Id of the storage account that hosts the blob
+status.streamDeclarations <map[string]object>	# StreamDeclarations: Declaration of custom streams used in this rule.
+status.streamDeclarations.<key>.columns <[]object>	# Columns: List of columns used by data in this stream.
+status.streamDeclarations.<key>.columns[].name <string>	# Name: The name of the column.
+status.streamDeclarations.<key>.columns[].type <string>	# Type: The type of the column data.
+status.systemData <object>	# SystemData: Metadata pertaining to creation and last modification of the resource.
+status.systemData.createdAt <string>	# CreatedAt: The timestamp of resource creation (UTC).
+status.systemData.createdBy <string>	# CreatedBy: The identity that created the resource.
+status.systemData.createdByType <string>	# CreatedByType: The type of identity that created the resource.
+status.systemData.lastModifiedAt <string>	# LastModifiedAt: The timestamp of resource last modification (UTC)
+status.systemData.lastModifiedBy <string>	# LastModifiedBy: The identity that last modified the resource.
+status.systemData.lastModifiedByType <string>	# LastModifiedByType: The type of identity that last modified the resource.
+status.tags <map[string]string>	# Tags: Resource tags.
+status.type <string>	# Type: The type of the resource.

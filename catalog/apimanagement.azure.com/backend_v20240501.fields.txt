@@ -1,0 +1,144 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=apimanagement.azure.com/v20240501
+kind <string> enum=Backend
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.additionalProperties <any>
+spec.azureName <string> min=1 max=80	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.circuitBreaker <object>	# CircuitBreaker: Backend Circuit Breaker Configuration
+spec.circuitBreaker.rules <[]object> max=15	# Rules: The rules for tripping the backend.
+spec.circuitBreaker.rules[].acceptRetryAfter <boolean>	# AcceptRetryAfter: flag to accept Retry-After header from the backend.
+spec.circuitBreaker.rules[].failureCondition <object>	# FailureCondition: The conditions for tripping the circuit breaker.
+spec.circuitBreaker.rules[].failureCondition.count <integer>	# Count: The threshold for opening the circuit.
+spec.circuitBreaker.rules[].failureCondition.errorReasons <[]string> max=10	# ErrorReasons: The error reasons which are considered as failure.
+spec.circuitBreaker.rules[].failureCondition.interval <string>	# Interval: The interval during which the failures are counted.
+spec.circuitBreaker.rules[].failureCondition.percentage <integer>	# Percentage: The threshold for opening the circuit.
+spec.circuitBreaker.rules[].failureCondition.statusCodeRanges <[]object> max=10	# StatusCodeRanges: The status code ranges which are considered as failure.
+spec.circuitBreaker.rules[].failureCondition.statusCodeRanges[].max <integer> min=200 max=599	# Max: The maximum http status code.
+spec.circuitBreaker.rules[].failureCondition.statusCodeRanges[].min <integer> min=200 max=599	# Min: The minimum http status code.
+spec.circuitBreaker.rules[].name <string>	# Name: The rule name.
+spec.circuitBreaker.rules[].tripDuration <string>	# TripDuration: The duration for which the circuit will be tripped.
+spec.credentials <object>	# Credentials: Backend Credentials Contract Properties
+spec.credentials.authorization <object>	# Authorization: Authorization header authentication
+spec.credentials.authorization.parameter <string> (required) min=1 max=300	# Parameter: Authentication Parameter value.
+spec.credentials.authorization.scheme <string> (required) min=1 max=100	# Scheme: Authentication Scheme name.
+spec.credentials.certificate <[]string> max=32	# Certificate: List of Client Certificate Thumbprints. Will be ignored if certificatesIds are provided.
+spec.credentials.certificateIds <[]string> max=32	# CertificateIds: List of Client Certificate Ids.
+spec.credentials.header <map[string]array>	# Header: Header Parameter description.
+spec.credentials.query <map[string]array>	# Query: Query Parameter description.
+spec.description <string> min=1 max=2000	# Description: Backend Description.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a apimanagement.azure.com/Service resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.pool <object>	# Pool: Backend pool information
+spec.pool.services <[]object> min=1	# Services: The list of backend entities belonging to a pool.
+spec.pool.services[].priority <integer> min=0 max=100	# Priority: The priority of the backend entity in the backend pool. Must be between 0 and 100. It can be also null if the value not specified.
+spec.pool.services[].reference <object> (required)	# Reference: The unique ARM id of the backend entity. The ARM id should refer to an already existing backend entity.
+spec.pool.services[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.pool.services[].reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.pool.services[].reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.pool.services[].reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.pool.services[].weight <integer> min=0 max=100	# Weight: The weight of the backend entity in the backend pool. Must be between 0 and 100. It can be also null if the value not specified.
+spec.properties <object>	# Properties: Backend Properties contract
+spec.properties.serviceFabricCluster <object>	# ServiceFabricCluster: Backend Service Fabric Cluster Properties
+spec.properties.serviceFabricCluster.clientCertificateId <string>	# ClientCertificateId: The client certificate id for the management endpoint.
+spec.properties.serviceFabricCluster.clientCertificatethumbprint <string>	# ClientCertificatethumbprint: The client certificate thumbprint for the management endpoint. Will be ignored if certificatesIds are provided
+spec.properties.serviceFabricCluster.managementEndpoints <[]string> (required)	# ManagementEndpoints: The cluster management endpoint.
+spec.properties.serviceFabricCluster.maxPartitionResolutionRetries <integer>	# MaxPartitionResolutionRetries: Maximum number of retries while attempting resolve the partition.
+spec.properties.serviceFabricCluster.serverCertificateThumbprints <[]string>	# ServerCertificateThumbprints: Thumbprints of certificates cluster management service uses for tls communication
+spec.properties.serviceFabricCluster.serverX509Names <[]object>	# ServerX509Names: Server X509 Certificate Names Collection
+spec.properties.serviceFabricCluster.serverX509Names[].issuerCertificateThumbprint <string>	# IssuerCertificateThumbprint: Thumbprint for the Issuer of the Certificate.
+spec.properties.serviceFabricCluster.serverX509Names[].name <string>	# Name: Common Name of the Certificate.
+spec.protocol <string> enum=http|soap	# Protocol: Backend communication protocol. Required when backend type is 'Single'.
+spec.proxy <object>	# Proxy: Backend gateway Contract Properties
+spec.proxy.password <object>	# Password: Password to connect to the WebProxy Server
+spec.proxy.password.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.proxy.password.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.proxy.url <string> (required) min=1 max=2000	# Url: WebProxy Server AbsoluteUri property which includes the entire URI stored in the Uri instance, including all fragments and query strings.
+spec.proxy.username <string>	# Username: Username to connect to the WebProxy server
+spec.resourceReference <object>	# ResourceReference: Management Uri of the Resource in External System. This URL can be the Arm Resource Id of Logic Apps, Function Apps or API Apps.
+spec.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.title <string> min=1 max=300	# Title: Backend Title.
+spec.tls <object>	# Tls: Backend TLS Properties
+spec.tls.validateCertificateChain <boolean>	# ValidateCertificateChain: Flag indicating whether SSL certificate chain validation should be done when using self-signed certificates for this backend host.
+spec.tls.validateCertificateName <boolean>	# ValidateCertificateName: Flag indicating whether SSL certificate name validation should be done when using self-signed certificates for this backend host.
+spec.type <string> enum=Pool|Single	# Type: Type of the backend. A backend can be either Single or Pool.
+spec.url <string> min=1 max=2000	# Url: Runtime Url of the Backend. Required when backend type is 'Single'.
+status <object>
+status.additionalProperties <any>
+status.circuitBreaker <object>	# CircuitBreaker: Backend Circuit Breaker Configuration
+status.circuitBreaker.rules <[]object>	# Rules: The rules for tripping the backend.
+status.circuitBreaker.rules[].acceptRetryAfter <boolean>	# AcceptRetryAfter: flag to accept Retry-After header from the backend.
+status.circuitBreaker.rules[].failureCondition <object>	# FailureCondition: The conditions for tripping the circuit breaker.
+status.circuitBreaker.rules[].failureCondition.count <integer>	# Count: The threshold for opening the circuit.
+status.circuitBreaker.rules[].failureCondition.errorReasons <[]string> max=10	# ErrorReasons: The error reasons which are considered as failure.
+status.circuitBreaker.rules[].failureCondition.interval <string>	# Interval: The interval during which the failures are counted.
+status.circuitBreaker.rules[].failureCondition.percentage <integer>	# Percentage: The threshold for opening the circuit.
+status.circuitBreaker.rules[].failureCondition.statusCodeRanges <[]object> max=10	# StatusCodeRanges: The status code ranges which are considered as failure.
+status.circuitBreaker.rules[].failureCondition.statusCodeRanges[].max <integer> min=200 max=599	# Max: The maximum http status code.
+status.circuitBreaker.rules[].failureCondition.statusCodeRanges[].min <integer> min=200 max=599	# Min: The minimum http status code.
+status.circuitBreaker.rules[].name <string>	# Name: The rule name.
+status.circuitBreaker.rules[].tripDuration <string>	# TripDuration: The duration for which the circuit will be tripped.
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.credentials <object>	# Credentials: Backend Credentials Contract Properties
+status.credentials.authorization <object>	# Authorization: Authorization header authentication
+status.credentials.authorization.parameter <string>	# Parameter: Authentication Parameter value.
+status.credentials.authorization.scheme <string>	# Scheme: Authentication Scheme name.
+status.credentials.certificate <[]string>	# Certificate: List of Client Certificate Thumbprints. Will be ignored if certificatesIds are provided.
+status.credentials.certificateIds <[]string>	# CertificateIds: List of Client Certificate Ids.
+status.credentials.header <map[string]array>	# Header: Header Parameter description.
+status.credentials.query <map[string]array>	# Query: Query Parameter description.
+status.description <string>	# Description: Backend Description.
+status.id <string>	# Id: Fully qualified resource ID for the resource. Ex - /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}
+status.name <string>	# Name: The name of the resource
+status.pool <object>	# Pool: Backend pool information
+status.pool.services <[]object>	# Services: The list of backend entities belonging to a pool.
+status.pool.services[].id <string> (required)	# Id: The unique ARM id of the backend entity. The ARM id should refer to an already existing backend entity.
+status.pool.services[].priority <integer> min=0 max=100	# Priority: The priority of the backend entity in the backend pool. Must be between 0 and 100. It can be also null if the value not specified.
+status.pool.services[].weight <integer> min=0 max=100	# Weight: The weight of the backend entity in the backend pool. Must be between 0 and 100. It can be also null if the value not specified.
+status.properties <object>	# Properties: Backend Properties contract
+status.properties.serviceFabricCluster <object>	# ServiceFabricCluster: Backend Service Fabric Cluster Properties
+status.properties.serviceFabricCluster.clientCertificateId <string>	# ClientCertificateId: The client certificate id for the management endpoint.
+status.properties.serviceFabricCluster.clientCertificatethumbprint <string>	# ClientCertificatethumbprint: The client certificate thumbprint for the management endpoint. Will be ignored if certificatesIds are provided
+status.properties.serviceFabricCluster.managementEndpoints <[]string>	# ManagementEndpoints: The cluster management endpoint.
+status.properties.serviceFabricCluster.maxPartitionResolutionRetries <integer>	# MaxPartitionResolutionRetries: Maximum number of retries while attempting resolve the partition.
+status.properties.serviceFabricCluster.serverCertificateThumbprints <[]string>	# ServerCertificateThumbprints: Thumbprints of certificates cluster management service uses for tls communication
+status.properties.serviceFabricCluster.serverX509Names <[]object>	# ServerX509Names: Server X509 Certificate Names Collection
+status.properties.serviceFabricCluster.serverX509Names[].issuerCertificateThumbprint <string>	# IssuerCertificateThumbprint: Thumbprint for the Issuer of the Certificate.
+status.properties.serviceFabricCluster.serverX509Names[].name <string>	# Name: Common Name of the Certificate.
+status.properties_type <string>	# PropertiesType: Type of the backend. A backend can be either Single or Pool.
+status.protocol <string>	# Protocol: Backend communication protocol. Required when backend type is 'Single'.
+status.proxy <object>	# Proxy: Backend gateway Contract Properties
+status.proxy.url <string>	# Url: WebProxy Server AbsoluteUri property which includes the entire URI stored in the Uri instance, including all fragments and query strings.
+status.proxy.username <string>	# Username: Username to connect to the WebProxy server
+status.resourceId <string>	# ResourceId: Management Uri of the Resource in External System. This URL can be the Arm Resource Id of Logic Apps, Function Apps or API Apps.
+status.title <string>	# Title: Backend Title.
+status.tls <object>	# Tls: Backend TLS Properties
+status.tls.validateCertificateChain <boolean>	# ValidateCertificateChain: Flag indicating whether SSL certificate chain validation should be done when using self-signed certificates for this backend host.
+status.tls.validateCertificateName <boolean>	# ValidateCertificateName: Flag indicating whether SSL certificate name validation should be done when using self-signed certificates for this backend host.
+status.type <string>	# Type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or "Microsoft.Storage/storageAccounts"
+status.url <string>	# Url: Runtime Url of the Backend. Required when backend type is 'Single'.

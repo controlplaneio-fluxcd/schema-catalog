@@ -1,0 +1,182 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=containerservice.azure.com/v1api20250301
+kind <string> enum=FleetsUpdateRun
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.azureName <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=50	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.managedClusterUpdate <object> (required)	# ManagedClusterUpdate: The update to be applied to all clusters in the UpdateRun. The managedClusterUpdate can be modified until the run is started.
+spec.managedClusterUpdate.nodeImageSelection <object>	# NodeImageSelection: The node image upgrade to be applied to the target nodes in update run.
+spec.managedClusterUpdate.nodeImageSelection.type <string> (required) enum=Consistent|Custom|Latest	# Type: The node image upgrade type.
+spec.managedClusterUpdate.upgrade <object> (required)	# Upgrade: The upgrade to apply to the ManagedClusters.
+spec.managedClusterUpdate.upgrade.kubernetesVersion <string>	# KubernetesVersion: The Kubernetes version to upgrade the member clusters to.
+spec.managedClusterUpdate.upgrade.type <string> (required) enum=ControlPlaneOnly|Full|NodeImageOnly	# Type: ManagedClusterUpgradeType is the type of upgrade to be applied.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a containerservice.azure.com/Fleet resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.strategy <object>	# Strategy: The strategy defines the order in which the clusters will be updated. If not set, all members will be updated sequentially. The UpdateRun status will show a single UpdateStage and a single UpdateGroup targeting all members. The strategy of the UpdateRun can be modified until the run is started.
+spec.strategy.stages <[]object> (required)	# Stages: The list of stages that compose this update run. Min size: 1.
+spec.strategy.stages[].afterStageWaitInSeconds <integer>	# AfterStageWaitInSeconds: The time in seconds to wait at the end of this stage before starting the next one. Defaults to 0 seconds if unspecified.
+spec.strategy.stages[].groups <[]object>	# Groups: Defines the groups to be executed in parallel in this stage. Duplicate groups are not allowed. Min size: 1.
+spec.strategy.stages[].groups[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=50	# Name: Name of the group. It must match a group name of an existing fleet member.
+spec.strategy.stages[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=50	# Name: The name of the stage. Must be unique within the UpdateRun.
+spec.updateStrategyReference <object>	# UpdateStrategyReference: The resource id of the FleetUpdateStrategy resource to reference. When creating a new run, there are three ways to define a strategy for the run: 1. Define a new strategy in place: Set the "strategy" field. 2. Use an existing strategy: Set the "updateStrategyId" field. (since 2023-08-15-preview) 3. Use the default strategy to update all the members one by one: Leave both "updateStrategyId" and "strategy" unset. (since 2023-08-15-preview) Setting both "updateStrategyId" and "strategy" is invalid. UpdateRuns created by "updateStrategyId" snapshot the referenced UpdateStrategy at the time of creation and store it in the "strategy" field. Subsequent changes to the referenced FleetUpdateStrategy resource do not propagate. UpdateRunStrategy changes can be made directly on the "strategy" field before launching the UpdateRun.
+spec.updateStrategyReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.updateStrategyReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.updateStrategyReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.updateStrategyReference.name <string>	# Name is the Kubernetes name of the resource.
+status <object>
+status.autoUpgradeProfileId <string>	# AutoUpgradeProfileId: AutoUpgradeProfileId is the id of an auto upgrade profile resource.
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.eTag <string>	# ETag: If eTag is provided in the response body, it may also be provided as a header per the normal etag convention. Entity tags are used for comparing two or more entities from the same requested resource. HTTP/1.1 uses entity tags in the etag (section 14.19), If-Match (section 14.24), If-None-Match (section 14.26), and If-Range (section 14.27) header fields.
+status.id <string>	# Id: Fully qualified resource ID for the resource. E.g. "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}"
+status.managedClusterUpdate <object>	# ManagedClusterUpdate: The update to be applied to all clusters in the UpdateRun. The managedClusterUpdate can be modified until the run is started.
+status.managedClusterUpdate.nodeImageSelection <object>	# NodeImageSelection: The node image upgrade to be applied to the target nodes in update run.
+status.managedClusterUpdate.nodeImageSelection.customNodeImageVersions <[]object>	# CustomNodeImageVersions: Custom node image versions to upgrade the nodes to. This field is required if node image selection type is Custom. Otherwise, it must be empty. For each node image family (e.g., 'AKSUbuntu-1804gen2containerd'), this field can contain at most one version (e.g., only one of 'AKSUbuntu-1804gen2containerd-2023.01.12' or 'AKSUbuntu-1804gen2containerd-2023.02.12', not both). If the nodes belong to a family without a matching image version in this field, they are not upgraded.
+status.managedClusterUpdate.nodeImageSelection.customNodeImageVersions[].version <string>	# Version: The image version to upgrade the nodes to (e.g., 'AKSUbuntu-1804gen2containerd-2022.12.13').
+status.managedClusterUpdate.nodeImageSelection.type <string>	# Type: The node image upgrade type.
+status.managedClusterUpdate.upgrade <object>	# Upgrade: The upgrade to apply to the ManagedClusters.
+status.managedClusterUpdate.upgrade.kubernetesVersion <string>	# KubernetesVersion: The Kubernetes version to upgrade the member clusters to.
+status.managedClusterUpdate.upgrade.type <string>	# Type: ManagedClusterUpgradeType is the type of upgrade to be applied.
+status.name <string>	# Name: The name of the resource
+status.provisioningState <string>	# ProvisioningState: The provisioning state of the UpdateRun resource.
+status.status <object>	# Status: The status of the UpdateRun.
+status.status.nodeImageSelection <object>	# NodeImageSelection: The node image upgrade specs for the update run. It is only set in update run when `NodeImageSelection.type` is `Consistent`.
+status.status.nodeImageSelection.selectedNodeImageVersions <[]object>	# SelectedNodeImageVersions: The image versions to upgrade the nodes to.
+status.status.nodeImageSelection.selectedNodeImageVersions[].version <string>	# Version: The image version to upgrade the nodes to (e.g., 'AKSUbuntu-1804gen2containerd-2022.12.13').
+status.status.stages <[]object>	# Stages: The stages composing an update run. Stages are run sequentially withing an UpdateRun.
+status.status.stages[].afterStageWaitStatus <object>	# AfterStageWaitStatus: The status of the wait period configured on the UpdateStage.
+status.status.stages[].afterStageWaitStatus.status <object>	# Status: The status of the wait duration.
+status.status.stages[].afterStageWaitStatus.status.completedTime <string>	# CompletedTime: The time the operation or group was completed.
+status.status.stages[].afterStageWaitStatus.status.error <object>	# Error: The error details when a failure is encountered.
+status.status.stages[].afterStageWaitStatus.status.error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].afterStageWaitStatus.status.error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].afterStageWaitStatus.status.error.additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].afterStageWaitStatus.status.error.code <string>	# Code: The error code.
+status.status.stages[].afterStageWaitStatus.status.error.details <[]object>	# Details: The error details.
+status.status.stages[].afterStageWaitStatus.status.error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].afterStageWaitStatus.status.error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].afterStageWaitStatus.status.error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].afterStageWaitStatus.status.error.details[].code <string>	# Code: The error code.
+status.status.stages[].afterStageWaitStatus.status.error.details[].message <string>	# Message: The error message.
+status.status.stages[].afterStageWaitStatus.status.error.details[].target <string>	# Target: The error target.
+status.status.stages[].afterStageWaitStatus.status.error.message <string>	# Message: The error message.
+status.status.stages[].afterStageWaitStatus.status.error.target <string>	# Target: The error target.
+status.status.stages[].afterStageWaitStatus.status.startTime <string>	# StartTime: The time the operation or group was started.
+status.status.stages[].afterStageWaitStatus.status.state <string>	# State: The State of the operation or group.
+status.status.stages[].afterStageWaitStatus.waitDurationInSeconds <integer>	# WaitDurationInSeconds: The wait duration configured in seconds.
+status.status.stages[].groups <[]object>	# Groups: The list of groups to be updated as part of this UpdateStage.
+status.status.stages[].groups[].members <[]object>	# Members: The list of member this UpdateGroup updates.
+status.status.stages[].groups[].members[].clusterResourceId <string>	# ClusterResourceId: The Azure resource id of the target Kubernetes cluster.
+status.status.stages[].groups[].members[].message <string>	# Message: The status message after processing the member update operation.
+status.status.stages[].groups[].members[].name <string>	# Name: The name of the FleetMember.
+status.status.stages[].groups[].members[].operationId <string>	# OperationId: The operation resource id of the latest attempt to perform the operation.
+status.status.stages[].groups[].members[].status <object>	# Status: The status of the MemberUpdate operation.
+status.status.stages[].groups[].members[].status.completedTime <string>	# CompletedTime: The time the operation or group was completed.
+status.status.stages[].groups[].members[].status.error <object>	# Error: The error details when a failure is encountered.
+status.status.stages[].groups[].members[].status.error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].groups[].members[].status.error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].groups[].members[].status.error.additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].groups[].members[].status.error.code <string>	# Code: The error code.
+status.status.stages[].groups[].members[].status.error.details <[]object>	# Details: The error details.
+status.status.stages[].groups[].members[].status.error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].groups[].members[].status.error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].groups[].members[].status.error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].groups[].members[].status.error.details[].code <string>	# Code: The error code.
+status.status.stages[].groups[].members[].status.error.details[].message <string>	# Message: The error message.
+status.status.stages[].groups[].members[].status.error.details[].target <string>	# Target: The error target.
+status.status.stages[].groups[].members[].status.error.message <string>	# Message: The error message.
+status.status.stages[].groups[].members[].status.error.target <string>	# Target: The error target.
+status.status.stages[].groups[].members[].status.startTime <string>	# StartTime: The time the operation or group was started.
+status.status.stages[].groups[].members[].status.state <string>	# State: The State of the operation or group.
+status.status.stages[].groups[].name <string>	# Name: The name of the UpdateGroup.
+status.status.stages[].groups[].status <object>	# Status: The status of the UpdateGroup.
+status.status.stages[].groups[].status.completedTime <string>	# CompletedTime: The time the operation or group was completed.
+status.status.stages[].groups[].status.error <object>	# Error: The error details when a failure is encountered.
+status.status.stages[].groups[].status.error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].groups[].status.error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].groups[].status.error.additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].groups[].status.error.code <string>	# Code: The error code.
+status.status.stages[].groups[].status.error.details <[]object>	# Details: The error details.
+status.status.stages[].groups[].status.error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].groups[].status.error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].groups[].status.error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].groups[].status.error.details[].code <string>	# Code: The error code.
+status.status.stages[].groups[].status.error.details[].message <string>	# Message: The error message.
+status.status.stages[].groups[].status.error.details[].target <string>	# Target: The error target.
+status.status.stages[].groups[].status.error.message <string>	# Message: The error message.
+status.status.stages[].groups[].status.error.target <string>	# Target: The error target.
+status.status.stages[].groups[].status.startTime <string>	# StartTime: The time the operation or group was started.
+status.status.stages[].groups[].status.state <string>	# State: The State of the operation or group.
+status.status.stages[].name <string>	# Name: The name of the UpdateStage.
+status.status.stages[].status <object>	# Status: The status of the UpdateStage.
+status.status.stages[].status.completedTime <string>	# CompletedTime: The time the operation or group was completed.
+status.status.stages[].status.error <object>	# Error: The error details when a failure is encountered.
+status.status.stages[].status.error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].status.error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].status.error.additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].status.error.code <string>	# Code: The error code.
+status.status.stages[].status.error.details <[]object>	# Details: The error details.
+status.status.stages[].status.error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.stages[].status.error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.stages[].status.error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.status.stages[].status.error.details[].code <string>	# Code: The error code.
+status.status.stages[].status.error.details[].message <string>	# Message: The error message.
+status.status.stages[].status.error.details[].target <string>	# Target: The error target.
+status.status.stages[].status.error.message <string>	# Message: The error message.
+status.status.stages[].status.error.target <string>	# Target: The error target.
+status.status.stages[].status.startTime <string>	# StartTime: The time the operation or group was started.
+status.status.stages[].status.state <string>	# State: The State of the operation or group.
+status.status.status <object>	# Status: The status of the UpdateRun.
+status.status.status.completedTime <string>	# CompletedTime: The time the operation or group was completed.
+status.status.status.error <object>	# Error: The error details when a failure is encountered.
+status.status.status.error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.status.error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.status.error.additionalInfo[].type <string>	# Type: The additional info type.
+status.status.status.error.code <string>	# Code: The error code.
+status.status.status.error.details <[]object>	# Details: The error details.
+status.status.status.error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.status.status.error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.status.status.error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.status.status.error.details[].code <string>	# Code: The error code.
+status.status.status.error.details[].message <string>	# Message: The error message.
+status.status.status.error.details[].target <string>	# Target: The error target.
+status.status.status.error.message <string>	# Message: The error message.
+status.status.status.error.target <string>	# Target: The error target.
+status.status.status.startTime <string>	# StartTime: The time the operation or group was started.
+status.status.status.state <string>	# State: The State of the operation or group.
+status.strategy <object>	# Strategy: The strategy defines the order in which the clusters will be updated. If not set, all members will be updated sequentially. The UpdateRun status will show a single UpdateStage and a single UpdateGroup targeting all members. The strategy of the UpdateRun can be modified until the run is started.
+status.strategy.stages <[]object>	# Stages: The list of stages that compose this update run. Min size: 1.
+status.strategy.stages[].afterStageWaitInSeconds <integer>	# AfterStageWaitInSeconds: The time in seconds to wait at the end of this stage before starting the next one. Defaults to 0 seconds if unspecified.
+status.strategy.stages[].groups <[]object>	# Groups: Defines the groups to be executed in parallel in this stage. Duplicate groups are not allowed. Min size: 1.
+status.strategy.stages[].groups[].name <string>	# Name: Name of the group. It must match a group name of an existing fleet member.
+status.strategy.stages[].name <string>	# Name: The name of the stage. Must be unique within the UpdateRun.
+status.systemData <object>	# SystemData: Azure Resource Manager metadata containing createdBy and modifiedBy information.
+status.systemData.createdAt <string>	# CreatedAt: The timestamp of resource creation (UTC).
+status.systemData.createdBy <string>	# CreatedBy: The identity that created the resource.
+status.systemData.createdByType <string>	# CreatedByType: The type of identity that created the resource.
+status.systemData.lastModifiedAt <string>	# LastModifiedAt: The timestamp of resource last modification (UTC)
+status.systemData.lastModifiedBy <string>	# LastModifiedBy: The identity that last modified the resource.
+status.systemData.lastModifiedByType <string>	# LastModifiedByType: The type of identity that last modified the resource.
+status.type <string>	# Type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or "Microsoft.Storage/storageAccounts"
+status.updateStrategyId <string>	# UpdateStrategyId: The resource id of the FleetUpdateStrategy resource to reference. When creating a new run, there are three ways to define a strategy for the run: 1. Define a new strategy in place: Set the "strategy" field. 2. Use an existing strategy: Set the "updateStrategyId" field. (since 2023-08-15-preview) 3. Use the default strategy to update all the members one by one: Leave both "updateStrategyId" and "strategy" unset. (since 2023-08-15-preview) Setting both "updateStrategyId" and "strategy" is invalid. UpdateRuns created by "updateStrategyId" snapshot the referenced UpdateStrategy at the time of creation and store it in the "strategy" field. Subsequent changes to the referenced FleetUpdateStrategy resource do not propagate. UpdateRunStrategy changes can be made directly on the "strategy" field before launching the UpdateRun.

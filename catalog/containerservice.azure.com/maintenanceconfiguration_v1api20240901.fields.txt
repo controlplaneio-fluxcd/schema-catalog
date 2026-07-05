@@ -1,0 +1,96 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=containerservice.azure.com/v1api20240901
+kind <string> enum=MaintenanceConfiguration
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.azureName <string>	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.maintenanceWindow <object>	# MaintenanceWindow: Maintenance window for the maintenance configuration.
+spec.maintenanceWindow.durationHours <integer> (required) min=4 max=24	# DurationHours: Length of maintenance window range from 4 to 24 hours.
+spec.maintenanceWindow.notAllowedDates <[]object>	# NotAllowedDates: Date ranges on which upgrade is not allowed. 'utcOffset' applies to this field. For example, with 'utcOffset: +02:00' and 'dateSpan' being '2022-12-23' to '2023-01-03', maintenance will be blocked from '2022-12-22 22:00' to '2023-01-03 22:00' in UTC time.
+spec.maintenanceWindow.notAllowedDates[].end <string> (required)	# End: The end date of the date span.
+spec.maintenanceWindow.notAllowedDates[].start <string> (required)	# Start: The start date of the date span.
+spec.maintenanceWindow.schedule <object> (required)	# Schedule: Recurrence schedule for the maintenance window.
+spec.maintenanceWindow.schedule.absoluteMonthly <object>	# AbsoluteMonthly: For schedules like: 'recur every month on the 15th' or 'recur every 3 months on the 20th'.
+spec.maintenanceWindow.schedule.absoluteMonthly.dayOfMonth <integer> (required) min=1 max=31	# DayOfMonth: The date of the month.
+spec.maintenanceWindow.schedule.absoluteMonthly.intervalMonths <integer> (required) min=1 max=6	# IntervalMonths: Specifies the number of months between each set of occurrences.
+spec.maintenanceWindow.schedule.daily <object>	# Daily: For schedules like: 'recur every day' or 'recur every 3 days'.
+spec.maintenanceWindow.schedule.daily.intervalDays <integer> (required) min=1 max=7	# IntervalDays: Specifies the number of days between each set of occurrences.
+spec.maintenanceWindow.schedule.relativeMonthly <object>	# RelativeMonthly: For schedules like: 'recur every month on the first Monday' or 'recur every 3 months on last Friday'.
+spec.maintenanceWindow.schedule.relativeMonthly.dayOfWeek <string> (required) enum=Friday|Monday|Saturday|Sunday|Thursday|Tuesday|Wednesday	# DayOfWeek: Specifies on which day of the week the maintenance occurs.
+spec.maintenanceWindow.schedule.relativeMonthly.intervalMonths <integer> (required) min=1 max=6	# IntervalMonths: Specifies the number of months between each set of occurrences.
+spec.maintenanceWindow.schedule.relativeMonthly.weekIndex <string> (required) enum=First|Fourth|Last|Second|Third	# WeekIndex: Specifies on which week of the month the dayOfWeek applies.
+spec.maintenanceWindow.schedule.weekly <object>	# Weekly: For schedules like: 'recur every Monday' or 'recur every 3 weeks on Wednesday'.
+spec.maintenanceWindow.schedule.weekly.dayOfWeek <string> (required) enum=Friday|Monday|Saturday|Sunday|Thursday|Tuesday|Wednesday	# DayOfWeek: Specifies on which day of the week the maintenance occurs.
+spec.maintenanceWindow.schedule.weekly.intervalWeeks <integer> (required) min=1 max=4	# IntervalWeeks: Specifies the number of weeks between each set of occurrences.
+spec.maintenanceWindow.startDate <string>	# StartDate: The date the maintenance window activates. If the current date is before this date, the maintenance window is inactive and will not be used for upgrades. If not specified, the maintenance window will be active right away.
+spec.maintenanceWindow.startTime <string> (required) pattern="^\\d{2}:\\d{2}$"	# StartTime: The start time of the maintenance window. Accepted values are from '00:00' to '23:59'. 'utcOffset' applies to this field. For example: '02:00' with 'utcOffset: +02:00' means UTC time '00:00'.
+spec.maintenanceWindow.utcOffset <string> pattern="^(-|\\+)[0-9]{2}:[0-9]{2}$"	# UtcOffset: The UTC offset in format +/-HH:mm. For example, '+05:30' for IST and '-07:00' for PST. If not specified, the default is '+00:00'.
+spec.notAllowedTime <[]object>	# NotAllowedTime: Time slots on which upgrade is not allowed.
+spec.notAllowedTime[].end <string>	# End: The end of a time span
+spec.notAllowedTime[].start <string>	# Start: The start of a time span
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a containerservice.azure.com/ManagedCluster resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.timeInWeek <[]object>	# TimeInWeek: If two array entries specify the same day of the week, the applied configuration is the union of times in both entries.
+spec.timeInWeek[].day <string> enum=Friday|Monday|Saturday|Sunday|Thursday|Tuesday|Wednesday	# Day: The day of the week.
+spec.timeInWeek[].hourSlots <[]integer>	# HourSlots: Each integer hour represents a time range beginning at 0m after the hour ending at the next hour (non-inclusive). 0 corresponds to 00:00 UTC, 23 corresponds to 23:00 UTC. Specifying [0, 1] means the 00:00 - 02:00 UTC time range.
+status <object>
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.id <string>	# Id: Resource ID.
+status.maintenanceWindow <object>	# MaintenanceWindow: Maintenance window for the maintenance configuration.
+status.maintenanceWindow.durationHours <integer>	# DurationHours: Length of maintenance window range from 4 to 24 hours.
+status.maintenanceWindow.notAllowedDates <[]object>	# NotAllowedDates: Date ranges on which upgrade is not allowed. 'utcOffset' applies to this field. For example, with 'utcOffset: +02:00' and 'dateSpan' being '2022-12-23' to '2023-01-03', maintenance will be blocked from '2022-12-22 22:00' to '2023-01-03 22:00' in UTC time.
+status.maintenanceWindow.notAllowedDates[].end <string>	# End: The end date of the date span.
+status.maintenanceWindow.notAllowedDates[].start <string>	# Start: The start date of the date span.
+status.maintenanceWindow.schedule <object>	# Schedule: Recurrence schedule for the maintenance window.
+status.maintenanceWindow.schedule.absoluteMonthly <object>	# AbsoluteMonthly: For schedules like: 'recur every month on the 15th' or 'recur every 3 months on the 20th'.
+status.maintenanceWindow.schedule.absoluteMonthly.dayOfMonth <integer>	# DayOfMonth: The date of the month.
+status.maintenanceWindow.schedule.absoluteMonthly.intervalMonths <integer>	# IntervalMonths: Specifies the number of months between each set of occurrences.
+status.maintenanceWindow.schedule.daily <object>	# Daily: For schedules like: 'recur every day' or 'recur every 3 days'.
+status.maintenanceWindow.schedule.daily.intervalDays <integer>	# IntervalDays: Specifies the number of days between each set of occurrences.
+status.maintenanceWindow.schedule.relativeMonthly <object>	# RelativeMonthly: For schedules like: 'recur every month on the first Monday' or 'recur every 3 months on last Friday'.
+status.maintenanceWindow.schedule.relativeMonthly.dayOfWeek <string>	# DayOfWeek: Specifies on which day of the week the maintenance occurs.
+status.maintenanceWindow.schedule.relativeMonthly.intervalMonths <integer>	# IntervalMonths: Specifies the number of months between each set of occurrences.
+status.maintenanceWindow.schedule.relativeMonthly.weekIndex <string>	# WeekIndex: Specifies on which week of the month the dayOfWeek applies.
+status.maintenanceWindow.schedule.weekly <object>	# Weekly: For schedules like: 'recur every Monday' or 'recur every 3 weeks on Wednesday'.
+status.maintenanceWindow.schedule.weekly.dayOfWeek <string>	# DayOfWeek: Specifies on which day of the week the maintenance occurs.
+status.maintenanceWindow.schedule.weekly.intervalWeeks <integer>	# IntervalWeeks: Specifies the number of weeks between each set of occurrences.
+status.maintenanceWindow.startDate <string>	# StartDate: The date the maintenance window activates. If the current date is before this date, the maintenance window is inactive and will not be used for upgrades. If not specified, the maintenance window will be active right away.
+status.maintenanceWindow.startTime <string>	# StartTime: The start time of the maintenance window. Accepted values are from '00:00' to '23:59'. 'utcOffset' applies to this field. For example: '02:00' with 'utcOffset: +02:00' means UTC time '00:00'.
+status.maintenanceWindow.utcOffset <string>	# UtcOffset: The UTC offset in format +/-HH:mm. For example, '+05:30' for IST and '-07:00' for PST. If not specified, the default is '+00:00'.
+status.name <string>	# Name: The name of the resource that is unique within a resource group. This name can be used to access the resource.
+status.notAllowedTime <[]object>	# NotAllowedTime: Time slots on which upgrade is not allowed.
+status.notAllowedTime[].end <string>	# End: The end of a time span
+status.notAllowedTime[].start <string>	# Start: The start of a time span
+status.systemData <object>	# SystemData: The system metadata relating to this resource.
+status.systemData.createdAt <string>	# CreatedAt: The timestamp of resource creation (UTC).
+status.systemData.createdBy <string>	# CreatedBy: The identity that created the resource.
+status.systemData.createdByType <string>	# CreatedByType: The type of identity that created the resource.
+status.systemData.lastModifiedAt <string>	# LastModifiedAt: The timestamp of resource last modification (UTC)
+status.systemData.lastModifiedBy <string>	# LastModifiedBy: The identity that last modified the resource.
+status.systemData.lastModifiedByType <string>	# LastModifiedByType: The type of identity that last modified the resource.
+status.timeInWeek <[]object>	# TimeInWeek: If two array entries specify the same day of the week, the applied configuration is the union of times in both entries.
+status.timeInWeek[].day <string>	# Day: The day of the week.
+status.timeInWeek[].hourSlots <[]integer>	# HourSlots: Each integer hour represents a time range beginning at 0m after the hour ending at the next hour (non-inclusive). 0 corresponds to 00:00 UTC, 23 corresponds to 23:00 UTC. Specifying [0, 1] means the 00:00 - 02:00 UTC time range.
+status.type <string>	# Type: Resource type

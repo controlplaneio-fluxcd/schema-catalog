@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-55-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-6%2C240-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-424%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-56-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-7%2C564-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-490%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -117,6 +117,7 @@ for the line grammar.
 | AWS Route 53 Controller | [v1.4.3](build/history/ack-route53.json) | 3 | 2026-07-05 |
 | AWS EFS Controller | [v1.4.0](build/history/ack-efs.json) | 3 | 2026-07-05 |
 | AWS API Gateway v2 Controller | [v1.3.2](build/history/ack-apigatewayv2.json) | 9 | 2026-07-05 |
+| Azure Service Operator | [v2.20.0](build/history/azure-service-operator.json) | 1324 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation

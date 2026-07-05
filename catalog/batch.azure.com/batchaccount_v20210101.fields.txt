@@ -1,0 +1,97 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=batch.azure.com/v20210101
+kind <string> enum=BatchAccount
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.autoStorage <object>	# AutoStorage: The properties related to the auto-storage account.
+spec.autoStorage.storageAccountReference <object> (required)	# StorageAccountReference: The resource ID of the storage account to be used for auto-storage account.
+spec.autoStorage.storageAccountReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.autoStorage.storageAccountReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.autoStorage.storageAccountReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.autoStorage.storageAccountReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.azureName <string> pattern="^[a-z0-9]+$" min=3 max=24	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.encryption <object>	# Encryption: Configures how customer data is encrypted inside the Batch account. By default, accounts are encrypted using a Microsoft managed key. For additional control, a customer-managed key can be used instead.
+spec.encryption.keySource <string> enum=Microsoft.Batch|Microsoft.KeyVault	# KeySource: Type of the key source.
+spec.encryption.keyVaultProperties <object>	# KeyVaultProperties: Additional details when using Microsoft.KeyVault
+spec.encryption.keyVaultProperties.keyIdentifier <string>	# KeyIdentifier: Full path to the versioned secret. Example https://mykeyvault.vault.azure.net/keys/testkey/6e34a81fef704045975661e297a4c053. To be usable the following prerequisites must be met: The Batch Account has a System Assigned identity The account identity has been granted Key/Get, Key/Unwrap and Key/Wrap permissions The KeyVault has soft-delete and purge protection enabled
+spec.identity <object>	# Identity: The identity of the Batch account.
+spec.identity.type <string> (required) enum=None|SystemAssigned|UserAssigned	# Type: The type of identity used for the Batch account.
+spec.identity.userAssignedIdentities <[]object>	# UserAssignedIdentities: The list of user identities associated with the Batch account. The user identity dictionary key references will be ARM resource ids in the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'.
+spec.identity.userAssignedIdentities[].reference <object>	# ResourceReference represents a resource reference, either to a Kubernetes resource or directly to an Azure resource via ARMID
+spec.identity.userAssignedIdentities[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.identity.userAssignedIdentities[].reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.identity.userAssignedIdentities[].reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.identity.userAssignedIdentities[].reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.keyVaultReference <object>	# KeyVaultReference: A reference to the Azure key vault associated with the Batch account.
+spec.keyVaultReference.reference <object> (required)	# Reference: The resource ID of the Azure key vault associated with the Batch account.
+spec.keyVaultReference.reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.keyVaultReference.reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.keyVaultReference.reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.keyVaultReference.reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.keyVaultReference.url <string> (required)	# Url: The URL of the Azure key vault associated with the Batch account.
+spec.location <string> (required)	# Location: The region in which to create the account.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a resources.azure.com/ResourceGroup resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.poolAllocationMode <string> enum=BatchService|UserSubscription	# PoolAllocationMode: The pool allocation mode also affects how clients may authenticate to the Batch Service API. If the mode is BatchService, clients may authenticate using access keys or Azure Active Directory. If the mode is UserSubscription, clients must use Azure Active Directory. The default is BatchService.
+spec.publicNetworkAccess <string> enum=Disabled|Enabled	# PublicNetworkAccess: If not specified, the default value is 'enabled'.
+spec.tags <map[string]string>	# Tags: The user-specified tags associated with the account.
+status <object>	# Contains information about an Azure Batch account.
+status.accountEndpoint <string>	# AccountEndpoint: The account endpoint used to interact with the Batch service.
+status.activeJobAndJobScheduleQuota <integer>
+status.autoStorage <object>	# AutoStorage: Contains information about the auto-storage account associated with a Batch account.
+status.autoStorage.lastKeySync <string>	# LastKeySync: The UTC time at which storage keys were last synchronized with the Batch account.
+status.autoStorage.storageAccountId <string>	# StorageAccountId: The resource ID of the storage account to be used for auto-storage account.
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.dedicatedCoreQuota <integer>	# DedicatedCoreQuota: For accounts with PoolAllocationMode set to UserSubscription, quota is managed on the subscription so this value is not returned.
+status.dedicatedCoreQuotaPerVMFamily <[]object>	# DedicatedCoreQuotaPerVMFamily: A list of the dedicated core quota per Virtual Machine family for the Batch account. For accounts with PoolAllocationMode set to UserSubscription, quota is managed on the subscription so this value is not returned.
+status.dedicatedCoreQuotaPerVMFamily[].coreQuota <integer>	# CoreQuota: The core quota for the VM family for the Batch account.
+status.dedicatedCoreQuotaPerVMFamily[].name <string>	# Name: The Virtual Machine family name.
+status.dedicatedCoreQuotaPerVMFamilyEnforced <boolean>	# DedicatedCoreQuotaPerVMFamilyEnforced: Batch is transitioning its core quota system for dedicated cores to be enforced per Virtual Machine family. During this transitional phase, the dedicated core quota per Virtual Machine family may not yet be enforced. If this flag is false, dedicated core quota is enforced via the old dedicatedCoreQuota property on the account and does not consider Virtual Machine family. If this flag is true, dedicated core quota is enforced via the dedicatedCoreQuotaPerVMFamily property on the account, and the old dedicatedCoreQuota does not apply.
+status.encryption <object>	# Encryption: Configures how customer data is encrypted inside the Batch account. By default, accounts are encrypted using a Microsoft managed key. For additional control, a customer-managed key can be used instead.
+status.encryption.keySource <string>	# KeySource: Type of the key source.
+status.encryption.keyVaultProperties <object>	# KeyVaultProperties: Additional details when using Microsoft.KeyVault
+status.encryption.keyVaultProperties.keyIdentifier <string>	# KeyIdentifier: Full path to the versioned secret. Example https://mykeyvault.vault.azure.net/keys/testkey/6e34a81fef704045975661e297a4c053. To be usable the following prerequisites must be met: The Batch Account has a System Assigned identity The account identity has been granted Key/Get, Key/Unwrap and Key/Wrap permissions The KeyVault has soft-delete and purge protection enabled
+status.id <string>	# Id: The ID of the resource.
+status.identity <object>	# Identity: The identity of the Batch account.
+status.identity.principalId <string>	# PrincipalId: The principal id of the Batch account. This property will only be provided for a system assigned identity.
+status.identity.tenantId <string>	# TenantId: The tenant id associated with the Batch account. This property will only be provided for a system assigned identity.
+status.identity.type <string>	# Type: The type of identity used for the Batch account.
+status.identity.userAssignedIdentities <map[string]object>	# UserAssignedIdentities: The list of user identities associated with the Batch account. The user identity dictionary key references will be ARM resource ids in the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'.
+status.identity.userAssignedIdentities.<key>.clientId <string>	# ClientId: The client id of user assigned identity.
+status.identity.userAssignedIdentities.<key>.principalId <string>	# PrincipalId: The principal id of user assigned identity.
+status.keyVaultReference <object>	# KeyVaultReference: Identifies the Azure key vault associated with a Batch account.
+status.keyVaultReference.id <string>	# Id: The resource ID of the Azure key vault associated with the Batch account.
+status.keyVaultReference.url <string>	# Url: The URL of the Azure key vault associated with the Batch account.
+status.location <string>	# Location: The location of the resource.
+status.lowPriorityCoreQuota <integer>	# LowPriorityCoreQuota: For accounts with PoolAllocationMode set to UserSubscription, quota is managed on the subscription so this value is not returned.
+status.name <string>	# Name: The name of the resource.
+status.poolAllocationMode <string>	# PoolAllocationMode: The allocation mode for creating pools in the Batch account.
+status.poolQuota <integer>
+status.privateEndpointConnections <[]object>	# PrivateEndpointConnections: List of private endpoint connections associated with the Batch account
+status.privateEndpointConnections[].id <string>	# Id: The ID of the resource.
+status.provisioningState <string>	# ProvisioningState: The provisioned state of the resource
+status.publicNetworkAccess <string>	# PublicNetworkAccess: If not specified, the default value is 'enabled'.
+status.tags <map[string]string>	# Tags: The tags of the resource.
+status.type <string>	# Type: The type of the resource.

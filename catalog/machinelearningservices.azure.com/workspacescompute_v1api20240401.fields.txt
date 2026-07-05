@@ -1,0 +1,928 @@
+# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=machinelearningservices.azure.com/v1api20240401
+kind <string> enum=WorkspacesCompute
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.additionalProperties <any>
+spec.azureName <string>	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.identity <object>	# Identity: The identity of the resource.
+spec.identity.type <string> (required) enum=None|SystemAssigned|SystemAssigned,UserAssigned|UserAssigned	# Type: Type of managed service identity (where both SystemAssigned and UserAssigned types are allowed).
+spec.identity.userAssignedIdentities <[]object>
+spec.identity.userAssignedIdentities[].reference <object>	# ResourceReference represents a resource reference, either to a Kubernetes resource or directly to an Azure resource via ARMID
+spec.identity.userAssignedIdentities[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.identity.userAssignedIdentities[].reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.identity.userAssignedIdentities[].reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.identity.userAssignedIdentities[].reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.location <string>	# Location: Specifies the location of the resource.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a machinelearningservices.azure.com/Workspace resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.properties <object>	# Properties: Compute properties
+spec.properties.aks <object>	# AKS: Mutually exclusive with all other properties
+spec.properties.aks.additionalProperties <any>
+spec.properties.aks.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.aks.computeType <string> (required) enum=AKS	# ComputeType: The type of compute
+spec.properties.aks.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.aks.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.aks.properties <object>	# Properties: AKS properties
+spec.properties.aks.properties.agentCount <integer> min=0	# AgentCount: Number of agents
+spec.properties.aks.properties.agentVmSize <string>	# AgentVmSize: Agent virtual machine size
+spec.properties.aks.properties.aksNetworkingConfiguration <object>	# AksNetworkingConfiguration: AKS networking configuration for vnet
+spec.properties.aks.properties.aksNetworkingConfiguration.dnsServiceIP <string> pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"	# DnsServiceIP: An IP address assigned to the Kubernetes DNS service. It must be within the Kubernetes service address range specified in serviceCidr.
+spec.properties.aks.properties.aksNetworkingConfiguration.dockerBridgeCidr <string> pattern="^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$"	# DockerBridgeCidr: A CIDR notation IP range assigned to the Docker bridge network. It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
+spec.properties.aks.properties.aksNetworkingConfiguration.serviceCidr <string> pattern="^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$"	# ServiceCidr: A CIDR notation IP range from which to assign service cluster IPs. It must not overlap with any Subnet IP ranges.
+spec.properties.aks.properties.aksNetworkingConfiguration.subnetReference <object>	# SubnetReference: Virtual network subnet resource ID the compute nodes belong to
+spec.properties.aks.properties.aksNetworkingConfiguration.subnetReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.aks.properties.aksNetworkingConfiguration.subnetReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.aks.properties.aksNetworkingConfiguration.subnetReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.aks.properties.aksNetworkingConfiguration.subnetReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.aks.properties.clusterFqdn <string>	# ClusterFqdn: Cluster full qualified domain name
+spec.properties.aks.properties.clusterPurpose <string> enum=DenseProd|DevTest|FastProd	# ClusterPurpose: Intended usage of the cluster
+spec.properties.aks.properties.loadBalancerSubnetReference <object>	# LoadBalancerSubnetReference: Load Balancer Subnet
+spec.properties.aks.properties.loadBalancerSubnetReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.aks.properties.loadBalancerSubnetReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.aks.properties.loadBalancerSubnetReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.aks.properties.loadBalancerSubnetReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.aks.properties.loadBalancerType <string> enum=InternalLoadBalancer|PublicIp	# LoadBalancerType: Load Balancer Type
+spec.properties.aks.properties.sslConfiguration <object>	# SslConfiguration: SSL configuration
+spec.properties.aks.properties.sslConfiguration.cert <object>	# Cert: Cert data
+spec.properties.aks.properties.sslConfiguration.cert.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.aks.properties.sslConfiguration.cert.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.aks.properties.sslConfiguration.cname <string>	# Cname: CNAME of the cert
+spec.properties.aks.properties.sslConfiguration.key <object>	# Key: Key data
+spec.properties.aks.properties.sslConfiguration.key.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.aks.properties.sslConfiguration.key.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.aks.properties.sslConfiguration.leafDomainLabel <string>	# LeafDomainLabel: Leaf domain label of public endpoint
+spec.properties.aks.properties.sslConfiguration.overwriteExistingDomain <boolean>	# OverwriteExistingDomain: Indicates whether to overwrite existing domain label.
+spec.properties.aks.properties.sslConfiguration.status <string> enum=Auto|Disabled|Enabled	# Status: Enable or disable ssl for scoring
+spec.properties.aks.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.aks.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.aks.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.aks.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.aks.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.amlCompute <object>	# AmlCompute: Mutually exclusive with all other properties
+spec.properties.amlCompute.additionalProperties <any>
+spec.properties.amlCompute.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.amlCompute.computeType <string> (required) enum=AmlCompute	# ComputeType: The type of compute
+spec.properties.amlCompute.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.amlCompute.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.amlCompute.properties <object>	# Properties: Properties of AmlCompute
+spec.properties.amlCompute.properties.enableNodePublicIp <boolean>	# EnableNodePublicIp: Enable or disable node public IP address provisioning. Possible values are: Possible values are: true - Indicates that the compute nodes will have public IPs provisioned. false - Indicates that the compute nodes will have a private endpoint and no public IPs.
+spec.properties.amlCompute.properties.isolatedNetwork <boolean>	# IsolatedNetwork: Network is isolated or not
+spec.properties.amlCompute.properties.osType <string> enum=Linux|Windows	# OsType: Compute OS Type
+spec.properties.amlCompute.properties.propertyBag <object (free-form)>	# PropertyBag: A property bag containing additional properties.
+spec.properties.amlCompute.properties.remoteLoginPortPublicAccess <string> enum=Disabled|Enabled|NotSpecified	# RemoteLoginPortPublicAccess: State of the public SSH port. Possible values are: Disabled - Indicates that the public ssh port is closed on all nodes of the cluster. Enabled - Indicates that the public ssh port is open on all nodes of the cluster. NotSpecified - Indicates that the public ssh port is closed on all nodes of the cluster if VNet is defined, else is open all public nodes. It can be default only during cluster creation time, after creation it will be either enabled or disabled.
+spec.properties.amlCompute.properties.scaleSettings <object>	# ScaleSettings: Scale settings for AML Compute
+spec.properties.amlCompute.properties.scaleSettings.maxNodeCount <integer> (required)	# MaxNodeCount: Max number of nodes to use
+spec.properties.amlCompute.properties.scaleSettings.minNodeCount <integer>	# MinNodeCount: Min number of nodes to use
+spec.properties.amlCompute.properties.scaleSettings.nodeIdleTimeBeforeScaleDown <string>	# NodeIdleTimeBeforeScaleDown: Node Idle Time before scaling down amlCompute. This string needs to be in the RFC Format.
+spec.properties.amlCompute.properties.subnet <object>	# Subnet: Virtual network subnet resource ID the compute nodes belong to.
+spec.properties.amlCompute.properties.subnet.reference <object> (required)	# Reference: The ID of the resource
+spec.properties.amlCompute.properties.subnet.reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.amlCompute.properties.subnet.reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.amlCompute.properties.subnet.reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.amlCompute.properties.subnet.reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.amlCompute.properties.userAccountCredentials <object>	# UserAccountCredentials: Credentials for an administrator user account that will be created on each compute node.
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserName <string> (required)	# AdminUserName: Name of the administrator user account which can be used to SSH to nodes.
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserPassword <object>	# AdminUserPassword: Password of the administrator user account.
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserPassword.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserPassword.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserSshPublicKey <object>	# AdminUserSshPublicKey: SSH public key of the administrator user account.
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserSshPublicKey.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.amlCompute.properties.userAccountCredentials.adminUserSshPublicKey.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.amlCompute.properties.virtualMachineImage <object>	# VirtualMachineImage: Virtual Machine image for AML Compute - windows only
+spec.properties.amlCompute.properties.virtualMachineImage.reference <object> (required)	# Reference: Virtual Machine image path
+spec.properties.amlCompute.properties.virtualMachineImage.reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.amlCompute.properties.virtualMachineImage.reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.amlCompute.properties.virtualMachineImage.reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.amlCompute.properties.virtualMachineImage.reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.amlCompute.properties.vmPriority <string> enum=Dedicated|LowPriority	# VmPriority: Virtual Machine priority
+spec.properties.amlCompute.properties.vmSize <string>	# VmSize: Virtual Machine Size
+spec.properties.amlCompute.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.amlCompute.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.amlCompute.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.amlCompute.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.amlCompute.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.computeInstance <object>	# ComputeInstance: Mutually exclusive with all other properties
+spec.properties.computeInstance.additionalProperties <any>
+spec.properties.computeInstance.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.computeInstance.computeType <string> (required) enum=ComputeInstance	# ComputeType: The type of compute
+spec.properties.computeInstance.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.computeInstance.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.computeInstance.properties <object>	# Properties: Properties of ComputeInstance
+spec.properties.computeInstance.properties.applicationSharingPolicy <string> enum=Personal|Shared	# ApplicationSharingPolicy: Policy for sharing applications on this compute instance among users of parent workspace. If Personal, only the creator can access applications on this compute instance. When Shared, any workspace user can access applications on this instance depending on his/her assigned role.
+spec.properties.computeInstance.properties.computeInstanceAuthorizationType <string> enum=personal	# ComputeInstanceAuthorizationType: The Compute Instance Authorization type. Available values are personal (default).
+spec.properties.computeInstance.properties.customServices <[]object>	# CustomServices: List of Custom Services added to the compute.
+spec.properties.computeInstance.properties.customServices[].docker <object>	# Docker: Describes the docker settings for the image
+spec.properties.computeInstance.properties.customServices[].docker.privileged <boolean>	# Privileged: Indicate whether container shall run in privileged or non-privileged mode.
+spec.properties.computeInstance.properties.customServices[].endpoints <[]object>	# Endpoints: Configuring the endpoints for the container
+spec.properties.computeInstance.properties.customServices[].endpoints[].hostIp <string>	# HostIp: Host IP over which the application is exposed from the container
+spec.properties.computeInstance.properties.customServices[].endpoints[].name <string>	# Name: Name of the Endpoint
+spec.properties.computeInstance.properties.customServices[].endpoints[].protocol <string> enum=http|tcp|udp	# Protocol: Protocol over which communication will happen over this endpoint
+spec.properties.computeInstance.properties.customServices[].endpoints[].published <integer>	# Published: Port over which the application is exposed from container.
+spec.properties.computeInstance.properties.customServices[].endpoints[].target <integer>	# Target: Application port inside the container.
+spec.properties.computeInstance.properties.customServices[].environmentVariables <map[string]object>	# EnvironmentVariables: Environment Variable for the container
+spec.properties.computeInstance.properties.customServices[].environmentVariables.<key>.type <string> enum=local	# Type: Type of the Environment Variable. Possible values are: local - For local variable
+spec.properties.computeInstance.properties.customServices[].environmentVariables.<key>.value <string>	# Value: Value of the Environment variable
+spec.properties.computeInstance.properties.customServices[].image <object>	# Image: Describes the Image Specifications
+spec.properties.computeInstance.properties.customServices[].image.reference <string>	# Reference: Image reference
+spec.properties.computeInstance.properties.customServices[].image.type <string> enum=azureml|docker	# Type: Type of the image. Possible values are: docker - For docker images. azureml - For AzureML images
+spec.properties.computeInstance.properties.customServices[].name <string>	# Name: Name of the Custom Service
+spec.properties.computeInstance.properties.customServices[].volumes <[]object>	# Volumes: Configuring the volumes for the container
+spec.properties.computeInstance.properties.customServices[].volumes[].bind <object>	# Bind: Bind Options of the mount
+spec.properties.computeInstance.properties.customServices[].volumes[].bind.createHostPath <boolean>	# CreateHostPath: Indicate whether to create host path.
+spec.properties.computeInstance.properties.customServices[].volumes[].bind.propagation <string>	# Propagation: Type of Bind Option
+spec.properties.computeInstance.properties.customServices[].volumes[].bind.selinux <string>	# Selinux: Mention the selinux options.
+spec.properties.computeInstance.properties.customServices[].volumes[].consistency <string>	# Consistency: Consistency of the volume
+spec.properties.computeInstance.properties.customServices[].volumes[].readOnly <boolean>	# ReadOnly: Indicate whether to mount volume as readOnly. Default value for this is false.
+spec.properties.computeInstance.properties.customServices[].volumes[].source <string>	# Source: Source of the mount. For bind mounts this is the host path.
+spec.properties.computeInstance.properties.customServices[].volumes[].target <string>	# Target: Target of the mount. For bind mounts this is the path in the container.
+spec.properties.computeInstance.properties.customServices[].volumes[].tmpfs <object>	# Tmpfs: tmpfs option of the mount
+spec.properties.computeInstance.properties.customServices[].volumes[].tmpfs.size <integer>	# Size: Mention the Tmpfs size
+spec.properties.computeInstance.properties.customServices[].volumes[].type <string> enum=bind|npipe|tmpfs|volume	# Type: Type of Volume Definition. Possible Values: bind,volume,tmpfs,npipe
+spec.properties.computeInstance.properties.customServices[].volumes[].volume <object>	# Volume: Volume Options of the mount
+spec.properties.computeInstance.properties.customServices[].volumes[].volume.nocopy <boolean>	# Nocopy: Indicate whether volume is nocopy
+spec.properties.computeInstance.properties.enableNodePublicIp <boolean>	# EnableNodePublicIp: Enable or disable node public IP address provisioning. Possible values are: Possible values are: true - Indicates that the compute nodes will have public IPs provisioned. false - Indicates that the compute nodes will have a private endpoint and no public IPs.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings <object>	# PersonalComputeInstanceSettings: Settings for a personal compute instance.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser <object>	# AssignedUser: A user explicitly assigned to a personal compute instance.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.objectId <string>	# ObjectId: User’s AAD Object Id.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.objectIdFromConfig <object>	# ObjectIdFromConfig: User’s AAD Object Id.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.objectIdFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.objectIdFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.tenantId <string>	# TenantId: User’s AAD Tenant Id.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.tenantIdFromConfig <object>	# TenantIdFromConfig: User’s AAD Tenant Id.
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.tenantIdFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.tenantIdFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.computeInstance.properties.schedules <object>	# Schedules: The list of schedules to be applied on the computes.
+spec.properties.computeInstance.properties.schedules.computeStartStop <[]object>	# ComputeStartStop: The list of compute start stop schedules to be applied.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].action <string> enum=Start|Stop	# Action: [Required] The compute power action.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].cron <object>	# Cron: Required if triggerType is Cron.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].cron.expression <string>	# Expression: [Required] Specifies cron expression of schedule. The expression should follow NCronTab format.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].cron.startTime <string>	# StartTime: The start time in yyyy-MM-ddTHH:mm:ss format.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].cron.timeZone <string>	# TimeZone: Specifies time zone in which the schedule runs. TimeZone should follow Windows time zone format. Refer: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones?view=windows-11
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence <object>	# Recurrence: Required if triggerType is Recurrence.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.frequency <string> enum=Day|Hour|Minute|Month|Week	# Frequency: [Required] The frequency to trigger schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.interval <integer>	# Interval: [Required] Specifies schedule interval in conjunction with frequency
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule <object>	# Schedule: [Required] The recurrence schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.hours <[]integer> (required)	# Hours: [Required] List of hours for the schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.minutes <[]integer> (required)	# Minutes: [Required] List of minutes for the schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.monthDays <[]integer>	# MonthDays: List of month days for the schedule
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.weekDays <[]string>	# WeekDays: List of days for the schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.startTime <string>	# StartTime: The start time in yyyy-MM-ddTHH:mm:ss format.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.timeZone <string>	# TimeZone: Specifies time zone in which the schedule runs. TimeZone should follow Windows time zone format. Refer: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones?view=windows-11
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule <object>	# Schedule: [Deprecated] Not used any more.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.provisioningStatus <string> enum=Completed|Failed|Provisioning	# ProvisioningStatus: The current deployment state of schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.reference <object>	# Reference: A system assigned id for the schedule.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.computeInstance.properties.schedules.computeStartStop[].schedule.status <string> enum=Disabled|Enabled	# Status: Is the schedule enabled or disabled?
+spec.properties.computeInstance.properties.schedules.computeStartStop[].status <string> enum=Disabled|Enabled	# Status: Is the schedule enabled or disabled?
+spec.properties.computeInstance.properties.schedules.computeStartStop[].triggerType <string> enum=Cron|Recurrence	# TriggerType: [Required] The schedule trigger type.
+spec.properties.computeInstance.properties.setupScripts <object>	# SetupScripts: Details of customized scripts to execute for setting up the cluster.
+spec.properties.computeInstance.properties.setupScripts.scripts <object>	# Scripts: Customized setup scripts
+spec.properties.computeInstance.properties.setupScripts.scripts.creationScript <object>	# CreationScript: Script that's run only once during provision of the compute.
+spec.properties.computeInstance.properties.setupScripts.scripts.creationScript.scriptArguments <string>	# ScriptArguments: Optional command line arguments passed to the script to run.
+spec.properties.computeInstance.properties.setupScripts.scripts.creationScript.scriptData <string>	# ScriptData: The location of scripts in the mounted volume.
+spec.properties.computeInstance.properties.setupScripts.scripts.creationScript.scriptSource <string>	# ScriptSource: The storage source of the script: workspace.
+spec.properties.computeInstance.properties.setupScripts.scripts.creationScript.timeout <string>	# Timeout: Optional time period passed to timeout command.
+spec.properties.computeInstance.properties.setupScripts.scripts.startupScript <object>	# StartupScript: Script that's run every time the machine starts.
+spec.properties.computeInstance.properties.setupScripts.scripts.startupScript.scriptArguments <string>	# ScriptArguments: Optional command line arguments passed to the script to run.
+spec.properties.computeInstance.properties.setupScripts.scripts.startupScript.scriptData <string>	# ScriptData: The location of scripts in the mounted volume.
+spec.properties.computeInstance.properties.setupScripts.scripts.startupScript.scriptSource <string>	# ScriptSource: The storage source of the script: workspace.
+spec.properties.computeInstance.properties.setupScripts.scripts.startupScript.timeout <string>	# Timeout: Optional time period passed to timeout command.
+spec.properties.computeInstance.properties.sshSettings <object>	# SshSettings: Specifies policy and settings for SSH access.
+spec.properties.computeInstance.properties.sshSettings.adminPublicKey <string>	# AdminPublicKey: Specifies the SSH rsa public key file as a string. Use "ssh-keygen -t rsa -b 2048" to generate your SSH key pairs.
+spec.properties.computeInstance.properties.sshSettings.sshPublicAccess <string> enum=Disabled|Enabled	# SshPublicAccess: State of the public SSH port. Possible values are: Disabled - Indicates that the public ssh port is closed on this instance. Enabled - Indicates that the public ssh port is open and accessible according to the VNet/subnet policy if applicable.
+spec.properties.computeInstance.properties.subnet <object>	# Subnet: Virtual network subnet resource ID the compute nodes belong to.
+spec.properties.computeInstance.properties.subnet.reference <object> (required)	# Reference: The ID of the resource
+spec.properties.computeInstance.properties.subnet.reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.computeInstance.properties.subnet.reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.computeInstance.properties.subnet.reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.computeInstance.properties.subnet.reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.computeInstance.properties.vmSize <string>	# VmSize: Virtual Machine Size
+spec.properties.computeInstance.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.computeInstance.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.computeInstance.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.computeInstance.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.computeInstance.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.dataFactory <object>	# DataFactory: Mutually exclusive with all other properties
+spec.properties.dataFactory.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.dataFactory.computeType <string> (required) enum=DataFactory	# ComputeType: The type of compute
+spec.properties.dataFactory.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.dataFactory.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.dataFactory.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.dataFactory.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.dataFactory.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.dataFactory.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.dataFactory.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.dataLakeAnalytics <object>	# DataLakeAnalytics: Mutually exclusive with all other properties
+spec.properties.dataLakeAnalytics.additionalProperties <any>
+spec.properties.dataLakeAnalytics.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.dataLakeAnalytics.computeType <string> (required) enum=DataLakeAnalytics	# ComputeType: The type of compute
+spec.properties.dataLakeAnalytics.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.dataLakeAnalytics.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.dataLakeAnalytics.properties <object>
+spec.properties.dataLakeAnalytics.properties.dataLakeStoreAccountName <string>	# DataLakeStoreAccountName: DataLake Store Account Name
+spec.properties.dataLakeAnalytics.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.dataLakeAnalytics.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.dataLakeAnalytics.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.dataLakeAnalytics.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.dataLakeAnalytics.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.databricks <object>	# Databricks: Mutually exclusive with all other properties
+spec.properties.databricks.additionalProperties <any>
+spec.properties.databricks.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.databricks.computeType <string> (required) enum=Databricks	# ComputeType: The type of compute
+spec.properties.databricks.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.databricks.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.databricks.properties <object>	# Properties: Properties of Databricks
+spec.properties.databricks.properties.databricksAccessToken <object>	# DatabricksAccessToken: Databricks access token
+spec.properties.databricks.properties.databricksAccessToken.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.databricks.properties.databricksAccessToken.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.databricks.properties.workspaceUrl <string>	# WorkspaceUrl: Workspace Url
+spec.properties.databricks.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.databricks.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.databricks.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.databricks.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.databricks.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.hdInsight <object>	# HDInsight: Mutually exclusive with all other properties
+spec.properties.hdInsight.additionalProperties <any>
+spec.properties.hdInsight.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.hdInsight.computeType <string> (required) enum=HDInsight	# ComputeType: The type of compute
+spec.properties.hdInsight.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.hdInsight.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.hdInsight.properties <object>	# Properties: HDInsight compute properties
+spec.properties.hdInsight.properties.address <string>	# Address: Public IP address of the master node of the cluster.
+spec.properties.hdInsight.properties.administratorAccount <object>	# AdministratorAccount: Admin credentials for master node of the cluster
+spec.properties.hdInsight.properties.administratorAccount.password <object>	# Password: Password of admin account
+spec.properties.hdInsight.properties.administratorAccount.password.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.hdInsight.properties.administratorAccount.password.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.hdInsight.properties.administratorAccount.privateKeyData <object>	# PrivateKeyData: Private key data
+spec.properties.hdInsight.properties.administratorAccount.privateKeyData.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.hdInsight.properties.administratorAccount.privateKeyData.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.hdInsight.properties.administratorAccount.publicKeyData <object>	# PublicKeyData: Public key data
+spec.properties.hdInsight.properties.administratorAccount.publicKeyData.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.hdInsight.properties.administratorAccount.publicKeyData.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.hdInsight.properties.administratorAccount.username <string>	# Username: Username of admin account
+spec.properties.hdInsight.properties.sshPort <integer>	# SshPort: Port open for ssh connections on the master node of the cluster.
+spec.properties.hdInsight.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.hdInsight.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.hdInsight.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.hdInsight.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.hdInsight.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.kubernetes <object>	# Kubernetes: Mutually exclusive with all other properties
+spec.properties.kubernetes.additionalProperties <any>
+spec.properties.kubernetes.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.kubernetes.computeType <string> (required) enum=Kubernetes	# ComputeType: The type of compute
+spec.properties.kubernetes.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.kubernetes.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.kubernetes.properties <object>	# Properties: Properties of Kubernetes
+spec.properties.kubernetes.properties.defaultInstanceType <string>	# DefaultInstanceType: Default instance type
+spec.properties.kubernetes.properties.extensionInstanceReleaseTrain <string>	# ExtensionInstanceReleaseTrain: Extension instance release train.
+spec.properties.kubernetes.properties.extensionPrincipalId <string>	# ExtensionPrincipalId: Extension principal-id.
+spec.properties.kubernetes.properties.extensionPrincipalIdFromConfig <object>	# ExtensionPrincipalIdFromConfig: Extension principal-id.
+spec.properties.kubernetes.properties.extensionPrincipalIdFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.kubernetes.properties.extensionPrincipalIdFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.kubernetes.properties.instanceTypes <map[string]object>	# InstanceTypes: Instance Type Schema
+spec.properties.kubernetes.properties.instanceTypes.<key>.nodeSelector <map[string]string>	# NodeSelector: Node Selector
+spec.properties.kubernetes.properties.instanceTypes.<key>.resources <object>	# Resources: Resource requests/limits for this instance type
+spec.properties.kubernetes.properties.instanceTypes.<key>.resources.limits <map[string]string>	# Limits: Resource limits for this instance type
+spec.properties.kubernetes.properties.instanceTypes.<key>.resources.requests <map[string]string>	# Requests: Resource requests for this instance type
+spec.properties.kubernetes.properties.namespace <string>	# Namespace: Compute namespace
+spec.properties.kubernetes.properties.relayConnectionString <object>	# RelayConnectionString: Relay connection string.
+spec.properties.kubernetes.properties.relayConnectionString.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.kubernetes.properties.relayConnectionString.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.kubernetes.properties.serviceBusConnectionString <object>	# ServiceBusConnectionString: ServiceBus connection string.
+spec.properties.kubernetes.properties.serviceBusConnectionString.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.kubernetes.properties.serviceBusConnectionString.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.kubernetes.properties.vcName <string>	# VcName: VC name.
+spec.properties.kubernetes.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.kubernetes.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.kubernetes.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.kubernetes.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.kubernetes.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.synapseSpark <object>	# SynapseSpark: Mutually exclusive with all other properties
+spec.properties.synapseSpark.additionalProperties <any>
+spec.properties.synapseSpark.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.synapseSpark.computeType <string> (required) enum=SynapseSpark	# ComputeType: The type of compute
+spec.properties.synapseSpark.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.synapseSpark.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.synapseSpark.properties <object>
+spec.properties.synapseSpark.properties.autoPauseProperties <object>	# AutoPauseProperties: Auto pause properties.
+spec.properties.synapseSpark.properties.autoPauseProperties.delayInMinutes <integer>
+spec.properties.synapseSpark.properties.autoPauseProperties.enabled <boolean>
+spec.properties.synapseSpark.properties.autoScaleProperties <object>	# AutoScaleProperties: Auto scale properties.
+spec.properties.synapseSpark.properties.autoScaleProperties.enabled <boolean>
+spec.properties.synapseSpark.properties.autoScaleProperties.maxNodeCount <integer>
+spec.properties.synapseSpark.properties.autoScaleProperties.minNodeCount <integer>
+spec.properties.synapseSpark.properties.nodeCount <integer>	# NodeCount: The number of compute nodes currently assigned to the compute.
+spec.properties.synapseSpark.properties.nodeSize <string>	# NodeSize: Node size.
+spec.properties.synapseSpark.properties.nodeSizeFamily <string>	# NodeSizeFamily: Node size family.
+spec.properties.synapseSpark.properties.poolName <string>	# PoolName: Pool name.
+spec.properties.synapseSpark.properties.resourceGroup <string>	# ResourceGroup: Name of the resource group in which workspace is located.
+spec.properties.synapseSpark.properties.sparkVersion <string>	# SparkVersion: Spark version.
+spec.properties.synapseSpark.properties.subscriptionId <string>	# SubscriptionId: Azure subscription identifier.
+spec.properties.synapseSpark.properties.workspaceName <string>	# WorkspaceName: Name of Azure Machine Learning workspace.
+spec.properties.synapseSpark.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.synapseSpark.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.synapseSpark.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.synapseSpark.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.synapseSpark.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.virtualMachine <object>	# VirtualMachine: Mutually exclusive with all other properties
+spec.properties.virtualMachine.additionalProperties <any>
+spec.properties.virtualMachine.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+spec.properties.virtualMachine.computeType <string> (required) enum=VirtualMachine	# ComputeType: The type of compute
+spec.properties.virtualMachine.description <string>	# Description: The description of the Machine Learning compute.
+spec.properties.virtualMachine.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+spec.properties.virtualMachine.properties <object>
+spec.properties.virtualMachine.properties.address <string>	# Address: Public IP address of the virtual machine.
+spec.properties.virtualMachine.properties.administratorAccount <object>	# AdministratorAccount: Admin credentials for virtual machine
+spec.properties.virtualMachine.properties.administratorAccount.password <object>	# Password: Password of admin account
+spec.properties.virtualMachine.properties.administratorAccount.password.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.virtualMachine.properties.administratorAccount.password.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.virtualMachine.properties.administratorAccount.privateKeyData <object>	# PrivateKeyData: Private key data
+spec.properties.virtualMachine.properties.administratorAccount.privateKeyData.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.virtualMachine.properties.administratorAccount.privateKeyData.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.virtualMachine.properties.administratorAccount.publicKeyData <object>	# PublicKeyData: Public key data
+spec.properties.virtualMachine.properties.administratorAccount.publicKeyData.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.properties.virtualMachine.properties.administratorAccount.publicKeyData.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
+spec.properties.virtualMachine.properties.administratorAccount.username <string>	# Username: Username of admin account
+spec.properties.virtualMachine.properties.isNotebookInstanceCompute <boolean>	# IsNotebookInstanceCompute: Indicates whether this compute will be used for running notebooks.
+spec.properties.virtualMachine.properties.notebookServerPort <integer>	# NotebookServerPort: Notebook server port open for ssh connections.
+spec.properties.virtualMachine.properties.sshPort <integer>	# SshPort: Port open for ssh connections.
+spec.properties.virtualMachine.properties.virtualMachineSize <string>	# VirtualMachineSize: Virtual Machine size
+spec.properties.virtualMachine.resourceReference <object>	# ResourceReference: ARM resource id of the underlying compute
+spec.properties.virtualMachine.resourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.virtualMachine.resourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.virtualMachine.resourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.virtualMachine.resourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.sku <object>	# Sku: The sku of the workspace.
+spec.sku.capacity <integer>	# Capacity: If the SKU supports scale out/in then the capacity integer should be included. If scale out/in is not possible for the resource this may be omitted.
+spec.sku.family <string>	# Family: If the service has different generations of hardware, for the same SKU, then that can be captured here.
+spec.sku.name <string> (required)	# Name: The name of the SKU. Ex - P3. It is typically a letter+number code
+spec.sku.size <string>	# Size: The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code.
+spec.sku.tier <string> enum=Basic|Free|Premium|Standard	# Tier: This field is required to be implemented by the Resource Provider if the service has more than one tier, but is not required on a PUT.
+spec.tags <map[string]string>	# Tags: Contains resource tags defined as key/value pairs.
+status <object>
+status.additionalProperties <any>
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.id <string>	# Id: Fully qualified resource ID for the resource. Ex - /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}
+status.identity <object>	# Identity: The identity of the resource.
+status.identity.principalId <string>	# PrincipalId: The service principal ID of the system assigned identity. This property will only be provided for a system assigned identity.
+status.identity.tenantId <string>	# TenantId: The tenant ID of the system assigned identity. This property will only be provided for a system assigned identity.
+status.identity.type <string>	# Type: Type of managed service identity (where both SystemAssigned and UserAssigned types are allowed).
+status.identity.userAssignedIdentities <map[string]object>
+status.identity.userAssignedIdentities.<key>.clientId <string>	# ClientId: The client ID of the assigned identity.
+status.identity.userAssignedIdentities.<key>.principalId <string>	# PrincipalId: The principal ID of the assigned identity.
+status.location <string>	# Location: Specifies the location of the resource.
+status.name <string>	# Name: The name of the resource
+status.properties <object>	# Properties: Compute properties
+status.properties.aks <object>	# AKS: Mutually exclusive with all other properties
+status.properties.aks.additionalProperties <any>
+status.properties.aks.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.aks.computeType <string>	# ComputeType: The type of compute
+status.properties.aks.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.aks.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.aks.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.aks.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.aks.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.aks.properties <object>	# Properties: AKS properties
+status.properties.aks.properties.agentCount <integer>	# AgentCount: Number of agents
+status.properties.aks.properties.agentVmSize <string>	# AgentVmSize: Agent virtual machine size
+status.properties.aks.properties.aksNetworkingConfiguration <object>	# AksNetworkingConfiguration: AKS networking configuration for vnet
+status.properties.aks.properties.aksNetworkingConfiguration.dnsServiceIP <string>	# DnsServiceIP: An IP address assigned to the Kubernetes DNS service. It must be within the Kubernetes service address range specified in serviceCidr.
+status.properties.aks.properties.aksNetworkingConfiguration.dockerBridgeCidr <string>	# DockerBridgeCidr: A CIDR notation IP range assigned to the Docker bridge network. It must not overlap with any Subnet IP ranges or the Kubernetes service address range.
+status.properties.aks.properties.aksNetworkingConfiguration.serviceCidr <string>	# ServiceCidr: A CIDR notation IP range from which to assign service cluster IPs. It must not overlap with any Subnet IP ranges.
+status.properties.aks.properties.aksNetworkingConfiguration.subnetId <string>	# SubnetId: Virtual network subnet resource ID the compute nodes belong to
+status.properties.aks.properties.clusterFqdn <string>	# ClusterFqdn: Cluster full qualified domain name
+status.properties.aks.properties.clusterPurpose <string>	# ClusterPurpose: Intended usage of the cluster
+status.properties.aks.properties.loadBalancerSubnet <string>	# LoadBalancerSubnet: Load Balancer Subnet
+status.properties.aks.properties.loadBalancerType <string>	# LoadBalancerType: Load Balancer Type
+status.properties.aks.properties.sslConfiguration <object>	# SslConfiguration: SSL configuration
+status.properties.aks.properties.sslConfiguration.cname <string>	# Cname: CNAME of the cert
+status.properties.aks.properties.sslConfiguration.leafDomainLabel <string>	# LeafDomainLabel: Leaf domain label of public endpoint
+status.properties.aks.properties.sslConfiguration.overwriteExistingDomain <boolean>	# OverwriteExistingDomain: Indicates whether to overwrite existing domain label.
+status.properties.aks.properties.sslConfiguration.status <string>	# Status: Enable or disable ssl for scoring
+status.properties.aks.properties.systemServices <[]object>	# SystemServices: System services
+status.properties.aks.properties.systemServices[].publicIpAddress <string>	# PublicIpAddress: Public IP address
+status.properties.aks.properties.systemServices[].systemServiceType <string>	# SystemServiceType: The type of this system service.
+status.properties.aks.properties.systemServices[].version <string>	# Version: The version for this type.
+status.properties.aks.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.aks.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.aks.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.aks.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.aks.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.aks.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.aks.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.aks.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.aks.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.aks.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.aks.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.aks.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.aks.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.aks.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.aks.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.aks.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.aks.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.amlCompute <object>	# AmlCompute: Mutually exclusive with all other properties
+status.properties.amlCompute.additionalProperties <any>
+status.properties.amlCompute.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.amlCompute.computeType <string>	# ComputeType: The type of compute
+status.properties.amlCompute.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.amlCompute.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.amlCompute.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.amlCompute.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.amlCompute.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.amlCompute.properties <object>	# Properties: Properties of AmlCompute
+status.properties.amlCompute.properties.allocationState <string>	# AllocationState: Allocation state of the compute. Possible values are: steady - Indicates that the compute is not resizing. There are no changes to the number of compute nodes in the compute in progress. A compute enters this state when it is created and when no operations are being performed on the compute to change the number of compute nodes. resizing - Indicates that the compute is resizing; that is, compute nodes are being added to or removed from the compute.
+status.properties.amlCompute.properties.allocationStateTransitionTime <string>	# AllocationStateTransitionTime: The time at which the compute entered its current allocation state.
+status.properties.amlCompute.properties.currentNodeCount <integer>	# CurrentNodeCount: The number of compute nodes currently assigned to the compute.
+status.properties.amlCompute.properties.enableNodePublicIp <boolean>	# EnableNodePublicIp: Enable or disable node public IP address provisioning. Possible values are: Possible values are: true - Indicates that the compute nodes will have public IPs provisioned. false - Indicates that the compute nodes will have a private endpoint and no public IPs.
+status.properties.amlCompute.properties.errors <[]object>	# Errors: Collection of errors encountered by various compute nodes during node setup.
+status.properties.amlCompute.properties.errors[].error <object>	# Error: The error object.
+status.properties.amlCompute.properties.errors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.amlCompute.properties.errors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.amlCompute.properties.errors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.amlCompute.properties.errors[].error.code <string>	# Code: The error code.
+status.properties.amlCompute.properties.errors[].error.details <[]object>	# Details: The error details.
+status.properties.amlCompute.properties.errors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.amlCompute.properties.errors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.amlCompute.properties.errors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.amlCompute.properties.errors[].error.details[].code <string>	# Code: The error code.
+status.properties.amlCompute.properties.errors[].error.details[].message <string>	# Message: The error message.
+status.properties.amlCompute.properties.errors[].error.details[].target <string>	# Target: The error target.
+status.properties.amlCompute.properties.errors[].error.message <string>	# Message: The error message.
+status.properties.amlCompute.properties.errors[].error.target <string>	# Target: The error target.
+status.properties.amlCompute.properties.isolatedNetwork <boolean>	# IsolatedNetwork: Network is isolated or not
+status.properties.amlCompute.properties.nodeStateCounts <object>	# NodeStateCounts: Counts of various node states on the compute.
+status.properties.amlCompute.properties.nodeStateCounts.idleNodeCount <integer>	# IdleNodeCount: Number of compute nodes in idle state.
+status.properties.amlCompute.properties.nodeStateCounts.leavingNodeCount <integer>	# LeavingNodeCount: Number of compute nodes which are leaving the amlCompute.
+status.properties.amlCompute.properties.nodeStateCounts.preemptedNodeCount <integer>	# PreemptedNodeCount: Number of compute nodes which are in preempted state.
+status.properties.amlCompute.properties.nodeStateCounts.preparingNodeCount <integer>	# PreparingNodeCount: Number of compute nodes which are being prepared.
+status.properties.amlCompute.properties.nodeStateCounts.runningNodeCount <integer>	# RunningNodeCount: Number of compute nodes which are running jobs.
+status.properties.amlCompute.properties.nodeStateCounts.unusableNodeCount <integer>	# UnusableNodeCount: Number of compute nodes which are in unusable state.
+status.properties.amlCompute.properties.osType <string>	# OsType: Compute OS Type
+status.properties.amlCompute.properties.propertyBag <object (free-form)>	# PropertyBag: A property bag containing additional properties.
+status.properties.amlCompute.properties.remoteLoginPortPublicAccess <string>	# RemoteLoginPortPublicAccess: State of the public SSH port. Possible values are: Disabled - Indicates that the public ssh port is closed on all nodes of the cluster. Enabled - Indicates that the public ssh port is open on all nodes of the cluster. NotSpecified - Indicates that the public ssh port is closed on all nodes of the cluster if VNet is defined, else is open all public nodes. It can be default only during cluster creation time, after creation it will be either enabled or disabled.
+status.properties.amlCompute.properties.scaleSettings <object>	# ScaleSettings: Scale settings for AML Compute
+status.properties.amlCompute.properties.scaleSettings.maxNodeCount <integer>	# MaxNodeCount: Max number of nodes to use
+status.properties.amlCompute.properties.scaleSettings.minNodeCount <integer>	# MinNodeCount: Min number of nodes to use
+status.properties.amlCompute.properties.scaleSettings.nodeIdleTimeBeforeScaleDown <string>	# NodeIdleTimeBeforeScaleDown: Node Idle Time before scaling down amlCompute. This string needs to be in the RFC Format.
+status.properties.amlCompute.properties.subnet <object>	# Subnet: Virtual network subnet resource ID the compute nodes belong to.
+status.properties.amlCompute.properties.subnet.id <string>	# Id: The ID of the resource
+status.properties.amlCompute.properties.targetNodeCount <integer>	# TargetNodeCount: The target number of compute nodes for the compute. If the allocationState is resizing, this property denotes the target node count for the ongoing resize operation. If the allocationState is steady, this property denotes the target node count for the previous resize operation.
+status.properties.amlCompute.properties.userAccountCredentials <object>	# UserAccountCredentials: Credentials for an administrator user account that will be created on each compute node.
+status.properties.amlCompute.properties.userAccountCredentials.adminUserName <string>	# AdminUserName: Name of the administrator user account which can be used to SSH to nodes.
+status.properties.amlCompute.properties.virtualMachineImage <object>	# VirtualMachineImage: Virtual Machine image for AML Compute - windows only
+status.properties.amlCompute.properties.virtualMachineImage.id <string>	# Id: Virtual Machine image path
+status.properties.amlCompute.properties.vmPriority <string>	# VmPriority: Virtual Machine priority
+status.properties.amlCompute.properties.vmSize <string>	# VmSize: Virtual Machine Size
+status.properties.amlCompute.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.amlCompute.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.amlCompute.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.amlCompute.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.amlCompute.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.amlCompute.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.amlCompute.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.amlCompute.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.amlCompute.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.amlCompute.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.amlCompute.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.amlCompute.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.amlCompute.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.amlCompute.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.amlCompute.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.amlCompute.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.amlCompute.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.computeInstance <object>	# ComputeInstance: Mutually exclusive with all other properties
+status.properties.computeInstance.additionalProperties <any>
+status.properties.computeInstance.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.computeInstance.computeType <string>	# ComputeType: The type of compute
+status.properties.computeInstance.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.computeInstance.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.computeInstance.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.computeInstance.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.computeInstance.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.computeInstance.properties <object>	# Properties: Properties of ComputeInstance
+status.properties.computeInstance.properties.applicationSharingPolicy <string>	# ApplicationSharingPolicy: Policy for sharing applications on this compute instance among users of parent workspace. If Personal, only the creator can access applications on this compute instance. When Shared, any workspace user can access applications on this instance depending on his/her assigned role.
+status.properties.computeInstance.properties.applications <[]object>	# Applications: Describes available applications and their endpoints on this ComputeInstance.
+status.properties.computeInstance.properties.applications[].displayName <string>	# DisplayName: Name of the ComputeInstance application.
+status.properties.computeInstance.properties.applications[].endpointUri <string>	# EndpointUri: Application' endpoint URI.
+status.properties.computeInstance.properties.computeInstanceAuthorizationType <string>	# ComputeInstanceAuthorizationType: The Compute Instance Authorization type. Available values are personal (default).
+status.properties.computeInstance.properties.connectivityEndpoints <object>	# ConnectivityEndpoints: Describes all connectivity endpoints available for this ComputeInstance.
+status.properties.computeInstance.properties.connectivityEndpoints.privateIpAddress <string>	# PrivateIpAddress: Private IP Address of this ComputeInstance (local to the VNET in which the compute instance is deployed).
+status.properties.computeInstance.properties.connectivityEndpoints.publicIpAddress <string>	# PublicIpAddress: Public IP Address of this ComputeInstance.
+status.properties.computeInstance.properties.containers <[]object>	# Containers: Describes informations of containers on this ComputeInstance.
+status.properties.computeInstance.properties.containers[].autosave <string>	# Autosave: Auto save settings.
+status.properties.computeInstance.properties.containers[].environment <object>	# Environment: Environment information of this container.
+status.properties.computeInstance.properties.containers[].environment.name <string>	# Name: name of environment.
+status.properties.computeInstance.properties.containers[].environment.version <string>	# Version: version of environment.
+status.properties.computeInstance.properties.containers[].gpu <string>	# Gpu: Information of GPU.
+status.properties.computeInstance.properties.containers[].name <string>	# Name: Name of the ComputeInstance container.
+status.properties.computeInstance.properties.containers[].network <string>	# Network: network of this container.
+status.properties.computeInstance.properties.containers[].services <[]object>	# Services: services of this containers.
+status.properties.computeInstance.properties.createdBy <object>	# CreatedBy: Describes information on user who created this ComputeInstance.
+status.properties.computeInstance.properties.createdBy.userId <string>	# UserId: Uniquely identifies the user within his/her organization.
+status.properties.computeInstance.properties.createdBy.userName <string>	# UserName: Name of the user.
+status.properties.computeInstance.properties.createdBy.userOrgId <string>	# UserOrgId: Uniquely identifies user' Azure Active Directory organization.
+status.properties.computeInstance.properties.customServices <[]object>	# CustomServices: List of Custom Services added to the compute.
+status.properties.computeInstance.properties.customServices[].docker <object>	# Docker: Describes the docker settings for the image
+status.properties.computeInstance.properties.customServices[].docker.privileged <boolean>	# Privileged: Indicate whether container shall run in privileged or non-privileged mode.
+status.properties.computeInstance.properties.customServices[].endpoints <[]object>	# Endpoints: Configuring the endpoints for the container
+status.properties.computeInstance.properties.customServices[].endpoints[].hostIp <string>	# HostIp: Host IP over which the application is exposed from the container
+status.properties.computeInstance.properties.customServices[].endpoints[].name <string>	# Name: Name of the Endpoint
+status.properties.computeInstance.properties.customServices[].endpoints[].protocol <string>	# Protocol: Protocol over which communication will happen over this endpoint
+status.properties.computeInstance.properties.customServices[].endpoints[].published <integer>	# Published: Port over which the application is exposed from container.
+status.properties.computeInstance.properties.customServices[].endpoints[].target <integer>	# Target: Application port inside the container.
+status.properties.computeInstance.properties.customServices[].environmentVariables <map[string]object>	# EnvironmentVariables: Environment Variable for the container
+status.properties.computeInstance.properties.customServices[].environmentVariables.<key>.type <string>	# Type: Type of the Environment Variable. Possible values are: local - For local variable
+status.properties.computeInstance.properties.customServices[].environmentVariables.<key>.value <string>	# Value: Value of the Environment variable
+status.properties.computeInstance.properties.customServices[].image <object>	# Image: Describes the Image Specifications
+status.properties.computeInstance.properties.customServices[].image.reference <string>	# Reference: Image reference
+status.properties.computeInstance.properties.customServices[].image.type <string>	# Type: Type of the image. Possible values are: docker - For docker images. azureml - For AzureML images
+status.properties.computeInstance.properties.customServices[].name <string>	# Name: Name of the Custom Service
+status.properties.computeInstance.properties.customServices[].volumes <[]object>	# Volumes: Configuring the volumes for the container
+status.properties.computeInstance.properties.customServices[].volumes[].bind <object>	# Bind: Bind Options of the mount
+status.properties.computeInstance.properties.customServices[].volumes[].bind.createHostPath <boolean>	# CreateHostPath: Indicate whether to create host path.
+status.properties.computeInstance.properties.customServices[].volumes[].bind.propagation <string>	# Propagation: Type of Bind Option
+status.properties.computeInstance.properties.customServices[].volumes[].bind.selinux <string>	# Selinux: Mention the selinux options.
+status.properties.computeInstance.properties.customServices[].volumes[].consistency <string>	# Consistency: Consistency of the volume
+status.properties.computeInstance.properties.customServices[].volumes[].readOnly <boolean>	# ReadOnly: Indicate whether to mount volume as readOnly. Default value for this is false.
+status.properties.computeInstance.properties.customServices[].volumes[].source <string>	# Source: Source of the mount. For bind mounts this is the host path.
+status.properties.computeInstance.properties.customServices[].volumes[].target <string>	# Target: Target of the mount. For bind mounts this is the path in the container.
+status.properties.computeInstance.properties.customServices[].volumes[].tmpfs <object>	# Tmpfs: tmpfs option of the mount
+status.properties.computeInstance.properties.customServices[].volumes[].tmpfs.size <integer>	# Size: Mention the Tmpfs size
+status.properties.computeInstance.properties.customServices[].volumes[].type <string>	# Type: Type of Volume Definition. Possible Values: bind,volume,tmpfs,npipe
+status.properties.computeInstance.properties.customServices[].volumes[].volume <object>	# Volume: Volume Options of the mount
+status.properties.computeInstance.properties.customServices[].volumes[].volume.nocopy <boolean>	# Nocopy: Indicate whether volume is nocopy
+status.properties.computeInstance.properties.dataDisks <[]object>	# DataDisks: Describes informations of dataDisks on this ComputeInstance.
+status.properties.computeInstance.properties.dataDisks[].caching <string>	# Caching: Caching type of Data Disk.
+status.properties.computeInstance.properties.dataDisks[].diskSizeGB <integer>	# DiskSizeGB: The initial disk size in gigabytes.
+status.properties.computeInstance.properties.dataDisks[].lun <integer>	# Lun: The lun is used to uniquely identify each data disk. If attaching multiple disks, each should have a distinct lun.
+status.properties.computeInstance.properties.dataDisks[].storageAccountType <string>	# StorageAccountType: type of this storage account.
+status.properties.computeInstance.properties.dataMounts <[]object>	# DataMounts: Describes informations of dataMounts on this ComputeInstance.
+status.properties.computeInstance.properties.dataMounts[].createdBy <string>	# CreatedBy: who this data mount created by.
+status.properties.computeInstance.properties.dataMounts[].error <string>	# Error: Error of this data mount.
+status.properties.computeInstance.properties.dataMounts[].mountAction <string>	# MountAction: Mount Action.
+status.properties.computeInstance.properties.dataMounts[].mountName <string>	# MountName: name of the ComputeInstance data mount.
+status.properties.computeInstance.properties.dataMounts[].mountPath <string>	# MountPath: Path of this data mount.
+status.properties.computeInstance.properties.dataMounts[].mountState <string>	# MountState: Mount state.
+status.properties.computeInstance.properties.dataMounts[].mountedOn <string>	# MountedOn: The time when the disk mounted.
+status.properties.computeInstance.properties.dataMounts[].source <string>	# Source: Source of the ComputeInstance data mount.
+status.properties.computeInstance.properties.dataMounts[].sourceType <string>	# SourceType: Data source type.
+status.properties.computeInstance.properties.enableNodePublicIp <boolean>	# EnableNodePublicIp: Enable or disable node public IP address provisioning. Possible values are: Possible values are: true - Indicates that the compute nodes will have public IPs provisioned. false - Indicates that the compute nodes will have a private endpoint and no public IPs.
+status.properties.computeInstance.properties.errors <[]object>	# Errors: Collection of errors encountered on this ComputeInstance.
+status.properties.computeInstance.properties.errors[].error <object>	# Error: The error object.
+status.properties.computeInstance.properties.errors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.computeInstance.properties.errors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.computeInstance.properties.errors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.computeInstance.properties.errors[].error.code <string>	# Code: The error code.
+status.properties.computeInstance.properties.errors[].error.details <[]object>	# Details: The error details.
+status.properties.computeInstance.properties.errors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.computeInstance.properties.errors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.computeInstance.properties.errors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.computeInstance.properties.errors[].error.details[].code <string>	# Code: The error code.
+status.properties.computeInstance.properties.errors[].error.details[].message <string>	# Message: The error message.
+status.properties.computeInstance.properties.errors[].error.details[].target <string>	# Target: The error target.
+status.properties.computeInstance.properties.errors[].error.message <string>	# Message: The error message.
+status.properties.computeInstance.properties.errors[].error.target <string>	# Target: The error target.
+status.properties.computeInstance.properties.lastOperation <object>	# LastOperation: The last operation on ComputeInstance.
+status.properties.computeInstance.properties.lastOperation.operationName <string>	# OperationName: Name of the last operation.
+status.properties.computeInstance.properties.lastOperation.operationStatus <string>	# OperationStatus: Operation status.
+status.properties.computeInstance.properties.lastOperation.operationTime <string>	# OperationTime: Time of the last operation.
+status.properties.computeInstance.properties.lastOperation.operationTrigger <string>	# OperationTrigger: Trigger of operation.
+status.properties.computeInstance.properties.osImageMetadata <object>	# OsImageMetadata: Returns metadata about the operating system image for this compute instance.
+status.properties.computeInstance.properties.osImageMetadata.currentImageVersion <string>	# CurrentImageVersion: Specifies the current operating system image version this compute instance is running on.
+status.properties.computeInstance.properties.osImageMetadata.isLatestOsImageVersion <boolean>	# IsLatestOsImageVersion: Specifies whether this compute instance is running on the latest operating system image.
+status.properties.computeInstance.properties.osImageMetadata.latestImageVersion <string>	# LatestImageVersion: Specifies the latest available operating system image version.
+status.properties.computeInstance.properties.personalComputeInstanceSettings <object>	# PersonalComputeInstanceSettings: Settings for a personal compute instance.
+status.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser <object>	# AssignedUser: A user explicitly assigned to a personal compute instance.
+status.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.objectId <string>	# ObjectId: User’s AAD Object Id.
+status.properties.computeInstance.properties.personalComputeInstanceSettings.assignedUser.tenantId <string>	# TenantId: User’s AAD Tenant Id.
+status.properties.computeInstance.properties.schedules <object>	# Schedules: The list of schedules to be applied on the computes.
+status.properties.computeInstance.properties.schedules.computeStartStop <[]object>	# ComputeStartStop: The list of compute start stop schedules to be applied.
+status.properties.computeInstance.properties.schedules.computeStartStop[].action <string>	# Action: [Required] The compute power action.
+status.properties.computeInstance.properties.schedules.computeStartStop[].cron <object>	# Cron: Required if triggerType is Cron.
+status.properties.computeInstance.properties.schedules.computeStartStop[].cron.expression <string>	# Expression: [Required] Specifies cron expression of schedule. The expression should follow NCronTab format.
+status.properties.computeInstance.properties.schedules.computeStartStop[].cron.startTime <string>	# StartTime: The start time in yyyy-MM-ddTHH:mm:ss format.
+status.properties.computeInstance.properties.schedules.computeStartStop[].cron.timeZone <string>	# TimeZone: Specifies time zone in which the schedule runs. TimeZone should follow Windows time zone format. Refer: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones?view=windows-11
+status.properties.computeInstance.properties.schedules.computeStartStop[].id <string>	# Id: A system assigned id for the schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].provisioningStatus <string>	# ProvisioningStatus: The current deployment state of schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence <object>	# Recurrence: Required if triggerType is Recurrence.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.frequency <string>	# Frequency: [Required] The frequency to trigger schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.interval <integer>	# Interval: [Required] Specifies schedule interval in conjunction with frequency
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule <object>	# Schedule: [Required] The recurrence schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.hours <[]integer>	# Hours: [Required] List of hours for the schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.minutes <[]integer>	# Minutes: [Required] List of minutes for the schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.monthDays <[]integer>	# MonthDays: List of month days for the schedule
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.schedule.weekDays <[]string>	# WeekDays: List of days for the schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.startTime <string>	# StartTime: The start time in yyyy-MM-ddTHH:mm:ss format.
+status.properties.computeInstance.properties.schedules.computeStartStop[].recurrence.timeZone <string>	# TimeZone: Specifies time zone in which the schedule runs. TimeZone should follow Windows time zone format. Refer: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones?view=windows-11
+status.properties.computeInstance.properties.schedules.computeStartStop[].schedule <object>	# Schedule: [Deprecated] Not used any more.
+status.properties.computeInstance.properties.schedules.computeStartStop[].schedule.id <string>	# Id: A system assigned id for the schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].schedule.provisioningStatus <string>	# ProvisioningStatus: The current deployment state of schedule.
+status.properties.computeInstance.properties.schedules.computeStartStop[].schedule.status <string>	# Status: Is the schedule enabled or disabled?
+status.properties.computeInstance.properties.schedules.computeStartStop[].status <string>	# Status: Is the schedule enabled or disabled?
+status.properties.computeInstance.properties.schedules.computeStartStop[].triggerType <string>	# TriggerType: [Required] The schedule trigger type.
+status.properties.computeInstance.properties.setupScripts <object>	# SetupScripts: Details of customized scripts to execute for setting up the cluster.
+status.properties.computeInstance.properties.setupScripts.scripts <object>	# Scripts: Customized setup scripts
+status.properties.computeInstance.properties.setupScripts.scripts.creationScript <object>	# CreationScript: Script that's run only once during provision of the compute.
+status.properties.computeInstance.properties.setupScripts.scripts.creationScript.scriptArguments <string>	# ScriptArguments: Optional command line arguments passed to the script to run.
+status.properties.computeInstance.properties.setupScripts.scripts.creationScript.scriptData <string>	# ScriptData: The location of scripts in the mounted volume.
+status.properties.computeInstance.properties.setupScripts.scripts.creationScript.scriptSource <string>	# ScriptSource: The storage source of the script: workspace.
+status.properties.computeInstance.properties.setupScripts.scripts.creationScript.timeout <string>	# Timeout: Optional time period passed to timeout command.
+status.properties.computeInstance.properties.setupScripts.scripts.startupScript <object>	# StartupScript: Script that's run every time the machine starts.
+status.properties.computeInstance.properties.setupScripts.scripts.startupScript.scriptArguments <string>	# ScriptArguments: Optional command line arguments passed to the script to run.
+status.properties.computeInstance.properties.setupScripts.scripts.startupScript.scriptData <string>	# ScriptData: The location of scripts in the mounted volume.
+status.properties.computeInstance.properties.setupScripts.scripts.startupScript.scriptSource <string>	# ScriptSource: The storage source of the script: workspace.
+status.properties.computeInstance.properties.setupScripts.scripts.startupScript.timeout <string>	# Timeout: Optional time period passed to timeout command.
+status.properties.computeInstance.properties.sshSettings <object>	# SshSettings: Specifies policy and settings for SSH access.
+status.properties.computeInstance.properties.sshSettings.adminPublicKey <string>	# AdminPublicKey: Specifies the SSH rsa public key file as a string. Use "ssh-keygen -t rsa -b 2048" to generate your SSH key pairs.
+status.properties.computeInstance.properties.sshSettings.adminUserName <string>	# AdminUserName: Describes the admin user name.
+status.properties.computeInstance.properties.sshSettings.sshPort <integer>	# SshPort: Describes the port for connecting through SSH.
+status.properties.computeInstance.properties.sshSettings.sshPublicAccess <string>	# SshPublicAccess: State of the public SSH port. Possible values are: Disabled - Indicates that the public ssh port is closed on this instance. Enabled - Indicates that the public ssh port is open and accessible according to the VNet/subnet policy if applicable.
+status.properties.computeInstance.properties.state <string>	# State: The current state of this ComputeInstance.
+status.properties.computeInstance.properties.subnet <object>	# Subnet: Virtual network subnet resource ID the compute nodes belong to.
+status.properties.computeInstance.properties.subnet.id <string>	# Id: The ID of the resource
+status.properties.computeInstance.properties.versions <object>	# Versions: ComputeInstance version.
+status.properties.computeInstance.properties.versions.runtime <string>	# Runtime: Runtime of compute instance.
+status.properties.computeInstance.properties.vmSize <string>	# VmSize: Virtual Machine Size
+status.properties.computeInstance.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.computeInstance.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.computeInstance.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.computeInstance.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.computeInstance.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.computeInstance.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.computeInstance.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.computeInstance.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.computeInstance.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.computeInstance.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.computeInstance.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.computeInstance.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.computeInstance.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.computeInstance.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.computeInstance.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.computeInstance.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.computeInstance.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.dataFactory <object>	# DataFactory: Mutually exclusive with all other properties
+status.properties.dataFactory.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.dataFactory.computeType <string>	# ComputeType: The type of compute
+status.properties.dataFactory.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.dataFactory.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.dataFactory.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.dataFactory.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.dataFactory.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.dataFactory.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.dataFactory.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.dataFactory.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.dataFactory.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.dataFactory.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.dataFactory.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.dataFactory.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.dataFactory.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.dataFactory.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.dataFactory.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.dataFactory.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.dataFactory.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.dataFactory.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.dataFactory.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.dataFactory.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.dataFactory.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.dataFactory.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.dataLakeAnalytics <object>	# DataLakeAnalytics: Mutually exclusive with all other properties
+status.properties.dataLakeAnalytics.additionalProperties <any>
+status.properties.dataLakeAnalytics.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.dataLakeAnalytics.computeType <string>	# ComputeType: The type of compute
+status.properties.dataLakeAnalytics.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.dataLakeAnalytics.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.dataLakeAnalytics.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.dataLakeAnalytics.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.dataLakeAnalytics.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.dataLakeAnalytics.properties <object>
+status.properties.dataLakeAnalytics.properties.dataLakeStoreAccountName <string>	# DataLakeStoreAccountName: DataLake Store Account Name
+status.properties.dataLakeAnalytics.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.dataLakeAnalytics.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.dataLakeAnalytics.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.dataLakeAnalytics.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.dataLakeAnalytics.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.databricks <object>	# Databricks: Mutually exclusive with all other properties
+status.properties.databricks.additionalProperties <any>
+status.properties.databricks.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.databricks.computeType <string>	# ComputeType: The type of compute
+status.properties.databricks.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.databricks.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.databricks.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.databricks.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.databricks.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.databricks.properties <object>	# Properties: Properties of Databricks
+status.properties.databricks.properties.workspaceUrl <string>	# WorkspaceUrl: Workspace Url
+status.properties.databricks.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.databricks.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.databricks.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.databricks.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.databricks.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.databricks.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.databricks.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.databricks.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.databricks.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.databricks.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.databricks.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.databricks.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.databricks.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.databricks.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.databricks.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.databricks.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.databricks.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.hdInsight <object>	# HDInsight: Mutually exclusive with all other properties
+status.properties.hdInsight.additionalProperties <any>
+status.properties.hdInsight.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.hdInsight.computeType <string>	# ComputeType: The type of compute
+status.properties.hdInsight.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.hdInsight.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.hdInsight.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.hdInsight.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.hdInsight.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.hdInsight.properties <object>	# Properties: HDInsight compute properties
+status.properties.hdInsight.properties.address <string>	# Address: Public IP address of the master node of the cluster.
+status.properties.hdInsight.properties.administratorAccount <object>	# AdministratorAccount: Admin credentials for master node of the cluster
+status.properties.hdInsight.properties.administratorAccount.username <string>	# Username: Username of admin account
+status.properties.hdInsight.properties.sshPort <integer>	# SshPort: Port open for ssh connections on the master node of the cluster.
+status.properties.hdInsight.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.hdInsight.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.hdInsight.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.hdInsight.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.hdInsight.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.hdInsight.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.hdInsight.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.hdInsight.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.hdInsight.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.hdInsight.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.hdInsight.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.hdInsight.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.hdInsight.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.hdInsight.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.hdInsight.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.hdInsight.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.hdInsight.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.kubernetes <object>	# Kubernetes: Mutually exclusive with all other properties
+status.properties.kubernetes.additionalProperties <any>
+status.properties.kubernetes.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.kubernetes.computeType <string>	# ComputeType: The type of compute
+status.properties.kubernetes.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.kubernetes.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.kubernetes.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.kubernetes.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.kubernetes.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.kubernetes.properties <object>	# Properties: Properties of Kubernetes
+status.properties.kubernetes.properties.defaultInstanceType <string>	# DefaultInstanceType: Default instance type
+status.properties.kubernetes.properties.extensionInstanceReleaseTrain <string>	# ExtensionInstanceReleaseTrain: Extension instance release train.
+status.properties.kubernetes.properties.extensionPrincipalId <string>	# ExtensionPrincipalId: Extension principal-id.
+status.properties.kubernetes.properties.instanceTypes <map[string]object>	# InstanceTypes: Instance Type Schema
+status.properties.kubernetes.properties.instanceTypes.<key>.nodeSelector <map[string]string>	# NodeSelector: Node Selector
+status.properties.kubernetes.properties.instanceTypes.<key>.resources <object>	# Resources: Resource requests/limits for this instance type
+status.properties.kubernetes.properties.instanceTypes.<key>.resources.limits <map[string]string>	# Limits: Resource limits for this instance type
+status.properties.kubernetes.properties.instanceTypes.<key>.resources.requests <map[string]string>	# Requests: Resource requests for this instance type
+status.properties.kubernetes.properties.namespace <string>	# Namespace: Compute namespace
+status.properties.kubernetes.properties.vcName <string>	# VcName: VC name.
+status.properties.kubernetes.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.kubernetes.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.kubernetes.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.kubernetes.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.kubernetes.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.kubernetes.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.kubernetes.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.kubernetes.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.kubernetes.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.kubernetes.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.kubernetes.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.kubernetes.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.kubernetes.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.kubernetes.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.kubernetes.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.kubernetes.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.kubernetes.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.synapseSpark <object>	# SynapseSpark: Mutually exclusive with all other properties
+status.properties.synapseSpark.additionalProperties <any>
+status.properties.synapseSpark.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.synapseSpark.computeType <string>	# ComputeType: The type of compute
+status.properties.synapseSpark.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.synapseSpark.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.synapseSpark.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.synapseSpark.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.synapseSpark.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.synapseSpark.properties <object>
+status.properties.synapseSpark.properties.autoPauseProperties <object>	# AutoPauseProperties: Auto pause properties.
+status.properties.synapseSpark.properties.autoPauseProperties.delayInMinutes <integer>
+status.properties.synapseSpark.properties.autoPauseProperties.enabled <boolean>
+status.properties.synapseSpark.properties.autoScaleProperties <object>	# AutoScaleProperties: Auto scale properties.
+status.properties.synapseSpark.properties.autoScaleProperties.enabled <boolean>
+status.properties.synapseSpark.properties.autoScaleProperties.maxNodeCount <integer>
+status.properties.synapseSpark.properties.autoScaleProperties.minNodeCount <integer>
+status.properties.synapseSpark.properties.nodeCount <integer>	# NodeCount: The number of compute nodes currently assigned to the compute.
+status.properties.synapseSpark.properties.nodeSize <string>	# NodeSize: Node size.
+status.properties.synapseSpark.properties.nodeSizeFamily <string>	# NodeSizeFamily: Node size family.
+status.properties.synapseSpark.properties.poolName <string>	# PoolName: Pool name.
+status.properties.synapseSpark.properties.resourceGroup <string>	# ResourceGroup: Name of the resource group in which workspace is located.
+status.properties.synapseSpark.properties.sparkVersion <string>	# SparkVersion: Spark version.
+status.properties.synapseSpark.properties.subscriptionId <string>	# SubscriptionId: Azure subscription identifier.
+status.properties.synapseSpark.properties.workspaceName <string>	# WorkspaceName: Name of Azure Machine Learning workspace.
+status.properties.synapseSpark.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.synapseSpark.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.synapseSpark.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.synapseSpark.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.synapseSpark.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.synapseSpark.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.synapseSpark.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.synapseSpark.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.synapseSpark.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.synapseSpark.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.synapseSpark.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.synapseSpark.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.synapseSpark.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.synapseSpark.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.synapseSpark.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.synapseSpark.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.synapseSpark.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.properties.virtualMachine <object>	# VirtualMachine: Mutually exclusive with all other properties
+status.properties.virtualMachine.additionalProperties <any>
+status.properties.virtualMachine.computeLocation <string>	# ComputeLocation: Location for the underlying compute
+status.properties.virtualMachine.computeType <string>	# ComputeType: The type of compute
+status.properties.virtualMachine.createdOn <string>	# CreatedOn: The time at which the compute was created.
+status.properties.virtualMachine.description <string>	# Description: The description of the Machine Learning compute.
+status.properties.virtualMachine.disableLocalAuth <boolean>	# DisableLocalAuth: Opt-out of local authentication and ensure customers can use only MSI and AAD exclusively for authentication.
+status.properties.virtualMachine.isAttachedCompute <boolean>	# IsAttachedCompute: Indicating whether the compute was provisioned by user and brought from outside if true, or machine learning service provisioned it if false.
+status.properties.virtualMachine.modifiedOn <string>	# ModifiedOn: The time at which the compute was last modified.
+status.properties.virtualMachine.properties <object>
+status.properties.virtualMachine.properties.address <string>	# Address: Public IP address of the virtual machine.
+status.properties.virtualMachine.properties.administratorAccount <object>	# AdministratorAccount: Admin credentials for virtual machine
+status.properties.virtualMachine.properties.administratorAccount.username <string>	# Username: Username of admin account
+status.properties.virtualMachine.properties.isNotebookInstanceCompute <boolean>	# IsNotebookInstanceCompute: Indicates whether this compute will be used for running notebooks.
+status.properties.virtualMachine.properties.notebookServerPort <integer>	# NotebookServerPort: Notebook server port open for ssh connections.
+status.properties.virtualMachine.properties.sshPort <integer>	# SshPort: Port open for ssh connections.
+status.properties.virtualMachine.properties.virtualMachineSize <string>	# VirtualMachineSize: Virtual Machine size
+status.properties.virtualMachine.provisioningErrors <[]object>	# ProvisioningErrors: Errors during provisioning
+status.properties.virtualMachine.provisioningErrors[].error <object>	# Error: The error object.
+status.properties.virtualMachine.provisioningErrors[].error.additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.virtualMachine.provisioningErrors[].error.additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.virtualMachine.provisioningErrors[].error.additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.virtualMachine.provisioningErrors[].error.code <string>	# Code: The error code.
+status.properties.virtualMachine.provisioningErrors[].error.details <[]object>	# Details: The error details.
+status.properties.virtualMachine.provisioningErrors[].error.details[].additionalInfo <[]object>	# AdditionalInfo: The error additional info.
+status.properties.virtualMachine.provisioningErrors[].error.details[].additionalInfo[].info <object (free-form)>	# Info: The additional info.
+status.properties.virtualMachine.provisioningErrors[].error.details[].additionalInfo[].type <string>	# Type: The additional info type.
+status.properties.virtualMachine.provisioningErrors[].error.details[].code <string>	# Code: The error code.
+status.properties.virtualMachine.provisioningErrors[].error.details[].message <string>	# Message: The error message.
+status.properties.virtualMachine.provisioningErrors[].error.details[].target <string>	# Target: The error target.
+status.properties.virtualMachine.provisioningErrors[].error.message <string>	# Message: The error message.
+status.properties.virtualMachine.provisioningErrors[].error.target <string>	# Target: The error target.
+status.properties.virtualMachine.provisioningState <string>	# ProvisioningState: The provision state of the cluster. Valid values are Unknown, Updating, Provisioning, Succeeded, and Failed.
+status.properties.virtualMachine.resourceId <string>	# ResourceId: ARM resource id of the underlying compute
+status.sku <object>	# Sku: The sku of the workspace.
+status.sku.capacity <integer>	# Capacity: If the SKU supports scale out/in then the capacity integer should be included. If scale out/in is not possible for the resource this may be omitted.
+status.sku.family <string>	# Family: If the service has different generations of hardware, for the same SKU, then that can be captured here.
+status.sku.name <string>	# Name: The name of the SKU. Ex - P3. It is typically a letter+number code
+status.sku.size <string>	# Size: The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code.
+status.sku.tier <string>	# Tier: This field is required to be implemented by the Resource Provider if the service has more than one tier, but is not required on a PUT.
+status.systemData <object>	# SystemData: Azure Resource Manager metadata containing createdBy and modifiedBy information.
+status.systemData.createdAt <string>	# CreatedAt: The timestamp of resource creation (UTC).
+status.systemData.createdBy <string>	# CreatedBy: The identity that created the resource.
+status.systemData.createdByType <string>	# CreatedByType: The type of identity that created the resource.
+status.systemData.lastModifiedAt <string>	# LastModifiedAt: The timestamp of resource last modification (UTC)
+status.systemData.lastModifiedBy <string>	# LastModifiedBy: The identity that last modified the resource.
+status.systemData.lastModifiedByType <string>	# LastModifiedByType: The type of identity that last modified the resource.
+status.tags <map[string]string>	# Tags: Contains resource tags defined as key/value pairs.
+status.type <string>	# Type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or "Microsoft.Storage/storageAccounts"
