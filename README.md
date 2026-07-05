@@ -1,42 +1,74 @@
-# Flux Schema Catalog
+#  Kubernetes Ecosystem Schema Catalog
 
-Catalog of JSON Schemas and field indexes for Kubernetes, OpenShift,
-the Flux ecosystem and other CNCF projects, generated with
-[flux-schema](https://github.com/fluxcd/flux-schema).
+A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
+Flux and other CNCF projects, generated with
+[flux-schema](https://github.com/fluxcd/flux-schema) and refreshed daily from
+upstream stable releases.
 
-The JSON Schemas (`catalog/<group>/<Kind>_<version>.json`, descriptions
-included) serve `flux-schema validate`. The field indexes
-(`catalog/<group>/<Kind>_<version>.fields.txt`) give AI agents an offline
-`kubectl explain` replacement: one greppable line per field with its dotted
-path, type, constraints and description.
+Point `flux schema validate` at this catalog to validate your manifests against
+always-current schemas, including CRDs beyond the CLI's built-in `default`
+catalog (e.g. cert-manager), without having to extract them yourself or
+upgrade the CLI to pick up new versions.
 
-<!-- versions:start -->
-| Source | Version |
-| --- | --- |
-| [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes) | v1.36.2 |
-| [openshift/api](https://github.com/openshift/api) | v4.20 |
-| [fluxcd/flux2](https://github.com/fluxcd/flux2) | v2.9.0 |
-| [fluxcd/flagger](https://github.com/fluxcd/flagger) | v1.43.0 |
-| [controlplaneio-fluxcd/flux-operator](https://github.com/controlplaneio-fluxcd/flux-operator) | v0.53.0 |
-| [kubernetes-sigs/gateway-api](https://github.com/kubernetes-sigs/gateway-api) | v1.6.0 |
-| [cert-manager/cert-manager](https://github.com/cert-manager/cert-manager) | v1.20.3 |
-<!-- versions:end -->
+## Using the catalog
 
-## Building the catalog
+The catalog is served straight from GitHub over HTTPS at the base URL.
 
-The catalog is populated by the Bun build system in [`build/`](build/):
+Pass the base URL as a `--schema-location`:
 
 ```shell
-cd build
-bun install
-bun run build              # resolve latest versions, extract, GC, update history
-bun run build -- --source flux --force
-bun run regen              # rebuild at the versions pinned in build/history
+flux schema validate ./manifests \
+  --schema-location https://raw.githubusercontent.com/controlplaneio-fluxcd/schema-catalog/main/catalog
 ```
 
-Sources are declared in [`build/sources.yaml`](build/sources.yaml) (format:
-[`build/src/types.ts`](build/src/types.ts)). Each successful build writes a
-provenance manifest to `build/history/<name>.json` recording the resolved
-version, build time, flux-schema version and the catalog files owned by the
-source; the manifests drive skip detection, garbage collection of removed
-schemas and the versions table above.
+### Config file
+
+To make the catalog the default for a repository, set it in a `.fluxschema.yml`
+config file so local runs and CI share the same configuration:
+
+```yaml
+apiVersion: schema.plugin.fluxcd.io/v1beta1
+kind: Config
+validate:
+  schemaLocation:
+    - https://raw.githubusercontent.com/controlplaneio-fluxcd/schema-catalog/main/catalog
+  verbose: true
+```
+
+```shell
+flux schema validate ./manifests --config .fluxschema.yml
+```
+
+## Field indexes for AI agents
+
+Each schema ships a `.fields.txt` sibling: a self-contained, line-oriented
+index of every field. AI Agents can grep these instead of
+querying a live cluster with `kubectl explain`:
+
+```shell
+grep 'images' catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.fields.txt
+```
+
+Each line carries the field's dotted path, type, constraints and description.
+See the [field index reference](https://github.com/fluxcd/flux-schema/blob/main/docs/field-index.md)
+for the line grammar.
+
+## Coverage
+
+<!-- versions:start -->
+| Project | Version | Updated |
+| --- | --- | --- |
+| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 2026-07-04 |
+| OpenShift | [v4.20](build/history/openshift.json) | 2026-07-04 |
+| Flux | [v2.9.0](build/history/flux.json) | 2026-07-04 |
+| Flagger | [v1.43.0](build/history/flagger.json) | 2026-07-04 |
+| Flux Operator | [v0.53.0](build/history/flux-operator.json) | 2026-07-04 |
+| Gateway API | [v1.6.0](build/history/gateway-api.json) | 2026-07-04 |
+| cert-manager | [v1.20.3](build/history/cert-manager.json) | 2026-07-04 |
+<!-- versions:end -->
+
+## Documentation
+
+- [Flux Schema CLI](https://github.com/fluxcd/flux-schema): the validator this catalog serves.
+- [Manifest validation guide](https://github.com/fluxcd/flux-schema/blob/main/docs/manifests-validation.md): flags, schema resolution, CEL rules and config files.
+- [Custom catalog guide](https://github.com/fluxcd/flux-schema/blob/main/docs/custom-schema-catalog.md): extract and host your own schemas.

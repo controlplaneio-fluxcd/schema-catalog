@@ -107,11 +107,13 @@ describe("versions table", () => {
   const readme = "# Title\n\n<!-- versions:start -->\nstale\n<!-- versions:end -->\n";
 
   test("renders and splices between the markers", () => {
-    const table = renderVersionsTable([{ repo: "fluxcd/flux2", version: "v2.9.0" }]);
+    const table = renderVersionsTable([
+      { alias: "Flux", name: "flux", version: "v2.9.0", builtAt: "2026-07-05T03:15:00.000Z" },
+    ]);
     expect(spliceVersionsTable(readme, table)).toBe(
       "# Title\n\n<!-- versions:start -->\n" +
-        "| Source | Version |\n| --- | --- |\n" +
-        "| [fluxcd/flux2](https://github.com/fluxcd/flux2) | v2.9.0 |\n" +
+        "| Project | Version | Updated |\n| --- | --- | --- |\n" +
+        "| Flux | [v2.9.0](build/history/flux.json) | 2026-07-05 |\n" +
         "<!-- versions:end -->\n",
     );
   });

@@ -2,14 +2,20 @@ const START = "<!-- versions:start -->";
 const END = "<!-- versions:end -->";
 
 export interface VersionRow {
-  repo: string;
+  /** Display name from the source's `alias`. */
+  alias: string;
+  /** Source key; links the version to build/history/<name>.json. */
+  name: string;
   version: string;
+  /** RFC 3339 build timestamp from the history manifest. */
+  builtAt: string;
 }
 
 export function renderVersionsTable(rows: VersionRow[]): string {
-  const lines = ["| Source | Version |", "| --- | --- |"];
+  const lines = ["| Project | Version | Updated |", "| --- | --- | --- |"];
   for (const row of rows) {
-    lines.push(`| [${row.repo}](https://github.com/${row.repo}) | ${row.version} |`);
+    const updated = row.builtAt.slice(0, 10);
+    lines.push(`| ${row.alias} | [${row.version}](build/history/${row.name}.json) | ${updated} |`);
   }
   return lines.join("\n");
 }

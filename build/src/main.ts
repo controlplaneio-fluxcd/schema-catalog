@@ -222,9 +222,14 @@ async function main(): Promise<number> {
   }
 
   const rows = allSources
-    .map((s) => history.get(s.name))
-    .filter((e): e is HistoryEntry => e != null)
-    .map((e) => ({ repo: e.repo, version: e.version }));
+    .map((s) => ({ source: s, entry: history.get(s.name) }))
+    .filter((x): x is { source: Source; entry: HistoryEntry } => x.entry != null)
+    .map(({ source, entry }) => ({
+      alias: source.alias,
+      name: entry.name,
+      version: entry.version,
+      builtAt: entry.builtAt,
+    }));
   if (rows.length > 0 && (await updateReadme(README_PATH, rows))) {
     console.log("  README.md: versions table updated");
   }
