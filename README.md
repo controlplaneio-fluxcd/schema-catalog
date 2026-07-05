@@ -76,6 +76,9 @@ for the line grammar.
 | Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 2026-07-05 |
 | Tekton Pipeline | [v1.14.0](build/history/tekton-pipeline.json) | 2026-07-05 |
 | Kyverno | [v1.18.1](build/history/kyverno.json) | 2026-07-05 |
+| Rook | [v1.20.1](build/history/rook.json) | 2026-07-05 |
+| Vitess Operator | [v2.17.0](build/history/vitess-operator.json) | 2026-07-05 |
+| Strimzi | [0.51.0](build/history/strimzi.json) | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation

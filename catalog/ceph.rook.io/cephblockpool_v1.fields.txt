@@ -1,0 +1,119 @@
+# schema source: Rook v1.20.1 https://github.com/rook/rook
+apiVersion <string> enum=ceph.rook.io/v1
+kind <string> enum=CephBlockPool
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# NamedBlockPoolSpec allows a block pool to be created with a non-default name. This is more specific than the NamedPoolSpec so we get schema validation on the allowed pool names that can be specified.
+spec.application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.erasureCoded <object>	# The erasure code settings
+spec.erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.mirroring <object>	# The mirroring settings
+spec.mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.mirroring.peers <object>	# Peers represents the peers spec
+spec.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.name <string> enum=.rgw.root|.nfs|.mgr	# The desired name of the pool if different from the CephBlockPool CR name.
+spec.parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.quotas <object>	# The quota settings
+spec.quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.replicated <object>	# The replication settings
+spec.replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.statusCheck <object>	# The mirroring statusCheck
+spec.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.statusCheck.mirror.disabled <boolean>
+spec.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.statusCheck.mirror.timeout <string>
+status <object>	# CephBlockPoolStatus represents the mirroring status of Ceph Storage Pool
+status.cephx <object>	# PeerTokenCephxStatus represents the cephx key rotation status for peer tokens
+status.cephx.peerToken <object>	# PeerToken shows the rotation status of the peer token associated with the `rbd-mirror-peer` user.
+status.cephx.peerToken.keyCephVersion <string>	# KeyCephVersion reports the Ceph version that created the current generation's keys. This is same string format as reported by `CephCluster.status.version.version` to allow them to be compared. E.g., `20.2.0-0`. For all newly-created resources, this field set to the version of Ceph that created the key. The special value "Uninitialized" indicates that keys are being created for the first time. An empty string indicates that the version is unknown, as expected in brownfield deployments.
+status.cephx.peerToken.keyGeneration <integer> format=int32	# KeyGeneration represents the CephX key generation for the last successful reconcile. For all newly-created resources, this field is set to `1`. When keys are rotated due to any rotation policy, the generation is incremented or updated to the configured policy generation. Generation `0` indicates that keys existed prior to the implementation of key tracking.
+status.conditions <[]object>
+status.conditions[].lastHeartbeatTime <string> format=date-time
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].reason <string>	# ConditionReason is a reason for a condition
+status.conditions[].status <string>
+status.conditions[].type <string>	# ConditionType represent a resource's status
+status.info <map[string]string>
+status.mirroringInfo <object>	# MirroringInfoSpec is the status of the pool/radosnamespace mirroring
+status.mirroringInfo.details <string>
+status.mirroringInfo.lastChanged <string>
+status.mirroringInfo.lastChecked <string>
+status.mirroringInfo.mode <string>	# Mode is the mirroring mode
+status.mirroringInfo.peers <[]object>	# Peers are the list of peer sites connected to that cluster
+status.mirroringInfo.peers[].client_name <string>	# ClientName is the CephX user used to connect to the peer
+status.mirroringInfo.peers[].direction <string>	# Direction is the peer mirroring direction
+status.mirroringInfo.peers[].mirror_uuid <string>	# MirrorUUID is the mirror UUID
+status.mirroringInfo.peers[].site_name <string>	# SiteName is the current site name
+status.mirroringInfo.peers[].uuid <string>	# UUID is the peer UUID
+status.mirroringInfo.site_name <string>	# SiteName is the current site name
+status.mirroringStatus <object>	# MirroringStatusSpec is the status of the pool/radosNamespace mirroring
+status.mirroringStatus.details <string>	# Details contains potential status errors
+status.mirroringStatus.lastChanged <string>	# LastChanged is the last time time the status last changed
+status.mirroringStatus.lastChecked <string>	# LastChecked is the last time time the status was checked
+status.mirroringStatus.summary <object>	# Summary is the mirroring status summary
+status.mirroringStatus.summary.daemon_health <string>	# DaemonHealth is the health of the mirroring daemon
+status.mirroringStatus.summary.group_health <string>	# GroupHealth is the health of the mirrored image group
+status.mirroringStatus.summary.group_states <object>	# GroupStates is the various state for all mirrored image groups
+status.mirroringStatus.summary.group_states.error <integer>	# Error is when the mirroring state is errored
+status.mirroringStatus.summary.group_states.replaying <integer>	# Replaying is when the replay of the mirroring journal is on-going
+status.mirroringStatus.summary.group_states.starting_replay <integer>	# StartingReplay is when the replay of the mirroring journal starts
+status.mirroringStatus.summary.group_states.stopped <integer>	# Stopped is when the mirroring state is stopped
+status.mirroringStatus.summary.group_states.stopping_replay <integer>	# StopReplaying is when the replay of the mirroring journal stops
+status.mirroringStatus.summary.group_states.syncing <integer>	# Syncing is when the image is syncing
+status.mirroringStatus.summary.group_states.unknown <integer>	# Unknown is when the mirroring state is unknown
+status.mirroringStatus.summary.health <string>	# Health is the mirroring health
+status.mirroringStatus.summary.image_health <string>	# ImageHealth is the health of the mirrored image
+status.mirroringStatus.summary.image_states <object>	# ImageStates is the various state for all mirrored images
+status.mirroringStatus.summary.image_states.error <integer>	# Error is when the mirroring state is errored
+status.mirroringStatus.summary.image_states.replaying <integer>	# Replaying is when the replay of the mirroring journal is on-going
+status.mirroringStatus.summary.image_states.starting_replay <integer>	# StartingReplay is when the replay of the mirroring journal starts
+status.mirroringStatus.summary.image_states.stopped <integer>	# Stopped is when the mirroring state is stopped
+status.mirroringStatus.summary.image_states.stopping_replay <integer>	# StopReplaying is when the replay of the mirroring journal stops
+status.mirroringStatus.summary.image_states.syncing <integer>	# Syncing is when the image is syncing
+status.mirroringStatus.summary.image_states.unknown <integer>	# Unknown is when the mirroring state is unknown
+status.mirroringStatus.summary.states <object>	# States is the various state for all mirrored images
+status.mirroringStatus.summary.states.error <integer>	# Error is when the mirroring state is errored
+status.mirroringStatus.summary.states.replaying <integer>	# Replaying is when the replay of the mirroring journal is on-going
+status.mirroringStatus.summary.states.starting_replay <integer>	# StartingReplay is when the replay of the mirroring journal starts
+status.mirroringStatus.summary.states.stopped <integer>	# Stopped is when the mirroring state is stopped
+status.mirroringStatus.summary.states.stopping_replay <integer>	# StopReplaying is when the replay of the mirroring journal stops
+status.mirroringStatus.summary.states.syncing <integer>	# Syncing is when the image is syncing
+status.mirroringStatus.summary.states.unknown <integer>	# Unknown is when the mirroring state is unknown
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest generation observed by the controller.
+status.phase <string>	# ConditionType represent a resource's status
+status.poolID <integer>	# optional
+status.snapshotScheduleStatus <object>	# SnapshotScheduleStatusSpec is the status of the snapshot schedule
+status.snapshotScheduleStatus.details <string>	# Details contains potential status errors
+status.snapshotScheduleStatus.lastChanged <string>	# LastChanged is the last time time the status last changed
+status.snapshotScheduleStatus.lastChecked <string>	# LastChecked is the last time time the status was checked
+status.snapshotScheduleStatus.snapshotSchedules <[]object>	# SnapshotSchedules is the list of snapshots scheduled
+status.snapshotScheduleStatus.snapshotSchedules[].image <string>	# Image is the mirrored image
+status.snapshotScheduleStatus.snapshotSchedules[].items <[]object>	# Items is the list schedules times for a given snapshot
+status.snapshotScheduleStatus.snapshotSchedules[].items[].interval <string>	# Interval is the interval in which snapshots will be taken
+status.snapshotScheduleStatus.snapshotSchedules[].items[].start_time <string>	# StartTime is the snapshot starting time
+status.snapshotScheduleStatus.snapshotSchedules[].namespace <string>	# Namespace is the RADOS namespace the image is part of
+status.snapshotScheduleStatus.snapshotSchedules[].pool <string>	# Pool is the pool name

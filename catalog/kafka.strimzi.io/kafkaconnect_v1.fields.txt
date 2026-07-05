@@ -1,0 +1,718 @@
+# schema source: Strimzi 0.51.0 https://github.com/strimzi/strimzi-kafka-operator
+apiVersion <string> enum=kafka.strimzi.io/v1
+kind <string> enum=KafkaConnect
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# The specification of the Kafka Connect cluster.
+spec.authentication <object>	# Authentication configuration for Kafka Connect.
+spec.authentication.certificateAndKey <object>	# Reference to the `Secret` which holds the certificate and private key pair.
+spec.authentication.certificateAndKey.certificate <string> (required)	# The name of the file certificate in the Secret.
+spec.authentication.certificateAndKey.key <string> (required)	# The name of the private key in the secret. The private key must be in unencrypted PKCS #8 format. For more information, see RFC 5208: https://datatracker.ietf.org/doc/html/rfc5208.
+spec.authentication.certificateAndKey.secretName <string> (required)	# The name of the Secret containing the certificate.
+spec.authentication.config <object (free-form)>	# Configuration for the custom authentication mechanism. Only properties with the `sasl.` and `ssl.keystore.` prefixes are allowed. Specify other options in the regular configuration section of the custom resource.
+spec.authentication.passwordSecret <object>	# Reference to the `Secret` which holds the password.
+spec.authentication.passwordSecret.password <string> (required)	# The name of the key in the Secret under which the password is stored.
+spec.authentication.passwordSecret.secretName <string> (required)	# The name of the Secret containing the password.
+spec.authentication.sasl <boolean>	# Enable or disable SASL on this authentication mechanism.
+spec.authentication.type <string> (required) enum=tls|scram-sha-256|scram-sha-512|plain|custom	# Specifies the authentication type. Supported types are `tls`, `scram-sha-256`, `scram-sha-512`, `plain`, 'oauth', and `custom`. `tls` uses TLS client authentication and is supported only over TLS connections. `scram-sha-256` and `scram-sha-512` use SASL SCRAM-SHA-256 and SASL SCRAM-SHA-512 authentication, respectively. `plain` uses SASL PLAIN authentication. `oauth` uses SASL OAUTHBEARER authentication. `custom` allows you to configure a custom authentication mechanism. As of Strimzi 0.49.0, `oauth` type is deprecated and will be removed in the `v1` API version. Please use `custom` type instead.
+spec.authentication.username <string>	# Username used for the authentication.
+spec.bootstrapServers <string> (required)	# Bootstrap servers to connect to. This should be given as a comma separated list of _<hostname>_:_<port>_ pairs.
+spec.build <object>	# Configures how the Connect container image should be built. Optional.
+spec.build.output <object> (required)	# Configures where should the newly built image be stored. Required.
+spec.build.output.additionalBuildOptions <[]string>	# Configures additional options to pass to the `build` command of either Kaniko or Buildah (depending on the feature gate setting) when building a new Kafka Connect image. Allowed Kaniko options: --customPlatform, --custom-platform, --insecure, --insecure-pull, --insecure-registry, --log-format, --log-timestamp, --registry-mirror, --reproducible, --single-snapshot, --skip-tls-verify, --skip-tls-verify-pull, --skip-tls-verify-registry, --verbosity, --snapshotMode, --use-new-run, --registry-certificate, --registry-client-cert, --ignore-path. Allowed Buildah `build` options: --authfile, --cert-dir, --creds, --decryption-key, --retry, --retry-delay, --tls-verify. Those options are used only on Kubernetes, where Kaniko and Buildah are available. They are ignored on OpenShift. For more information, see the link:https://github.com/GoogleContainerTools/kaniko[Kaniko GitHub repository^] or the link:https://github.com/containers/buildah/blob/main/docs/buildah-build.1.md[Buildah build document^]. Changing this field does not trigger a rebuild of the Kafka Connect image.
+spec.build.output.additionalPushOptions <[]string>	# Configures additional options to pass to the Buildah `push` command when pushing a new Connect image. Allowed options: --authfile, --cert-dir, --creds, --quiet, --retry, --retry-delay, --tls-verify. Those options are used only on Kubernetes, where Buildah is available. They are ignored on OpenShift. For more information, see the link:https://github.com/containers/buildah/blob/main/docs/buildah-push.1.md[Buildah push document^]. Changing this field does not trigger a rebuild of the Kafka Connect image.
+spec.build.output.image <string> (required)	# The name of the image which will be built. Required.
+spec.build.output.pushSecret <string>	# Container Registry Secret with the credentials for pushing the newly built image.
+spec.build.output.type <string> (required) enum=docker|imagestream	# Output type. Must be either `docker` for pushing the newly build image to Docker compatible registry or `imagestream` for pushing the image to OpenShift ImageStream. Required.
+spec.build.plugins <[]object> (required)	# List of connector plugins which should be added to the Kafka Connect. Required.
+spec.build.plugins[].artifacts <[]object> (required)	# List of artifacts which belong to this connector plugin. Required.
+spec.build.plugins[].artifacts[].artifact <string>	# Maven artifact id. Applicable to the `maven` artifact type only.
+spec.build.plugins[].artifacts[].fileName <string>	# Name under which the artifact will be stored.
+spec.build.plugins[].artifacts[].group <string>	# Maven group id. Applicable to the `maven` artifact type only.
+spec.build.plugins[].artifacts[].insecure <boolean>	# By default, connections using TLS are verified to check they are secure. The server certificate used must be valid, trusted, and contain the server name. By setting this option to `true`, all TLS verification is disabled and the artifact will be downloaded, even when the server is considered insecure.
+spec.build.plugins[].artifacts[].repository <string>	# Maven repository to download the artifact from. Applicable to the `maven` artifact type only.
+spec.build.plugins[].artifacts[].sha512sum <string>	# SHA512 checksum of the artifact. Optional. If specified, the checksum will be verified while building the new container. If not specified, the downloaded artifact will not be verified. Not applicable to the `maven` artifact type. 
+spec.build.plugins[].artifacts[].type <string> (required) enum=jar|tgz|zip|maven|other	# Artifact type. Currently, the supported artifact types are `tgz`, `jar`, `zip`, `other` and `maven`.
+spec.build.plugins[].artifacts[].url <string> pattern="^(https?|ftp)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]$"	# URL of the artifact which will be downloaded. Strimzi does not do any security scanning of the downloaded artifacts. For security reasons, you should first verify the artifacts manually and configure the checksum verification to make sure the same artifact is used in the automated build. Required for `jar`, `zip`, `tgz` and `other` artifacts. Not applicable to the `maven` artifact type.
+spec.build.plugins[].artifacts[].version <string>	# Maven version number. Applicable to the `maven` artifact type only.
+spec.build.plugins[].name <string> (required) pattern="^[a-z0-9][-_a-z0-9]*[a-z0-9]$"	# The unique name of the connector plugin. Will be used to generate the path where the connector artifacts will be stored. The name has to be unique within the KafkaConnect resource. The name has to follow the following pattern: `^[a-z][-_a-z0-9]*[a-z]$`. Required.
+spec.build.resources <object>	# CPU and memory resources to reserve for the build.
+spec.build.resources.claims <[]object>
+spec.build.resources.claims[].name <string>
+spec.build.resources.claims[].request <string>
+spec.build.resources.limits <object (free-form)>
+spec.build.resources.requests <object (free-form)>
+spec.clientRackInitImage <string>	# The image of the init container used for initializing the `client.rack`.
+spec.config <object (free-form)>	# The Kafka Connect configuration. Properties with the following prefixes cannot be set: ssl., sasl., security., listeners, plugin.path, rest., bootstrap.servers, consumer.interceptor.classes, producer.interceptor.classes, prometheus.metrics.reporter. (with the exception of: ssl.endpoint.identification.algorithm, ssl.cipher.suites, ssl.protocol, ssl.enabled.protocols).
+spec.configStorageTopic <string> (required)	# The name of the Kafka topic where connector configurations are stored.
+spec.groupId <string> (required)	# A unique ID that identifies the Connect cluster group.
+spec.image <string>	# The container image used for Kafka Connect pods. If no image name is explicitly specified, it is determined based on the `spec.version` configuration. The image names are specifically mapped to corresponding versions in the Cluster Operator configuration.
+spec.jmxOptions <object>	# JMX Options.
+spec.jmxOptions.authentication <object>	# Authentication configuration for connecting to the JMX port.
+spec.jmxOptions.authentication.type <string> (required) enum=password	# Authentication type. Currently the only supported types are `password`.`password` type creates a username and protected port with no TLS.
+spec.jvmOptions <object>	# JVM Options for pods.
+spec.jvmOptions.-XX <map[string]string>	# A map of -XX options to the JVM.
+spec.jvmOptions.-Xms <string> pattern="^[0-9]+[mMgG]?$"	# -Xms option to to the JVM.
+spec.jvmOptions.-Xmx <string> pattern="^[0-9]+[mMgG]?$"	# -Xmx option to to the JVM.
+spec.jvmOptions.gcLoggingEnabled <boolean>	# Specifies whether the Garbage Collection logging is enabled. The default is false.
+spec.jvmOptions.javaSystemProperties <[]object>	# A map of additional system properties which will be passed using the `-D` option to the JVM.
+spec.jvmOptions.javaSystemProperties[].name <string>	# The system property name.
+spec.jvmOptions.javaSystemProperties[].value <string>	# The system property value.
+spec.livenessProbe <object>	# Pod liveness checking.
+spec.livenessProbe.failureThreshold <integer> min=1	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.livenessProbe.initialDelaySeconds <integer> min=0	# The initial delay before first the health is first checked. Default to 15 seconds. Minimum value is 0.
+spec.livenessProbe.periodSeconds <integer> min=1	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.livenessProbe.successThreshold <integer> min=1	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness. Minimum value is 1.
+spec.livenessProbe.timeoutSeconds <integer> min=1	# The timeout for each attempted health check. Default to 5 seconds. Minimum value is 1.
+spec.logging <object>	# Logging configuration for Kafka Connect.
+spec.logging.loggers <map[string]string>	# A Map from logger name to logger level.
+spec.logging.type <string> (required) enum=inline|external	# Logging type, must be either 'inline' or 'external'.
+spec.logging.valueFrom <object>	# `ConfigMap` entry where the logging configuration is stored. 
+spec.logging.valueFrom.configMapKeyRef <object>	# Reference to the key in the ConfigMap containing the configuration.
+spec.logging.valueFrom.configMapKeyRef.key <string>
+spec.logging.valueFrom.configMapKeyRef.name <string>
+spec.logging.valueFrom.configMapKeyRef.optional <boolean>
+spec.metricsConfig <object>	# Metrics configuration.
+spec.metricsConfig.type <string> (required) enum=jmxPrometheusExporter|strimziMetricsReporter	# Metrics type. The supported types are `jmxPrometheusExporter` and `strimziMetricsReporter`. Type `jmxPrometheusExporter` uses the Prometheus JMX Exporter to expose Kafka JMX metrics in Prometheus format through an HTTP endpoint. Type `strimziMetricsReporter` uses the Strimzi Metrics Reporter to directly expose Kafka metrics in Prometheus format through an HTTP endpoint.
+spec.metricsConfig.valueFrom <object>	# ConfigMap entry where the Prometheus JMX Exporter configuration is stored.
+spec.metricsConfig.valueFrom.configMapKeyRef <object>	# Reference to the key in the ConfigMap containing the configuration.
+spec.metricsConfig.valueFrom.configMapKeyRef.key <string>
+spec.metricsConfig.valueFrom.configMapKeyRef.name <string>
+spec.metricsConfig.valueFrom.configMapKeyRef.optional <boolean>
+spec.metricsConfig.values <object>	# Configuration values for the Strimzi Metrics Reporter.
+spec.metricsConfig.values.allowList <[]string>	# A list of regex patterns to filter the metrics to collect. Should contain at least one element.
+spec.offsetStorageTopic <string> (required)	# The name of the Kafka topic where source connector offsets are stored.
+spec.plugins <[]object>	# List of connector plugins to mount into the `KafkaConnect` pod.
+spec.plugins[].artifacts <[]object> (required)	# List of artifacts associated with this connector plugin. Required.
+spec.plugins[].artifacts[].pullPolicy <string>	# Policy that determines when the container image (OCI artifact) is pulled. Possible values are: * `Always`: Always pull the image. If the pull fails, container creation fails. * `Never`: Never pull the image. Use only a locally available image. Container creation fails if the image isn’t present. * `IfNotPresent`: Pull the image only if it’s not already available locally. Container creation fails if the image isn’t present and the pull fails. Defaults to `Always` if `:latest` tag is specified, or `IfNotPresent` otherwise.
+spec.plugins[].artifacts[].reference <string> (required)	# Reference to the container image (OCI artifact) containing the Kafka Connect plugin. The image is mounted as a volume and provides the plugin binary. Required.
+spec.plugins[].artifacts[].type <string> (required) enum=image	# Artifact type. Currently, the only supported artifact type is `image`.
+spec.plugins[].name <string> (required) pattern="^[a-z0-9][-_a-z0-9]*[a-z0-9]$"	# A unique name for the connector plugin. This name is used to generate the mount path for the connector artifacts. The name has to be unique within the KafkaConnect resource. The name must be unique within the `KafkaConnect` resource and match the pattern: `^[a-z][-_a-z0-9]*[a-z]$`. Required.
+spec.rack <object>	# Configuration of the node label which will be used as the `client.rack` consumer configuration.
+spec.rack.topologyKey <string> (required)	# A key that matches labels assigned to the Kubernetes cluster nodes. The value of the label is used to set a broker's `broker.rack` config, and the `client.rack` config for Kafka Connect or MirrorMaker 2.
+spec.readinessProbe <object>	# Pod readiness checking.
+spec.readinessProbe.failureThreshold <integer> min=1	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.readinessProbe.initialDelaySeconds <integer> min=0	# The initial delay before first the health is first checked. Default to 15 seconds. Minimum value is 0.
+spec.readinessProbe.periodSeconds <integer> min=1	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.readinessProbe.successThreshold <integer> min=1	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness. Minimum value is 1.
+spec.readinessProbe.timeoutSeconds <integer> min=1	# The timeout for each attempted health check. Default to 5 seconds. Minimum value is 1.
+spec.replicas <integer> (required)	# The number of pods in the Kafka Connect group. Required in the `v1` version of the Strimzi API. Defaults to `3` in the `v1beta2` version of the Strimzi API.
+spec.resources <object>	# The maximum limits for CPU and memory resources and the requested initial resources.
+spec.resources.claims <[]object>
+spec.resources.claims[].name <string>
+spec.resources.claims[].request <string>
+spec.resources.limits <object (free-form)>
+spec.resources.requests <object (free-form)>
+spec.statusStorageTopic <string> (required)	# The name of the Kafka topic where connector and task status are stored.
+spec.template <object>	# Template for Kafka Connect and Kafka MirrorMaker 2 resources. The template allows users to specify how the `Pods`, `Service`, and other services are generated.
+spec.template.apiService <object>	# Template for Kafka Connect API `Service`.
+spec.template.apiService.ipFamilies <[]string>	# Specifies the IP Families used by the service. Available options are `IPv4` and `IPv6`. If unspecified, Kubernetes will choose the default value based on the `ipFamilyPolicy` setting.
+spec.template.apiService.ipFamilyPolicy <string> enum=SingleStack|PreferDualStack|RequireDualStack	# Specifies the IP Family Policy used by the service. Available options are `SingleStack`, `PreferDualStack` and `RequireDualStack`. `SingleStack` is for a single IP family. `PreferDualStack` is for two IP families on dual-stack configured clusters or a single IP family on single-stack clusters. `RequireDualStack` fails unless there are two IP families on dual-stack configured clusters. If unspecified, Kubernetes will choose the default value based on the service type.
+spec.template.apiService.metadata <object>	# Metadata applied to the resource.
+spec.template.apiService.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.apiService.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.buildConfig <object>	# Template for the Kafka Connect BuildConfig used to build new container images. The BuildConfig is used only on OpenShift.
+spec.template.buildConfig.metadata <object>	# Metadata to apply to the `PodDisruptionBudgetTemplate` resource.
+spec.template.buildConfig.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.buildConfig.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.buildConfig.pullSecret <string>	# Container Registry Secret with the credentials for pulling the base image.
+spec.template.buildContainer <object>	# Template for the Kafka Connect Build container. The build container is used only on Kubernetes.
+spec.template.buildContainer.env <[]object>	# Environment variables which should be applied to the container.
+spec.template.buildContainer.env[].name <string>	# The environment variable key.
+spec.template.buildContainer.env[].value <string>	# The environment variable value.
+spec.template.buildContainer.env[].valueFrom <object>	# Reference to the secret or config map property to which the environment variable is set.
+spec.template.buildContainer.env[].valueFrom.configMapKeyRef <object>	# Reference to a key in a config map.
+spec.template.buildContainer.env[].valueFrom.configMapKeyRef.key <string>
+spec.template.buildContainer.env[].valueFrom.configMapKeyRef.name <string>
+spec.template.buildContainer.env[].valueFrom.configMapKeyRef.optional <boolean>
+spec.template.buildContainer.env[].valueFrom.secretKeyRef <object>	# Reference to a key in a secret.
+spec.template.buildContainer.env[].valueFrom.secretKeyRef.key <string>
+spec.template.buildContainer.env[].valueFrom.secretKeyRef.name <string>
+spec.template.buildContainer.env[].valueFrom.secretKeyRef.optional <boolean>
+spec.template.buildContainer.securityContext <object>	# Security context for the container.
+spec.template.buildContainer.securityContext.allowPrivilegeEscalation <boolean>
+spec.template.buildContainer.securityContext.appArmorProfile <object>
+spec.template.buildContainer.securityContext.appArmorProfile.localhostProfile <string>
+spec.template.buildContainer.securityContext.appArmorProfile.type <string>
+spec.template.buildContainer.securityContext.capabilities <object>
+spec.template.buildContainer.securityContext.capabilities.add <[]string>
+spec.template.buildContainer.securityContext.capabilities.drop <[]string>
+spec.template.buildContainer.securityContext.privileged <boolean>
+spec.template.buildContainer.securityContext.procMount <string>
+spec.template.buildContainer.securityContext.readOnlyRootFilesystem <boolean>
+spec.template.buildContainer.securityContext.runAsGroup <integer>
+spec.template.buildContainer.securityContext.runAsNonRoot <boolean>
+spec.template.buildContainer.securityContext.runAsUser <integer>
+spec.template.buildContainer.securityContext.seLinuxOptions <object>
+spec.template.buildContainer.securityContext.seLinuxOptions.level <string>
+spec.template.buildContainer.securityContext.seLinuxOptions.role <string>
+spec.template.buildContainer.securityContext.seLinuxOptions.type <string>
+spec.template.buildContainer.securityContext.seLinuxOptions.user <string>
+spec.template.buildContainer.securityContext.seccompProfile <object>
+spec.template.buildContainer.securityContext.seccompProfile.localhostProfile <string>
+spec.template.buildContainer.securityContext.seccompProfile.type <string>
+spec.template.buildContainer.securityContext.windowsOptions <object>
+spec.template.buildContainer.securityContext.windowsOptions.gmsaCredentialSpec <string>
+spec.template.buildContainer.securityContext.windowsOptions.gmsaCredentialSpecName <string>
+spec.template.buildContainer.securityContext.windowsOptions.hostProcess <boolean>
+spec.template.buildContainer.securityContext.windowsOptions.runAsUserName <string>
+spec.template.buildContainer.volumeMounts <[]object>	# Additional volume mounts which should be applied to the container.
+spec.template.buildContainer.volumeMounts[].mountPath <string>
+spec.template.buildContainer.volumeMounts[].mountPropagation <string>
+spec.template.buildContainer.volumeMounts[].name <string>
+spec.template.buildContainer.volumeMounts[].readOnly <boolean>
+spec.template.buildContainer.volumeMounts[].recursiveReadOnly <string>
+spec.template.buildContainer.volumeMounts[].subPath <string>
+spec.template.buildContainer.volumeMounts[].subPathExpr <string>
+spec.template.buildPod <object>	# Template for Kafka Connect Build `Pods`. The build pod is used only on Kubernetes.
+spec.template.buildPod.affinity <object>	# The pod's affinity rules.
+spec.template.buildPod.affinity.nodeAffinity <object>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference <object>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions <[]object>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].key <string>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields <[]object>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].key <string>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].operator <string>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].values <[]string>
+spec.template.buildPod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution <object>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms <[]object>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions <[]object>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].key <string>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].operator <string>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields <[]object>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].key <string>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].operator <string>
+spec.template.buildPod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].values <[]string>
+spec.template.buildPod.affinity.podAffinity <object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string>
+spec.template.buildPod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.template.buildPod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string>
+spec.template.buildPod.affinity.podAntiAffinity <object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string>
+spec.template.buildPod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.template.buildPod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string>
+spec.template.buildPod.dnsConfig <object>	# The pod's DNSConfig. If specified, it will be merged to the generated DNS configuration based on the DNSPolicy.
+spec.template.buildPod.dnsConfig.nameservers <[]string>
+spec.template.buildPod.dnsConfig.options <[]object>
+spec.template.buildPod.dnsConfig.options[].name <string>
+spec.template.buildPod.dnsConfig.options[].value <string>
+spec.template.buildPod.dnsConfig.searches <[]string>
+spec.template.buildPod.dnsPolicy <string> enum=ClusterFirst|ClusterFirstWithHostNet|Default|None	# The pod's DNSPolicy. Defaults to `ClusterFirst`. Valid values are `ClusterFirstWithHostNet`, `ClusterFirst`, `Default` or `None`.
+spec.template.buildPod.enableServiceLinks <boolean>	# Indicates whether information about services should be injected into Pod's environment variables.
+spec.template.buildPod.hostAliases <[]object>	# The pod's HostAliases. HostAliases is an optional list of hosts and IPs that will be injected into the Pod's hosts file if specified.
+spec.template.buildPod.hostAliases[].hostnames <[]string>
+spec.template.buildPod.hostAliases[].ip <string>
+spec.template.buildPod.hostUsers <boolean>	# Use the host user namespace. Optional. Defaults to `true`. When `true` or not set, the pod runs in the host user namespace. This is required when the pod needs features available only in the host namespace, such as loading kernel modules with `CAP_SYS_MODULE`.When set to `false`, the pod runs in a new user namespace. Setting `false` helps mitigate container breakout vulnerabilities and allows containers to run as `root` without granting `root` privileges on the host. This property is alpha-level in Kubernetes and is supported only by Kubernetes clusters that enable the `UserNamespacesSupport` feature.
+spec.template.buildPod.imagePullSecrets <[]object>	# List of references to secrets in the same namespace to use for pulling any of the images used by this Pod. When the `STRIMZI_IMAGE_PULL_SECRETS` environment variable in Cluster Operator and the `imagePullSecrets` option are specified, only the `imagePullSecrets` variable is used and the `STRIMZI_IMAGE_PULL_SECRETS` variable is ignored.
+spec.template.buildPod.imagePullSecrets[].name <string>
+spec.template.buildPod.metadata <object>	# Metadata applied to the resource.
+spec.template.buildPod.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.buildPod.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.buildPod.priorityClassName <string>	# The name of the priority class used to assign priority to the pods. 
+spec.template.buildPod.schedulerName <string>	# The name of the scheduler used to dispatch this `Pod`. If not specified, the default scheduler will be used.
+spec.template.buildPod.securityContext <object>	# Configures pod-level security attributes and common container settings.
+spec.template.buildPod.securityContext.appArmorProfile <object>
+spec.template.buildPod.securityContext.appArmorProfile.localhostProfile <string>
+spec.template.buildPod.securityContext.appArmorProfile.type <string>
+spec.template.buildPod.securityContext.fsGroup <integer>
+spec.template.buildPod.securityContext.fsGroupChangePolicy <string>
+spec.template.buildPod.securityContext.runAsGroup <integer>
+spec.template.buildPod.securityContext.runAsNonRoot <boolean>
+spec.template.buildPod.securityContext.runAsUser <integer>
+spec.template.buildPod.securityContext.seLinuxChangePolicy <string>
+spec.template.buildPod.securityContext.seLinuxOptions <object>
+spec.template.buildPod.securityContext.seLinuxOptions.level <string>
+spec.template.buildPod.securityContext.seLinuxOptions.role <string>
+spec.template.buildPod.securityContext.seLinuxOptions.type <string>
+spec.template.buildPod.securityContext.seLinuxOptions.user <string>
+spec.template.buildPod.securityContext.seccompProfile <object>
+spec.template.buildPod.securityContext.seccompProfile.localhostProfile <string>
+spec.template.buildPod.securityContext.seccompProfile.type <string>
+spec.template.buildPod.securityContext.supplementalGroups <[]integer>
+spec.template.buildPod.securityContext.supplementalGroupsPolicy <string>
+spec.template.buildPod.securityContext.sysctls <[]object>
+spec.template.buildPod.securityContext.sysctls[].name <string>
+spec.template.buildPod.securityContext.sysctls[].value <string>
+spec.template.buildPod.securityContext.windowsOptions <object>
+spec.template.buildPod.securityContext.windowsOptions.gmsaCredentialSpec <string>
+spec.template.buildPod.securityContext.windowsOptions.gmsaCredentialSpecName <string>
+spec.template.buildPod.securityContext.windowsOptions.hostProcess <boolean>
+spec.template.buildPod.securityContext.windowsOptions.runAsUserName <string>
+spec.template.buildPod.terminationGracePeriodSeconds <integer> min=0	# The grace period is the duration in seconds after the processes running in the pod are sent a termination signal, and the time when the processes are forcibly halted with a kill signal. Set this value to longer than the expected cleanup time for your process. Value must be a non-negative integer. A zero value indicates delete immediately. You might need to increase the grace period for very large Kafka clusters, so that the Kafka brokers have enough time to transfer their work to another broker before they are terminated. Defaults to 30 seconds.
+spec.template.buildPod.tmpDirSizeLimit <string> pattern="^([0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"	# Defines the total amount of pod memory allocated for the temporary `EmptyDir` volume `/tmp`. Specify the allocation in memory units, for example, `100Mi` for 100 mebibytes. Default value is `5Mi`. The `/tmp` volume is backed by pod memory, not disk storage, so avoid setting a high value as it consumes pod memory resources.
+spec.template.buildPod.tolerations <[]object>	# The pod's tolerations.
+spec.template.buildPod.tolerations[].effect <string>
+spec.template.buildPod.tolerations[].key <string>
+spec.template.buildPod.tolerations[].operator <string>
+spec.template.buildPod.tolerations[].tolerationSeconds <integer>
+spec.template.buildPod.tolerations[].value <string>
+spec.template.buildPod.topologySpreadConstraints <[]object>	# The pod's topology spread constraints.
+spec.template.buildPod.topologySpreadConstraints[].labelSelector <object>
+spec.template.buildPod.topologySpreadConstraints[].labelSelector.matchExpressions <[]object>
+spec.template.buildPod.topologySpreadConstraints[].labelSelector.matchExpressions[].key <string>
+spec.template.buildPod.topologySpreadConstraints[].labelSelector.matchExpressions[].operator <string>
+spec.template.buildPod.topologySpreadConstraints[].labelSelector.matchExpressions[].values <[]string>
+spec.template.buildPod.topologySpreadConstraints[].labelSelector.matchLabels <map[string]string>
+spec.template.buildPod.topologySpreadConstraints[].matchLabelKeys <[]string>
+spec.template.buildPod.topologySpreadConstraints[].maxSkew <integer>
+spec.template.buildPod.topologySpreadConstraints[].minDomains <integer>
+spec.template.buildPod.topologySpreadConstraints[].nodeAffinityPolicy <string>
+spec.template.buildPod.topologySpreadConstraints[].nodeTaintsPolicy <string>
+spec.template.buildPod.topologySpreadConstraints[].topologyKey <string>
+spec.template.buildPod.topologySpreadConstraints[].whenUnsatisfiable <string>
+spec.template.buildPod.volumes <[]object>	# Additional volumes that can be mounted to the pod.
+spec.template.buildPod.volumes[].configMap <object>	# `ConfigMap` to use to populate the volume.
+spec.template.buildPod.volumes[].configMap.defaultMode <integer>
+spec.template.buildPod.volumes[].configMap.items <[]object>
+spec.template.buildPod.volumes[].configMap.items[].key <string>
+spec.template.buildPod.volumes[].configMap.items[].mode <integer>
+spec.template.buildPod.volumes[].configMap.items[].path <string>
+spec.template.buildPod.volumes[].configMap.name <string>
+spec.template.buildPod.volumes[].configMap.optional <boolean>
+spec.template.buildPod.volumes[].csi <object>	# `CSIVolumeSource` object to use to populate the volume.
+spec.template.buildPod.volumes[].csi.driver <string>
+spec.template.buildPod.volumes[].csi.fsType <string>
+spec.template.buildPod.volumes[].csi.nodePublishSecretRef <object>
+spec.template.buildPod.volumes[].csi.nodePublishSecretRef.name <string>
+spec.template.buildPod.volumes[].csi.readOnly <boolean>
+spec.template.buildPod.volumes[].csi.volumeAttributes <map[string]string>
+spec.template.buildPod.volumes[].emptyDir <object>	# `EmptyDir` to use to populate the volume.
+spec.template.buildPod.volumes[].emptyDir.medium <string> enum=Memory	# Medium represents the type of storage medium should back this volume. Valid values are unset or `Memory`. When not set, it will use the node's default medium.
+spec.template.buildPod.volumes[].emptyDir.sizeLimit <string> pattern="^([0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"	# The total amount of local storage required for this EmptyDir volume (for example 1Gi).
+spec.template.buildPod.volumes[].image <object>	# `ImageVolumeSource` object to use to populate the volume.
+spec.template.buildPod.volumes[].image.pullPolicy <string>
+spec.template.buildPod.volumes[].image.reference <string>
+spec.template.buildPod.volumes[].name <string>	# Name to use for the volume. Required.
+spec.template.buildPod.volumes[].persistentVolumeClaim <object>	# `PersistentVolumeClaim` object to use to populate the volume.
+spec.template.buildPod.volumes[].persistentVolumeClaim.claimName <string>
+spec.template.buildPod.volumes[].persistentVolumeClaim.readOnly <boolean>
+spec.template.buildPod.volumes[].secret <object>	# `Secret` to use to populate the volume.
+spec.template.buildPod.volumes[].secret.defaultMode <integer>
+spec.template.buildPod.volumes[].secret.items <[]object>
+spec.template.buildPod.volumes[].secret.items[].key <string>
+spec.template.buildPod.volumes[].secret.items[].mode <integer>
+spec.template.buildPod.volumes[].secret.items[].path <string>
+spec.template.buildPod.volumes[].secret.optional <boolean>
+spec.template.buildPod.volumes[].secret.secretName <string>
+spec.template.buildServiceAccount <object>	# Template for the Kafka Connect Build service account.
+spec.template.buildServiceAccount.metadata <object>	# Metadata applied to the resource.
+spec.template.buildServiceAccount.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.buildServiceAccount.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.clusterRoleBinding <object>	# Template for the Kafka Connect ClusterRoleBinding.
+spec.template.clusterRoleBinding.metadata <object>	# Metadata applied to the resource.
+spec.template.clusterRoleBinding.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.clusterRoleBinding.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.connectContainer <object>	# Template for the Kafka Connect container.
+spec.template.connectContainer.env <[]object>	# Environment variables which should be applied to the container.
+spec.template.connectContainer.env[].name <string>	# The environment variable key.
+spec.template.connectContainer.env[].value <string>	# The environment variable value.
+spec.template.connectContainer.env[].valueFrom <object>	# Reference to the secret or config map property to which the environment variable is set.
+spec.template.connectContainer.env[].valueFrom.configMapKeyRef <object>	# Reference to a key in a config map.
+spec.template.connectContainer.env[].valueFrom.configMapKeyRef.key <string>
+spec.template.connectContainer.env[].valueFrom.configMapKeyRef.name <string>
+spec.template.connectContainer.env[].valueFrom.configMapKeyRef.optional <boolean>
+spec.template.connectContainer.env[].valueFrom.secretKeyRef <object>	# Reference to a key in a secret.
+spec.template.connectContainer.env[].valueFrom.secretKeyRef.key <string>
+spec.template.connectContainer.env[].valueFrom.secretKeyRef.name <string>
+spec.template.connectContainer.env[].valueFrom.secretKeyRef.optional <boolean>
+spec.template.connectContainer.securityContext <object>	# Security context for the container.
+spec.template.connectContainer.securityContext.allowPrivilegeEscalation <boolean>
+spec.template.connectContainer.securityContext.appArmorProfile <object>
+spec.template.connectContainer.securityContext.appArmorProfile.localhostProfile <string>
+spec.template.connectContainer.securityContext.appArmorProfile.type <string>
+spec.template.connectContainer.securityContext.capabilities <object>
+spec.template.connectContainer.securityContext.capabilities.add <[]string>
+spec.template.connectContainer.securityContext.capabilities.drop <[]string>
+spec.template.connectContainer.securityContext.privileged <boolean>
+spec.template.connectContainer.securityContext.procMount <string>
+spec.template.connectContainer.securityContext.readOnlyRootFilesystem <boolean>
+spec.template.connectContainer.securityContext.runAsGroup <integer>
+spec.template.connectContainer.securityContext.runAsNonRoot <boolean>
+spec.template.connectContainer.securityContext.runAsUser <integer>
+spec.template.connectContainer.securityContext.seLinuxOptions <object>
+spec.template.connectContainer.securityContext.seLinuxOptions.level <string>
+spec.template.connectContainer.securityContext.seLinuxOptions.role <string>
+spec.template.connectContainer.securityContext.seLinuxOptions.type <string>
+spec.template.connectContainer.securityContext.seLinuxOptions.user <string>
+spec.template.connectContainer.securityContext.seccompProfile <object>
+spec.template.connectContainer.securityContext.seccompProfile.localhostProfile <string>
+spec.template.connectContainer.securityContext.seccompProfile.type <string>
+spec.template.connectContainer.securityContext.windowsOptions <object>
+spec.template.connectContainer.securityContext.windowsOptions.gmsaCredentialSpec <string>
+spec.template.connectContainer.securityContext.windowsOptions.gmsaCredentialSpecName <string>
+spec.template.connectContainer.securityContext.windowsOptions.hostProcess <boolean>
+spec.template.connectContainer.securityContext.windowsOptions.runAsUserName <string>
+spec.template.connectContainer.volumeMounts <[]object>	# Additional volume mounts which should be applied to the container.
+spec.template.connectContainer.volumeMounts[].mountPath <string>
+spec.template.connectContainer.volumeMounts[].mountPropagation <string>
+spec.template.connectContainer.volumeMounts[].name <string>
+spec.template.connectContainer.volumeMounts[].readOnly <boolean>
+spec.template.connectContainer.volumeMounts[].recursiveReadOnly <string>
+spec.template.connectContainer.volumeMounts[].subPath <string>
+spec.template.connectContainer.volumeMounts[].subPathExpr <string>
+spec.template.headlessService <object>	# Template for Kafka Connect headless `Service`.
+spec.template.headlessService.ipFamilies <[]string>	# Specifies the IP Families used by the service. Available options are `IPv4` and `IPv6`. If unspecified, Kubernetes will choose the default value based on the `ipFamilyPolicy` setting.
+spec.template.headlessService.ipFamilyPolicy <string> enum=SingleStack|PreferDualStack|RequireDualStack	# Specifies the IP Family Policy used by the service. Available options are `SingleStack`, `PreferDualStack` and `RequireDualStack`. `SingleStack` is for a single IP family. `PreferDualStack` is for two IP families on dual-stack configured clusters or a single IP family on single-stack clusters. `RequireDualStack` fails unless there are two IP families on dual-stack configured clusters. If unspecified, Kubernetes will choose the default value based on the service type.
+spec.template.headlessService.metadata <object>	# Metadata applied to the resource.
+spec.template.headlessService.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.headlessService.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.initContainer <object>	# Template for the Kafka init container.
+spec.template.initContainer.env <[]object>	# Environment variables which should be applied to the container.
+spec.template.initContainer.env[].name <string>	# The environment variable key.
+spec.template.initContainer.env[].value <string>	# The environment variable value.
+spec.template.initContainer.env[].valueFrom <object>	# Reference to the secret or config map property to which the environment variable is set.
+spec.template.initContainer.env[].valueFrom.configMapKeyRef <object>	# Reference to a key in a config map.
+spec.template.initContainer.env[].valueFrom.configMapKeyRef.key <string>
+spec.template.initContainer.env[].valueFrom.configMapKeyRef.name <string>
+spec.template.initContainer.env[].valueFrom.configMapKeyRef.optional <boolean>
+spec.template.initContainer.env[].valueFrom.secretKeyRef <object>	# Reference to a key in a secret.
+spec.template.initContainer.env[].valueFrom.secretKeyRef.key <string>
+spec.template.initContainer.env[].valueFrom.secretKeyRef.name <string>
+spec.template.initContainer.env[].valueFrom.secretKeyRef.optional <boolean>
+spec.template.initContainer.securityContext <object>	# Security context for the container.
+spec.template.initContainer.securityContext.allowPrivilegeEscalation <boolean>
+spec.template.initContainer.securityContext.appArmorProfile <object>
+spec.template.initContainer.securityContext.appArmorProfile.localhostProfile <string>
+spec.template.initContainer.securityContext.appArmorProfile.type <string>
+spec.template.initContainer.securityContext.capabilities <object>
+spec.template.initContainer.securityContext.capabilities.add <[]string>
+spec.template.initContainer.securityContext.capabilities.drop <[]string>
+spec.template.initContainer.securityContext.privileged <boolean>
+spec.template.initContainer.securityContext.procMount <string>
+spec.template.initContainer.securityContext.readOnlyRootFilesystem <boolean>
+spec.template.initContainer.securityContext.runAsGroup <integer>
+spec.template.initContainer.securityContext.runAsNonRoot <boolean>
+spec.template.initContainer.securityContext.runAsUser <integer>
+spec.template.initContainer.securityContext.seLinuxOptions <object>
+spec.template.initContainer.securityContext.seLinuxOptions.level <string>
+spec.template.initContainer.securityContext.seLinuxOptions.role <string>
+spec.template.initContainer.securityContext.seLinuxOptions.type <string>
+spec.template.initContainer.securityContext.seLinuxOptions.user <string>
+spec.template.initContainer.securityContext.seccompProfile <object>
+spec.template.initContainer.securityContext.seccompProfile.localhostProfile <string>
+spec.template.initContainer.securityContext.seccompProfile.type <string>
+spec.template.initContainer.securityContext.windowsOptions <object>
+spec.template.initContainer.securityContext.windowsOptions.gmsaCredentialSpec <string>
+spec.template.initContainer.securityContext.windowsOptions.gmsaCredentialSpecName <string>
+spec.template.initContainer.securityContext.windowsOptions.hostProcess <boolean>
+spec.template.initContainer.securityContext.windowsOptions.runAsUserName <string>
+spec.template.initContainer.volumeMounts <[]object>	# Additional volume mounts which should be applied to the container.
+spec.template.initContainer.volumeMounts[].mountPath <string>
+spec.template.initContainer.volumeMounts[].mountPropagation <string>
+spec.template.initContainer.volumeMounts[].name <string>
+spec.template.initContainer.volumeMounts[].readOnly <boolean>
+spec.template.initContainer.volumeMounts[].recursiveReadOnly <string>
+spec.template.initContainer.volumeMounts[].subPath <string>
+spec.template.initContainer.volumeMounts[].subPathExpr <string>
+spec.template.jmxSecret <object>	# Template for Secret of the Kafka Connect Cluster JMX authentication.
+spec.template.jmxSecret.metadata <object>	# Metadata applied to the resource.
+spec.template.jmxSecret.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.jmxSecret.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.pod <object>	# Template for Kafka Connect `Pods`.
+spec.template.pod.affinity <object>	# The pod's affinity rules.
+spec.template.pod.affinity.nodeAffinity <object>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference <object>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions <[]object>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].key <string>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].operator <string>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].values <[]string>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields <[]object>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].key <string>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].operator <string>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].values <[]string>
+spec.template.pod.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution <object>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms <[]object>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions <[]object>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].key <string>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].operator <string>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].values <[]string>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields <[]object>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].key <string>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].operator <string>
+spec.template.pod.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].values <[]string>
+spec.template.pod.affinity.podAffinity <object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string>
+spec.template.pod.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.template.pod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string>
+spec.template.pod.affinity.podAntiAffinity <object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string>
+spec.template.pod.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.template.pod.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string>
+spec.template.pod.dnsConfig <object>	# The pod's DNSConfig. If specified, it will be merged to the generated DNS configuration based on the DNSPolicy.
+spec.template.pod.dnsConfig.nameservers <[]string>
+spec.template.pod.dnsConfig.options <[]object>
+spec.template.pod.dnsConfig.options[].name <string>
+spec.template.pod.dnsConfig.options[].value <string>
+spec.template.pod.dnsConfig.searches <[]string>
+spec.template.pod.dnsPolicy <string> enum=ClusterFirst|ClusterFirstWithHostNet|Default|None	# The pod's DNSPolicy. Defaults to `ClusterFirst`. Valid values are `ClusterFirstWithHostNet`, `ClusterFirst`, `Default` or `None`.
+spec.template.pod.enableServiceLinks <boolean>	# Indicates whether information about services should be injected into Pod's environment variables.
+spec.template.pod.hostAliases <[]object>	# The pod's HostAliases. HostAliases is an optional list of hosts and IPs that will be injected into the Pod's hosts file if specified.
+spec.template.pod.hostAliases[].hostnames <[]string>
+spec.template.pod.hostAliases[].ip <string>
+spec.template.pod.hostUsers <boolean>	# Use the host user namespace. Optional. Defaults to `true`. When `true` or not set, the pod runs in the host user namespace. This is required when the pod needs features available only in the host namespace, such as loading kernel modules with `CAP_SYS_MODULE`.When set to `false`, the pod runs in a new user namespace. Setting `false` helps mitigate container breakout vulnerabilities and allows containers to run as `root` without granting `root` privileges on the host. This property is alpha-level in Kubernetes and is supported only by Kubernetes clusters that enable the `UserNamespacesSupport` feature.
+spec.template.pod.imagePullSecrets <[]object>	# List of references to secrets in the same namespace to use for pulling any of the images used by this Pod. When the `STRIMZI_IMAGE_PULL_SECRETS` environment variable in Cluster Operator and the `imagePullSecrets` option are specified, only the `imagePullSecrets` variable is used and the `STRIMZI_IMAGE_PULL_SECRETS` variable is ignored.
+spec.template.pod.imagePullSecrets[].name <string>
+spec.template.pod.metadata <object>	# Metadata applied to the resource.
+spec.template.pod.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.pod.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.pod.priorityClassName <string>	# The name of the priority class used to assign priority to the pods. 
+spec.template.pod.schedulerName <string>	# The name of the scheduler used to dispatch this `Pod`. If not specified, the default scheduler will be used.
+spec.template.pod.securityContext <object>	# Configures pod-level security attributes and common container settings.
+spec.template.pod.securityContext.appArmorProfile <object>
+spec.template.pod.securityContext.appArmorProfile.localhostProfile <string>
+spec.template.pod.securityContext.appArmorProfile.type <string>
+spec.template.pod.securityContext.fsGroup <integer>
+spec.template.pod.securityContext.fsGroupChangePolicy <string>
+spec.template.pod.securityContext.runAsGroup <integer>
+spec.template.pod.securityContext.runAsNonRoot <boolean>
+spec.template.pod.securityContext.runAsUser <integer>
+spec.template.pod.securityContext.seLinuxChangePolicy <string>
+spec.template.pod.securityContext.seLinuxOptions <object>
+spec.template.pod.securityContext.seLinuxOptions.level <string>
+spec.template.pod.securityContext.seLinuxOptions.role <string>
+spec.template.pod.securityContext.seLinuxOptions.type <string>
+spec.template.pod.securityContext.seLinuxOptions.user <string>
+spec.template.pod.securityContext.seccompProfile <object>
+spec.template.pod.securityContext.seccompProfile.localhostProfile <string>
+spec.template.pod.securityContext.seccompProfile.type <string>
+spec.template.pod.securityContext.supplementalGroups <[]integer>
+spec.template.pod.securityContext.supplementalGroupsPolicy <string>
+spec.template.pod.securityContext.sysctls <[]object>
+spec.template.pod.securityContext.sysctls[].name <string>
+spec.template.pod.securityContext.sysctls[].value <string>
+spec.template.pod.securityContext.windowsOptions <object>
+spec.template.pod.securityContext.windowsOptions.gmsaCredentialSpec <string>
+spec.template.pod.securityContext.windowsOptions.gmsaCredentialSpecName <string>
+spec.template.pod.securityContext.windowsOptions.hostProcess <boolean>
+spec.template.pod.securityContext.windowsOptions.runAsUserName <string>
+spec.template.pod.terminationGracePeriodSeconds <integer> min=0	# The grace period is the duration in seconds after the processes running in the pod are sent a termination signal, and the time when the processes are forcibly halted with a kill signal. Set this value to longer than the expected cleanup time for your process. Value must be a non-negative integer. A zero value indicates delete immediately. You might need to increase the grace period for very large Kafka clusters, so that the Kafka brokers have enough time to transfer their work to another broker before they are terminated. Defaults to 30 seconds.
+spec.template.pod.tmpDirSizeLimit <string> pattern="^([0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"	# Defines the total amount of pod memory allocated for the temporary `EmptyDir` volume `/tmp`. Specify the allocation in memory units, for example, `100Mi` for 100 mebibytes. Default value is `5Mi`. The `/tmp` volume is backed by pod memory, not disk storage, so avoid setting a high value as it consumes pod memory resources.
+spec.template.pod.tolerations <[]object>	# The pod's tolerations.
+spec.template.pod.tolerations[].effect <string>
+spec.template.pod.tolerations[].key <string>
+spec.template.pod.tolerations[].operator <string>
+spec.template.pod.tolerations[].tolerationSeconds <integer>
+spec.template.pod.tolerations[].value <string>
+spec.template.pod.topologySpreadConstraints <[]object>	# The pod's topology spread constraints.
+spec.template.pod.topologySpreadConstraints[].labelSelector <object>
+spec.template.pod.topologySpreadConstraints[].labelSelector.matchExpressions <[]object>
+spec.template.pod.topologySpreadConstraints[].labelSelector.matchExpressions[].key <string>
+spec.template.pod.topologySpreadConstraints[].labelSelector.matchExpressions[].operator <string>
+spec.template.pod.topologySpreadConstraints[].labelSelector.matchExpressions[].values <[]string>
+spec.template.pod.topologySpreadConstraints[].labelSelector.matchLabels <map[string]string>
+spec.template.pod.topologySpreadConstraints[].matchLabelKeys <[]string>
+spec.template.pod.topologySpreadConstraints[].maxSkew <integer>
+spec.template.pod.topologySpreadConstraints[].minDomains <integer>
+spec.template.pod.topologySpreadConstraints[].nodeAffinityPolicy <string>
+spec.template.pod.topologySpreadConstraints[].nodeTaintsPolicy <string>
+spec.template.pod.topologySpreadConstraints[].topologyKey <string>
+spec.template.pod.topologySpreadConstraints[].whenUnsatisfiable <string>
+spec.template.pod.volumes <[]object>	# Additional volumes that can be mounted to the pod.
+spec.template.pod.volumes[].configMap <object>	# `ConfigMap` to use to populate the volume.
+spec.template.pod.volumes[].configMap.defaultMode <integer>
+spec.template.pod.volumes[].configMap.items <[]object>
+spec.template.pod.volumes[].configMap.items[].key <string>
+spec.template.pod.volumes[].configMap.items[].mode <integer>
+spec.template.pod.volumes[].configMap.items[].path <string>
+spec.template.pod.volumes[].configMap.name <string>
+spec.template.pod.volumes[].configMap.optional <boolean>
+spec.template.pod.volumes[].csi <object>	# `CSIVolumeSource` object to use to populate the volume.
+spec.template.pod.volumes[].csi.driver <string>
+spec.template.pod.volumes[].csi.fsType <string>
+spec.template.pod.volumes[].csi.nodePublishSecretRef <object>
+spec.template.pod.volumes[].csi.nodePublishSecretRef.name <string>
+spec.template.pod.volumes[].csi.readOnly <boolean>
+spec.template.pod.volumes[].csi.volumeAttributes <map[string]string>
+spec.template.pod.volumes[].emptyDir <object>	# `EmptyDir` to use to populate the volume.
+spec.template.pod.volumes[].emptyDir.medium <string> enum=Memory	# Medium represents the type of storage medium should back this volume. Valid values are unset or `Memory`. When not set, it will use the node's default medium.
+spec.template.pod.volumes[].emptyDir.sizeLimit <string> pattern="^([0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"	# The total amount of local storage required for this EmptyDir volume (for example 1Gi).
+spec.template.pod.volumes[].image <object>	# `ImageVolumeSource` object to use to populate the volume.
+spec.template.pod.volumes[].image.pullPolicy <string>
+spec.template.pod.volumes[].image.reference <string>
+spec.template.pod.volumes[].name <string>	# Name to use for the volume. Required.
+spec.template.pod.volumes[].persistentVolumeClaim <object>	# `PersistentVolumeClaim` object to use to populate the volume.
+spec.template.pod.volumes[].persistentVolumeClaim.claimName <string>
+spec.template.pod.volumes[].persistentVolumeClaim.readOnly <boolean>
+spec.template.pod.volumes[].secret <object>	# `Secret` to use to populate the volume.
+spec.template.pod.volumes[].secret.defaultMode <integer>
+spec.template.pod.volumes[].secret.items <[]object>
+spec.template.pod.volumes[].secret.items[].key <string>
+spec.template.pod.volumes[].secret.items[].mode <integer>
+spec.template.pod.volumes[].secret.items[].path <string>
+spec.template.pod.volumes[].secret.optional <boolean>
+spec.template.pod.volumes[].secret.secretName <string>
+spec.template.podDisruptionBudget <object>	# Template for Kafka Connect `PodDisruptionBudget`.
+spec.template.podDisruptionBudget.maxUnavailable <integer> min=0	# Maximum number of unavailable pods to allow automatic Pod eviction. A Pod eviction is allowed when the `maxUnavailable` number of pods or fewer are unavailable after the eviction. Setting this value to 0 prevents all voluntary evictions, so the pods must be evicted manually. Defaults to 1.
+spec.template.podDisruptionBudget.metadata <object>	# Metadata to apply to the `PodDisruptionBudgetTemplate` resource.
+spec.template.podDisruptionBudget.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.podDisruptionBudget.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.podSet <object>	# Template for Kafka Connect `StrimziPodSet` resource.
+spec.template.podSet.metadata <object>	# Metadata applied to the resource.
+spec.template.podSet.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.podSet.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.template.serviceAccount <object>	# Template for the Kafka Connect service account.
+spec.template.serviceAccount.metadata <object>	# Metadata applied to the resource.
+spec.template.serviceAccount.metadata.annotations <map[string]string>	# Annotations added to the Kubernetes resource.
+spec.template.serviceAccount.metadata.labels <map[string]string>	# Labels added to the Kubernetes resource.
+spec.tls <object>	# TLS configuration.
+spec.tls.trustedCertificates <[]object>	# Trusted certificates for TLS connection.
+spec.tls.trustedCertificates[].certificate <string>	# The name of the file certificate in the secret.
+spec.tls.trustedCertificates[].pattern <string>	# Pattern for the certificate files in the secret. Use the link:https://en.wikipedia.org/wiki/Glob_(programming)[_glob syntax_] for the pattern. All files in the secret that match the pattern are used.
+spec.tls.trustedCertificates[].secretName <string> (required)	# The name of the Secret containing the certificate.
+spec.tracing <object>	# The configuration of tracing in Kafka Connect.
+spec.tracing.type <string> (required) enum=opentelemetry	# Type of the tracing used. Currently the only supported type is `opentelemetry` for OpenTelemetry tracing. As of Strimzi 0.37.0, `jaeger` type is not supported anymore and this option is ignored.
+spec.version <string>	# The Kafka Connect version. Defaults to the latest version. Consult the user documentation to understand the process required to upgrade or downgrade the version.
+status <object>	# The status of the Kafka Connect cluster.
+status.conditions <[]object>	# List of status conditions.
+status.conditions[].lastTransitionTime <string>	# Last time the condition of a type changed from one status to another. The required format is 'yyyy-MM-ddTHH:mm:ssZ', in the UTC time zone.
+status.conditions[].message <string>	# Human-readable message indicating details about the condition's last transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition (a single word in CamelCase).
+status.conditions[].status <string>	# The status of the condition, either True, False or Unknown.
+status.conditions[].type <string>	# The unique identifier of a condition, used to distinguish between other conditions in the resource.
+status.connectorPlugins <[]object>	# The list of connector plugins available in this Kafka Connect deployment.
+status.connectorPlugins[].class <string>	# The class of the connector plugin.
+status.connectorPlugins[].type <string>	# The type of the connector plugin. The available types are `sink` and `source`.
+status.connectorPlugins[].version <string>	# The version of the connector plugin.
+status.labelSelector <string>	# Label selector for pods providing this resource.
+status.observedGeneration <integer>	# The generation of the CRD that was last reconciled by the operator.
+status.replicas <integer>	# The current number of pods being used to provide this resource.
+status.url <string>	# The URL of the REST API endpoint for managing and monitoring Kafka Connect connectors.

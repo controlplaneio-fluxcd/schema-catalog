@@ -1,0 +1,343 @@
+# schema source: Rook v1.20.1 https://github.com/rook/rook
+apiVersion <string> enum=ceph.rook.io/v1
+kind <string> enum=CephFilesystem
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# FilesystemSpec represents the spec of a file system
+spec.dataPools <[]object> (required)	# The data pool settings, with optional predefined pool name.
+spec.dataPools[].application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.dataPools[].compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.dataPools[].crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.dataPools[].deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.dataPools[].enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.dataPools[].enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.dataPools[].erasureCoded <object>	# The erasure code settings
+spec.dataPools[].erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.dataPools[].erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.dataPools[].erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.dataPools[].erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.dataPools[].failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.dataPools[].mirroring <object>	# The mirroring settings
+spec.dataPools[].mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.dataPools[].mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.dataPools[].mirroring.peers <object>	# Peers represents the peers spec
+spec.dataPools[].mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.dataPools[].mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.dataPools[].mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.dataPools[].mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.dataPools[].mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.dataPools[].name <string>	# Name of the pool
+spec.dataPools[].parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.dataPools[].quotas <object>	# The quota settings
+spec.dataPools[].quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.dataPools[].quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.dataPools[].quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.dataPools[].replicated <object>	# The replication settings
+spec.dataPools[].replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.dataPools[].replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.dataPools[].replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.dataPools[].replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.dataPools[].replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.dataPools[].replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.dataPools[].replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.dataPools[].replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.dataPools[].statusCheck <object>	# The mirroring statusCheck
+spec.dataPools[].statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.dataPools[].statusCheck.mirror.disabled <boolean>
+spec.dataPools[].statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.dataPools[].statusCheck.mirror.timeout <string>
+spec.metadataPool <object> (required)	# The metadata pool settings
+spec.metadataPool.application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.metadataPool.compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.metadataPool.crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.metadataPool.deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.metadataPool.enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.metadataPool.enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.metadataPool.erasureCoded <object>	# The erasure code settings
+spec.metadataPool.erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.metadataPool.erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.metadataPool.erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.metadataPool.erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.metadataPool.failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.metadataPool.mirroring <object>	# The mirroring settings
+spec.metadataPool.mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.metadataPool.mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.metadataPool.mirroring.peers <object>	# Peers represents the peers spec
+spec.metadataPool.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.metadataPool.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.metadataPool.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.metadataPool.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.metadataPool.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.metadataPool.name <string>	# Name of the pool
+spec.metadataPool.parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.metadataPool.quotas <object>	# The quota settings
+spec.metadataPool.quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.metadataPool.quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.metadataPool.quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.metadataPool.replicated <object>	# The replication settings
+spec.metadataPool.replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.metadataPool.replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.metadataPool.replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.metadataPool.replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.metadataPool.replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.metadataPool.replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.metadataPool.replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.metadataPool.replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.metadataPool.statusCheck <object>	# The mirroring statusCheck
+spec.metadataPool.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.metadataPool.statusCheck.mirror.disabled <boolean>
+spec.metadataPool.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.metadataPool.statusCheck.mirror.timeout <string>
+spec.metadataServer <object> (required)	# The mds pod info
+spec.metadataServer.activeCount <integer> (required) format=int32 min=1 max=50	# The number of metadata servers that are active. The remaining servers in the cluster will be in standby mode.
+spec.metadataServer.activeStandby <boolean>	# Whether each active MDS instance will have an active standby with a warm metadata cache for faster failover. If false, standbys will still be available, but will not have a warm metadata cache.
+spec.metadataServer.annotations <map[string]string>	# The annotations-related configuration to add/set on each Pod related object.
+spec.metadataServer.cacheMemoryLimitFactor <number> min=0 max=1	# CacheMemoryLimitFactor is the factor applied to the memory limit to determine the MDS cache memory limit. MDS cache memory limit should be set to 50-60% of RAM reserved for the MDS container. MDS uses approximately 125% of the value of mds_cache_memory_limit in RAM. This factor is applied when resources.limits.memory is set.
+spec.metadataServer.cacheMemoryRequestFactor <number> min=0 max=1	# CacheMemoryRequestFactor is the factor applied to the memory request to determine the MDS cache memory limit. This factor is applied when resources.requests.memory is set and resources.limits.memory is not set.
+spec.metadataServer.labels <map[string]string>	# The labels-related configuration to add/set on each Pod related object.
+spec.metadataServer.livenessProbe <object>	# ProbeSpec is a wrapper around Probe so it can be enabled or disabled for a Ceph daemon
+spec.metadataServer.livenessProbe.disabled <boolean>	# Disabled determines whether probe is disable or not
+spec.metadataServer.livenessProbe.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+spec.metadataServer.livenessProbe.probe.exec <object>	# Exec specifies a command to execute in the container.
+spec.metadataServer.livenessProbe.probe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+spec.metadataServer.livenessProbe.probe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.metadataServer.livenessProbe.probe.grpc <object>	# GRPC specifies a GRPC HealthCheckRequest.
+spec.metadataServer.livenessProbe.probe.grpc.port <integer> (required) format=int32	# Port number of the gRPC service. Number must be in the range 1 to 65535.
+spec.metadataServer.livenessProbe.probe.grpc.service <string> default=""	# Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If this is not specified, the default behavior is defined by gRPC.
+spec.metadataServer.livenessProbe.probe.httpGet <object>	# HTTPGet specifies an HTTP GET request to perform.
+spec.metadataServer.livenessProbe.probe.httpGet.host <string>	# Host name to connect to, defaults to the pod IP. You probably want to set "Host" in httpHeaders instead.
+spec.metadataServer.livenessProbe.probe.httpGet.httpHeaders <[]object>	# Custom headers to set in the request. HTTP allows repeated headers.
+spec.metadataServer.livenessProbe.probe.httpGet.httpHeaders[].name <string> (required)	# The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
+spec.metadataServer.livenessProbe.probe.httpGet.httpHeaders[].value <string> (required)	# The header field value
+spec.metadataServer.livenessProbe.probe.httpGet.path <string>	# Path to access on the HTTP server.
+spec.metadataServer.livenessProbe.probe.httpGet.port <int-or-string> (required)	# Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.metadataServer.livenessProbe.probe.httpGet.scheme <string>	# Scheme to use for connecting to the host. Defaults to HTTP.
+spec.metadataServer.livenessProbe.probe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.metadataServer.livenessProbe.probe.periodSeconds <integer> format=int32	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.metadataServer.livenessProbe.probe.successThreshold <integer> format=int32	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.metadataServer.livenessProbe.probe.tcpSocket <object>	# TCPSocket specifies a connection to a TCP port.
+spec.metadataServer.livenessProbe.probe.tcpSocket.host <string>	# Optional: Host name to connect to, defaults to the pod IP.
+spec.metadataServer.livenessProbe.probe.tcpSocket.port <int-or-string> (required)	# Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.metadataServer.livenessProbe.probe.terminationGracePeriodSeconds <integer> format=int64
+spec.metadataServer.livenessProbe.probe.timeoutSeconds <integer> format=int32	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.metadataServer.placement <object>
+spec.metadataServer.placement.nodeAffinity <object>
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference <object> (required)
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions <[]object>
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].values <[]string>
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields <[]object>
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].key <string> (required)
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].operator <string> (required)
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].values <[]string>
+spec.metadataServer.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer> (required) format=int32
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution <object>
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms <[]object> (required)
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions <[]object>
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].key <string> (required)
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].values <[]string>
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields <[]object>
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].key <string> (required)
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].operator <string> (required)
+spec.metadataServer.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].values <[]string>
+spec.metadataServer.placement.podAffinity <object>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object> (required)
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string> (required)
+spec.metadataServer.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer> (required) format=int32
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.metadataServer.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string> (required)
+spec.metadataServer.placement.podAntiAffinity <object>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object> (required)
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string> (required)
+spec.metadataServer.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer> (required) format=int32
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.metadataServer.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string> (required)
+spec.metadataServer.placement.tolerations <[]object>
+spec.metadataServer.placement.tolerations[].effect <string>
+spec.metadataServer.placement.tolerations[].key <string>
+spec.metadataServer.placement.tolerations[].operator <string>
+spec.metadataServer.placement.tolerations[].tolerationSeconds <integer> format=int64
+spec.metadataServer.placement.tolerations[].value <string>
+spec.metadataServer.placement.topologySpreadConstraints <[]object>
+spec.metadataServer.placement.topologySpreadConstraints[].labelSelector <object>
+spec.metadataServer.placement.topologySpreadConstraints[].labelSelector.matchExpressions <[]object>
+spec.metadataServer.placement.topologySpreadConstraints[].labelSelector.matchExpressions[].key <string> (required)
+spec.metadataServer.placement.topologySpreadConstraints[].labelSelector.matchExpressions[].operator <string> (required)
+spec.metadataServer.placement.topologySpreadConstraints[].labelSelector.matchExpressions[].values <[]string>
+spec.metadataServer.placement.topologySpreadConstraints[].labelSelector.matchLabels <map[string]string>
+spec.metadataServer.placement.topologySpreadConstraints[].matchLabelKeys <[]string>
+spec.metadataServer.placement.topologySpreadConstraints[].maxSkew <integer> (required) format=int32
+spec.metadataServer.placement.topologySpreadConstraints[].minDomains <integer> format=int32
+spec.metadataServer.placement.topologySpreadConstraints[].nodeAffinityPolicy <string>
+spec.metadataServer.placement.topologySpreadConstraints[].nodeTaintsPolicy <string>
+spec.metadataServer.placement.topologySpreadConstraints[].topologyKey <string> (required)
+spec.metadataServer.placement.topologySpreadConstraints[].whenUnsatisfiable <string> (required)
+spec.metadataServer.priorityClassName <string>	# PriorityClassName sets priority classes on components
+spec.metadataServer.resources <object>	# The resource requirements for the mds pods
+spec.metadataServer.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.metadataServer.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.metadataServer.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.metadataServer.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.metadataServer.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.metadataServer.startupProbe <object>	# ProbeSpec is a wrapper around Probe so it can be enabled or disabled for a Ceph daemon
+spec.metadataServer.startupProbe.disabled <boolean>	# Disabled determines whether probe is disable or not
+spec.metadataServer.startupProbe.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+spec.metadataServer.startupProbe.probe.exec <object>	# Exec specifies a command to execute in the container.
+spec.metadataServer.startupProbe.probe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+spec.metadataServer.startupProbe.probe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.metadataServer.startupProbe.probe.grpc <object>	# GRPC specifies a GRPC HealthCheckRequest.
+spec.metadataServer.startupProbe.probe.grpc.port <integer> (required) format=int32	# Port number of the gRPC service. Number must be in the range 1 to 65535.
+spec.metadataServer.startupProbe.probe.grpc.service <string> default=""	# Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If this is not specified, the default behavior is defined by gRPC.
+spec.metadataServer.startupProbe.probe.httpGet <object>	# HTTPGet specifies an HTTP GET request to perform.
+spec.metadataServer.startupProbe.probe.httpGet.host <string>	# Host name to connect to, defaults to the pod IP. You probably want to set "Host" in httpHeaders instead.
+spec.metadataServer.startupProbe.probe.httpGet.httpHeaders <[]object>	# Custom headers to set in the request. HTTP allows repeated headers.
+spec.metadataServer.startupProbe.probe.httpGet.httpHeaders[].name <string> (required)	# The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
+spec.metadataServer.startupProbe.probe.httpGet.httpHeaders[].value <string> (required)	# The header field value
+spec.metadataServer.startupProbe.probe.httpGet.path <string>	# Path to access on the HTTP server.
+spec.metadataServer.startupProbe.probe.httpGet.port <int-or-string> (required)	# Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.metadataServer.startupProbe.probe.httpGet.scheme <string>	# Scheme to use for connecting to the host. Defaults to HTTP.
+spec.metadataServer.startupProbe.probe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.metadataServer.startupProbe.probe.periodSeconds <integer> format=int32	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.metadataServer.startupProbe.probe.successThreshold <integer> format=int32	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.metadataServer.startupProbe.probe.tcpSocket <object>	# TCPSocket specifies a connection to a TCP port.
+spec.metadataServer.startupProbe.probe.tcpSocket.host <string>	# Optional: Host name to connect to, defaults to the pod IP.
+spec.metadataServer.startupProbe.probe.tcpSocket.port <int-or-string> (required)	# Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.metadataServer.startupProbe.probe.terminationGracePeriodSeconds <integer> format=int64
+spec.metadataServer.startupProbe.probe.timeoutSeconds <integer> format=int32	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.mirroring <object>	# The mirroring settings
+spec.mirroring.enabled <boolean>	# Enabled whether this filesystem is mirrored or not
+spec.mirroring.peers <object>	# Peers represents the peers spec
+spec.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.mirroring.snapshotRetention <[]object>	# Retention is the retention policy for a snapshot schedule One path has exactly one retention policy. A policy can however contain multiple count-time period pairs in order to specify complex retention policies
+spec.mirroring.snapshotRetention[].duration <string>	# Duration represents the retention duration for a snapshot
+spec.mirroring.snapshotRetention[].path <string>	# Path is the path to snapshot
+spec.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored filesystems
+spec.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.preserveFilesystemOnDelete <boolean>	# Preserve the fs in the cluster on CephFilesystem CR deletion. Setting this to true automatically implies PreservePoolsOnDelete is true.
+spec.preservePoolNames <boolean>	# Preserve pool names as specified
+spec.preservePoolsOnDelete <boolean>	# Preserve pools on filesystem deletion
+spec.statusCheck <object>	# The mirroring statusCheck
+spec.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.statusCheck.mirror.disabled <boolean>
+spec.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.statusCheck.mirror.timeout <string>
+status <object>	# CephFilesystemStatus represents the status of a Ceph Filesystem
+status.cephx <object>
+status.cephx.daemon <object>	# Daemon shows the CephX key status for local Ceph daemons associated with this resources.
+status.cephx.daemon.keyCephVersion <string>	# KeyCephVersion reports the Ceph version that created the current generation's keys. This is same string format as reported by `CephCluster.status.version.version` to allow them to be compared. E.g., `20.2.0-0`. For all newly-created resources, this field set to the version of Ceph that created the key. The special value "Uninitialized" indicates that keys are being created for the first time. An empty string indicates that the version is unknown, as expected in brownfield deployments.
+status.cephx.daemon.keyGeneration <integer> format=int32	# KeyGeneration represents the CephX key generation for the last successful reconcile. For all newly-created resources, this field is set to `1`. When keys are rotated due to any rotation policy, the generation is incremented or updated to the configured policy generation. Generation `0` indicates that keys existed prior to the implementation of key tracking.
+status.conditions <[]object>
+status.conditions[].lastHeartbeatTime <string> format=date-time
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].reason <string>	# ConditionReason is a reason for a condition
+status.conditions[].status <string>
+status.conditions[].type <string>	# ConditionType represent a resource's status
+status.info <map[string]string>	# Use only info and put mirroringStatus in it?
+status.mirroringStatus <object>	# MirroringStatus is the filesystem mirroring status
+status.mirroringStatus.daemonsStatus <[]object>	# PoolMirroringStatus is the mirroring status of a filesystem
+status.mirroringStatus.daemonsStatus[].daemon_id <integer>	# DaemonID is the cephfs-mirror name
+status.mirroringStatus.daemonsStatus[].filesystems <[]object>	# Filesystems is the list of filesystems managed by a given cephfs-mirror daemon
+status.mirroringStatus.daemonsStatus[].filesystems[].directory_count <integer>	# DirectoryCount is the number of directories in the filesystem
+status.mirroringStatus.daemonsStatus[].filesystems[].filesystem_id <integer>	# FilesystemID is the filesystem identifier
+status.mirroringStatus.daemonsStatus[].filesystems[].name <string>	# Name is name of the filesystem
+status.mirroringStatus.daemonsStatus[].filesystems[].peers <[]object>	# Peers represents the mirroring peers
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].remote <object>	# Remote are the remote cluster information
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].remote.client_name <string>	# ClientName is cephx name
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].remote.cluster_name <string>	# ClusterName is the name of the cluster
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].remote.fs_name <string>	# FsName is the filesystem name
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].stats <object>	# Stats are the stat a peer mirror
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].stats.failure_count <integer>	# FailureCount is the number of mirroring failure
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].stats.recovery_count <integer>	# RecoveryCount is the number of recovery attempted after failures
+status.mirroringStatus.daemonsStatus[].filesystems[].peers[].uuid <string>	# UUID is the peer unique identifier
+status.mirroringStatus.details <string>	# Details contains potential status errors
+status.mirroringStatus.lastChanged <string>	# LastChanged is the last time time the status last changed
+status.mirroringStatus.lastChecked <string>	# LastChecked is the last time time the status was checked
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest generation observed by the controller.
+status.phase <string>	# ConditionType represent a resource's status
+status.snapshotScheduleStatus <object>	# FilesystemSnapshotScheduleStatusSpec is the status of the snapshot schedule
+status.snapshotScheduleStatus.details <string>	# Details contains potential status errors
+status.snapshotScheduleStatus.lastChanged <string>	# LastChanged is the last time time the status last changed
+status.snapshotScheduleStatus.lastChecked <string>	# LastChecked is the last time time the status was checked
+status.snapshotScheduleStatus.snapshotSchedules <[]object>	# SnapshotSchedules is the list of snapshots scheduled
+status.snapshotScheduleStatus.snapshotSchedules[].fs <string>	# Fs is the name of the Ceph Filesystem
+status.snapshotScheduleStatus.snapshotSchedules[].path <string>	# Path is the path on the filesystem
+status.snapshotScheduleStatus.snapshotSchedules[].rel_path <string>
+status.snapshotScheduleStatus.snapshotSchedules[].retention <object>	# FilesystemSnapshotScheduleStatusRetention is the retention specification for a filesystem snapshot schedule
+status.snapshotScheduleStatus.snapshotSchedules[].retention.active <boolean>	# Active is whether the scheduled is active or not
+status.snapshotScheduleStatus.snapshotSchedules[].retention.created <string>	# Created is when the snapshot schedule was created
+status.snapshotScheduleStatus.snapshotSchedules[].retention.created_count <integer>	# CreatedCount is total amount of snapshots
+status.snapshotScheduleStatus.snapshotSchedules[].retention.first <string>	# First is when the first snapshot schedule was taken
+status.snapshotScheduleStatus.snapshotSchedules[].retention.last <string>	# Last is when the last snapshot schedule was taken
+status.snapshotScheduleStatus.snapshotSchedules[].retention.last_pruned <string>	# LastPruned is when the last snapshot schedule was pruned
+status.snapshotScheduleStatus.snapshotSchedules[].retention.pruned_count <integer>	# PrunedCount is total amount of pruned snapshots
+status.snapshotScheduleStatus.snapshotSchedules[].retention.start <string>	# Start is when the snapshot schedule starts
+status.snapshotScheduleStatus.snapshotSchedules[].schedule <string>
+status.snapshotScheduleStatus.snapshotSchedules[].subvol <string>	# Subvol is the name of the sub volume

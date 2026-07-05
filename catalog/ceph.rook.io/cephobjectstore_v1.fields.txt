@@ -1,0 +1,458 @@
+# schema source: Rook v1.20.1 https://github.com/rook/rook
+apiVersion <string> enum=ceph.rook.io/v1
+kind <string> enum=CephObjectStore
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# ObjectStoreSpec represent the spec of a pool
+spec.allowUsersInNamespaces <[]string>	# The list of allowed namespaces in addition to the object store namespace where ceph object store users may be created. Specify "*" to allow all namespaces, otherwise list individual namespaces that are to be allowed. This is useful for applications that need object store credentials to be created in their own namespace, where neither OBCs nor COSI is being used to create buckets. The default is empty.
+spec.auth <object>	# The authentication configuration
+spec.auth.keystone <object>	# The spec for Keystone
+spec.auth.keystone.acceptedRoles <[]string> (required)	# The roles requires to serve requests.
+spec.auth.keystone.implicitTenants <string>	# Create new users in their own tenants of the same name. Possible values are true, false, swift and s3. The latter have the effect of splitting the identity space such that only the indicated protocol will use implicit tenants.
+spec.auth.keystone.revocationInterval <integer>	# The number of seconds between token revocation checks.
+spec.auth.keystone.serviceUserSecretName <string> (required)	# The name of the secret containing the credentials for the service user account used by RGW. It has to be in the same namespace as the object store resource.
+spec.auth.keystone.tokenCacheSize <integer>	# The maximum number of entries in each Keystone token cache.
+spec.auth.keystone.url <string> (required)	# The URL for the Keystone server.
+spec.dataPool <object>	# The data pool settings
+spec.dataPool.application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.dataPool.compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.dataPool.crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.dataPool.deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.dataPool.enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.dataPool.enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.dataPool.erasureCoded <object>	# The erasure code settings
+spec.dataPool.erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.dataPool.erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.dataPool.erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.dataPool.erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.dataPool.failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.dataPool.mirroring <object>	# The mirroring settings
+spec.dataPool.mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.dataPool.mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.dataPool.mirroring.peers <object>	# Peers represents the peers spec
+spec.dataPool.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.dataPool.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.dataPool.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.dataPool.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.dataPool.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.dataPool.parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.dataPool.quotas <object>	# The quota settings
+spec.dataPool.quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.dataPool.quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.dataPool.quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.dataPool.replicated <object>	# The replication settings
+spec.dataPool.replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.dataPool.replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.dataPool.replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.dataPool.replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.dataPool.replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.dataPool.replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.dataPool.replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.dataPool.replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.dataPool.statusCheck <object>	# The mirroring statusCheck
+spec.dataPool.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.dataPool.statusCheck.mirror.disabled <boolean>
+spec.dataPool.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.dataPool.statusCheck.mirror.timeout <string>
+spec.defaultRealm <boolean>	# Set this realm as the default in Ceph. Only one realm should be default. Do not set this true on more than one CephObjectStore. This may not be set when zone is also specified; in this case, the realm referenced by the zone's zonegroup should configure defaulting behavior.
+spec.gateway <object>	# The rgw pod info
+spec.gateway.additionalVolumeMounts <[]object>	# AdditionalVolumeMounts allows additional volumes to be mounted to the RGW pod. The root directory for each additional volume mount is `/var/rgw`. Example: for an additional mount at subPath `ldap`, mounted from a secret that has key `bindpass.secret`, the file would reside at `/var/rgw/ldap/bindpass.secret`.
+spec.gateway.additionalVolumeMounts[].subPath <string> (required) pattern="^[^:]+$" min=1	# SubPath defines the sub-path (subdirectory) of the directory root where the volumeSource will be mounted. All files/keys in the volume source's volume will be mounted to the subdirectory. This is not the same as the Kubernetes `subPath` volume mount option. Each subPath definition must be unique and must not contain ':'.
+spec.gateway.additionalVolumeMounts[].volumeSource <object> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.defaultMode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.items <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.items[].key <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.items[].mode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.items[].path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.name <string> default=""
+spec.gateway.additionalVolumeMounts[].volumeSource.configMap.optional <boolean>
+spec.gateway.additionalVolumeMounts[].volumeSource.emptyDir <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.emptyDir.medium <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.emptyDir.sizeLimit <int-or-string>
+spec.gateway.additionalVolumeMounts[].volumeSource.hostPath <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.hostPath.path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.hostPath.type <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.persistentVolumeClaim <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.persistentVolumeClaim.claimName <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.persistentVolumeClaim.readOnly <boolean>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.defaultMode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.labelSelector <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.labelSelector.matchExpressions <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.labelSelector.matchExpressions[].key <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.labelSelector.matchExpressions[].operator <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.labelSelector.matchExpressions[].values <[]string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.labelSelector.matchLabels <map[string]string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.name <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.optional <boolean>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].clusterTrustBundle.signerName <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap.items <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap.items[].key <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap.items[].mode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap.items[].path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap.name <string> default=""
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].configMap.optional <boolean>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].fieldRef <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].fieldRef.apiVersion <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].fieldRef.fieldPath <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].mode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].resourceFieldRef <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].resourceFieldRef.containerName <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].resourceFieldRef.divisor <int-or-string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].downwardAPI.items[].resourceFieldRef.resource <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.certificateChainPath <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.credentialBundlePath <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.keyPath <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.keyType <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.maxExpirationSeconds <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.signerName <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].podCertificate.userAnnotations <map[string]string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret.items <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret.items[].key <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret.items[].mode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret.items[].path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret.name <string> default=""
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].secret.optional <boolean>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].serviceAccountToken <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].serviceAccountToken.audience <string>
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].serviceAccountToken.expirationSeconds <integer> format=int64
+spec.gateway.additionalVolumeMounts[].volumeSource.projected.sources[].serviceAccountToken.path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.secret <object>
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.defaultMode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.items <[]object>
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.items[].key <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.items[].mode <integer> format=int32
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.items[].path <string> (required)
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.optional <boolean>
+spec.gateway.additionalVolumeMounts[].volumeSource.secret.secretName <string>
+spec.gateway.annotations <map[string]string>	# The annotations-related configuration to add/set on each Pod related object.
+spec.gateway.caBundleRef <string>	# The name of the secret that stores custom ca-bundle with root and intermediate certificates.
+spec.gateway.dashboardEnabled <boolean>	# Whether rgw dashboard is enabled for the rgw daemon. If not set, the rgw dashboard will be enabled.
+spec.gateway.disableMultisiteSyncTraffic <boolean>	# DisableMultisiteSyncTraffic, when true, prevents this object store's gateways from transmitting multisite replication data. Note that this value does not affect whether gateways receive multisite replication traffic: see ObjectZone.spec.customEndpoints for that. If false or unset, this object store's gateways will be able to transmit multisite replication data.
+spec.gateway.externalRgwEndpoints <[]object>	# ExternalRgwEndpoints points to external RGW endpoint(s). Multiple endpoints can be given, but for stability of ObjectBucketClaims, we highly recommend that users give only a single external RGW endpoint that is a load balancer that sends requests to the multiple RGWs.
+spec.gateway.externalRgwEndpoints[].hostname <string>	# The DNS-addressable Hostname of this endpoint. This field will be preferred over IP if both are given.
+spec.gateway.externalRgwEndpoints[].ip <string>	# The IP of this endpoint. As a legacy behavior, this supports being given a DNS-addressable hostname as well.
+spec.gateway.hostNetwork <boolean>	# Whether host networking is enabled for the rgw daemon. If not set, the network settings from the cluster CR will be applied.
+spec.gateway.instances <integer> format=int32	# The number of pods in the rgw replicaset.
+spec.gateway.labels <map[string]string>	# The labels-related configuration to add/set on each Pod related object.
+spec.gateway.opsLogSidecar <object>	# Enable enhanced operation Logs for S3 in a sidecar named ops-log
+spec.gateway.opsLogSidecar.resources <object>	# Resources represents the way to specify resource requirements for the ops-log sidecar
+spec.gateway.opsLogSidecar.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.gateway.opsLogSidecar.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.gateway.opsLogSidecar.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.gateway.opsLogSidecar.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.gateway.opsLogSidecar.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.gateway.placement <object>
+spec.gateway.placement.nodeAffinity <object>
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference <object> (required)
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions <[]object>
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].key <string> (required)
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].operator <string> (required)
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchExpressions[].values <[]string>
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields <[]object>
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].key <string> (required)
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].operator <string> (required)
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].preference.matchFields[].values <[]string>
+spec.gateway.placement.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer> (required) format=int32
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution <object>
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms <[]object> (required)
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions <[]object>
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].key <string> (required)
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].operator <string> (required)
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchExpressions[].values <[]string>
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields <[]object>
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].key <string> (required)
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].operator <string> (required)
+spec.gateway.placement.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[].matchFields[].values <[]string>
+spec.gateway.placement.podAffinity <object>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object> (required)
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string> (required)
+spec.gateway.placement.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer> (required) format=int32
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.gateway.placement.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string> (required)
+spec.gateway.placement.podAntiAffinity <object>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm <object> (required)
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector <object>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions <[]object>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.labelSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.matchLabelKeys <[]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.mismatchLabelKeys <[]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector <object>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions <[]object>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaceSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.namespaces <[]string>
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].podAffinityTerm.topologyKey <string> (required)
+spec.gateway.placement.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[].weight <integer> (required) format=int32
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution <[]object>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector <object>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions <[]object>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].labelSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].matchLabelKeys <[]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].mismatchLabelKeys <[]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector <object>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions <[]object>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaceSelector.matchLabels <map[string]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>
+spec.gateway.placement.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string> (required)
+spec.gateway.placement.tolerations <[]object>
+spec.gateway.placement.tolerations[].effect <string>
+spec.gateway.placement.tolerations[].key <string>
+spec.gateway.placement.tolerations[].operator <string>
+spec.gateway.placement.tolerations[].tolerationSeconds <integer> format=int64
+spec.gateway.placement.tolerations[].value <string>
+spec.gateway.placement.topologySpreadConstraints <[]object>
+spec.gateway.placement.topologySpreadConstraints[].labelSelector <object>
+spec.gateway.placement.topologySpreadConstraints[].labelSelector.matchExpressions <[]object>
+spec.gateway.placement.topologySpreadConstraints[].labelSelector.matchExpressions[].key <string> (required)
+spec.gateway.placement.topologySpreadConstraints[].labelSelector.matchExpressions[].operator <string> (required)
+spec.gateway.placement.topologySpreadConstraints[].labelSelector.matchExpressions[].values <[]string>
+spec.gateway.placement.topologySpreadConstraints[].labelSelector.matchLabels <map[string]string>
+spec.gateway.placement.topologySpreadConstraints[].matchLabelKeys <[]string>
+spec.gateway.placement.topologySpreadConstraints[].maxSkew <integer> (required) format=int32
+spec.gateway.placement.topologySpreadConstraints[].minDomains <integer> format=int32
+spec.gateway.placement.topologySpreadConstraints[].nodeAffinityPolicy <string>
+spec.gateway.placement.topologySpreadConstraints[].nodeTaintsPolicy <string>
+spec.gateway.placement.topologySpreadConstraints[].topologyKey <string> (required)
+spec.gateway.placement.topologySpreadConstraints[].whenUnsatisfiable <string> (required)
+spec.gateway.port <integer> format=int32	# The port the rgw service will be listening on (http)
+spec.gateway.priorityClassName <string>	# PriorityClassName sets priority classes on the rgw pods
+spec.gateway.readAffinity <object>	# ReadAffinity defines the RGW read affinity policy to optimize the read requests for the RGW clients Note: Only supported from Ceph Tentacle (v20)
+spec.gateway.readAffinity.type <string> (required) enum=localize|balance|default	# Type defines the RGW ReadAffinity type localize: read from the nearest OSD based on crush location of the RGW client balance: picks a random OSD from the PG's active set default: read from the primary OSD
+spec.gateway.resources <object>	# The resource requirements for the rgw pods
+spec.gateway.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.gateway.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.gateway.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.gateway.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.gateway.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.gateway.rgwCommandFlags <map[string]string>	# RgwCommandFlags sets Ceph RGW config values for the gateway clients that serve this object store. Values are modified at RGW startup, resulting in RGW pod restarts. This feature is intended for advanced users. It allows breaking configurations to be easily applied. Use with caution.
+spec.gateway.rgwConfig <map[string]string>	# RgwConfig sets Ceph RGW config values for the gateway clients that serve this object store. Values are modified at runtime without RGW restart. This feature is intended for advanced users. It allows breaking configurations to be easily applied. Use with caution.
+spec.gateway.rgwConfigFromSecret <map[string]object>	# RgwConfigFromSecret works exactly like RgwConfig but takes config value from Secret Key reference. Values are modified at runtime without RGW restart. This feature is intended for advanced users. It allows breaking configurations to be easily applied. Use with caution.
+spec.gateway.rgwConfigFromSecret.<key>.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.gateway.rgwConfigFromSecret.<key>.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.gateway.rgwConfigFromSecret.<key>.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.gateway.securePort <integer> format=int32 min=0 max=65535	# The port the rgw service will be listening on (https)
+spec.gateway.service <object>	# The configuration related to add/set on each rgw service.
+spec.gateway.service.annotations <map[string]string>	# The annotations-related configuration to add/set on each rgw service. nullable optional
+spec.gateway.service.labels <map[string]string>	# The labels-related configuration to add/set on each rgw service.
+spec.gateway.sslCertificateRef <string>	# The name of the secret that stores the ssl certificate for secure rgw connections
+spec.healthCheck <object>	# The RGW health probes
+spec.healthCheck.readinessProbe <object>	# ProbeSpec is a wrapper around Probe so it can be enabled or disabled for a Ceph daemon
+spec.healthCheck.readinessProbe.disabled <boolean>	# Disabled determines whether probe is disable or not
+spec.healthCheck.readinessProbe.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+spec.healthCheck.readinessProbe.probe.exec <object>	# Exec specifies a command to execute in the container.
+spec.healthCheck.readinessProbe.probe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+spec.healthCheck.readinessProbe.probe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.healthCheck.readinessProbe.probe.grpc <object>	# GRPC specifies a GRPC HealthCheckRequest.
+spec.healthCheck.readinessProbe.probe.grpc.port <integer> (required) format=int32	# Port number of the gRPC service. Number must be in the range 1 to 65535.
+spec.healthCheck.readinessProbe.probe.grpc.service <string> default=""	# Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If this is not specified, the default behavior is defined by gRPC.
+spec.healthCheck.readinessProbe.probe.httpGet <object>	# HTTPGet specifies an HTTP GET request to perform.
+spec.healthCheck.readinessProbe.probe.httpGet.host <string>	# Host name to connect to, defaults to the pod IP. You probably want to set "Host" in httpHeaders instead.
+spec.healthCheck.readinessProbe.probe.httpGet.httpHeaders <[]object>	# Custom headers to set in the request. HTTP allows repeated headers.
+spec.healthCheck.readinessProbe.probe.httpGet.httpHeaders[].name <string> (required)	# The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
+spec.healthCheck.readinessProbe.probe.httpGet.httpHeaders[].value <string> (required)	# The header field value
+spec.healthCheck.readinessProbe.probe.httpGet.path <string>	# Path to access on the HTTP server.
+spec.healthCheck.readinessProbe.probe.httpGet.port <int-or-string> (required)	# Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.healthCheck.readinessProbe.probe.httpGet.scheme <string>	# Scheme to use for connecting to the host. Defaults to HTTP.
+spec.healthCheck.readinessProbe.probe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.healthCheck.readinessProbe.probe.periodSeconds <integer> format=int32	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.healthCheck.readinessProbe.probe.successThreshold <integer> format=int32	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.healthCheck.readinessProbe.probe.tcpSocket <object>	# TCPSocket specifies a connection to a TCP port.
+spec.healthCheck.readinessProbe.probe.tcpSocket.host <string>	# Optional: Host name to connect to, defaults to the pod IP.
+spec.healthCheck.readinessProbe.probe.tcpSocket.port <int-or-string> (required)	# Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.healthCheck.readinessProbe.probe.terminationGracePeriodSeconds <integer> format=int64
+spec.healthCheck.readinessProbe.probe.timeoutSeconds <integer> format=int32	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.healthCheck.startupProbe <object>	# ProbeSpec is a wrapper around Probe so it can be enabled or disabled for a Ceph daemon
+spec.healthCheck.startupProbe.disabled <boolean>	# Disabled determines whether probe is disable or not
+spec.healthCheck.startupProbe.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+spec.healthCheck.startupProbe.probe.exec <object>	# Exec specifies a command to execute in the container.
+spec.healthCheck.startupProbe.probe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+spec.healthCheck.startupProbe.probe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.healthCheck.startupProbe.probe.grpc <object>	# GRPC specifies a GRPC HealthCheckRequest.
+spec.healthCheck.startupProbe.probe.grpc.port <integer> (required) format=int32	# Port number of the gRPC service. Number must be in the range 1 to 65535.
+spec.healthCheck.startupProbe.probe.grpc.service <string> default=""	# Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If this is not specified, the default behavior is defined by gRPC.
+spec.healthCheck.startupProbe.probe.httpGet <object>	# HTTPGet specifies an HTTP GET request to perform.
+spec.healthCheck.startupProbe.probe.httpGet.host <string>	# Host name to connect to, defaults to the pod IP. You probably want to set "Host" in httpHeaders instead.
+spec.healthCheck.startupProbe.probe.httpGet.httpHeaders <[]object>	# Custom headers to set in the request. HTTP allows repeated headers.
+spec.healthCheck.startupProbe.probe.httpGet.httpHeaders[].name <string> (required)	# The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
+spec.healthCheck.startupProbe.probe.httpGet.httpHeaders[].value <string> (required)	# The header field value
+spec.healthCheck.startupProbe.probe.httpGet.path <string>	# Path to access on the HTTP server.
+spec.healthCheck.startupProbe.probe.httpGet.port <int-or-string> (required)	# Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.healthCheck.startupProbe.probe.httpGet.scheme <string>	# Scheme to use for connecting to the host. Defaults to HTTP.
+spec.healthCheck.startupProbe.probe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.healthCheck.startupProbe.probe.periodSeconds <integer> format=int32	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.healthCheck.startupProbe.probe.successThreshold <integer> format=int32	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.healthCheck.startupProbe.probe.tcpSocket <object>	# TCPSocket specifies a connection to a TCP port.
+spec.healthCheck.startupProbe.probe.tcpSocket.host <string>	# Optional: Host name to connect to, defaults to the pod IP.
+spec.healthCheck.startupProbe.probe.tcpSocket.port <int-or-string> (required)	# Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.healthCheck.startupProbe.probe.terminationGracePeriodSeconds <integer> format=int64
+spec.healthCheck.startupProbe.probe.timeoutSeconds <integer> format=int32	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.hosting <object>	# Hosting settings for the object store. A common use case for hosting configuration is to inform Rook of endpoints that support DNS wildcards, which in turn allows virtual host-style bucket addressing.
+spec.hosting.advertiseEndpoint <object>	# AdvertiseEndpoint is the default endpoint Rook will return for resources dependent on this object store. This endpoint will be returned to CephObjectStoreUsers, Object Bucket Claims, and COSI Buckets/Accesses. By default, Rook returns the endpoint for the object store's Kubernetes service using HTTPS with `gateway.securePort` if it is defined (otherwise, HTTP with `gateway.port`).
+spec.hosting.advertiseEndpoint.dnsName <string> (required) min=1	# DnsName is the DNS name (in RFC-1123 format) of the endpoint. If the DNS name corresponds to an endpoint with DNS wildcard support, do not include the wildcard itself in the list of hostnames. E.g., use "mystore.example.com" instead of "*.mystore.example.com".
+spec.hosting.advertiseEndpoint.port <integer> (required) format=int32 min=1 max=65535	# Port is the port on which S3 connections can be made for this endpoint.
+spec.hosting.advertiseEndpoint.useTls <boolean> (required)	# UseTls defines whether the endpoint uses TLS (HTTPS) or not (HTTP).
+spec.hosting.dnsNames <[]string>	# A list of DNS host names on which object store gateways will accept client S3 connections. When specified, object store gateways will reject client S3 connections to hostnames that are not present in this list, so include all endpoints. The object store's advertiseEndpoint and Kubernetes service endpoint, plus CephObjectZone `customEndpoints` are automatically added to the list but may be set here again if desired. Each DNS name must be valid according RFC-1123. If the DNS name corresponds to an endpoint with DNS wildcard support, do not include the wildcard itself in the list of hostnames. E.g., use "mystore.example.com" instead of "*.mystore.example.com".
+spec.metadataPool <object>	# The metadata pool settings
+spec.metadataPool.application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.metadataPool.compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.metadataPool.crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.metadataPool.deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.metadataPool.enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.metadataPool.enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.metadataPool.erasureCoded <object>	# The erasure code settings
+spec.metadataPool.erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.metadataPool.erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.metadataPool.erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.metadataPool.erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.metadataPool.failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.metadataPool.mirroring <object>	# The mirroring settings
+spec.metadataPool.mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.metadataPool.mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.metadataPool.mirroring.peers <object>	# Peers represents the peers spec
+spec.metadataPool.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.metadataPool.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.metadataPool.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.metadataPool.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.metadataPool.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.metadataPool.parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.metadataPool.quotas <object>	# The quota settings
+spec.metadataPool.quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.metadataPool.quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.metadataPool.quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.metadataPool.replicated <object>	# The replication settings
+spec.metadataPool.replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.metadataPool.replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.metadataPool.replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.metadataPool.replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.metadataPool.replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.metadataPool.replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.metadataPool.replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.metadataPool.replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.metadataPool.statusCheck <object>	# The mirroring statusCheck
+spec.metadataPool.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.metadataPool.statusCheck.mirror.disabled <boolean>
+spec.metadataPool.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.metadataPool.statusCheck.mirror.timeout <string>
+spec.preservePoolsOnDelete <boolean>	# Preserve pools on object store deletion
+spec.protocols <object>	# The protocol specification
+spec.protocols.enableAPIs <[]string>	# Represents RGW 'rgw_enable_apis' config option. See: https://docs.ceph.com/en/reef/radosgw/config-ref/#confval-rgw_enable_apis If no value provided then all APIs will be enabled: s3, s3website, swift, swift_auth, admin, sts, iam, notifications If enabled APIs are set, all remaining APIs will be disabled. This option overrides S3.Enabled value.
+spec.protocols.s3 <object>	# The spec for S3
+spec.protocols.s3.authUseKeystone <boolean>	# Whether to use Keystone for authentication. This option maps directly to the rgw_s3_auth_use_keystone option. Enabling it allows generating S3 credentials via an OpenStack API call, see the docs. If not given, the defaults of the corresponding RGW option apply.
+spec.protocols.s3.enabled <boolean>	# Deprecated: use protocol.enableAPIs instead. Whether to enable S3. This defaults to true (even if protocols.s3 is not present in the CRD). This maintains backwards compatibility – by default S3 is enabled.
+spec.protocols.swift <object>	# The spec for Swift
+spec.protocols.swift.accountInUrl <boolean>	# Whether or not the Swift account name should be included in the Swift API URL. If set to false (the default), then the Swift API will listen on a URL formed like http://host:port/<rgw_swift_url_prefix>/v1. If set to true, the Swift API URL will be http://host:port/<rgw_swift_url_prefix>/v1/AUTH_<account_name>. You must set this option to true (and update the Keystone service catalog) if you want radosgw to support publicly-readable containers and temporary URLs.
+spec.protocols.swift.urlPrefix <string>	# The URL prefix for the Swift API, to distinguish it from the S3 API endpoint. The default is swift, which makes the Swift API available at the URL http://host:port/swift/v1 (or http://host:port/swift/v1/AUTH_%(tenant_id)s if rgw swift account in url is enabled).
+spec.protocols.swift.versioningEnabled <boolean>	# Enables the Object Versioning of OpenStack Object Storage API. This allows clients to put the X-Versions-Location attribute on containers that should be versioned.
+spec.security <object>	# Security represents security settings
+spec.security.cipherSuites <[]string> min=0 max=1000	# CipherSuites specifies the cipher suites used during the TLS handshake for TLS v1.3. Each value must be a valid OpenSSL cipher suite name. See https://docs.openssl.org/master/man1/openssl-ciphers/
+spec.security.ciphers <[]string> min=0 max=1000	# Ciphers specifies the cipher suites used during the TLS handshake for TLS v1.2 and below. Each value must be a valid OpenSSL cipher suite name. See https://docs.openssl.org/master/man1/openssl-ciphers/
+spec.security.keyRotation <object>	# KeyRotation defines options for Key Rotation.
+spec.security.keyRotation.enabled <boolean> default=false	# Enabled represents whether the key rotation is enabled.
+spec.security.keyRotation.schedule <string>	# Schedule represents the cron schedule for key rotation.
+spec.security.kms <object>	# KeyManagementService is the main Key Management option
+spec.security.kms.connectionDetails <map[string]string>	# ConnectionDetails contains the KMS connection details (address, port etc)
+spec.security.kms.tokenSecretName <string>	# TokenSecretName is the kubernetes secret containing the KMS token
+spec.security.s3 <object>	# The settings for supporting AWS-SSE:S3 with RGW
+spec.security.s3.connectionDetails <map[string]string>	# ConnectionDetails contains the KMS connection details (address, port etc)
+spec.security.s3.tokenSecretName <string>	# TokenSecretName is the kubernetes secret containing the KMS token
+spec.security.sslOptions <object>	# SslOptions sets the SSL context options for the Ceph RGW beast frontend. See https://docs.ceph.com/en/latest/radosgw/frontends/#options
+spec.security.sslOptions.defaultWorkarounds <boolean>	# defaultWorkarounds implements various bug workaround when true, or disables it when false. Default disabled.
+spec.security.sslOptions.noCompression <boolean>	# noCompression disables compression when true, or disables it when false. Default disabled.
+spec.security.sslOptions.singleDiffieHellmanUse <boolean>	# SingleDiffieHellmanUse always creates a new key when using tmp_dh parameters when true, or disables it when false. Default disabled.
+spec.security.sslOptions.sslv2 <boolean>	# sslv2 enables SSL v2 when true, or disables it when false. Default disabled.
+spec.security.sslOptions.sslv3 <boolean>	# sslv3 enables SSL v3 when true, or disables it when false. Default disabled.
+spec.security.sslOptions.tlsv1_0 <boolean>	# tlsv1_0 enables TLS v1.0 when true, or disables it when false. Default disabled.
+spec.security.sslOptions.tlsv1_1 <boolean>	# tlsv1_1 enables TLS v1.1 when true, or disables it when false. Default disabled.
+spec.security.sslOptions.tlsv1_2 <boolean>	# tlsv1_2 enables TLS v1.2 when true, or disables it when false. Default enabled.
+spec.security.tlsGroups <[]string>	# TlsGroups specifies one or more TLS Group strings separated by colons. Multiple suites are supported with ':' colon-separated. The pseudo group name DEFAULT can be used to select the OpenSSL built-in default list of groups. Other valid group names will depend on OpenSSL version See https://docs.openssl.org/master/man3/SSL_CTX_set1_curves/#description
+spec.sharedPools <object>	# The pool information when configuring RADOS namespaces in existing pools.
+spec.sharedPools.dataPoolName <string> (immutable)	# The data pool used for creating RADOS namespaces in the object store
+spec.sharedPools.metadataPoolName <string> (immutable)	# The metadata pool used for creating RADOS namespaces in the object store
+spec.sharedPools.poolPlacements <[]object>	# PoolPlacements control which Pools are associated with a particular RGW bucket. Once PoolPlacements are defined, RGW client will be able to associate pool with ObjectStore bucket by providing "<LocationConstraint>" during s3 bucket creation or "X-Storage-Policy" header during swift container creation. See: https://docs.ceph.com/en/latest/radosgw/placement/#placement-targets PoolPlacement with name: "default" will be used as a default pool if no option is provided during bucket creation. If default placement is not provided, spec.sharedPools.dataPoolName and spec.sharedPools.MetadataPoolName will be used as default pools. If spec.sharedPools are also empty, then RGW pools (spec.dataPool and spec.metadataPool) will be used as defaults.
+spec.sharedPools.poolPlacements[].dataNonECPoolName <string>	# The data pool used to store ObjectStore data that cannot use erasure coding (ex: multi-part uploads). If dataPoolName is not erasure coded, then there is no need for dataNonECPoolName. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].dataPoolName <string> (required) min=1	# The data pool used to store ObjectStore objects data. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].default <boolean>	# Sets given placement as default. Only one placement in the list can be marked as default. Default is false.
+spec.sharedPools.poolPlacements[].metadataPoolName <string> (required) min=1	# The metadata pool used to store ObjectStore bucket index. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].name <string> (required) pattern="^[a-zA-Z0-9._/-]+$" min=1	# Pool placement name. Name can be arbitrary. Placement with name "default" will be used as default.
+spec.sharedPools.poolPlacements[].storageClasses <[]object> max=10	# StorageClasses can be selected by user to override dataPoolName during object creation. Each placement has default STANDARD StorageClass pointing to dataPoolName. This list allows defining additional StorageClasses on top of default STANDARD storage class.
+spec.sharedPools.poolPlacements[].storageClasses[].dataPoolName <string> (required) min=1	# DataPoolName is the data pool used to store ObjectStore objects data. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].storageClasses[].name <string> (required) pattern="^[a-zA-Z0-9._/-]+$" min=1	# Name is the StorageClass name. Ceph allows arbitrary name for StorageClasses, however most clients/libs insist on AWS names so it is recommended to use one of the valid x-amz-storage-class values for better compatibility: REDUCED_REDUNDANCY | STANDARD_IA | ONEZONE_IA | INTELLIGENT_TIERING | GLACIER | DEEP_ARCHIVE | OUTPOSTS | GLACIER_IR | SNOW | EXPRESS_ONEZONE See AWS docs: https://aws.amazon.com/de/s3/storage-classes/
+spec.sharedPools.preserveRadosNamespaceDataOnDelete <boolean>	# Whether the RADOS namespaces should be preserved on deletion of the object store
+spec.zone <object>	# The multisite info
+spec.zone.name <string> (required)	# CephObjectStoreZone name this CephObjectStore is part of
+status <object>	# ObjectStoreStatus represents the status of a Ceph Object Store resource
+status.cephx <object>
+status.cephx.daemon <object>	# Daemon shows the CephX key status for local Ceph daemons associated with this resources.
+status.cephx.daemon.keyCephVersion <string>	# KeyCephVersion reports the Ceph version that created the current generation's keys. This is same string format as reported by `CephCluster.status.version.version` to allow them to be compared. E.g., `20.2.0-0`. For all newly-created resources, this field set to the version of Ceph that created the key. The special value "Uninitialized" indicates that keys are being created for the first time. An empty string indicates that the version is unknown, as expected in brownfield deployments.
+status.cephx.daemon.keyGeneration <integer> format=int32	# KeyGeneration represents the CephX key generation for the last successful reconcile. For all newly-created resources, this field is set to `1`. When keys are rotated due to any rotation policy, the generation is incremented or updated to the configured policy generation. Generation `0` indicates that keys existed prior to the implementation of key tracking.
+status.conditions <[]object>
+status.conditions[].lastHeartbeatTime <string> format=date-time
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].reason <string>	# ConditionReason is a reason for a condition
+status.conditions[].status <string>
+status.conditions[].type <string>	# ConditionType represent a resource's status
+status.endpoints <object>
+status.endpoints.insecure <[]string>
+status.endpoints.secure <[]string>
+status.info <map[string]string>
+status.message <string>
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest generation observed by the controller.
+status.phase <string>	# ConditionType represent a resource's status
+status.replicas <integer> format=int32
+status.selector <string>

@@ -1,0 +1,114 @@
+# schema source: Rook v1.20.1 https://github.com/rook/rook
+apiVersion <string> enum=ceph.rook.io/v1
+kind <string> enum=CephObjectZone
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# ObjectZoneSpec represent the spec of an ObjectZone
+spec.customEndpoints <[]string>	# If this zone cannot be accessed from other peer Ceph clusters via the ClusterIP Service endpoint created by Rook, you must set this to the externally reachable endpoint(s). You may include the port in the definition. For example: "https://my-object-store.my-domain.net:443". In many cases, you should set this to the endpoint of the ingress resource that makes the CephObjectStore associated with this CephObjectStoreZone reachable to peer clusters. The list can have one or more endpoints pointing to different RGW servers in the zone. If a CephObjectStore endpoint is omitted from this list, that object store's gateways will not receive multisite replication data (see CephObjectStore.spec.gateway.disableMultisiteSyncTraffic).
+spec.dataPool <object>	# The data pool settings
+spec.dataPool.application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.dataPool.compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.dataPool.crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.dataPool.deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.dataPool.enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.dataPool.enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.dataPool.erasureCoded <object>	# The erasure code settings
+spec.dataPool.erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.dataPool.erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.dataPool.erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.dataPool.erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.dataPool.failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.dataPool.mirroring <object>	# The mirroring settings
+spec.dataPool.mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.dataPool.mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.dataPool.mirroring.peers <object>	# Peers represents the peers spec
+spec.dataPool.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.dataPool.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.dataPool.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.dataPool.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.dataPool.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.dataPool.parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.dataPool.quotas <object>	# The quota settings
+spec.dataPool.quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.dataPool.quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.dataPool.quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.dataPool.replicated <object>	# The replication settings
+spec.dataPool.replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.dataPool.replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.dataPool.replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.dataPool.replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.dataPool.replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.dataPool.replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.dataPool.replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.dataPool.replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.dataPool.statusCheck <object>	# The mirroring statusCheck
+spec.dataPool.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.dataPool.statusCheck.mirror.disabled <boolean>
+spec.dataPool.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.dataPool.statusCheck.mirror.timeout <string>
+spec.metadataPool <object>	# The metadata pool settings
+spec.metadataPool.application <string>	# The application name to set on the pool. Only expected to be set for rgw pools.
+spec.metadataPool.compressionMode <string> enum=none|passive|aggressive|force|	# DEPRECATED: use Parameters instead, e.g., Parameters["compression_mode"] = "force" The inline compression mode in Bluestore OSD to set to (options are: none, passive, aggressive, force) Do NOT set a default value for kubebuilder as this will override the Parameters
+spec.metadataPool.crushRoot <string>	# The root of the crush hierarchy utilized by the pool
+spec.metadataPool.deviceClass <string>	# The device class the OSD should set to for use in the pool
+spec.metadataPool.enableCrushUpdates <boolean>	# Allow rook operator to change the pool CRUSH tunables once the pool is created
+spec.metadataPool.enableRBDStats <boolean>	# EnableRBDStats is used to enable gathering of statistics for all RBD images in the pool
+spec.metadataPool.erasureCoded <object>	# The erasure code settings
+spec.metadataPool.erasureCoded.algorithm <string> enum=isa|jerasure	# The algorithm for erasure coding. If absent, defaults to the plugin specified in osd_pool_default_erasure_code_profile.
+spec.metadataPool.erasureCoded.codingChunks <integer> (required) min=0	# Number of coding chunks per object in an erasure coded storage pool (required for erasure-coded pool type). This is the number of OSDs that can be lost simultaneously before data cannot be recovered.
+spec.metadataPool.erasureCoded.dataChunks <integer> (required) min=0	# Number of data chunks per object in an erasure coded storage pool (required for erasure-coded pool type). The number of chunks required to recover an object when any single OSD is lost is the same as dataChunks so be aware that the larger the number of data chunks, the higher the cost of recovery.
+spec.metadataPool.erasureCoded.stripeUnit <int-or-string>	# Erasure code stripe size in bytes. Ceph default is 4096 bytes (4 KiB). Value must be a multiple of 4096 (4Ki).
+spec.metadataPool.failureDomain <string>	# The failure domain: osd/host/(region or zone if available) - technically also any type in the crush map
+spec.metadataPool.mirroring <object>	# The mirroring settings
+spec.metadataPool.mirroring.enabled <boolean>	# Enabled whether this pool is mirrored or not
+spec.metadataPool.mirroring.mode <string> enum=pool|image|init-only	# Mode is the mirroring mode: pool, image or init-only.
+spec.metadataPool.mirroring.peers <object>	# Peers represents the peers spec
+spec.metadataPool.mirroring.peers.secretNames <[]string>	# SecretNames represents the Kubernetes Secret names to add rbd-mirror or cephfs-mirror peers
+spec.metadataPool.mirroring.snapshotSchedules <[]object>	# SnapshotSchedules is the scheduling of snapshot for mirrored images/pools
+spec.metadataPool.mirroring.snapshotSchedules[].interval <string>	# Interval represent the periodicity of the snapshot.
+spec.metadataPool.mirroring.snapshotSchedules[].path <string>	# Path is the path to snapshot, only valid for CephFS
+spec.metadataPool.mirroring.snapshotSchedules[].startTime <string>	# StartTime indicates when to start the snapshot
+spec.metadataPool.parameters <map[string]string>	# Parameters is a list of properties to enable on a given pool
+spec.metadataPool.quotas <object>	# The quota settings
+spec.metadataPool.quotas.maxBytes <integer> format=int64	# MaxBytes represents the quota in bytes Deprecated in favor of MaxSize
+spec.metadataPool.quotas.maxObjects <integer> format=int64	# MaxObjects represents the quota in objects
+spec.metadataPool.quotas.maxSize <string> pattern="^[0-9]+[\\.]?[0-9]*([KMGTPE]i|[kMGTPE])?$"	# MaxSize represents the quota in bytes as a string
+spec.metadataPool.replicated <object>	# The replication settings
+spec.metadataPool.replicated.hybridStorage <object>	# HybridStorage represents hybrid storage tier settings
+spec.metadataPool.replicated.hybridStorage.primaryDeviceClass <string> (required) min=1	# PrimaryDeviceClass represents high performance tier (for example SSD or NVME) for Primary OSD
+spec.metadataPool.replicated.hybridStorage.secondaryDeviceClass <string> (required) min=1	# SecondaryDeviceClass represents low performance tier (for example HDDs) for remaining OSDs
+spec.metadataPool.replicated.replicasPerFailureDomain <integer> min=1	# ReplicasPerFailureDomain the number of replica in the specified failure domain
+spec.metadataPool.replicated.requireSafeReplicaSize <boolean>	# RequireSafeReplicaSize if false allows you to set replica 1
+spec.metadataPool.replicated.size <integer> (required) min=0	# Size - Number of copies per object in a replicated storage pool, including the object itself (required for replicated pool type)
+spec.metadataPool.replicated.subFailureDomain <string>	# SubFailureDomain the name of the sub-failure domain
+spec.metadataPool.replicated.targetSizeRatio <number> min=0	# TargetSizeRatio gives a hint (%) to Ceph in terms of expected consumption of the total cluster capacity
+spec.metadataPool.statusCheck <object>	# The mirroring statusCheck
+spec.metadataPool.statusCheck.mirror <object>	# HealthCheckSpec represents the health check of an object store bucket
+spec.metadataPool.statusCheck.mirror.disabled <boolean>
+spec.metadataPool.statusCheck.mirror.interval <string>	# Interval is the internal in second or minute for the health check to run like 60s for 60 seconds
+spec.metadataPool.statusCheck.mirror.timeout <string>
+spec.preservePoolsOnDelete <boolean> default=true	# Preserve pools on object zone deletion
+spec.sharedPools <object>	# The pool information when configuring RADOS namespaces in existing pools.
+spec.sharedPools.dataPoolName <string> (immutable)	# The data pool used for creating RADOS namespaces in the object store
+spec.sharedPools.metadataPoolName <string> (immutable)	# The metadata pool used for creating RADOS namespaces in the object store
+spec.sharedPools.poolPlacements <[]object>	# PoolPlacements control which Pools are associated with a particular RGW bucket. Once PoolPlacements are defined, RGW client will be able to associate pool with ObjectStore bucket by providing "<LocationConstraint>" during s3 bucket creation or "X-Storage-Policy" header during swift container creation. See: https://docs.ceph.com/en/latest/radosgw/placement/#placement-targets PoolPlacement with name: "default" will be used as a default pool if no option is provided during bucket creation. If default placement is not provided, spec.sharedPools.dataPoolName and spec.sharedPools.MetadataPoolName will be used as default pools. If spec.sharedPools are also empty, then RGW pools (spec.dataPool and spec.metadataPool) will be used as defaults.
+spec.sharedPools.poolPlacements[].dataNonECPoolName <string>	# The data pool used to store ObjectStore data that cannot use erasure coding (ex: multi-part uploads). If dataPoolName is not erasure coded, then there is no need for dataNonECPoolName. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].dataPoolName <string> (required) min=1	# The data pool used to store ObjectStore objects data. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].default <boolean>	# Sets given placement as default. Only one placement in the list can be marked as default. Default is false.
+spec.sharedPools.poolPlacements[].metadataPoolName <string> (required) min=1	# The metadata pool used to store ObjectStore bucket index. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].name <string> (required) pattern="^[a-zA-Z0-9._/-]+$" min=1	# Pool placement name. Name can be arbitrary. Placement with name "default" will be used as default.
+spec.sharedPools.poolPlacements[].storageClasses <[]object> max=10	# StorageClasses can be selected by user to override dataPoolName during object creation. Each placement has default STANDARD StorageClass pointing to dataPoolName. This list allows defining additional StorageClasses on top of default STANDARD storage class.
+spec.sharedPools.poolPlacements[].storageClasses[].dataPoolName <string> (required) min=1	# DataPoolName is the data pool used to store ObjectStore objects data. WARNING: Do not change this field after creation. Pool names are used in RADOS namespaces and renaming leads to data loss.
+spec.sharedPools.poolPlacements[].storageClasses[].name <string> (required) pattern="^[a-zA-Z0-9._/-]+$" min=1	# Name is the StorageClass name. Ceph allows arbitrary name for StorageClasses, however most clients/libs insist on AWS names so it is recommended to use one of the valid x-amz-storage-class values for better compatibility: REDUCED_REDUNDANCY | STANDARD_IA | ONEZONE_IA | INTELLIGENT_TIERING | GLACIER | DEEP_ARCHIVE | OUTPOSTS | GLACIER_IR | SNOW | EXPRESS_ONEZONE See AWS docs: https://aws.amazon.com/de/s3/storage-classes/
+spec.sharedPools.preserveRadosNamespaceDataOnDelete <boolean>	# Whether the RADOS namespaces should be preserved on deletion of the object store
+spec.zoneGroup <string> (required)	# The name of the zone group the zone is a member of.
+status <object>	# Status represents the status of an object
+status.conditions <[]object>
+status.conditions[].lastHeartbeatTime <string> format=date-time
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].reason <string>	# ConditionReason is a reason for a condition
+status.conditions[].status <string>
+status.conditions[].type <string>	# ConditionType represent a resource's status
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest generation observed by the controller.
+status.phase <string>
