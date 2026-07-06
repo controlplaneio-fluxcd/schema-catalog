@@ -97,6 +97,18 @@ Every extraction runs with `--strip-description=false --with-field-index
 `{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. The binary
 lowercases all template variables, so catalog filenames are lowercase.
 
+**Fieldless kinds are pruned.** After staging, `pruneKindsWithoutFields` drops
+every file of a kind that has no `.fields.txt` index — the Kubernetes `*List`
+aggregate types, which the swagger extractors (`k8s`, `openshift`) emit as a
+bare schema the catalog does not serve (CRD sources never produce them). The
+filter is kind-scoped: a kind keeps all its schema versions as long as one
+version is indexed, so a schema-only version of an otherwise-indexed kind is
+never dropped. Pruning happens before sync, so List schemas never enter the
+catalog; GC removes any left by an earlier build. Because the output template
+lowercases the kind, the field index is the only record of the original casing
+(`kind <string> enum=<Kind>`): `kindCasing` reads it back into the manifest's
+`kinds` array, which the web index uses for display.
+
 Before piping, the assembled CRD stream is normalized to drop any empty, blank,
 or comment-only document (`dropEmptyDocs`): flux-schema rejects such a document
 with "document is not a YAML mapping". These show up as a leading license/usage
@@ -114,8 +126,10 @@ output. Producers run alone via `.text()`, then the YAML is fed to
 ## History manifests — the source of truth
 
 `build/history/<name>.json` records repo, resolved version, build timestamp,
-flux-schema version, and the sorted list of repo-root-relative catalog files
-the source owns. Everything derives from these manifests:
+flux-schema version, the sorted `kinds` array of original-cased `<group>/<Kind>`
+identifiers (one per indexed kind; the slug is recovered by lowercasing), and
+the sorted list of repo-root-relative catalog files the source owns. Everything
+derives from these manifests:
 
 - **Skip detection**: resolved version == manifest version AND every listed
   file exists on disk (the existence check makes a partially-synced catalog

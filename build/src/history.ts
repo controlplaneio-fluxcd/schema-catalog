@@ -60,6 +60,72 @@ export async function listStagedFiles(dir: string): Promise<string[]> {
 }
 
 /**
+ * Matches a catalog file path, tolerating an optional `catalog/` prefix so it
+ * works on both staged (`<group>/<kind>_<version>.<ext>`) and history-manifest
+ * (`catalog/<group>/<kind>_<version>.<ext>`) forms. Captures group, lowercase
+ * kind slug, and extension.
+ */
+const KIND_FILE_RE = /(?:^|\/)([a-z0-9.-]+)\/([a-z0-9.-]+)_[a-z0-9]+\.(json|fields\.txt)$/;
+
+/**
+ * Drops every file belonging to a kind that has no `.fields.txt` index in the
+ * set — the Kubernetes `*List` aggregate types, which flux-schema emits as a
+ * bare schema with no field index and which the catalog does not serve. The
+ * filter is kind-scoped, not file-scoped: a kind keeps all its schema versions
+ * as long as at least one version has a field index, so a schema-only version
+ * of an otherwise-indexed kind is never dropped. Non-conforming paths pass
+ * through untouched for the stricter downstream guards to reject.
+ */
+export function pruneKindsWithoutFields(files: string[]): string[] {
+  const indexed = new Set<string>();
+  for (const file of files) {
+    const match = file.match(KIND_FILE_RE);
+    if (match !== null && match[3] === "fields.txt") {
+      indexed.add(`${match[1]}/${match[2]}`);
+    }
+  }
+  return files.filter((file) => {
+    const match = file.match(KIND_FILE_RE);
+    return match === null || match[3] === "fields.txt" || indexed.has(`${match[1]}/${match[2]}`);
+  });
+}
+
+/** Extracts the original-cased kind from a `.fields.txt`'s `kind <string> enum=<Kind>` row. */
+export function parseKindName(fieldsText: string): string | null {
+  const match = fieldsText.match(/^kind <string> enum=(\S+)/m);
+  return match === null ? null : match[1]!;
+}
+
+/**
+ * Builds the sorted, unique `<group>/<Kind>` casing list recorded in the history
+ * manifest, reading the kind's original casing from each `.fields.txt` via
+ * `readText`. One entry per kind (casing is version-invariant); a fields index
+ * missing its `kind` enum row fails the build loudly rather than losing casing.
+ */
+export async function kindCasing(
+  files: string[],
+  readText: (file: string) => Promise<string>,
+): Promise<string[]> {
+  const casing = new Map<string, string>();
+  for (const file of files) {
+    const match = file.match(KIND_FILE_RE);
+    if (match === null || match[3] !== "fields.txt") {
+      continue;
+    }
+    const key = `${match[1]}/${match[2]}`;
+    if (casing.has(key)) {
+      continue;
+    }
+    const kind = parseKindName(await readText(file));
+    if (kind === null) {
+      throw new Error(`no kind enum in ${file}`);
+    }
+    casing.set(key, `${match[1]}/${kind}`);
+  }
+  return [...casing.values()].sort();
+}
+
+/**
  * Copies staged files into catalog/ and returns their repo-root-relative
  * paths (catalog/<group>/<file>), the format stored in history manifests.
  */

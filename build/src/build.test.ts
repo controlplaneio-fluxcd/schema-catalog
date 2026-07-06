@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { CATEGORIES } from "./config.ts";
 import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
 import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
-import { removedFiles } from "./history.ts";
+import { kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles } from "./history.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
 import {
@@ -226,6 +226,7 @@ describe("removedFiles", () => {
     version: "v1",
     builtAt: "",
     fluxSchemaVersion: "",
+    kinds: ["g/A", "g/B"],
     files: ["catalog/g/A_v1.json", "catalog/g/A_v1.fields.txt", "catalog/g/B_v1.json"],
   };
 
@@ -251,6 +252,102 @@ describe("removedFiles", () => {
       "catalog/g/A_v1.json",
       "catalog/g/A_v1.fields.txt",
     ]);
+  });
+});
+
+describe("pruneKindsWithoutFields", () => {
+  test("drops a *List kind that has only a schema and no field index", () => {
+    const files = [
+      "accessanalyzer.aws.upbound.io/archiverule_v1beta1.json",
+      "accessanalyzer.aws.upbound.io/archiverule_v1beta1.fields.txt",
+      "accessanalyzer.aws.upbound.io/archiverulelist_v1beta1.json",
+    ];
+    expect(pruneKindsWithoutFields(files)).toEqual([
+      "accessanalyzer.aws.upbound.io/archiverule_v1beta1.json",
+      "accessanalyzer.aws.upbound.io/archiverule_v1beta1.fields.txt",
+    ]);
+  });
+
+  test("keeps a real kind whose name ends in 'list' because it has a field index", () => {
+    const files = [
+      "ec2.aws.upbound.io/managedprefixlist_v1beta1.json",
+      "ec2.aws.upbound.io/managedprefixlist_v1beta1.fields.txt",
+    ];
+    expect(pruneKindsWithoutFields(files)).toEqual(files);
+  });
+
+  test("is kind-scoped: a schema-only version survives when a sibling version has fields", () => {
+    const files = [
+      "g.io/gadget_v1beta1.json",
+      "g.io/gadget_v2.json",
+      "g.io/gadget_v2.fields.txt",
+    ];
+    expect(pruneKindsWithoutFields(files)).toEqual(files);
+  });
+
+  test("works on catalog/-prefixed history paths too", () => {
+    const files = [
+      "catalog/g.io/foo_v1.json",
+      "catalog/g.io/foo_v1.fields.txt",
+      "catalog/g.io/foolist_v1.json",
+    ];
+    expect(pruneKindsWithoutFields(files)).toEqual([
+      "catalog/g.io/foo_v1.json",
+      "catalog/g.io/foo_v1.fields.txt",
+    ]);
+  });
+});
+
+describe("parseKindName", () => {
+  test("reads the original casing from the kind enum row", () => {
+    const text = "apiVersion <string>\nkind <string> enum=ArchiveRule (cluster-scoped)\nmetadata.name <string> (required)\n";
+    expect(parseKindName(text)).toBe("ArchiveRule");
+  });
+
+  test("handles an enum with no scope suffix at end of line", () => {
+    expect(parseKindName("kind <string> enum=Canary")).toBe("Canary");
+  });
+
+  test("ignores nested fields that merely end in 'kind'", () => {
+    const text = "spec.resourceRef.kind <string>\nkind <string> enum=HelmRelease (namespaced)\n";
+    expect(parseKindName(text)).toBe("HelmRelease");
+  });
+
+  test("returns null when there is no top-level kind enum", () => {
+    expect(parseKindName("metadata.name <string> (required)\n")).toBeNull();
+  });
+});
+
+describe("kindCasing", () => {
+  test("builds sorted unique <group>/<Kind> ids, reading each kind once", async () => {
+    const reads: string[] = [];
+    const fields: Record<string, string> = {
+      "g.io/canary_v1beta1.fields.txt": "kind <string> enum=Canary (namespaced)\n",
+      "g.io/canary_v1.fields.txt": "kind <string> enum=Canary (namespaced)\n",
+      "a.io/alertprovider_v1beta1.fields.txt": "kind <string> enum=AlertProvider (namespaced)\n",
+    };
+    const files = [
+      "g.io/canary_v1beta1.json",
+      "g.io/canary_v1beta1.fields.txt",
+      "g.io/canary_v1.json",
+      "g.io/canary_v1.fields.txt",
+      "a.io/alertprovider_v1beta1.json",
+      "a.io/alertprovider_v1beta1.fields.txt",
+    ];
+    const kinds = await kindCasing(files, (file) => {
+      reads.push(file);
+      return Promise.resolve(fields[file]!);
+    });
+    expect(kinds).toEqual(["a.io/AlertProvider", "g.io/Canary"]);
+    // Canary appears at two versions but its fields file is read once.
+    expect(reads).toEqual(["g.io/canary_v1beta1.fields.txt", "a.io/alertprovider_v1beta1.fields.txt"]);
+  });
+
+  test("throws when a field index is missing its kind enum row", () => {
+    const files = ["g.io/broken_v1.fields.txt"];
+    expect(kindCasing(files, () => Promise.resolve("metadata.name <string>\n"))).rejects.toThrow(
+      "no kind enum in g.io/broken_v1.fields.txt",
+    );
   });
 });
 

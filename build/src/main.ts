@@ -11,8 +11,10 @@ import {
   deleteHistory,
   gcCatalog,
   historyFilesPresent,
+  kindCasing,
   listHistoryNames,
   listStagedFiles,
+  pruneKindsWithoutFields,
   readHistory,
   removedFiles,
   syncCatalog,
@@ -89,7 +91,13 @@ async function processSource(
     if (staged.length === 0) {
       throw new Error(`extraction at ${version} produced no files`);
     }
-    const conflicts = staged.map((rel) => join("catalog", rel)).filter((f) => foreign.has(f));
+    // Drop the *List aggregate kinds (schema, no field index) before syncing so
+    // they never enter the catalog; GC removes any left by an earlier build.
+    const kept = pruneKindsWithoutFields(staged);
+    if (kept.length === 0) {
+      throw new Error(`extraction at ${version} produced only fieldless kinds`);
+    }
+    const conflicts = kept.map((rel) => join("catalog", rel)).filter((f) => foreign.has(f));
     if (conflicts.length > 0) {
       const owner = [...history].find(([, e]) => e?.files.includes(conflicts[0]!))?.[0];
       throw new Error(
@@ -97,7 +105,8 @@ async function processSource(
           ` e.g. ${conflicts[0]}`,
       );
     }
-    const files = await syncCatalog(staging, staged);
+    const files = await syncCatalog(staging, kept);
+    const kinds = await kindCasing(kept, (rel) => Bun.file(join(staging, rel)).text());
     const removed = removedFiles(prev, files, foreign);
     await gcCatalog(removed);
     const entry: HistoryEntry = {
@@ -106,6 +115,7 @@ async function processSource(
       version,
       builtAt: new Date().toISOString(),
       fluxSchemaVersion: opts.toolVersion,
+      kinds,
       files,
     };
     await writeHistory(entry);

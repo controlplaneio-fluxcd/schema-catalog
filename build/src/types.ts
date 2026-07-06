@@ -80,6 +80,13 @@ export interface HistoryEntry {
   builtAt: string;
   /** Version of the flux-schema binary that produced the files. */
   fluxSchemaVersion: string;
+  /**
+   * Original-cased kind identifiers `<group>/<Kind>` for every kind that has a
+   * field index, sorted and unique. Catalog filenames lowercase the kind, so
+   * this is the only record of the real casing (e.g. `.../ArchiveRule`) the web
+   * index uses for display; the slug is recovered by lowercasing.
+   */
+  kinds: string[];
   /** Catalog files owned by this source, repo-root relative, sorted. */
   files: string[];
 }
