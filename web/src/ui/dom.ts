@@ -37,13 +37,22 @@ export function createPage(className: string): HTMLElement {
   return page;
 }
 
-/** Creates the reusable site header with home link and theme toggle. */
+/** Creates the reusable site header: logo lockup home link and theme toggle. */
 export function createSiteHeader(title = "Flux Schema Catalog"): HTMLElement {
   const header = document.createElement("header");
   header.className = "site-header";
 
-  const brand = link(homeRoute(), title, "site-title");
-  header.append(brand, createThemeToggle());
+  const brand = link(homeRoute(), "", "site-brand");
+  const logo = document.createElement("img");
+  logo.src = "/flux-operator-icon-color.svg";
+  logo.alt = "";
+  logo.width = 22;
+  logo.height = 22;
+  brand.append(logo, document.createTextNode(title));
+
+  const spacer = document.createElement("span");
+  spacer.className = "header-spacer";
+  header.append(brand, spacer, createThemeToggle());
   return header;
 }
 

@@ -179,7 +179,7 @@ function renderFieldsExplorer(content: HTMLElement, lines: FieldLine[]): void {
   filter.autocomplete = "off";
   filter.setAttribute("aria-label", "Filter fields");
 
-  const count = text("span", "muted", "");
+  const count = text("span", "fields-count", "");
   toolbar.append(filter, count);
 
   const results = document.createElement("div");
@@ -195,14 +195,27 @@ function renderFieldsExplorer(content: HTMLElement, lines: FieldLine[]): void {
       return;
     }
 
-    const filtered = filterFieldLines(lines, { query });
+    const filtered = filterFieldLines(lines, { query, limit: FILTER_RENDER_CAP });
     count.textContent = `${filtered.total} of ${lines.length} fields`;
     results.append(renderFieldList(filtered.matches));
+    if (filtered.total > filtered.matches.length) {
+      results.append(
+        text("p", "field-list-note", `Showing the first ${filtered.matches.length} matches — narrow the filter for the rest.`),
+      );
+    }
   };
 
-  filter.addEventListener("input", render);
+  // Debounced: the largest fields files run to ~8k lines and a synchronous
+  // re-render per keystroke would jank the input.
+  let pending = 0;
+  filter.addEventListener("input", () => {
+    clearTimeout(pending);
+    pending = window.setTimeout(render, 120);
+  });
   render();
 }
+
+const FILTER_RENDER_CAP = 500;
 
 function renderFieldList(lines: FieldLine[]): HTMLElement {
   const list = document.createElement("div");

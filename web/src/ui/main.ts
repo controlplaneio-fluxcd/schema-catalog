@@ -15,12 +15,31 @@ if (app === null) {
 const appElement = app;
 
 initializeTheme();
+installSearchShortcut();
 
 try {
   catalogIndex = await fetchCatalogIndex();
   installRouter(renderRoute);
 } catch (error) {
   renderStartupError(error);
+}
+
+/** `/` focuses the home search from anywhere, unless already typing in a field. */
+function installSearchShortcut(): void {
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      return;
+    }
+    event.preventDefault();
+    if (location.hash !== "" && location.hash !== "#/") {
+      location.hash = "#/";
+    }
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>("#search")?.focus());
+  });
 }
 
 async function fetchCatalogIndex(): Promise<CatalogIndex> {
