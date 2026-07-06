@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-108-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C261-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-560%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-109-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C281-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-562%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -205,6 +205,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Elastic Cloud | [v3.4.1](build/history/eck-operator.json) | 19 | 2026-07-06 |
 | Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-05 |
 | Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-06 |
+| OpenSearch Operator | [opensearch-operator-3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-06 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-05 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-05 |
 | VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 24 | 2026-07-05 |
