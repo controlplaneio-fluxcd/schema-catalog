@@ -29,6 +29,7 @@ web-build:
 # Needs RCLONE_CONFIG_R2_* env vars pointing at the R2 bucket's S3 endpoint;
 # the CF build image has no rclone, so fetch the pinned static binary when missing.
 web-sync:
+	@env | grep -o '^RCLONE_CONFIG_R2_[A-Z_]*' | sort || echo "no RCLONE_CONFIG_R2_* vars in env"
 	@test -x "$(RCLONE)" || (curl -fsSL https://downloads.rclone.org/$(RCLONE_VERSION)/rclone-$(RCLONE_VERSION)-linux-amd64.zip -o /tmp/rclone.zip && unzip -oq /tmp/rclone.zip -d /tmp)
 	$(RCLONE) sync catalog r2:schema-catalog --checksum --fast-list --transfers 32 --stats-one-line -v
 
