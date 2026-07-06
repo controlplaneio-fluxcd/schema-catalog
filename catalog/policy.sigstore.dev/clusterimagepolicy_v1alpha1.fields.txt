@@ -1,0 +1,98 @@
+# schema source: Sigstore Policy Controller v0.15.1 https://github.com/sigstore/policy-controller
+apiVersion <string> enum=policy.sigstore.dev/v1alpha1
+kind <string> enum=ClusterImagePolicy (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# Spec holds the desired state of the ClusterImagePolicy (from the client).
+spec.authorities <[]object>	# Authorities defines the rules for discovering and validating signatures.
+spec.authorities[].attestations <[]object>	# Attestations is a list of individual attestations for this authority, once the signature for this authority has been verified.
+spec.authorities[].attestations[].name <string>	# Name of the attestation. These can then be referenced at the CIP level policy.
+spec.authorities[].attestations[].policy <object>	# Policy defines all of the matching signatures, and all of the matching attestations (whose attestations are verified).
+spec.authorities[].attestations[].policy.configMapRef <object>	# ConfigMapRef defines the reference to a configMap with the policy definition.
+spec.authorities[].attestations[].policy.configMapRef.key <string>	# Key defines the key to pull from the configmap.
+spec.authorities[].attestations[].policy.configMapRef.name <string>	# Name is unique within a namespace to reference a configmap resource.
+spec.authorities[].attestations[].policy.configMapRef.namespace <string>	# Namespace defines the space within which the configmap name must be unique.
+spec.authorities[].attestations[].policy.data <string>	# Data contains the policy definition.
+spec.authorities[].attestations[].policy.fetchConfigFile <boolean>	# FetchConfigFile controls whether ConfigFile will be fetched and made available for CIP level policy evaluation. Note that this only gets evaluated (and hence fetched) iff at least one authority matches. The ConfigFile will then be available in this format: https://github.com/opencontainers/image-spec/blob/main/config.md
+spec.authorities[].attestations[].policy.includeObjectMeta <boolean>	# IncludeObjectMeta controls whether the ObjectMeta will be included and made available for CIP level policy evalutation. Note that this only gets evaluated iff at least one authority matches.
+spec.authorities[].attestations[].policy.includeSpec <boolean>	# IncludeSpec controls whether resource `Spec` will be included and made available for CIP level policy evaluation. Note that this only gets evaluated iff at least one authority matches. Also note that because Spec may be of a different shape depending on the resource being evaluatied (see MatchResource for filtering) you might want to configure these to match the policy file to ensure the shape of the Spec is what you expect when evaling the policy.
+spec.authorities[].attestations[].policy.includeTypeMeta <boolean>	# IncludeTypeMeta controls whether the TypeMeta will be included and made available for CIP level policy evalutation. Note that this only gets evaluated iff at least one authority matches.
+spec.authorities[].attestations[].policy.remote <object>	# Remote defines the url to a policy.
+spec.authorities[].attestations[].policy.remote.sha256sum <string>	# Sha256sum defines the exact sha256sum computed out of the 'body' of the http response.
+spec.authorities[].attestations[].policy.remote.url <string>	# URL to the policy data.
+spec.authorities[].attestations[].policy.type <string>	# Which kind of policy this is, currently only rego or cue are supported. Furthermore, only cue is tested :)
+spec.authorities[].attestations[].predicateType <string>	# PredicateType defines which predicate type to verify. Matches cosign verify-attestation options.
+spec.authorities[].ctlog <object>	# CTLog sets the configuration to verify the authority against a Rekor instance.
+spec.authorities[].ctlog.trustRootRef <string>	# Use the Public Key from the referred TrustRoot.TLog
+spec.authorities[].ctlog.url <string>	# URL sets the url to the rekor instance (by default the public rekor.sigstore.dev)
+spec.authorities[].key <object>	# Key defines the type of key to validate the image.
+spec.authorities[].key.data <string>	# Data contains the inline public key.
+spec.authorities[].key.hashAlgorithm <string>	# HashAlgorithm always defaults to sha256 if the algorithm hasn't been explicitly set
+spec.authorities[].key.kms <string>	# KMS contains the KMS url of the public key Supported formats differ based on the KMS system used.
+spec.authorities[].key.secretRef <object>	# SecretRef sets a reference to a secret with the key.
+spec.authorities[].key.secretRef.name <string>	# name is unique within a namespace to reference a secret resource.
+spec.authorities[].key.secretRef.namespace <string>	# namespace defines the space within which the secret name must be unique.
+spec.authorities[].keyless <object>	# Keyless sets the configuration to verify the authority against a Fulcio instance.
+spec.authorities[].keyless.ca-cert <object>	# CACert sets a reference to CA certificate
+spec.authorities[].keyless.ca-cert.data <string>	# Data contains the inline public key.
+spec.authorities[].keyless.ca-cert.hashAlgorithm <string>	# HashAlgorithm always defaults to sha256 if the algorithm hasn't been explicitly set
+spec.authorities[].keyless.ca-cert.kms <string>	# KMS contains the KMS url of the public key Supported formats differ based on the KMS system used.
+spec.authorities[].keyless.ca-cert.secretRef <object>	# SecretRef sets a reference to a secret with the key.
+spec.authorities[].keyless.ca-cert.secretRef.name <string>	# name is unique within a namespace to reference a secret resource.
+spec.authorities[].keyless.ca-cert.secretRef.namespace <string>	# namespace defines the space within which the secret name must be unique.
+spec.authorities[].keyless.identities <[]object>	# Identities sets a list of identities.
+spec.authorities[].keyless.identities[].issuer <string>	# Issuer defines the issuer for this identity.
+spec.authorities[].keyless.identities[].issuerRegExp <string>	# IssuerRegExp specifies a regular expression to match the issuer for this identity.
+spec.authorities[].keyless.identities[].subject <string>	# Subject defines the subject for this identity.
+spec.authorities[].keyless.identities[].subjectRegExp <string>	# SubjectRegExp specifies a regular expression to match the subject for this identity.
+spec.authorities[].keyless.insecureIgnoreSCT <boolean>	# InsecureIgnoreSCT omits verifying if a certificate contains an embedded SCT
+spec.authorities[].keyless.trustRootRef <string>	# Use the Certificate Chain from the referred TrustRoot.CertificateAuthorities and TrustRoot.CTLog
+spec.authorities[].keyless.url <string>	# URL defines a url to the keyless instance.
+spec.authorities[].name <string>	# Name is the name for this authority. Used by the CIP Policy validator to be able to reference matching signature or attestation verifications. If not specified, the name will be authority-<index in array>
+spec.authorities[].rfc3161timestamp <object>	# RFC3161Timestamp sets the configuration to verify the signature timestamp against a RFC3161 time-stamping instance.
+spec.authorities[].rfc3161timestamp.trustRootRef <string>	# Use the Certificate Chain from the referred TrustRoot.TimeStampAuthorities
+spec.authorities[].signatureFormat <string>	# SignatureFormat specifies the format the authority expects. Supported formats are "legacy" and "bundle". If not specified, the default is "legacy" (cosign's default).
+spec.authorities[].source <[]object>	# Sources sets the configuration to specify the sources from where to consume the signatures.
+spec.authorities[].source[].oci <string>	# OCI defines the registry from where to pull the signature / attestations.
+spec.authorities[].source[].signaturePullSecrets <[]object>	# SignaturePullSecrets is an optional list of references to secrets in the same namespace as the deploying resource for pulling any of the signatures used by this Source.
+spec.authorities[].source[].signaturePullSecrets[].name <string>	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.authorities[].source[].tagPrefix <string>	# TagPrefix is an optional prefix that signature and attestations have. This is the 'tag based discovery' and in the future once references are fully supported that should likely be the preferred way to handle these.
+spec.authorities[].static <object>	# Static specifies that signatures / attestations are not validated but instead a static policy is applied against matching images.
+spec.authorities[].static.action <string>	# Action defines how to handle a matching policy.
+spec.authorities[].static.message <string>	# For fail actions, emit an optional custom message
+spec.images <[]object>	# Images defines the patterns of image names that should be subject to this policy.
+spec.images[].glob <string>	# Glob defines a globbing pattern.
+spec.match <[]object>	# Match allows selecting resources based on their properties.
+spec.match[].group <string>
+spec.match[].resource <string>
+spec.match[].selector <object>
+spec.match[].selector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.match[].selector.matchExpressions[].key <string>	# key is the label key that the selector applies to.
+spec.match[].selector.matchExpressions[].operator <string>	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.match[].selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.match[].selector.matchLabels <object (free-form)>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.match[].version <string>
+spec.mode <string>	# Mode controls whether a failing policy will be rejected (not admitted), or if errors are converted to Warnings. enforce - Reject (default) warn - allow but warn
+spec.policy <object>	# Policy is an optional policy that can be applied against all the successfully validated Authorities. If no authorities pass, this does not even get evaluated, as the Policy is considered failed.
+spec.policy.configMapRef <object>	# ConfigMapRef defines the reference to a configMap with the policy definition.
+spec.policy.configMapRef.key <string>	# Key defines the key to pull from the configmap.
+spec.policy.configMapRef.name <string>	# Name is unique within a namespace to reference a configmap resource.
+spec.policy.configMapRef.namespace <string>	# Namespace defines the space within which the configmap name must be unique.
+spec.policy.data <string>	# Data contains the policy definition.
+spec.policy.fetchConfigFile <boolean>	# FetchConfigFile controls whether ConfigFile will be fetched and made available for CIP level policy evaluation. Note that this only gets evaluated (and hence fetched) iff at least one authority matches. The ConfigFile will then be available in this format: https://github.com/opencontainers/image-spec/blob/main/config.md
+spec.policy.includeObjectMeta <boolean>	# IncludeObjectMeta controls whether the ObjectMeta will be included and made available for CIP level policy evalutation. Note that this only gets evaluated iff at least one authority matches.
+spec.policy.includeSpec <boolean>	# IncludeSpec controls whether resource `Spec` will be included and made available for CIP level policy evaluation. Note that this only gets evaluated iff at least one authority matches. Also note that because Spec may be of a different shape depending on the resource being evaluatied (see MatchResource for filtering) you might want to configure these to match the policy file to ensure the shape of the Spec is what you expect when evaling the policy.
+spec.policy.includeTypeMeta <boolean>	# IncludeTypeMeta controls whether the TypeMeta will be included and made available for CIP level policy evalutation. Note that this only gets evaluated iff at least one authority matches.
+spec.policy.remote <object>	# Remote defines the url to a policy.
+spec.policy.remote.sha256sum <string>	# Sha256sum defines the exact sha256sum computed out of the 'body' of the http response.
+spec.policy.remote.url <string>	# URL to the policy data.
+spec.policy.type <string>	# Which kind of policy this is, currently only rego or cue are supported. Furthermore, only cue is tested :)
+status <object>	# Status represents the current state of the ClusterImagePolicy. This data may be out of date.
+status.annotations <object (free-form)>	# Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
+status.conditions <[]object>	# Conditions the latest available observations of a resource's current state.
+status.conditions[].lastTransitionTime <string>	# LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.

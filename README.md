@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-104-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C217-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-105-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C220-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -117,6 +117,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | OPA Gatekeeper | [v3.22.2](build/history/gatekeeper.json) | 27 | 2026-07-05 |
 | OpenReports | [v0.2.1](build/history/openreports.json) | 2 | 2026-07-05 |
 | Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 4 | 2026-07-05 |
+| Sigstore Policy Controller | [v0.15.1](build/history/sigstore-policy-controller.json) | 3 | 2026-07-06 |
 | SPIRE Controller Manager | [v0.6.6](build/history/spire-controller-manager.json) | 4 | 2026-07-05 |
 | Trust Manager | [v0.24.0](build/history/trust-manager.json) | 2 | 2026-07-05 |
 | Upbound AWS Provider | [v2.6.0](build/history/provider-upjet-aws.json) | 2364 | 2026-07-05 |
