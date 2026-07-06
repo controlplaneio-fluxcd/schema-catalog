@@ -33,31 +33,31 @@ const FEATURES: Array<{ title: string; body: string }> = [
   {
     title: "Extracted from upstream",
     body:
-      "Every kind, field, type, and constraint is extracted from the project's published API definitions. The agent looks it up instead of reconstructing it from training data.",
+      "Every kind, field, type, and constraint comes from the project's published API definitions. The agent looks it up instead of reconstructing it from training data.",
   },
   {
     title: "Write valid manifests",
     body:
-      "A HelmRelease, a Gateway, a Cilium policy: the agent pulls the schema for the exact apiVersion it targets and only uses fields that exist.",
+      "The agent pulls the schema for the exact API version a manifest targets and only uses fields that exist. Field descriptions teach it what each field does, including features newer than its training data.",
   },
   {
     title: "Review manifests",
     body:
-      "Point the agent at existing manifests and it verifies field paths, required values, and deprecations against the real schema, before the cluster rejects them.",
+      "Point the agent at existing manifests and it verifies field paths, required values, and deprecations against the real schema before the cluster rejects them.",
   },
   {
     title: "Rebuilt daily",
     body:
-      "The catalog tracks upstream releases, so new CRDs, kinds, and apiVersions land within a day of shipping, nothing for you to update.",
+      "The catalog tracks upstream releases, so new kinds and API versions land here within a day of shipping.",
   },
 ];
 
 const TOOLS: Array<{ name: string; description: string }> = [
-  { name: "grep_catalog", description: "Grep TypeMeta lines with case-insensitive regex: apiVersion, Kind, and project." },
-  { name: "list_projects", description: "Enumerate covered projects with version, GitHub repo, and kind count." },
-  { name: "get_project", description: "Fetch one project's apiVersion/Kind lines and field-index coverage." },
-  { name: "get_schema", description: "Fetch the complete JSON Schema for an apiVersion and kind." },
-  { name: "grep_schema", description: "Grep an apiVersion/kind flattened field index with case-insensitive regex." },
+  { name: "grep_catalog", description: "Search the catalog with a regex and get back matching kinds and their API versions." },
+  { name: "list_projects", description: "List every project in the catalog with its upstream version and kind count." },
+  { name: "get_project", description: "List all the kinds and API versions that one project ships." },
+  { name: "get_schema", description: "Fetch the complete JSON Schema for a kind and API version." },
+  { name: "grep_schema", description: "Search a kind's fields with a regex and get back paths, types, constraints, and descriptions." },
 ];
 
 /**
@@ -90,7 +90,7 @@ function createHero(index: CatalogIndex): HTMLElement {
     text(
       "p",
       "mcp-tagline",
-      "An LLM-friendly kubectl explain for the whole Kubernetes ecosystem, no cluster required. One endpoint serves the kinds, fields, types, constraints, and apiVersions for every resource your agent writes or reviews.",
+      "An LLM-friendly kubectl explain for the whole Kubernetes ecosystem, no cluster required. One endpoint serves the kinds, fields, types, and constraints for every resource your agent writes or reviews.",
     ),
     createEndpoint(),
     text(
@@ -113,12 +113,12 @@ function createEndpoint(): HTMLElement {
 }
 
 function createWhySection(): HTMLElement {
-  const section = createSection("Why connect it");
+  const section = createSection("What your agent gets");
   section.append(
     text(
       "p",
       "mcp-lead",
-      "Language models writing Kubernetes YAML from training data invent field names, misremember apiVersions, and drop required values. This server gives the agent the real schemas instead: curated JSON Schemas and greppable field indexes for core Kubernetes, OpenShift, the Flux ecosystem, and a growing set of CNCF projects, controllers, and operators, served over MCP.",
+      "Models writing Kubernetes YAML from memory invent field names and miss required values. This MCP server lets your agent look up the real schema instead.",
     ),
   );
 
@@ -140,7 +140,7 @@ function createConfigSection(): HTMLElement {
     text(
       "p",
       "mcp-lead",
-      "Standard streamable-HTTP MCP transport, no authentication or API key. Point any MCP client at the endpoint.",
+      "The server speaks standard streamable HTTP and needs no authentication or API key. Point any MCP client at the endpoint.",
     ),
     text("h3", "", "Claude Code"),
     createCodeBlock(CLAUDE_COMMAND),
@@ -154,7 +154,7 @@ function createConfigSection(): HTMLElement {
 
 function createToolsSection(): HTMLElement {
   const section = createSection("Tools");
-  section.append(text("p", "mcp-lead", "Five tools, meant to be called in narrowing order: discover the group and kind, grep the flattened schema cheaply, and pull the full JSON Schema only when needed."));
+  section.append(text("p", "mcp-lead", "The agent starts broad and narrows down. It finds the right kind, searches its fields, and fetches the full JSON Schema only when it needs everything."));
 
   const scroller = document.createElement("div");
   scroller.className = "table-scroll";

@@ -56,17 +56,17 @@ const CHECKS: Array<{ title: string; body: string }> = [
   {
     title: "API server semantics",
     body:
-      "Every field of every kind is checked strictly: unknown fields, wrong types, and missing required properties are reported as schema violations.",
+      "Every field of every kind is checked strictly. Unknown fields, wrong types, and missing required properties are reported as schema violations.",
   },
   {
     title: "CEL rules",
     body:
-      "The x-kubernetes-validations rules embedded in CRDs run with the same engine as the Kubernetes API server. A HelmRelease missing both chart and chartRef fails locally, not on the cluster.",
+      "The validation rules embedded in CRDs run with the same engine as the Kubernetes API server. A HelmRelease missing both chart and chartRef fails locally instead of on the cluster.",
   },
   {
     title: "Strict YAML decoding",
     body:
-      "Duplicate keys are rejected, matching Flux behavior, and names, namespaces, labels, and annotations are checked against API server rules (DNS-1123, qualified names).",
+      "Duplicate keys are rejected to match Flux behavior. Names, namespaces, labels, and annotations are checked against the API server naming rules.",
   },
   {
     title: "SOPS-aware",
@@ -102,7 +102,7 @@ function createHero(): HTMLElement {
     text(
       "p",
       "mcp-tagline",
-      "Static validation for GitOps workflows with Kubernetes API server semantics. Catch invalid manifests in pull requests, before Flux reconciles them on clusters.",
+      "Static validation for GitOps workflows with Kubernetes API server semantics. Catch invalid manifests in pull requests before Flux reconciles them on clusters.",
     ),
     createCodeBlock(INSTALL_COMMAND),
     createMetaLine(),
@@ -138,17 +138,17 @@ function createCatalogSection(index: CatalogIndex): HTMLElement {
     text(
       "p",
       "mcp-lead",
-      `One schema location covers ${index.projects.length.toLocaleString("en-US")} projects and ${kinds.toLocaleString("en-US")} kinds, the plugin's built-in catalog included.`,
+      `One schema location covers ${index.projects.length.toLocaleString("en-US")} projects and ${kinds.toLocaleString("en-US")} kinds, including everything from the plugin's built-in catalog.`,
     ),
     createCodeBlock(VALIDATE_COMMAND),
     text("h3", "", "Validate what Flux sees"),
     text(
       "p",
       "mcp-lead",
-      "Pipe rendered kustomize overlays or Helm charts through the same check: the exact manifests Flux applies at reconciliation time.",
+      "Pipe rendered kustomize overlays or Helm charts through the same check to validate the exact manifests Flux applies at reconciliation time.",
     ),
     createCodeBlock(RENDERED_COMMAND),
-    text("h3", "", "Violations, pinpointed"),
+    text("h3", "", "Example output"),
     createCodeBlock(EXAMPLE_OUTPUT, "console"),
   );
   return section;
@@ -175,7 +175,7 @@ function createCiSection(): HTMLElement {
     text(
       "p",
       "mcp-lead",
-      "For GitHub repositories, two composite actions cover the pipeline: one installs the CLI, the other renders kustomize overlays and Helm charts and validates every document.",
+      "On GitHub, two composite actions cover the whole pipeline. The first installs the CLI and the second renders kustomize overlays and Helm charts, then validates every document.",
     ),
     createCodeBlock(CI_WORKFLOW, "yaml"),
     text("h3", "", "Point CI at this catalog"),
@@ -199,9 +199,9 @@ function createAgentsPointer(): HTMLElement {
   const lead = document.createElement("p");
   lead.className = "mcp-lead";
   lead.append(
-    document.createTextNode("The same catalog is served to agents over MCP, see "),
+    document.createTextNode("The same catalog is served to agents over MCP. See the "),
     link(agentsRoute(), "AI Agents"),
-    document.createTextNode("."),
+    document.createTextNode(" page to connect one."),
   );
   section.append(lead);
   return section;
