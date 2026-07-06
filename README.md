@@ -167,7 +167,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | LeaderWorkerSet | [v0.9.0](build/history/lws.json) | 2 | 2026-07-05 |
 | NFD NodeResourceTopology | [v0.18.3](build/history/node-feature-discovery-nrt.json) | 2 | 2026-07-05 |
 | Node Feature Discovery | [v0.18.3](build/history/node-feature-discovery.json) | 3 | 2026-07-05 |
-| Vertical Pod Autoscaler | [vertical-pod-autoscaler-1.7.0](build/history/vertical-pod-autoscaler.json) | 4 | 2026-07-05 |
+| Vertical Pod Autoscaler | [1.7.0](build/history/vertical-pod-autoscaler.json) | 4 | 2026-07-06 |
 | Volcano | [v1.15.0](build/history/volcano.json) | 9 | 2026-07-05 |
 | Volcano JobFlow | [v1.15.0](build/history/volcano-jobflow.json) | 2 | 2026-07-05 |
 
@@ -175,7 +175,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
-| Actions Runner Controller | [gha-runner-scale-set-0.14.2](build/history/actions-runner-controller.json) | 9 | 2026-07-06 |
+| Actions Runner Controller | [0.14.2](build/history/actions-runner-controller.json) | 9 | 2026-07-06 |
 | Argo CD | [v3.4.4](build/history/argo-cd.json) | 3 | 2026-07-05 |
 | Argo Events | [v1.9.10](build/history/argo-events.json) | 3 | 2026-07-05 |
 | Argo Rollouts | [v1.9.0](build/history/argo-rollouts.json) | 5 | 2026-07-05 |
@@ -186,11 +186,11 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Flux | [v2.9.0](build/history/flux.json) | 15 | 2026-07-05 |
 | Flux Operator | [v0.53.0](build/history/flux-operator.json) | 4 | 2026-07-05 |
 | Kargo | [v1.10.8](build/history/kargo.json) | 9 | 2026-07-06 |
-| Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 20 | 2026-07-05 |
-| Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-05 |
+| Knative Eventing | [v1.22.2](build/history/knative-eventing.json) | 20 | 2026-07-06 |
+| Knative Serving | [v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-06 |
 | KServe | [v0.19.0](build/history/kserve.json) | 6 | 2026-07-05 |
 | KServe LLM | [v0.19.0](build/history/kserve-llmisvc.json) | 4 | 2026-07-05 |
-| MariaDB Operator | [mariadb-operator-crds-26.6.0](build/history/mariadb-operator.json) | 12 | 2026-07-06 |
+| MariaDB Operator | [26.6.0](build/history/mariadb-operator.json) | 12 | 2026-07-06 |
 | NATS | [v0.23.0](build/history/nats.json) | 8 | 2026-07-05 |
 | OpenFeature Operator | [v0.9.2](build/history/open-feature-operator.json) | 9 | 2026-07-05 |
 | RabbitMQ Cluster Operator | [v2.22.0](build/history/rabbitmq-cluster-operator.json) | 1 | 2026-07-05 |
@@ -207,8 +207,8 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Elastic Cloud | [v3.4.1](build/history/eck-operator.json) | 19 | 2026-07-06 |
 | Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-05 |
 | Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-06 |
-| Loki Operator | [operator/v0.10.2](build/history/loki-operator.json) | 9 | 2026-07-06 |
-| OpenSearch Operator | [opensearch-operator-3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-06 |
+| Loki Operator | [v0.10.2](build/history/loki-operator.json) | 9 | 2026-07-06 |
+| OpenSearch Operator | [3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-06 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-05 |
 | Perses Operator | [v0.4.0](build/history/perses-operator.json) | 7 | 2026-07-06 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-05 |
