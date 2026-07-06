@@ -1,0 +1,38 @@
+# schema source: kgateway v2.3.5 https://github.com/kgateway-dev/kgateway
+apiVersion <string> enum=gateway.kgateway.dev/v1alpha1
+kind <string> enum=Backend
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# BackendSpec defines the desired state of Backend.
+spec.aws <object>	# Aws is the AWS backend configuration.
+spec.aws.accountId <string> (required) pattern="^[0-9]{12}$" min=1 max=12	# AccountId is the AWS account ID to use for the backend.
+spec.aws.auth <object>	# Auth specifies an explicit AWS authentication method for the backend. When omitted, the following credential providers are tried in order, stopping when one of them returns an access key ID and a secret access key (the session token is optional): 1. Environment variables: when the environment variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN are set. 2. AssumeRoleWithWebIdentity API call: when the environment variables AWS_WEB_IDENTITY_TOKEN_FILE and AWS_ROLE_ARN are set. 3. EKS Pod Identity: when the environment variable AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE is set. See the Envoy docs for more info: https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/aws_request_signing_filter#credentials
+spec.aws.auth.secretRef <object>	# SecretRef references a Kubernetes Secret containing the AWS credentials. The Secret must have keys "accessKey", "secretKey", and optionally "sessionToken".
+spec.aws.auth.secretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.aws.auth.type <string> (required) enum=Secret	# Type specifies the authentication method to use for the backend.
+spec.aws.lambda <object> (required)	# Lambda configures the AWS lambda service.
+spec.aws.lambda.endpointURL <string> pattern="^https?://[-a-zA-Z0-9@:%.+~#?&/=]+$" max=2048	# EndpointURL is the URL or domain for the Lambda service. This is primarily useful for testing and development purposes. When omitted, the default lambda hostname will be used.
+spec.aws.lambda.functionName <string> (required) pattern="^[A-Za-z0-9-_]{1,140}$"	# FunctionName is the name of the Lambda function to invoke.
+spec.aws.lambda.invocationMode <string> enum=Sync|Async default="Sync"	# InvocationMode defines how to invoke the Lambda function. Defaults to Sync.
+spec.aws.lambda.payloadTransformMode <string> enum=None|Envoy default="Envoy"	# PayloadTransformation specifies payload transformation mode before it is sent to the Lambda function. Defaults to Envoy.
+spec.aws.lambda.qualifier <string> default="$LATEST" pattern="^(\\$LATEST|[0-9]+|[A-Za-z0-9-_]{1,128})$"	# Qualifier is the alias or version for the Lambda function. Valid values include a numeric version (e.g. "1"), an alias name (alphanumeric plus "-" or "_"), or the special literal "$LATEST".
+spec.aws.region <string> default="us-east-1" pattern="^[a-z0-9-]+$" min=1 max=63	# Region is the AWS region to use for the backend. Defaults to us-east-1 if not specified.
+spec.dynamicForwardProxy <object>	# DynamicForwardProxy is the dynamic forward proxy backend configuration.
+spec.dynamicForwardProxy.enableTls <boolean>	# EnableTls enables TLS. When true, the backend will be configured to use TLS. System CA will be used for validation. The hostname will be used for SNI and auto SAN validation.
+spec.gcp <object>	# Gcp is the GCP backend configuration.
+spec.gcp.audience <string> min=1	# Audience is the GCP service account audience URL. When omitted, defaults to "https://{host}". This is used by the GCP authn filter to request the appropriate token.
+spec.gcp.host <string> (required) min=1	# Host is the hostname of the GCP service to connect to. This will be used for SNI and as the target address.
+spec.static <object>	# Static is the static backend configuration.
+spec.static.appProtocol <string> enum=http2|grpc|grpc-web|kubernetes.io/h2c|kubernetes.io/ws	# AppProtocol is the application protocol to use when communicating with the backend.
+spec.static.hosts <[]object> (required) min=1	# Hosts is a list of hosts to use for the backend.
+spec.static.hosts[].host <string> (required) min=1	# Host is the host name to use for the backend.
+spec.static.hosts[].port <integer> (required) format=int32	# Port is the port to use for the backend.
+spec.type <string> enum=AWS|Static|DynamicForwardProxy|GCP	# Type indicates the type of the backend to be used. Deprecated: The Type field is deprecated and will be removed in a future release. The backend type is inferred from the configuration.
+status <object>	# BackendStatus defines the observed state of Backend.
+status.conditions <[]object> max=8	# Conditions is the list of conditions for the backend.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

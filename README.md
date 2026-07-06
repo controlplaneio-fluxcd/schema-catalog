@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-111-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C297-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-563%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-112-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C305-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-565%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -158,6 +158,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Karpenter Cluster API | [v0.2.0](build/history/karpenter-provider-cluster-api.json) | 1 | 2026-07-05 |
 | Karpenter IBM Cloud | [v1.0.4](build/history/karpenter-provider-ibm-cloud.json) | 1 | 2026-07-05 |
 | KEDA | [v2.20.1](build/history/keda.json) | 6 | 2026-07-05 |
+| kgateway | [v2.3.5](build/history/kgateway.json) | 8 | 2026-07-06 |
 | kjob | [v0.1.0](build/history/kjob.json) | 5 | 2026-07-05 |
 | KubeEdge | [v1.23.0](build/history/kubeedge.json) | 18 | 2026-07-05 |
 | Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-05 |
