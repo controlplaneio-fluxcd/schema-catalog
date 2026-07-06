@@ -16,13 +16,15 @@ upgrade the CLI to pick up new versions.
 
 ## Using the catalog
 
-The catalog is served straight from GitHub over HTTPS at the base URL.
+The catalog is served from the edge at
+[schemas.fluxoperator.dev](https://schemas.fluxoperator.dev), where you can
+also search and browse every project, kind and field index.
 
 Pass the base URL as a `--schema-location`:
 
 ```shell
 flux schema validate ./manifests \
-  --schema-location https://raw.githubusercontent.com/controlplaneio-fluxcd/schema-catalog/main/catalog
+  --schema-location https://schemas.fluxoperator.dev/catalog
 ```
 
 ### Config file
@@ -35,7 +37,7 @@ apiVersion: schema.plugin.fluxcd.io/v1beta1
 kind: Config
 validate:
   schemaLocation:
-    - https://raw.githubusercontent.com/controlplaneio-fluxcd/schema-catalog/main/catalog
+    - https://schemas.fluxoperator.dev/catalog
   verbose: true
 ```
 
@@ -43,19 +45,34 @@ validate:
 flux schema validate ./manifests --config .fluxschema.yml
 ```
 
-## Field indexes for AI agents
+## MCP server for AI agents
 
-Each schema ships a `.fields.txt` sibling: a self-contained, line-oriented
-index of every field. AI Agents can grep these instead of
-querying a live cluster with `kubectl explain`:
+The catalog is exposed as a remote MCP server (streamable HTTP, no
+authentication) at `https://schemas.fluxoperator.dev/mcp`. It gives AI agents
+an offline replacement for `kubectl explain`, backed by the `.fields.txt`
+[field indexes](https://github.com/fluxcd/flux-schema/blob/main/docs/field-index.md)
+that ship alongside every schema.
 
-```shell
-grep 'images' catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.fields.txt
+To use it, add the MCP config to your project's `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "flux-schema-catalog": {
+      "type": "http",
+      "url": "https://schemas.fluxoperator.dev/mcp"
+    }
+  }
+}
 ```
 
-Each line carries the field's dotted path, type, constraints and description.
-See the [field index reference](https://github.com/fluxcd/flux-schema/blob/main/docs/field-index.md)
-for the line grammar.
+| Tool             | Description                                                               |
+| ---------------- | ------------------------------------------------------------------------- |
+| `search_catalog` | Search projects, API groups, and kinds; returns latest schema URLs        |
+| `list_projects`  | List projects, optionally filtered by CNCF category                       |
+| `get_project`    | Return one project with groups, kinds, versions, and fields availability  |
+| `get_schema`     | Return the JSON Schema for a group/kind/version                           |
+| `search_fields`  | Grep a kind's field index by query and/or field path prefix               |
 
 ## Catalog
 
