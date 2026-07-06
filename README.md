@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-112-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C305-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-565%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C314-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-565%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -207,6 +207,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Elastic Cloud | [v3.4.1](build/history/eck-operator.json) | 19 | 2026-07-06 |
 | Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-05 |
 | Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-06 |
+| Loki Operator | [operator/v0.10.2](build/history/loki-operator.json) | 9 | 2026-07-06 |
 | OpenSearch Operator | [opensearch-operator-3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-06 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-05 |
 | Perses Operator | [v0.4.0](build/history/perses-operator.json) | 7 | 2026-07-06 |
