@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import { filterFieldLines, parseFieldsFile } from "../shared/fields.ts";
+import type { FieldLine } from "../shared/fields.ts";
 import { latestVersion, searchIndex } from "../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
 import type { Env } from "./index.ts";
@@ -11,7 +12,7 @@ export const CATALOG_BASE_URL = "https://schemas.fluxoperator.dev/catalog";
 
 /**
  * Maximum schema body size returned inline by `get_schema`, in bytes. Larger
- * objects return a direct URL plus `search_fields` guidance to keep MCP
+ * objects return a direct URL plus `grep_schema` guidance to keep MCP
  * responses bounded and avoid loading large schemas into agent context.
  */
 export const MAX_SCHEMA_INLINE_BYTES = 262_144;
@@ -51,10 +52,10 @@ export interface GetSchemaInput {
 }
 
 /**
- * Input for searching a `.fields.txt` index. `limit` is the post-filter cap and
+ * Input for grepping a `.fields.txt` index. `limit` is the post-filter cap and
  * is validated by the MCP schema before reaching these helpers.
  */
-export interface SearchFieldsInput {
+export interface GrepSchemaInput {
   group: string;
   kind: string;
   version?: string;
@@ -259,18 +260,26 @@ export function sizeGuardText(group: string, kind: string, version: string, size
   const url = schemaUrl(group, kind, version);
   return (
     `Schema "${group}/${kind}_${version}.json" is ${size} bytes, which exceeds the ${MAX_SCHEMA_INLINE_BYTES} byte inline response limit. ` +
-    `Open it directly at ${url}, or use search_fields for targeted field lookup.`
+    `Open it directly at ${url}, or use grep_schema for targeted field lookup.`
   );
 }
 
 /**
- * Formats a filtered `.fields.txt` response for MCP clients. Matching lines are
- * returned unchanged, followed by a footer with the untruncated match count and
- * total field count.
+ * Formats a regex-filtered `.fields.txt` response for MCP clients. Matching
+ * lines are returned unchanged, followed by a footer with the untruncated match
+ * count and total field count.
  */
-export function formatFieldsResponse(text: string, opts: { query?: string; prefix?: string; limit: number }): string {
+export function formatGrepSchemaResponse(text: string, opts: { query?: string; prefix?: string; limit: number }): string {
   const lines = parseFieldsFile(text);
-  const filtered = filterFieldLines(lines, opts);
+  let filtered: { matches: FieldLine[]; total: number };
+  try {
+    filtered = filterFieldLines(lines, { ...opts, queryMode: "regex" });
+  } catch (error) {
+    if (opts.query !== undefined) {
+      return invalidRegexMessage(opts.query, error);
+    }
+    throw error;
+  }
   return [...filtered.matches.map((line) => line.raw), `-- matched ${filtered.total} of ${lines.length} fields`].join("\n");
 }
 
@@ -326,14 +335,14 @@ export async function getSchemaText(
 }
 
 /**
- * Resolves and searches a `.fields.txt` object for `search_fields`. If the index
+ * Resolves and searches a `.fields.txt` object for `grep_schema`. If the index
  * says no fields file exists for the selected version, the loader is not called
  * and the response points clients at the JSON schema instead.
  */
-export async function searchFieldsText(
+export async function grepSchemaText(
   index: CatalogIndex,
   env: Env,
-  input: SearchFieldsInput,
+  input: GrepSchemaInput,
   loader: CatalogObjectLoader,
 ): Promise<string> {
   const resolved = resolveKind(index, input.group, input.kind);
@@ -358,7 +367,7 @@ export async function searchFieldsText(
   }
 
   const text = await new Response(obj.body).text();
-  return formatFieldsResponse(text, { query: input.query, prefix: input.prefix, limit: input.limit });
+  return formatGrepSchemaResponse(text, { query: input.query, prefix: input.prefix, limit: input.limit });
 }
 
 function categoryName(index: CatalogIndex, project: ProjectEntry): string {
@@ -375,6 +384,11 @@ function catalogKey(group: string, kind: string, version: string, suffix: "json"
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function invalidRegexMessage(pattern: string, error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return `invalid regex ${JSON.stringify(pattern)}: ${message}`;
 }
 
 function closeProjectMatches(index: CatalogIndex, value: string): ProjectEntry[] {

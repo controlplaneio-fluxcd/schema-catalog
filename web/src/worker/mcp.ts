@@ -9,10 +9,10 @@ import {
   CNCF_CATEGORIES,
   findProject,
   getSchemaText,
+  grepSchemaText,
   listProjectSummaries,
   projectDetails,
   projectNotFoundMessage,
-  searchFieldsText,
 } from "./mcp-core.ts";
 import { getCatalogObject } from "./catalog.ts";
 import type { Env } from "./index.ts";
@@ -22,17 +22,18 @@ import { loadIndex } from "./index-data.ts";
  * System instructions sent to MCP clients. They position the catalog as the
  * authoritative source for Kubernetes-ecosystem API definitions, tell agents
  * exactly when to reach for it (any manifest work), and prescribe the cheap
- * discover -> `search_fields` -> `get_schema` escalation path.
+ * discover -> `grep_schema` -> `get_schema` escalation path.
  */
 const instructions =
-  "Authoritative JSON Schemas and field indexes for the Kubernetes ecosystem: core Kubernetes, OpenShift, " +
-  "the Flux ecosystem, and a broad set of CNCF projects, controllers, and operators. " +
+  "An LLM-friendly `kubectl explain` for the whole Kubernetes ecosystem, no cluster required: authoritative " +
+  "JSON Schemas and field indexes for core Kubernetes, OpenShift, the Flux ecosystem, and a broad set of CNCF " +
+  "projects, controllers, and operators. " +
   "Use these tools whenever you generate, edit, review, or validate a Kubernetes manifest or custom resource: " +
   "look up the real kinds, field names, types, constraints, required values, and apiVersions here instead of " +
   "reconstructing them from training data. " +
   "Flow: discover with `search_catalog` (or `list_projects`/`get_project`) to pin down the API group, kind, and " +
-  "available versions; answer most field questions with `search_fields`, which returns one compact line per " +
-  "field (path, type, constraints, description) at a fraction of the cost of a full schema; call `get_schema` " +
+  "available versions; answer most field questions with `grep_schema`, which runs case-insensitive JavaScript regex over " +
+  "compact flattened field lines (path, type, constraints, description); call `get_schema` " +
   "only when you need the complete JSON Schema. Schemas are versioned per apiVersion — request the exact " +
   "version the manifest targets.";
 
@@ -55,7 +56,7 @@ const GetSchemaInput = z.object({
   version: z.string().min(1).optional(),
 });
 
-const SearchFieldsInput = z.object({
+const GrepSchemaInput = z.object({
   group: z.string().min(1),
   kind: z.string().min(1),
   version: z.string().min(1).optional(),
@@ -133,7 +134,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     "get_schema",
     {
       title: "Get schema",
-      description: "Fetch the complete JSON Schema for a group/kind/version when you need every field to author or strictly validate a resource; oversized schemas return a direct URL and a pointer to search_fields.",
+      description: "Fetch the complete JSON Schema for a group/kind/version when you need every field to author or strictly validate a resource; oversized schemas return a direct URL and a pointer to grep_schema.",
       inputSchema: GetSchemaInput,
     },
     async (args) =>
@@ -144,16 +145,16 @@ function createCatalogMcpServer(env: Env): McpServer {
   );
 
   server.registerTool(
-    "search_fields",
+    "grep_schema",
     {
-      title: "Search fields",
-      description: "Query a kind's field index for exact field paths, types, constraints, and descriptions — one line per field, far cheaper than the full schema. Prefer this for targeted field questions.",
-      inputSchema: SearchFieldsInput,
+      title: "Grep schema",
+      description: "Grep a kind's flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per line (path, type, constraints, description). A greppable `kubectl explain --recursive` — prefer it for targeted field lookup.",
+      inputSchema: GrepSchemaInput,
     },
     async (args) =>
       textResultFrom(async () => {
         const index = await loadIndex(env);
-        return await searchFieldsText(index, env, args, getCatalogObject);
+        return await grepSchemaText(index, env, args, getCatalogObject);
       }),
   );
 

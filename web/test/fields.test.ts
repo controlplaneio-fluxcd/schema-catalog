@@ -11,13 +11,15 @@ metadata.name <string> (required)
 spec <object> (required)\t# spec describes how the user wants the resources to appear
 spec.conversion.webhook.clientConfig.caBundle <string> format=byte\t# caBundle is a PEM encoded CA bundle...
 spec.versions[].name <string> (required)\t# name is the version name, e.g. v1
+spec.template.spec.containers[].image <string>\t# Container Image
+spec.template.spec.containers[].resources.limits.cpu <string>\t# CPU limit
 `;
 
 describe("parseFieldsFile", () => {
   test("skips comments and splits fields lines", () => {
     const lines = parseFieldsFile(sample);
 
-    expect(lines).toHaveLength(6);
+    expect(lines).toHaveLength(8);
     expect(lines[0]).toMatchObject({
       path: "apiVersion",
       type: "<string>",
@@ -50,6 +52,41 @@ describe("filterFieldLines", () => {
     expect(byQuery.total).toBe(1);
     expect(byQuery.matches).toHaveLength(1);
     expect(byQuery.matches[0]?.description).toContain("PEM");
+  });
+
+  test("filters by case-insensitive regex query", () => {
+    const lines = parseFieldsFile(sample);
+    const byRegex = filterFieldLines(lines, { query: "spec\\..*image", queryMode: "regex" });
+    const byCase = filterFieldLines(lines, { query: "container image", queryMode: "regex" });
+
+    expect(byRegex.total).toBe(1);
+    expect(byRegex.matches[0]?.path).toBe("spec.template.spec.containers[].image");
+    expect(byCase.total).toBe(1);
+    expect(byCase.matches[0]?.description).toBe("Container Image");
+  });
+
+  test("falls back to substring matching for invalid UI regex", () => {
+    const lines = parseFieldsFile(sample);
+    const fallback = filterFieldLines(lines, { query: "[", queryMode: "regex-or-substring" });
+
+    expect(fallback.total).toBe(3);
+    expect(fallback.matches.map((line) => line.path)).toEqual([
+      "spec.versions[].name",
+      "spec.template.spec.containers[].image",
+      "spec.template.spec.containers[].resources.limits.cpu",
+    ]);
+  });
+
+  test("composes prefix and regex filters", () => {
+    const lines = parseFieldsFile(sample);
+    const filtered = filterFieldLines(lines, {
+      prefix: "spec.template",
+      query: "(limits|requests)\\.cpu",
+      queryMode: "regex",
+    });
+
+    expect(filtered.total).toBe(1);
+    expect(filtered.matches[0]?.path).toBe("spec.template.spec.containers[].resources.limits.cpu");
   });
 });
 

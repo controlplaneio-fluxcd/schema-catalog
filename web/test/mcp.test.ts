@@ -5,13 +5,13 @@ import { describe, expect, test } from "bun:test";
 import type { CatalogIndex } from "../src/shared/types.ts";
 import {
   buildSearchResults,
-  formatFieldsResponse,
+  formatGrepSchemaResponse,
   getSchemaText,
+  grepSchemaText,
   kindNotFoundMessage,
   MAX_SCHEMA_INLINE_BYTES,
   projectNotFoundMessage,
   resolveKind,
-  searchFieldsText,
   sizeGuardText,
 } from "../src/worker/mcp-core.ts";
 import type { CatalogObjectLoader } from "../src/worker/mcp-core.ts";
@@ -89,17 +89,17 @@ describe("MCP catalog helpers", () => {
     const refusal = sizeGuardText("example.io", "huge", "v1", MAX_SCHEMA_INLINE_BYTES + 1);
     expect(refusal).toContain("262145 bytes");
     expect(refusal).toContain("https://schemas.fluxoperator.dev/catalog/example.io/huge_v1.json");
-    expect(refusal).toContain("search_fields");
+    expect(refusal).toContain("grep_schema");
   });
 
-  test("formatFieldsResponse returns raw lines with matched footer", () => {
+  test("formatGrepSchemaResponse returns raw lines with matched footer", () => {
     const fields = [
       "spec <object> (required)\t# desired state",
       "spec.prune <boolean>\t# prune stale resources",
       "status <object>\t# observed state",
     ].join("\n");
 
-    expect(formatFieldsResponse(fields, { query: "prune", limit: 200 })).toBe(
+    expect(formatGrepSchemaResponse(fields, { query: "prune", limit: 200 })).toBe(
       "spec.prune <boolean>\t# prune stale resources\n-- matched 1 of 3 fields",
     );
   });
@@ -130,14 +130,32 @@ describe("MCP catalog helpers", () => {
     expect(text).toContain("https://schemas.fluxoperator.dev/catalog/argoproj.io/workflow_v1alpha1.json");
   });
 
-  test("searchFieldsText reports schema URL when a kind has no fields file", async () => {
+  test("grepSchemaText reports schema URL when a kind has no fields file", async () => {
     const loader: CatalogObjectLoader = async () => {
       throw new Error("loader should not be called when fieldsBits is empty");
     };
 
-    const text = await searchFieldsText(index, env, { group: "argoproj.io", kind: "workflow", limit: 200 }, loader);
+    const text = await grepSchemaText(index, env, { group: "argoproj.io", kind: "workflow", limit: 200 }, loader);
 
     expect(text).toContain("No fields index is available");
     expect(text).toContain("https://schemas.fluxoperator.dev/catalog/argoproj.io/workflow_v1alpha1.json");
+  });
+
+  test("grepSchemaText reports invalid regex as a tool result", async () => {
+    const loader: CatalogObjectLoader = async () => ({
+      body: new Response("spec.template.spec.containers[].image <string>\t# image").body!,
+      etag: "\"test\"",
+      size: 64,
+    });
+
+    const text = await grepSchemaText(
+      index,
+      env,
+      { group: "kustomize.toolkit.fluxcd.io", kind: "kustomization", query: "[", limit: 200 },
+      loader,
+    );
+
+    expect(text.startsWith('invalid regex "[":')).toBe(true);
+    expect(text).toContain("Invalid regular expression");
   });
 });

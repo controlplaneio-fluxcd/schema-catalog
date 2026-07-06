@@ -26,6 +26,17 @@ export interface FieldNode {
   children: Map<string, FieldNode>;
 }
 
+/** Query matching mode used by field-index filters. */
+export type FieldQueryMode = "substring" | "regex" | "regex-or-substring";
+
+/** Options for filtering parsed `.fields.txt` rows. */
+export interface FilterFieldLinesOptions {
+  query?: string;
+  prefix?: string;
+  limit?: number;
+  queryMode?: FieldQueryMode;
+}
+
 /**
  * Parses a `.fields.txt` document into structured rows. Blank lines and
  * comments are ignored; malformed rows throw with the offending raw line so bad
@@ -59,19 +70,21 @@ export function parseFieldsFile(text: string): FieldLine[] {
 
 /**
  * Filters parsed field rows by optional dotted path prefix and/or
- * case-insensitive raw-line query. `total` reports all matches before the
- * non-negative limit is applied, which lets MCP responses explain truncation.
+ * case-insensitive raw-line query. `queryMode` defaults to substring matching;
+ * regex modes use JavaScript `RegExp` syntax against each raw line. `total`
+ * reports all matches before the non-negative limit is applied, which lets MCP
+ * responses explain truncation.
  */
 export function filterFieldLines(
   lines: FieldLine[],
-  opts: { query?: string; prefix?: string; limit?: number },
+  opts: FilterFieldLinesOptions,
 ): { matches: FieldLine[]; total: number } {
-  const query = opts.query?.toLowerCase();
+  const matchesQuery = fieldQueryMatcher(opts.query, opts.queryMode ?? "substring");
   const matches = lines.filter((line) => {
     if (opts.prefix !== undefined && opts.prefix !== "" && !line.path.startsWith(opts.prefix)) {
       return false;
     }
-    return query === undefined || query === "" || line.raw.toLowerCase().includes(query);
+    return matchesQuery(line);
   });
 
   const limit = opts.limit === undefined ? matches.length : Math.max(0, opts.limit);
@@ -109,4 +122,24 @@ function parseDescription(value: string): string {
     return trimmed.slice(1).trimStart();
   }
   return trimmed;
+}
+
+function fieldQueryMatcher(query: string | undefined, mode: FieldQueryMode): (line: FieldLine) => boolean {
+  if (query === undefined || query === "") {
+    return () => true;
+  }
+
+  if (mode === "regex" || mode === "regex-or-substring") {
+    try {
+      const regex = new RegExp(query, "i");
+      return (line) => regex.test(line.raw);
+    } catch (error) {
+      if (mode === "regex") {
+        throw error;
+      }
+    }
+  }
+
+  const lowerQuery = query.toLowerCase();
+  return (line) => line.raw.toLowerCase().includes(lowerQuery);
 }
