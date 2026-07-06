@@ -145,7 +145,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     {
       title: "Grep schema",
       description:
-        "Grep an apiVersion/kind flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per field line. Prefer it for targeted field lookup.",
+        "Grep an apiVersion/kind flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per field line. Constraints are part of each line, so a query like `\\(required\\)` lists every required field. Prefer it over get_schema for targeted field lookup.",
       inputSchema: GrepSchemaInput,
     },
     async (args) =>
