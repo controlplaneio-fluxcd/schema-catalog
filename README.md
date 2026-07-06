@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-102-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C209-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-103-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C210-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -81,6 +81,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
+| 1Password Operator | [v1.12.0](build/history/onepassword-operator.json) | 1 | 2026-07-06 |
 | AWS ACM Controller | [v1.4.1](build/history/ack-acm.json) | 1 | 2026-07-05 |
 | AWS API Gateway v2 Controller | [v1.3.2](build/history/ack-apigatewayv2.json) | 9 | 2026-07-05 |
 | AWS DynamoDB Controller | [v1.9.1](build/history/ack-dynamodb.json) | 3 | 2026-07-05 |
