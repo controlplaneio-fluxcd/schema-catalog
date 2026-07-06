@@ -1,0 +1,50 @@
+# schema source: MariaDB Operator mariadb-operator-crds-26.6.0 https://github.com/mariadb-operator/mariadb-operator
+apiVersion <string> enum=k8s.mariadb.com/v1alpha1
+kind <string> enum=PointInTimeRecovery
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# PointInTimeRecoverySpec defines the desired state of PointInTimeRecovery. It contains binlog archive and point-in-time restoration settings.
+spec.archiveTimeout <string> default="1h"	# ArchiveTimeout defines the maximum duration for the binary log archival. If this duration is exceeded, the sidecar agent will log an error and it will be retried in the next archive cycle. It defaults to 1 hour.
+spec.compression <string> enum=none|bzip2|gzip	# Compression algorithm to be used for compressing the binary logs. This field is immutable, it cannot be updated after creation.
+spec.physicalBackupRef <object> (required)	# PhysicalBackupRef is a reference to a PhysicalBackup object that will be used as base backup.
+spec.physicalBackupRef.name <string> default=""
+spec.storage <object> (required)	# PointInTimeRecoveryStorage is the storage where the point in time recovery data will be stored
+spec.storage.azureBlob <object>	# AzureBlob is the Azure Blob Storage where the binary logs will be kept.
+spec.storage.azureBlob.containerName <string> (required)	# ContainerName is the name of the storage container.
+spec.storage.azureBlob.prefix <string>	# Prefix indicates a folder/subfolder in the container. For example: mariadb/ or mariadb/backups. A trailing slash '/' is added if not provided.
+spec.storage.azureBlob.serviceURL <string> (required)	# ServiceURL is the full URL for connecting to Azure, usually in the form: http(s)://<account>.blob.core.windows.net/.
+spec.storage.azureBlob.storageAccountKey <object>	# StorageAccountKey is a reference to a Secret key containing the Azure Blob Storage Storage account Key. Pairs with StorageAccountKey for static credential authentication
+spec.storage.azureBlob.storageAccountKey.key <string> (required)
+spec.storage.azureBlob.storageAccountKey.name <string> default=""
+spec.storage.azureBlob.storageAccountName <string>	# StorageAccountName is the name of the storage account. Pairs with StorageAccountKey for static credential authentication
+spec.storage.azureBlob.tls <object>	# TLS provides the configuration required to establish TLS connections with Azure Blob Storage.
+spec.storage.azureBlob.tls.caSecretKeyRef <object>	# CASecretKeyRef is a reference to a Secret key containing a CA bundle in PEM format used to establish TLS connections with S3. By default, the system trust chain will be used, but you can use this field to add more CAs to the bundle.
+spec.storage.azureBlob.tls.caSecretKeyRef.key <string> (required)
+spec.storage.azureBlob.tls.caSecretKeyRef.name <string> default=""
+spec.storage.azureBlob.tls.enabled <boolean>	# Enabled is a flag to enable TLS.
+spec.storage.s3 <object>	# S3 is the S3-compatible storage where the binary logs will be kept.
+spec.storage.s3.accessKeyIdSecretKeyRef <object>	# AccessKeyIdSecretKeyRef is a reference to a Secret key containing the S3 access key id.
+spec.storage.s3.accessKeyIdSecretKeyRef.key <string> (required)
+spec.storage.s3.accessKeyIdSecretKeyRef.name <string> default=""
+spec.storage.s3.bucket <string> (required)	# Bucket is the name Name of the bucket to store backups.
+spec.storage.s3.endpoint <string> (required)	# Endpoint is the S3 API endpoint without scheme.
+spec.storage.s3.prefix <string>	# Prefix indicates a folder/subfolder in the bucket. For example: mariadb/ or mariadb/backups. A trailing slash '/' is added if not provided.
+spec.storage.s3.region <string>	# Region is the S3 region name to use.
+spec.storage.s3.secretAccessKeySecretKeyRef <object>	# AccessKeyIdSecretKeyRef is a reference to a Secret key containing the S3 secret key.
+spec.storage.s3.secretAccessKeySecretKeyRef.key <string> (required)
+spec.storage.s3.secretAccessKeySecretKeyRef.name <string> default=""
+spec.storage.s3.sessionTokenSecretKeyRef <object>	# SessionTokenSecretKeyRef is a reference to a Secret key containing the S3 session token.
+spec.storage.s3.sessionTokenSecretKeyRef.key <string> (required)
+spec.storage.s3.sessionTokenSecretKeyRef.name <string> default=""
+spec.storage.s3.ssec <object>	# SSEC is a reference to a Secret containing the SSE-C (Server-Side Encryption with Customer-Provided Keys) key. The secret must contain a 32-byte key (256 bits) in the specified key. This enables server-side encryption where you provide and manage the encryption key.
+spec.storage.s3.ssec.customerKeySecretKeyRef <object> (required)	# CustomerKeySecretKeyRef is a reference to a Secret key containing the SSE-C customer-provided encryption key. The key must be a 32-byte (256-bit) key encoded in base64.
+spec.storage.s3.ssec.customerKeySecretKeyRef.key <string> (required)
+spec.storage.s3.ssec.customerKeySecretKeyRef.name <string> default=""
+spec.storage.s3.tls <object>	# TLS provides the configuration required to establish TLS connections with S3.
+spec.storage.s3.tls.caSecretKeyRef <object>	# CASecretKeyRef is a reference to a Secret key containing a CA bundle in PEM format used to establish TLS connections with S3. By default, the system trust chain will be used, but you can use this field to add more CAs to the bundle.
+spec.storage.s3.tls.caSecretKeyRef.key <string> (required)
+spec.storage.s3.tls.caSecretKeyRef.name <string> default=""
+spec.storage.s3.tls.enabled <boolean>	# Enabled is a flag to enable TLS.
+spec.strictMode <boolean>	# StrictMode controls the behavior when a point-in-time restoration cannot reach the exact target time: When enabled: Returns an error and avoids replaying binary logs if target time is not reached. When disabled (default): Replays available binary logs until the last recoverable time. It logs logs an error if target time is not reached.
+status <object>	# PointInTimeRecoveryStatus represents the current status of the point-in-time-recovery.
+status.lastRecoverableTime <string>	# LastRecoverableTime is the most recent recoverable time based on the current state of physical backups and archived binary logs.

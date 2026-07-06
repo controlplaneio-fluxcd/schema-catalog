@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-101-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C197-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-548%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-102-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C209-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -184,6 +184,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-05 |
 | KServe | [v0.19.0](build/history/kserve.json) | 6 | 2026-07-05 |
 | KServe LLM | [v0.19.0](build/history/kserve-llmisvc.json) | 4 | 2026-07-05 |
+| MariaDB Operator | [mariadb-operator-crds-26.6.0](build/history/mariadb-operator.json) | 12 | 2026-07-06 |
 | NATS | [v0.23.0](build/history/nats.json) | 8 | 2026-07-05 |
 | OpenFeature Operator | [v0.9.2](build/history/open-feature-operator.json) | 9 | 2026-07-05 |
 | RabbitMQ Cluster Operator | [v2.22.0](build/history/rabbitmq-cluster-operator.json) | 1 | 2026-07-05 |
