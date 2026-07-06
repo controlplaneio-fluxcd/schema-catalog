@@ -46,6 +46,10 @@ RCLONE := $(or $(shell command -v rclone 2>/dev/null),/tmp/rclone-$(RCLONE_VERSI
 web-build: ## Install, lint, test and bundle the web app.
 	cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build
 
+.PHONY: web-dev
+web-dev: ## Serve the UI on :8787 without wrangler; watches src and live-reloads (no /mcp).
+	cd web && bun run build && bun scripts/serve.ts
+
 .PHONY: web-run
 web-run: ## Run the Worker locally on :8787 without CF credentials.
 	cd web && bun install --frozen-lockfile && bun run build && bun scripts/dev.ts
