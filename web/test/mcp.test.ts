@@ -18,7 +18,7 @@ import type { CatalogObjectLoader } from "../src/worker/mcp-core.ts";
 import type { Env } from "../src/worker/index.ts";
 
 const index: CatalogIndex = {
-  v: 1,
+  v: 2,
   generatedAt: "2026-07-06T00:00:00.000Z",
   categories: [
     "Provisioning",

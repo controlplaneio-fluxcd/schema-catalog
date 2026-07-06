@@ -3,7 +3,7 @@
 
 import { buildFieldTree, filterFieldLines, parseFieldsFile } from "../../shared/fields.ts";
 import type { FieldLine, FieldNode } from "../../shared/fields.ts";
-import { findKind } from "../../shared/index-query.ts";
+import { findKind, kindDisplay } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../../shared/types.ts";
 import {
   clear,
@@ -41,15 +41,16 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
     return notFoundView(`Version "${version}" is not available for "${group}/${kind}".`);
   }
 
+  const display = kindDisplay(found.entry);
   const page = createPage("kind-page");
   page.append(
     createSiteHeader(),
     createBreadcrumb([
       { label: "Home", href: homeRoute() },
       { label: found.project.alias, href: projectRoute(found.project.name) },
-      { label: kind },
+      { label: display },
     ]),
-    createKindHero(found.project, found.entry, group, kind, version),
+    createKindHero(found.project, found.entry, group, kind, version, display),
     createActions(found.entry, group, kind, version, versionIndex),
   );
 
@@ -72,12 +73,13 @@ function createKindHero(
   group: string,
   kind: string,
   version: string,
+  display: string,
 ): HTMLElement {
   const hero = document.createElement("section");
   hero.className = "hero";
 
   const title = document.createElement("h1");
-  title.textContent = kind;
+  title.textContent = display;
 
   const gvk = text("p", "mono gvk-line", `${group}/${version}`);
   const meta = document.createElement("div");

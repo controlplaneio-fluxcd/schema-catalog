@@ -19,7 +19,10 @@ export interface SearchHit {
   project: string;
   alias: string;
   group: string;
+  /** Lowercase catalog slug; use for routes and object paths. */
   kind: string;
+  /** Original-cased kind name for display text. */
+  display: string;
   versions: string[];
   fieldsBits: number;
   score: number;
@@ -66,6 +69,11 @@ export function latestVersion(entry: KindEntry): string {
   return entry[1][0] ?? "";
 }
 
+/** Returns the original-cased kind name for display, falling back to the slug. */
+export function kindDisplay(entry: KindEntry): string {
+  return entry[3] ?? entry[0];
+}
+
 /**
  * Searches kind, group, project alias, and project name with simple deterministic
  * scoring. Empty queries and non-positive limits return no hits; results are
@@ -94,6 +102,7 @@ export function searchIndex(index: CatalogIndex, query: string, limit = 20): Sea
           alias: project.alias,
           group: group.g,
           kind: entry[0],
+          display: kindDisplay(entry),
           versions: entry[1],
           fieldsBits: entry[2],
           score,

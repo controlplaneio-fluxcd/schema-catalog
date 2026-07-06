@@ -9,7 +9,7 @@
  */
 export interface CatalogIndex {
   /** Index contract version. */
-  v: 1;
+  v: 2;
   /** ISO timestamp for when `scripts/gen-index.ts` wrote the asset. */
   generatedAt: string;
   /** CNCF category names; `ProjectEntry.cat` stores an index into this array. */
@@ -44,8 +44,11 @@ export interface GroupEntry {
 }
 
 /**
- * Compact kind tuple: `[kind, versions, fieldsBits]`. `versions` is sorted by
- * Kubernetes API priority with the preferred/latest version at index 0; bit `i`
- * in `fieldsBits` is set when `versions[i]` has a sibling `.fields.txt` index.
+ * Compact kind tuple: `[kind, versions, fieldsBits, display?]`. `kind` is the
+ * lowercase catalog slug used for object paths, routes, and lookups. `versions`
+ * is sorted by Kubernetes API priority with the preferred/latest version at
+ * index 0; bit `i` in `fieldsBits` is set when `versions[i]` has a sibling
+ * `.fields.txt` index. `display` is the original-cased kind name for UI text and
+ * is omitted when it equals `kind`; read it through `kindDisplay`.
  */
-export type KindEntry = [kind: string, versions: string[], fieldsBits: number];
+export type KindEntry = [kind: string, versions: string[], fieldsBits: number, display?: string];

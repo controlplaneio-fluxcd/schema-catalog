@@ -176,7 +176,7 @@ function createResultRow(hit: SearchHit): HTMLAnchorElement {
   const version = latestVersion([hit.kind, hit.versions, hit.fieldsBits]);
   const row = link(kindRoute(hit.group, hit.kind, version), "", "result-row");
   row.append(
-    text("span", "result-kind", hit.kind),
+    text("span", "result-kind", hit.display),
     text("span", "result-group", hit.group),
     text("span", "result-project", hit.alias),
   );

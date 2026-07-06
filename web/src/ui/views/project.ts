@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { latestVersion } from "../../shared/index-query.ts";
+import { kindDisplay, latestVersion } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../../shared/types.ts";
 import {
   categoryName,
@@ -91,7 +91,7 @@ function createTableBody(group: string, kinds: KindEntry[]): HTMLTableSectionEle
     const latest = latestVersion(entry);
     const row = document.createElement("tr");
     const kindCell = document.createElement("td");
-    kindCell.append(link(kindRoute(group, entry[0], latest), entry[0], "kind-link mono"));
+    kindCell.append(link(kindRoute(group, entry[0], latest), kindDisplay(entry), "kind-link mono"));
 
     const versionsCell = document.createElement("td");
     versionsCell.className = "version-list";

@@ -6,7 +6,7 @@ import { compareApiVersion, findKind, searchIndex } from "../src/shared/index-qu
 import type { CatalogIndex } from "../src/shared/types.ts";
 
 const index: CatalogIndex = {
-  v: 1,
+  v: 2,
   generatedAt: "2026-07-06T00:00:00.000Z",
   categories: ["Runtime"],
   projects: [

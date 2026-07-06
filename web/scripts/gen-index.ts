@@ -69,7 +69,7 @@ export function generateIndex(sources: Source[], entries: HistoryEntry[]): Catal
   }
 
   return {
-    v: 1,
+    v: 2,
     generatedAt: new Date().toISOString(),
     categories: CATEGORIES,
     projects: projects.sort((a, b) => a.alias.localeCompare(b.alias)),
@@ -103,6 +103,12 @@ async function loadHistory(dir: string): Promise<HistoryEntry[]> {
 function collectGroups(entry: HistoryEntry): GroupEntry[] {
   const badPaths: string[] = [];
   const groups = new Map<string, Map<string, KindBuild>>();
+  // Recover the original casing recorded by the build: `<group>/<Kind>` keyed by
+  // its lowercase `<group>/<slug>` so it joins back to catalog filenames.
+  const casing = new Map<string, string>();
+  for (const id of entry.kinds ?? []) {
+    casing.set(id.toLowerCase(), id.slice(id.indexOf("/") + 1));
+  }
 
   for (const file of entry.files) {
     const match = file.match(FILE_RE);
@@ -150,7 +156,10 @@ function collectGroups(entry: HistoryEntry): GroupEntry[] {
               fieldsBits |= 1 << i;
             }
           });
-          return [kind, versions, fieldsBits];
+          const display = casing.get(`${g}/${kind}`);
+          return display === undefined || display === kind
+            ? [kind, versions, fieldsBits]
+            : [kind, versions, fieldsBits, display];
         }),
     }));
 }

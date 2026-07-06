@@ -37,11 +37,13 @@ describe("generateIndex", () => {
       {
         ...baseEntry,
         name: "beta",
+        kinds: [],
         files: ["catalog/beta.example.io/widget_v1.json"],
       },
       {
         ...baseEntry,
         name: "alpha",
+        kinds: ["alpha.example.io/Gadget"],
         files: [
           "catalog/alpha.example.io/gadget_v1beta1.json",
           "catalog/alpha.example.io/gadget_v2.json",
@@ -52,17 +54,21 @@ describe("generateIndex", () => {
 
     const index = generateIndex(sources, entries);
     const alpha = index.projects[0];
-    if (alpha === undefined) {
-      throw new Error("expected alpha project");
+    const beta = index.projects[1];
+    if (alpha === undefined || beta === undefined) {
+      throw new Error("expected alpha and beta projects");
     }
 
-    expect(index.v).toBe(1);
+    expect(index.v).toBe(2);
     expect(index.categories[alpha.cat]).toBe("Runtime");
     expect(index.projects.map((project) => project.alias)).toEqual(["Alpha", "Beta"]);
     expect(alpha.repo).toBe("example/alpha");
     expect(alpha.builtAt).toBe("2026-07-06");
     expect(alpha.groups[0]?.g).toBe("alpha.example.io");
-    expect(alpha.groups[0]?.kinds[0]).toEqual(["gadget", ["v2", "v1beta1"], 1]);
+    // Original casing recorded in `kinds` becomes the 4th tuple element.
+    expect(alpha.groups[0]?.kinds[0]).toEqual(["gadget", ["v2", "v1beta1"], 1, "Gadget"]);
+    // A kind with no recorded casing keeps the slug and omits the display element.
+    expect(beta.groups[0]?.kinds[0]).toEqual(["widget", ["v1"], 0]);
   });
 
   test("throws on bad catalog file paths", () => {
@@ -70,6 +76,7 @@ describe("generateIndex", () => {
       {
         ...baseEntry,
         name: "alpha",
+        kinds: [],
         files: ["catalog/Foo/bar.json"],
       },
     ];
