@@ -3,7 +3,7 @@
 
 import { filterFieldLines, parseFieldsFile } from "../shared/fields.ts";
 import type { FieldLine } from "../shared/fields.ts";
-import { latestVersion, searchIndex } from "../shared/index-query.ts";
+import { kindDisplay, latestVersion } from "../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
 import type { Env } from "./index.ts";
 
@@ -16,16 +16,6 @@ export const CATALOG_BASE_URL = "https://schemas.fluxoperator.dev/catalog";
  * responses bounded and avoid loading large schemas into agent context.
  */
 export const MAX_SCHEMA_INLINE_BYTES = 262_144;
-
-/** CNCF category filter values exposed to the `list_projects` MCP tool. */
-export const CNCF_CATEGORIES = [
-  "Provisioning",
-  "Runtime",
-  "Orchestration & Management",
-  "App Definition & Development",
-  "Observability & Analysis",
-  "Platform",
-] as const;
 
 /**
  * Catalog object stream plus metadata used by MCP helpers. `size` is nullable
@@ -46,9 +36,8 @@ export type CatalogObjectLoader = (env: Env, key: string) => Promise<CatalogObje
 
 /** Input for resolving and returning one JSON schema through the MCP layer. */
 export interface GetSchemaInput {
-  group: string;
+  apiVersion: string;
   kind: string;
-  version?: string;
 }
 
 /**
@@ -56,51 +45,11 @@ export interface GetSchemaInput {
  * is validated by the MCP schema before reaching these helpers.
  */
 export interface GrepSchemaInput {
-  group: string;
+  apiVersion: string;
   kind: string;
-  version?: string;
   query?: string;
   prefix?: string;
   limit: number;
-}
-
-/** Compact `search_catalog` result with the latest schema URL precomputed. */
-export interface SearchCatalogResult {
-  project: string;
-  alias: string;
-  group: string;
-  kind: string;
-  versions: string[];
-  hasFields: boolean;
-  schemaUrl: string;
-}
-
-/** One row returned by `list_projects`, with kind count but no per-kind detail. */
-export interface ProjectSummary {
-  name: string;
-  alias: string;
-  category: string;
-  version: string;
-  repo: string;
-  builtAt: string;
-  kinds: number;
-}
-
-/** Full project detail returned by `get_project`, including per-version fields availability. */
-export interface ProjectDetails {
-  name: string;
-  alias: string;
-  category: string;
-  version: string;
-  repo: string;
-  builtAt: string;
-  groups: Array<{
-    group: string;
-    kinds: Array<{
-      kind: string;
-      versions: Array<{ version: string; hasFields: boolean }>;
-    }>;
-  }>;
 }
 
 /** Canonical group/kind match resolved from case-insensitive MCP input. */
@@ -110,43 +59,36 @@ export interface ResolvedKind {
   entry: KindEntry;
 }
 
-/**
- * Builds MCP-facing search results from ranked index hits. `hasFields` reports
- * only the latest/preferred version because the returned `schemaUrl` also points
- * at `versions[0]`.
- */
-export function buildSearchResults(index: CatalogIndex, query: string, limit = 20): SearchCatalogResult[] {
-  return searchIndex(index, query, limit).map((hit) => {
-    const latest = hit.versions[0] ?? "";
-    return {
-      project: hit.project,
-      alias: hit.alias,
-      group: hit.group,
-      kind: hit.kind,
-      versions: hit.versions,
-      hasFields: hasFieldsAtVersion(hit.fieldsBits, 0),
-      schemaUrl: schemaUrl(hit.group, hit.kind, latest),
-    };
-  });
+interface ParsedApiVersionInput {
+  group: string;
+  version?: string;
 }
 
-/**
- * Lists project summaries in index order, optionally matching the display
- * category name exactly. Unknown categories simply produce an empty list because
- * the MCP input schema normally rejects invalid category values first.
- */
-export function listProjectSummaries(index: CatalogIndex, category?: string): ProjectSummary[] {
-  return index.projects
-    .filter((project) => category === undefined || categoryName(index, project) === category)
-    .map((project) => ({
-      name: project.name,
-      alias: project.alias,
-      category: categoryName(index, project),
-      version: project.version,
-      repo: project.repo,
-      builtAt: project.builtAt,
-      kinds: kindCount(project),
-    }));
+interface ResolvedSchemaTarget extends ResolvedKind {
+  version: string;
+  versionIndex: number;
+}
+
+/** Greps rendered TypeMeta-like catalog lines with a case-insensitive JavaScript RegExp. */
+export function grepCatalogText(index: CatalogIndex, query: string, limit = 20): string {
+  let regex: RegExp;
+  try {
+    regex = new RegExp(query, "i");
+  } catch (error) {
+    return invalidRegexMessage(query, error);
+  }
+
+  const lines = catalogLines(index);
+  const matches = lines.filter((line) => regex.test(line));
+  return [...matches.slice(0, limit), `# matched ${matches.length} of ${lines.length} schemas`].join("\n");
+}
+
+/** Formats project summaries as one greppable line per project, plus a metadata footer. */
+export function listProjectsText(index: CatalogIndex): string {
+  return [
+    ...index.projects.map((project) => `${project.name} ${project.version} github.com/${project.repo} ${kindCount(project)} kinds`),
+    `# ${index.projects.length} projects`,
+  ].join("\n");
 }
 
 /**
@@ -159,30 +101,9 @@ export function findProject(index: CatalogIndex, value: string): ProjectEntry | 
   return index.projects.find((project) => normalize(project.name) === needle || normalize(project.alias) === needle);
 }
 
-/**
- * Expands a compact project entry into the `get_project` response contract. The
- * `hasFields` value for each version is decoded from bit `i` of `fieldsBits`,
- * where `i` is the version's index in the sorted `versions` array.
- */
-export function projectDetails(index: CatalogIndex, project: ProjectEntry): ProjectDetails {
-  return {
-    name: project.name,
-    alias: project.alias,
-    category: categoryName(index, project),
-    version: project.version,
-    repo: project.repo,
-    builtAt: project.builtAt,
-    groups: project.groups.map((group) => ({
-      group: group.g,
-      kinds: group.kinds.map((entry) => ({
-        kind: entry[0],
-        versions: entry[1].map((version, index) => ({
-          version,
-          hasFields: hasFieldsAtVersion(entry[2], index),
-        })),
-      })),
-    })),
-  };
+/** Formats one project's API surface as a header plus TypeMeta-like lines. */
+export function projectText(project: ProjectEntry): string {
+  return [`# ${project.name} ${project.version} github.com/${project.repo}`, ...projectCatalogLines(project)].join("\n");
 }
 
 /**
@@ -226,8 +147,8 @@ export function kindNotFoundMessage(index: CatalogIndex, group: string, kind: st
   const suffix =
     candidates.length === 0
       ? ""
-      : ` Close matches: ${candidates.map((candidate) => `${candidate.group}/${candidate.kind}`).join(", ")}.`;
-  return `Kind "${group}/${kind}" was not found in the catalog.${suffix}`;
+      : ` Close matches: ${candidates.map((candidate) => `${candidate.apiVersion} ${candidate.kind}`).join(", ")}.`;
+  return `Kind "${kind}" was not found for apiVersion selector "${group}".${suffix}`;
 }
 
 /**
@@ -244,7 +165,7 @@ export function resolveVersion(entry: KindEntry, requested?: string): string | u
 
 /** Returns a human-readable version miss that includes all available versions. */
 export function versionNotFoundMessage(group: string, entry: KindEntry, version: string): string {
-  return `Version "${version}" is not available for "${group}/${entry[0]}". Available versions: ${entry[1].join(", ")}.`;
+  return `apiVersion "${formatApiVersion(group, version)}" is not available for "${kindDisplay(entry)}". Available apiVersions: ${entry[1].map((candidate) => formatApiVersion(group, candidate)).join(", ")}.`;
 }
 
 /**
@@ -265,11 +186,15 @@ export function sizeGuardText(group: string, kind: string, version: string, size
 }
 
 /**
- * Formats a regex-filtered `.fields.txt` response for MCP clients. Matching
- * lines are returned unchanged, followed by a footer with the untruncated match
- * count and total field count.
+ * Formats a regex-filtered `.fields.txt` response for MCP clients. An optional
+ * resolved-source header comes first (skipped on invalid-regex errors), then
+ * matching lines unchanged, then a footer with the untruncated match count and
+ * total field count.
  */
-export function formatGrepSchemaResponse(text: string, opts: { query?: string; prefix?: string; limit: number }): string {
+export function formatGrepSchemaResponse(
+  text: string,
+  opts: { query?: string; prefix?: string; limit: number; header?: string },
+): string {
   const lines = parseFieldsFile(text);
   let filtered: { matches: FieldLine[]; total: number };
   try {
@@ -280,7 +205,11 @@ export function formatGrepSchemaResponse(text: string, opts: { query?: string; p
     }
     throw error;
   }
-  return [...filtered.matches.map((line) => line.raw), `-- matched ${filtered.total} of ${lines.length} fields`].join("\n");
+  return [
+    ...(opts.header === undefined ? [] : [opts.header]),
+    ...filtered.matches.map((line) => line.raw),
+    `# matched ${filtered.total} of ${lines.length} fields`,
+  ].join("\n");
 }
 
 /**
@@ -311,22 +240,17 @@ export async function getSchemaText(
   input: GetSchemaInput,
   loader: CatalogObjectLoader,
 ): Promise<string> {
-  const resolved = resolveKind(index, input.group, input.kind);
-  if (resolved === undefined) {
-    return kindNotFoundMessage(index, input.group, input.kind);
+  const resolved = resolveSchemaTarget(index, input.apiVersion, input.kind);
+  if (typeof resolved === "string") {
+    return resolved;
   }
 
-  const version = resolveVersion(resolved.entry, input.version);
-  if (version === undefined) {
-    return versionNotFoundMessage(resolved.group, resolved.entry, input.version ?? "");
-  }
-
-  const obj = await loader(env, catalogKey(resolved.group, resolved.entry[0], version, "json"));
+  const obj = await loader(env, catalogKey(resolved.group, resolved.entry[0], resolved.version, "json"));
   if (obj === null) {
-    return `Schema "${resolved.group}/${resolved.entry[0]}_${version}.json" was not found at ${schemaUrl(resolved.group, resolved.entry[0], version)}.`;
+    return `Schema "${resolved.group}/${resolved.entry[0]}_${resolved.version}.json" was not found at ${schemaUrl(resolved.group, resolved.entry[0], resolved.version)}.`;
   }
 
-  const guard = sizeGuardText(resolved.group, resolved.entry[0], version, obj.size);
+  const guard = sizeGuardText(resolved.group, resolved.entry[0], resolved.version, obj.size);
   if (guard !== undefined) {
     return guard;
   }
@@ -335,9 +259,11 @@ export async function getSchemaText(
 }
 
 /**
- * Resolves and searches a `.fields.txt` object for `grep_schema`. If the index
- * says no fields file exists for the selected version, the loader is not called
- * and the response points clients at the JSON schema instead.
+ * Resolves and searches a `.fields.txt` object for `grep_schema`. Successful
+ * responses open with a `# <apiVersion> <Kind> from <project>` header so clients
+ * see which schema version and source a bare-group input resolved to. If the
+ * index says no fields file exists for the selected version, the loader is not
+ * called and the response points clients at the JSON schema instead.
  */
 export async function grepSchemaText(
   index: CatalogIndex,
@@ -345,37 +271,92 @@ export async function grepSchemaText(
   input: GrepSchemaInput,
   loader: CatalogObjectLoader,
 ): Promise<string> {
-  const resolved = resolveKind(index, input.group, input.kind);
-  if (resolved === undefined) {
-    return kindNotFoundMessage(index, input.group, input.kind);
+  const resolved = resolveSchemaTarget(index, input.apiVersion, input.kind);
+  if (typeof resolved === "string") {
+    return resolved;
   }
 
-  const version = resolveVersion(resolved.entry, input.version);
-  if (version === undefined) {
-    return versionNotFoundMessage(resolved.group, resolved.entry, input.version ?? "");
+  const url = schemaUrl(resolved.group, resolved.entry[0], resolved.version);
+  if (!hasFieldsAtVersion(resolved.entry[2], resolved.versionIndex)) {
+    return `No fields index is available for "${resolved.group}/${resolved.entry[0]}_${resolved.version}.fields.txt". Use the JSON schema directly: ${url}`;
   }
 
-  const versionIndex = resolved.entry[1].indexOf(version);
-  const url = schemaUrl(resolved.group, resolved.entry[0], version);
-  if (!hasFieldsAtVersion(resolved.entry[2], versionIndex)) {
-    return `No fields index is available for "${resolved.group}/${resolved.entry[0]}_${version}.fields.txt". Use the JSON schema directly: ${url}`;
-  }
-
-  const obj = await loader(env, catalogKey(resolved.group, resolved.entry[0], version, "fields.txt"));
+  const obj = await loader(env, catalogKey(resolved.group, resolved.entry[0], resolved.version, "fields.txt"));
   if (obj === null) {
-    return `Fields index "${resolved.group}/${resolved.entry[0]}_${version}.fields.txt" was not found. Use the JSON schema directly: ${url}`;
+    return `Fields index "${resolved.group}/${resolved.entry[0]}_${resolved.version}.fields.txt" was not found. Use the JSON schema directly: ${url}`;
   }
 
   const text = await new Response(obj.body).text();
-  return formatGrepSchemaResponse(text, { query: input.query, prefix: input.prefix, limit: input.limit });
+  const header =
+    `# ${formatApiVersion(resolved.group, resolved.version)} ${kindDisplay(resolved.entry)} ` +
+    `from ${resolved.project.name} ${resolved.project.version} github.com/${resolved.project.repo}`;
+  return formatGrepSchemaResponse(text, { query: input.query, prefix: input.prefix, limit: input.limit, header });
 }
 
-function categoryName(index: CatalogIndex, project: ProjectEntry): string {
-  return index.categories[project.cat] ?? "Uncategorized";
+function resolveSchemaTarget(index: CatalogIndex, apiVersion: string, kind: string): ResolvedSchemaTarget | string {
+  const parsed = parseApiVersionInput(apiVersion);
+  const resolved = resolveKind(index, parsed.group, kind);
+  if (resolved === undefined) {
+    return kindNotFoundMessage(index, parsed.group, kind);
+  }
+
+  const version = resolveVersion(resolved.entry, parsed.version);
+  if (version === undefined) {
+    return versionNotFoundMessage(resolved.group, resolved.entry, parsed.version ?? "");
+  }
+
+  return { ...resolved, version, versionIndex: resolved.entry[1].indexOf(version) };
+}
+
+function parseApiVersionInput(apiVersion: string): ParsedApiVersionInput {
+  const trimmed = apiVersion.trim();
+  const slash = trimmed.indexOf("/");
+  if (slash !== -1) {
+    return {
+      group: normalizeCoreGroup(trimmed.slice(0, slash).trim()),
+      version: trimmed.slice(slash + 1).trim(),
+    };
+  }
+
+  return /^v\d+((alpha|beta)\d*)?$/.test(normalize(trimmed))
+    ? { group: "core", version: trimmed }
+    : { group: normalizeCoreGroup(trimmed) };
 }
 
 function kindCount(project: ProjectEntry): number {
   return project.groups.reduce((total, group) => total + group.kinds.length, 0);
+}
+
+function catalogLines(index: CatalogIndex): string[] {
+  return index.projects.flatMap((project) => projectCatalogLines(project, true));
+}
+
+function projectCatalogLines(project: ProjectEntry, includeProject = false): string[] {
+  return project.groups.flatMap((group) =>
+    group.kinds.flatMap((entry) =>
+      entry[1].map((version, versionIndex) => catalogLine(project, group.g, entry, version, versionIndex, includeProject)),
+    ),
+  );
+}
+
+function catalogLine(
+  project: ProjectEntry,
+  group: string,
+  entry: KindEntry,
+  version: string,
+  versionIndex: number,
+  includeProject: boolean,
+): string {
+  const base = `${formatApiVersion(group, version)} ${kindDisplay(entry)}`;
+  const hasFields = hasFieldsAtVersion(entry[2], versionIndex);
+  if (includeProject) {
+    return `${base}\t# ${project.name}${hasFields ? "" : ", no fields index"}`;
+  }
+  return hasFields ? base : `${base}\t# no fields index`;
+}
+
+function formatApiVersion(group: string, version: string): string {
+  return normalize(group) === "core" ? version : `${group}/${version}`;
 }
 
 function catalogKey(group: string, kind: string, version: string, suffix: "json" | "fields.txt"): string {
@@ -384,6 +365,10 @@ function catalogKey(group: string, kind: string, version: string, suffix: "json"
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function normalizeCoreGroup(group: string): string {
+  return normalize(group) === "core" ? "core" : group;
 }
 
 function invalidRegexMessage(pattern: string, error: unknown): string {
@@ -409,10 +394,10 @@ function closeProjectMatches(index: CatalogIndex, value: string): ProjectEntry[]
     .map((entry) => entry.project);
 }
 
-function closeKindMatches(index: CatalogIndex, group: string, kind: string): Array<{ group: string; kind: string }> {
+function closeKindMatches(index: CatalogIndex, group: string, kind: string): Array<{ apiVersion: string; kind: string }> {
   const normalizedGroup = normalize(group);
   const normalizedKind = normalize(kind);
-  const candidates: Array<{ group: string; kind: string; score: number; sameGroup: boolean; includes: boolean }> = [];
+  const candidates: Array<{ apiVersion: string; kind: string; score: number; sameGroup: boolean; includes: boolean }> = [];
 
   for (const project of index.projects) {
     for (const groupEntry of project.groups) {
@@ -420,8 +405,8 @@ function closeKindMatches(index: CatalogIndex, group: string, kind: string): Arr
       for (const entry of groupEntry.kinds) {
         const entryKind = normalize(entry[0]);
         candidates.push({
-          group: groupEntry.g,
-          kind: entry[0],
+          apiVersion: formatApiVersion(groupEntry.g, latestVersion(entry)),
+          kind: kindDisplay(entry),
           score: distance(normalizedKind, entryKind),
           sameGroup,
           includes: entryKind.includes(normalizedKind),
@@ -438,10 +423,10 @@ function closeKindMatches(index: CatalogIndex, group: string, kind: string): Arr
       if (a.includes !== b.includes) {
         return a.includes ? -1 : 1;
       }
-      return a.score - b.score || a.kind.localeCompare(b.kind) || a.group.localeCompare(b.group);
+      return a.score - b.score || a.kind.localeCompare(b.kind) || a.apiVersion.localeCompare(b.apiVersion);
     })
     .slice(0, 5)
-    .map(({ group, kind }) => ({ group, kind }));
+    .map(({ apiVersion, kind }) => ({ apiVersion, kind }));
 }
 
 function distance(a: string, b: string): number {

@@ -53,11 +53,11 @@ const FEATURES: Array<{ title: string; body: string }> = [
 ];
 
 const TOOLS: Array<{ name: string; description: string }> = [
-  { name: "search_catalog", description: "Resolve a keyword to matching API groups, kinds, and versions." },
-  { name: "list_projects", description: "Enumerate the covered projects, optionally by CNCF category." },
-  { name: "get_project", description: "Fetch one project's groups, kinds, versions, and field-index coverage." },
-  { name: "get_schema", description: "Fetch the complete JSON Schema for a group/kind/version." },
-  { name: "grep_schema", description: "Grep a kind's flattened field index with case-insensitive regex: kubectl explain, greppable." },
+  { name: "grep_catalog", description: "Grep TypeMeta lines with case-insensitive regex: apiVersion, Kind, and project." },
+  { name: "list_projects", description: "Enumerate covered projects with version, GitHub repo, and kind count." },
+  { name: "get_project", description: "Fetch one project's apiVersion/Kind lines and field-index coverage." },
+  { name: "get_schema", description: "Fetch the complete JSON Schema for an apiVersion and kind." },
+  { name: "grep_schema", description: "Grep an apiVersion/kind flattened field index with case-insensitive regex." },
 ];
 
 /**

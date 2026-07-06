@@ -5,13 +5,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createMcpHandler, WorkerTransport } from "agents/mcp";
 import { z } from "zod";
 import {
-  buildSearchResults,
-  CNCF_CATEGORIES,
   findProject,
   getSchemaText,
+  grepCatalogText,
   grepSchemaText,
-  listProjectSummaries,
-  projectDetails,
+  listProjectsText,
+  projectText,
   projectNotFoundMessage,
 } from "./mcp-core.ts";
 import { getCatalogObject } from "./catalog.ts";
@@ -22,7 +21,7 @@ import { loadIndex } from "./index-data.ts";
  * System instructions sent to MCP clients. They position the catalog as the
  * authoritative source for Kubernetes-ecosystem API definitions, tell agents
  * exactly when to reach for it (any manifest work), and prescribe the cheap
- * discover -> `grep_schema` -> `get_schema` escalation path.
+ * `grep_catalog` -> `grep_schema` -> `get_schema` escalation path.
  */
 const instructions =
   "An LLM-friendly `kubectl explain` for the whole Kubernetes ecosystem, no cluster required: authoritative " +
@@ -31,35 +30,28 @@ const instructions =
   "Use these tools whenever you generate, edit, review, or validate a Kubernetes manifest or custom resource: " +
   "look up the real kinds, field names, types, constraints, required values, and apiVersions here instead of " +
   "reconstructing them from training data. " +
-  "Flow: discover with `search_catalog` (or `list_projects`/`get_project`) to pin down the API group, kind, and " +
-  "available versions; answer most field questions with `grep_schema`, which runs case-insensitive JavaScript regex over " +
-  "compact flattened field lines (path, type, constraints, description); call `get_schema` " +
-  "only when you need the complete JSON Schema. Schemas are versioned per apiVersion — request the exact " +
-  "version the manifest targets.";
+  "Flow: discover with `grep_catalog`, answer field questions with `grep_schema`, and call `get_schema` " +
+  "only when you need the complete JSON Schema.";
 
-const SearchCatalogInput = z.object({
-  query: z.string().min(2),
-  limit: z.number().int().min(1).max(100).default(20),
+const GrepCatalogInput = z.object({
+  query: z.string().min(1),
+  limit: z.number().int().min(1).max(500).default(20),
 });
 
-const ListProjectsInput = z.object({
-  category: z.enum(CNCF_CATEGORIES).optional(),
-});
+const ListProjectsInput = z.object({});
 
 const GetProjectInput = z.object({
   project: z.string().min(1),
 });
 
 const GetSchemaInput = z.object({
-  group: z.string().min(1),
+  apiVersion: z.string().min(1),
   kind: z.string().min(1),
-  version: z.string().min(1).optional(),
 });
 
 const GrepSchemaInput = z.object({
-  group: z.string().min(1),
+  apiVersion: z.string().min(1),
   kind: z.string().min(1),
-  version: z.string().min(1).optional(),
   query: z.string().optional(),
   prefix: z.string().optional(),
   limit: z.number().int().min(1).max(500).default(200),
@@ -86,16 +78,17 @@ function createCatalogMcpServer(env: Env): McpServer {
   );
 
   server.registerTool(
-    "search_catalog",
+    "grep_catalog",
     {
-      title: "Search catalog",
-      description: "Resolve a keyword (project, API group, or kind) to matching groups, kinds, and versions. Start here when you don't yet know the exact group/kind a manifest needs.",
-      inputSchema: SearchCatalogInput,
+      title: "Grep catalog",
+      description:
+        "Grep the catalog of kinds with JavaScript RegExp syntax; returns one line per apiVersion: `<apiVersion> <Kind>  # project`. Start here to resolve what a manifest needs.",
+      inputSchema: GrepCatalogInput,
     },
     async (args) =>
       textResultFrom(async () => {
         const index = await loadIndex(env);
-        return JSON.stringify(buildSearchResults(index, args.query, args.limit), null, 2);
+        return grepCatalogText(index, args.query, args.limit);
       }),
   );
 
@@ -103,13 +96,14 @@ function createCatalogMcpServer(env: Env): McpServer {
     "list_projects",
     {
       title: "List projects",
-      description: "Enumerate every project in the catalog — Kubernetes, OpenShift, Flux, and CNCF controllers and operators — optionally filtered by CNCF category. Use it to check coverage or browse by area.",
+      description:
+        "Enumerate every project in catalog order as plain-text lines with project name, version, GitHub repo, and kind count.",
       inputSchema: ListProjectsInput,
     },
-    async (args) =>
+    async () =>
       textResultFrom(async () => {
         const index = await loadIndex(env);
-        return JSON.stringify(listProjectSummaries(index, args.category), null, 2);
+        return listProjectsText(index);
       }),
   );
 
@@ -117,7 +111,8 @@ function createCatalogMcpServer(env: Env): McpServer {
     "get_project",
     {
       title: "Get project",
-      description: "Fetch one project's full API surface by name or alias: its groups, kinds, apiVersions, and which versions have a field index.",
+      description:
+        "Fetch one project's TypeMeta lines by name or alias, including every apiVersion/Kind pair and field-index coverage.",
       inputSchema: GetProjectInput,
     },
     async (args) =>
@@ -126,7 +121,7 @@ function createCatalogMcpServer(env: Env): McpServer {
         const project = findProject(index, args.project);
         return project === undefined
           ? projectNotFoundMessage(index, args.project)
-          : JSON.stringify(projectDetails(index, project), null, 2);
+          : projectText(project);
       }),
   );
 
@@ -134,7 +129,8 @@ function createCatalogMcpServer(env: Env): McpServer {
     "get_schema",
     {
       title: "Get schema",
-      description: "Fetch the complete JSON Schema for a group/kind/version when you need every field to author or strictly validate a resource; oversized schemas return a direct URL and a pointer to grep_schema.",
+      description:
+        "Fetch the complete JSON Schema for an apiVersion and kind when you need every field; oversized schemas return a direct URL and a pointer to grep_schema.",
       inputSchema: GetSchemaInput,
     },
     async (args) =>
@@ -148,7 +144,8 @@ function createCatalogMcpServer(env: Env): McpServer {
     "grep_schema",
     {
       title: "Grep schema",
-      description: "Grep a kind's flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per line (path, type, constraints, description). A greppable `kubectl explain --recursive` — prefer it for targeted field lookup.",
+      description:
+        "Grep an apiVersion/kind flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per field line. Prefer it for targeted field lookup.",
       inputSchema: GrepSchemaInput,
     },
     async (args) =>

@@ -87,9 +87,9 @@ beta, beta before alpha, higher major/sequence before lower. Bit `i` in
 
 Endpoint: streamable HTTP at <https://schemas.fluxoperator.dev/mcp>, no
 authentication. The catalog is framed to agents as an LLM-friendly
-`kubectl explain` — an authoritative, cluster-free source of
+`kubectl explain`, an authoritative, cluster-free source of
 Kubernetes-ecosystem API definitions for generating, editing, and validating
-manifests — not as a `flux-schema` backend. The human-facing overview page is
+manifests, not as a `flux-schema` backend. The human-facing overview page is
 at <https://schemas.fluxoperator.dev/agents> (SPA route
 `src/ui/views/mcp.ts`; `/mcp-server` and legacy `#/...` hash URLs are
 aliases). The `/`, `/agents`, and `/cli` pages are prerendered at build time
@@ -99,14 +99,15 @@ single-page-application mode.
 
 | Tool             | Description                                                                   |
 |------------------|-------------------------------------------------------------------------------|
-| `search_catalog` | Resolve a keyword (project, group, or kind) to matching groups/kinds/versions |
-| `list_projects`  | Enumerate catalog projects, optionally filtered by CNCF category              |
-| `get_project`    | Fetch one project's groups, kinds, versions, and field-index coverage         |
-| `get_schema`     | Fetch the full JSON Schema for a group/kind/version (256 KiB inline guard)    |
-| `grep_schema`    | Search flattened field index lines for a kind with case-insensitive regex     |
+| `grep_catalog`   | Grep TypeMeta lines with case-insensitive regex: apiVersion, Kind, and project |
+| `list_projects`  | Enumerate catalog projects with version, GitHub repo, and kind count          |
+| `get_project`    | Fetch one project's apiVersion/Kind lines and field-index coverage            |
+| `get_schema`     | Fetch the full JSON Schema for an apiVersion and kind (256 KiB inline guard)  |
+| `grep_schema`    | Search flattened field index lines for an apiVersion and kind with case-insensitive regex |
 
-The server `instructions` steer agents through a discover → `grep_schema` →
-`get_schema` escalation so most field questions never load a full schema.
+The server `instructions` steer agents through a `grep_catalog` ->
+`grep_schema` -> `get_schema` escalation so most field questions never load a
+full schema.
 
 ```shell
 claude mcp add --transport http flux-schema-catalog https://schemas.fluxoperator.dev/mcp
