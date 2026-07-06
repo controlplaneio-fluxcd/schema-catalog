@@ -6,9 +6,15 @@ schemas power `flux-schema validate`; the `.fields.txt` indexes are an
 offline `kubectl explain` replacement for AI agents (one greppable line per
 field: dotted path, type, constraints, description).
 
-For build system internals — dataflow, module map, extraction model, history
-manifest invariants — read [build/src/README.md](build/src/README.md) before
-touching anything under `build/src/`.
+Two subsystems, each with its own reference doc — read the relevant one before
+changing that subsystem:
+
+- **`build/`** — the Bun/TypeScript builder that generates `catalog/` from
+  `sources.yaml`. Dataflow, module map, extraction model, history-manifest
+  invariants and the add-a-source recipe: [build/README.md](build/README.md).
+- **`web/`** — the Cloudflare Worker that serves the catalog, explorer UI and
+  MCP endpoint. Architecture, routing, caching and index generation:
+  [web/README.md](web/README.md).
 
 ## Layout
 
@@ -17,7 +23,8 @@ touching anything under `build/src/`.
 | `catalog/<group>/`          | **Generated.** `<kind>_<version>.json` + `.fields.txt` siblings  |
 | `build/config/sources.yaml` | Catalog sources config — the only file to edit to add a project  |
 | `build/history/*.json`      | **Generated.** Per-source provenance manifests                   |
-| `build/src/`                | The Bun build system ([internals](build/src/README.md))          |
+| `build/`                    | The Bun build system ([build/README.md](build/README.md))        |
+| `web/`                      | The Cloudflare Worker: catalog serving, UI, MCP ([web/README.md](web/README.md)) |
 | `README.md`                 | Versions table between markers is **generated**                  |
 | `.github/workflows/`        | `test.yaml` (lint+test), `update-catalog.yaml` (daily build+PR)  |
 | `plans/`                    | Git-ignored local scratch — never reference it in committed files |
@@ -32,7 +39,7 @@ touching anything under `build/src/`.
   `Bun.$`, `bun test` and node builtins.
 - **Adding a catalog source is config-only**: edit `build/config/sources.yaml`,
   nothing else — no code, no test changes. See the
-  [recipe](build/src/README.md#adding-a-source).
+  [recipe](build/README.md#adding-a-source).
 - **flux-schema binary**: resolved from `FLUX_SCHEMA_BIN` (a single binary
   path), else PATH. Locally, Bun auto-loads the git-ignored `build/.env`;
   CI installs a released CLI via `fluxcd/flux-schema/actions/setup`.
@@ -52,8 +59,8 @@ make test    # bun test — pure logic only, needs no Flux CLIs or network
 make build   # full catalog build; FORCE_BUILD=1 and BUILD_SUMMARY=<path> opt in
 ```
 
-Direct CLI (from `build/`): `bun src/main.ts build [--source <name>]
-[--force] [--summary <path>]` and `bun src/main.ts regen [--source <name>]`.
+The underlying `bun src/main.ts build|regen` flags and env vars are documented
+in [build/README.md](build/README.md#cli).
 
 ## Verification
 
