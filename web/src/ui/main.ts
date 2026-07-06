@@ -7,6 +7,7 @@ import { installRouter, type Route } from "./router.ts";
 import { initializeTheme } from "./theme.ts";
 import { renderHome } from "./views/home.ts";
 import { renderKind } from "./views/kind.ts";
+import { renderMcp } from "./views/mcp.ts";
 import { renderProject } from "./views/project.ts";
 
 let catalogIndex: CatalogIndex;
@@ -57,6 +58,10 @@ function renderRoute(route: Route): void {
   clear(appElement);
   if (route.name === "home") {
     appElement.append(renderHome(catalogIndex));
+    return;
+  }
+  if (route.name === "mcp") {
+    appElement.append(renderMcp(catalogIndex));
     return;
   }
   if (route.name === "project") {

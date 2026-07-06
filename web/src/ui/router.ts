@@ -8,6 +8,7 @@
  */
 export type Route =
   | { name: "home" }
+  | { name: "mcp" }
   | { name: "project"; project: string }
   | { name: "kind"; group: string; kind: string; version: string }
   | { name: "not-found"; path: string };
@@ -26,6 +27,11 @@ export function installRouter(render: (route: Route) => void): () => void {
 /** Returns the hash URL for the catalog overview. */
 export function homeRoute(): string {
   return "#/";
+}
+
+/** Returns the hash URL for the MCP server page. */
+export function mcpRoute(): string {
+  return "#/mcp-server";
 }
 
 /** Returns the hash URL for a project source name, URL-encoding the segment. */
@@ -54,6 +60,10 @@ export function parseRoute(hash: string): Route {
     parts = rawParts.map((part) => decodeURIComponent(part));
   } catch {
     return { name: "not-found", path };
+  }
+
+  if (parts[0] === "mcp-server" && parts.length === 1) {
+    return { name: "mcp" };
   }
 
   if (parts[0] === "p" && parts.length === 2 && parts[1] !== undefined && parts[1] !== "") {

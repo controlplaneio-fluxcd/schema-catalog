@@ -5,7 +5,7 @@ import { latestVersion, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
 import type { CatalogIndex } from "../../shared/types.ts";
 import { clear, kindCount, link, schemaCount, text } from "../dom.ts";
-import { kindRoute, projectRoute } from "../router.ts";
+import { kindRoute, mcpRoute, projectRoute } from "../router.ts";
 import { createThemeToggle } from "../theme.ts";
 
 const VALIDATE_COMMAND = "flux-schema validate <path> --schema-location https://schemas.fluxoperator.dev/catalog";
@@ -81,7 +81,7 @@ export function renderHome(index: CatalogIndex): HTMLElement {
   footer.append(
     text("span", "", `${schemas.toLocaleString("en-US")} schemas`),
     link("https://github.com/controlplaneio-fluxcd/schema-catalog", "GitHub"),
-    link("/mcp", "MCP endpoint"),
+    link(mcpRoute(), "MCP server"),
     link("https://fluxoperator.dev", "fluxoperator.dev"),
   );
 

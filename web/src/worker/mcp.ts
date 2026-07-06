@@ -19,14 +19,22 @@ import type { Env } from "./index.ts";
 import { loadIndex } from "./index-data.ts";
 
 /**
- * System instructions sent to MCP clients. They describe the catalog as a
- * validation schema source plus field-index lookup service so agents prefer the
- * narrow `search_fields` path before fetching full schemas.
+ * System instructions sent to MCP clients. They position the catalog as the
+ * authoritative source for Kubernetes-ecosystem API definitions, tell agents
+ * exactly when to reach for it (any manifest work), and prescribe the cheap
+ * discover -> `search_fields` -> `get_schema` escalation path.
  */
 const instructions =
-  "This catalog powers `flux-schema validate --schema-location https://schemas.fluxoperator.dev/catalog`. " +
-  "Use these tools to discover Kubernetes, OpenShift, Flux ecosystem, and CNCF project schemas. " +
-  "The fields indexes are greppable one-line-per-field files for quick field lookup without reading full JSON schemas.";
+  "Authoritative JSON Schemas and field indexes for the Kubernetes ecosystem: core Kubernetes, OpenShift, " +
+  "the Flux ecosystem, and a broad set of CNCF projects, controllers, and operators. " +
+  "Use these tools whenever you generate, edit, review, or validate a Kubernetes manifest or custom resource: " +
+  "look up the real kinds, field names, types, constraints, required values, and apiVersions here instead of " +
+  "reconstructing them from training data. " +
+  "Flow: discover with `search_catalog` (or `list_projects`/`get_project`) to pin down the API group, kind, and " +
+  "available versions; answer most field questions with `search_fields`, which returns one compact line per " +
+  "field (path, type, constraints, description) at a fraction of the cost of a full schema; call `get_schema` " +
+  "only when you need the complete JSON Schema. Schemas are versioned per apiVersion — request the exact " +
+  "version the manifest targets.";
 
 const SearchCatalogInput = z.object({
   query: z.string().min(2),
@@ -80,7 +88,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     "search_catalog",
     {
       title: "Search catalog",
-      description: "Search projects, API groups, and kinds in the Flux schema catalog.",
+      description: "Resolve a keyword (project, API group, or kind) to matching groups, kinds, and versions. Start here when you don't yet know the exact group/kind a manifest needs.",
       inputSchema: SearchCatalogInput,
     },
     async (args) =>
@@ -94,7 +102,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     "list_projects",
     {
       title: "List projects",
-      description: "List catalog projects, optionally filtered by CNCF category.",
+      description: "Enumerate every project in the catalog — Kubernetes, OpenShift, Flux, and CNCF controllers and operators — optionally filtered by CNCF category. Use it to check coverage or browse by area.",
       inputSchema: ListProjectsInput,
     },
     async (args) =>
@@ -108,7 +116,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     "get_project",
     {
       title: "Get project",
-      description: "Get one project by name or alias, with groups, kinds, versions, and fields availability.",
+      description: "Fetch one project's full API surface by name or alias: its groups, kinds, apiVersions, and which versions have a field index.",
       inputSchema: GetProjectInput,
     },
     async (args) =>
@@ -125,7 +133,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     "get_schema",
     {
       title: "Get schema",
-      description: "Return a JSON schema text when small enough; large schemas return a direct URL and search_fields advice.",
+      description: "Fetch the complete JSON Schema for a group/kind/version when you need every field to author or strictly validate a resource; oversized schemas return a direct URL and a pointer to search_fields.",
       inputSchema: GetSchemaInput,
     },
     async (args) =>
@@ -139,7 +147,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     "search_fields",
     {
       title: "Search fields",
-      description: "Search a greppable fields.txt index by raw query text and/or field path prefix.",
+      description: "Query a kind's field index for exact field paths, types, constraints, and descriptions — one line per field, far cheaper than the full schema. Prefer this for targeted field questions.",
       inputSchema: SearchFieldsInput,
     },
     async (args) =>
