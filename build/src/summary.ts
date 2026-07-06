@@ -1,6 +1,8 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
+import { displayVersion } from "./resolve.ts";
+
 /** A source rebuilt during this run, for the PR body. */
 export interface BuildChange {
   repo: string;
@@ -36,8 +38,8 @@ export function renderBuildSummary(
       ...changes.map((c) => {
         const version =
           c.prevVersion === null || c.prevVersion === c.version
-            ? c.version
-            : `${c.prevVersion} -> ${c.version}`;
+            ? displayVersion(c.version)
+            : `${displayVersion(c.prevVersion)} -> ${displayVersion(c.version)}`;
         const delta = c.added > 0 || c.removed > 0 ? ` (+${c.added} -${c.removed})` : "";
         return `| [${c.repo}](https://github.com/${c.repo}) | ${version} | ${c.files}${delta} |`;
       }),

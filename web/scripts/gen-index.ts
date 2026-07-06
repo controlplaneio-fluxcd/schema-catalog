@@ -5,6 +5,7 @@ import { mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CATEGORIES, loadSources, repoOf } from "../../build/src/config.ts";
+import { displayVersion } from "../../build/src/resolve.ts";
 import type { HistoryEntry, Source } from "../../build/src/types.ts";
 import { compareApiVersion } from "../src/shared/index-query.ts";
 import type { CatalogIndex, GroupEntry, KindEntry, ProjectEntry } from "../src/shared/types.ts";
@@ -62,7 +63,7 @@ export function generateIndex(sources: Source[], entries: HistoryEntry[]): Catal
       alias: source.alias,
       cat,
       repo: repoOf(source),
-      version: entry.version,
+      version: displayVersion(entry.version),
       builtAt: entry.builtAt.slice(0, 10),
       groups,
     });

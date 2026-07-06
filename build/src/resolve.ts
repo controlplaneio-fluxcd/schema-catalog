@@ -69,6 +69,20 @@ export function semverOf(tag: string): string {
   return tag.match(/\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?/)?.[0] ?? tag;
 }
 
+/**
+ * The human-facing version for the README table, field-index headers and web
+ * index: the resolved tag with any project-name prefix stripped, keeping the
+ * leading `v` only when the upstream tag has one (`operator/v0.10.2` → `v0.10.2`,
+ * `opensearch-operator-3.0.2` → `3.0.2`, `knative-v1.22.2` → `v1.22.2`). The
+ * full tag stays the source of record in the history manifest because it
+ * doubles as the git ref for extraction — this is a pure display derivation.
+ * A tag with no dotted version (never a resolved version in practice) falls
+ * back to itself unchanged.
+ */
+export function displayVersion(version: string): string {
+  return version.match(/v?\d+\.\d+.*/)?.[0] ?? version;
+}
+
 export function normalizeVersion(version: string): string {
   return /^\d/.test(version) ? `v${version}` : version;
 }

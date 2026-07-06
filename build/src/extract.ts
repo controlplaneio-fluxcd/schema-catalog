@@ -5,7 +5,7 @@ import { $, YAML } from "bun";
 import { repoOf } from "./config.ts";
 import { downloadAsset, fetchCrdDir, fetchCrdFile, findReleaseAsset } from "./github.ts";
 import { FLUX_SCHEMA_BIN } from "./paths.ts";
-import { bareVersion, openshiftRef } from "./resolve.ts";
+import { bareVersion, displayVersion, openshiftRef } from "./resolve.ts";
 import type { CrdSource, FluxInstance, Source } from "./types.ts";
 
 /** Reports the version of the flux-schema binary in use. */
@@ -22,7 +22,8 @@ export async function extractSource(source: Source, version: string, dir: string
   const flags = [
     "--strip-description=false",
     "--with-field-index",
-    `--index-source=${source.alias} ${version} ${source.url}`,
+    // The header shows the stripped version; the git ref below stays the full tag.
+    `--index-source=${source.alias} ${displayVersion(version)} ${source.url}`,
     "--output-format={{ .Group }}/{{ .Kind }}_{{ .Version }}.json",
     `--output-dir=${dir}`,
   ];

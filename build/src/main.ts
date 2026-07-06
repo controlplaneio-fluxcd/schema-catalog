@@ -22,7 +22,7 @@ import {
 } from "./history.ts";
 import { README_PATH, ROOT_DIR, SOURCES_PATH } from "./paths.ts";
 import { updateReadme } from "./readme.ts";
-import { resolveVersion } from "./resolve.ts";
+import { displayVersion, resolveVersion } from "./resolve.ts";
 import { renderBuildSummary } from "./summary.ts";
 import type { BuildChange, OrphanRemoval } from "./summary.ts";
 import type { HistoryEntry, Source } from "./types.ts";
@@ -76,10 +76,10 @@ async function processSource(
     version = await resolveVersion(source);
     if (!opts.force && prev?.version === version) {
       if (await historyFilesPresent(prev)) {
-        console.log(`  ${source.name}: ${version} is up to date, skipped`);
+        console.log(`  ${source.name}: ${displayVersion(version)} is up to date, skipped`);
         return null;
       }
-      console.log(`  ${source.name}: ${version} has missing catalog files, rebuilding`);
+      console.log(`  ${source.name}: ${displayVersion(version)} has missing catalog files, rebuilding`);
     }
   }
 
@@ -123,7 +123,7 @@ async function processSource(
     const prevSet = new Set(prev?.files ?? []);
     const added = files.filter((f) => !prevSet.has(f)).length;
     console.log(
-      `  ${source.name}: ${prev?.version ?? "none"} -> ${version},` +
+      `  ${source.name}: ${prev ? displayVersion(prev.version) : "none"} -> ${displayVersion(version)},` +
         ` ${files.length} files (+${added} -${removed.length})`,
     );
     return {
@@ -241,7 +241,7 @@ async function main(): Promise<number> {
     alias: source.alias,
     category: source.category,
     name: entry.name,
-    version: entry.version,
+    version: displayVersion(entry.version),
     builtAt: entry.builtAt,
     schemas: entry.files.filter((f) => f.endsWith(".json")).length,
   }));

@@ -10,6 +10,7 @@ import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./
 import { renderBuildSummary } from "./summary.ts";
 import {
   bareVersion,
+  displayVersion,
   normalizeVersion,
   openshiftRef,
   pickLatestOpenShift,
@@ -133,6 +134,22 @@ describe("version helpers", () => {
 
   test("openshiftRef passes branch-name pins through unchanged", () => {
     expect(openshiftRef("release-4.20")).toBe("release-4.20");
+  });
+
+  test("displayVersion strips the project-name prefix, keeping an upstream v", () => {
+    expect(displayVersion("operator/v0.10.2")).toBe("v0.10.2");
+    expect(displayVersion("knative-v1.22.2")).toBe("v1.22.2");
+    expect(displayVersion("opensearch-operator-3.0.2")).toBe("3.0.2");
+    expect(displayVersion("gha-runner-scale-set-0.14.2")).toBe("0.14.2");
+    expect(displayVersion("mariadb-operator-crds-26.6.0")).toBe("26.6.0");
+    expect(displayVersion("vertical-pod-autoscaler-1.7.0")).toBe("1.7.0");
+  });
+
+  test("displayVersion leaves unprefixed versions untouched", () => {
+    expect(displayVersion("v5.24.0")).toBe("v5.24.0");
+    expect(displayVersion("0.51.0")).toBe("0.51.0");
+    expect(displayVersion("v4.20")).toBe("v4.20");
+    expect(displayVersion("v3.0.0-alpha.2")).toBe("v3.0.0-alpha.2");
   });
 });
 
