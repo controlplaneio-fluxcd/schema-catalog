@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-101-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C410-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-564%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-101-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C197-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-548%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -157,7 +157,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | KEDA | [v2.20.1](build/history/keda.json) | 6 | 2026-07-05 |
 | kjob | [v0.1.0](build/history/kjob.json) | 5 | 2026-07-05 |
 | KubeEdge | [v1.23.0](build/history/kubeedge.json) | 18 | 2026-07-05 |
-| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 191 | 2026-07-05 |
+| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-05 |
 | Kueue | [v0.18.2](build/history/kueue.json) | 22 | 2026-07-05 |
 | KWOK | [v0.8.0](build/history/kwok.json) | 12 | 2026-07-05 |
 | LeaderWorkerSet | [v0.9.0](build/history/lws.json) | 2 | 2026-07-05 |
@@ -206,7 +206,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
-| OpenShift | [v4.20](build/history/openshift.json) | 256 | 2026-07-05 |
+| OpenShift | [v4.20](build/history/openshift.json) | 133 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
