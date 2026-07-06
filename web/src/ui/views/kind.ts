@@ -7,7 +7,6 @@ import { findKind, kindDisplay } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../../shared/types.ts";
 import {
   clear,
-  createBadge,
   createBreadcrumb,
   createPage,
   hasFields,
@@ -17,12 +16,14 @@ import {
 } from "../dom.ts";
 import { homeRoute, kindRoute, projectRoute } from "../router.ts";
 
-/**
- * Copyable validation command shown in the kind view. It intentionally points at
- * the public catalog root, not a specific schema URL, because `flux-schema`
- * resolves GVK-specific files beneath that root.
- */
-const VALIDATE_COMMAND = "flux-schema validate <path> --schema-location https://schemas.fluxoperator.dev/catalog";
+/** Streamable-HTTP MCP endpoint copied by the hero's Copy MCP Server button. */
+const MCP_ENDPOINT = "https://schemas.fluxoperator.dev/mcp";
+
+const MCP_ICON =
+  '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" aria-hidden="true"><path d="M25 97.8528L92.8823 29.9706C102.255 20.598 117.451 20.598 126.823 29.9706C136.196 39.3431 136.196 54.5391 126.823 63.9117L75.5581 115.177"/><path d="M76.2653 114.47L126.823 63.9117C136.196 54.5391 151.392 54.5391 160.765 63.9117L161.118 64.2652C170.491 73.6378 170.491 88.8338 161.118 98.2063L99.7248 159.6C96.6006 162.724 96.6006 167.789 99.7248 170.913L112.331 183.52"/><path d="M109.853 46.9411L59.6482 97.1457C50.2757 106.518 50.2757 121.714 59.6482 131.087C69.0208 140.459 84.2168 140.459 93.5894 131.087L143.794 80.8822"/></svg>';
+
+const DOWNLOAD_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
 /**
  * Renders a concrete group/kind/version page with schema links and, when
@@ -49,7 +50,6 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
       { label: display },
     ]),
     createKindHero(found.project, found.entry, group, kind, version, display),
-    createActions(found.entry, group, kind, version, versionIndex),
   );
 
   const content = document.createElement("section");
@@ -95,35 +95,50 @@ function createKindHero(
     }
     switcher.append(chip);
   });
+  meta.append(switcher, createHeroActions(group, kind, version));
 
-  hero.append(title, gvk, meta, switcher);
+  hero.append(title, gvk, meta);
   return hero;
 }
 
-function createActions(entry: KindEntry, group: string, kind: string, version: string, versionIndex: number): HTMLElement {
-  const actions = document.createElement("section");
-  actions.className = "action-row";
+/** MCP copy and schema download, kept on the version row instead of a bar. */
+function createHeroActions(group: string, kind: string, version: string): HTMLElement {
+  const actions = document.createElement("div");
+  actions.className = "meta-actions";
 
-  actions.append(link(schemaUrl(group, kind, version), "Raw JSON schema", "button-link"));
-  if (hasFields(entry, versionIndex)) {
-    actions.append(link(fieldsUrl(group, kind, version), "Raw fields.txt", "button-link"));
-  }
-
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = "button-link";
-  copy.textContent = "Copy validate command";
-  copy.addEventListener("click", () => {
-    void navigator.clipboard.writeText(VALIDATE_COMMAND).then(
+  const mcp = document.createElement("button");
+  mcp.type = "button";
+  mcp.className = "button-link mcp-copy";
+  mcp.innerHTML = MCP_ICON;
+  mcp.append(text("span", "", "Copy MCP Server"));
+  mcp.title = `Copy the MCP endpoint: ${MCP_ENDPOINT}`;
+  mcp.setAttribute("aria-label", "Copy the MCP server endpoint");
+  const label = mcp.querySelector("span");
+  mcp.addEventListener("click", () => {
+    void navigator.clipboard.writeText(MCP_ENDPOINT).then(
       () => {
-        copy.textContent = "Copied";
+        if (label !== null) {
+          label.textContent = "Copied";
+          setTimeout(() => {
+            label.textContent = "Copy MCP Server";
+          }, 1600);
+        }
       },
-      (error: unknown) => {
-        copy.textContent = error instanceof Error ? `Copy failed: ${error.message}` : "Copy failed";
+      () => {
+        if (label !== null) {
+          label.textContent = "Copy failed";
+        }
       },
     );
   });
-  actions.append(copy);
+
+  const download = link(schemaUrl(group, kind, version), "", "icon-button");
+  download.innerHTML = DOWNLOAD_ICON;
+  download.setAttribute("download", `${kind}_${version}.json`);
+  download.title = "Download JSON schema";
+  download.setAttribute("aria-label", "Download JSON schema");
+
+  actions.append(mcp, download);
   return actions;
 }
 
@@ -178,9 +193,9 @@ function renderFieldsExplorer(content: HTMLElement, lines: FieldLine[]): void {
   filter.name = "field-filter";
   filter.className = "filter-input";
   filter.type = "search";
-  filter.placeholder = "Filter fields…";
+  filter.placeholder = "Filter fields (regex)…";
   filter.autocomplete = "off";
-  filter.setAttribute("aria-label", "Filter fields");
+  filter.setAttribute("aria-label", "Filter fields, regex supported");
 
   const count = text("span", "fields-count", "");
   toolbar.append(filter, count);
@@ -227,14 +242,56 @@ function renderFieldList(lines: FieldLine[]): HTMLElement {
     const row = document.createElement("div");
     row.className = "field-row";
     row.append(
-      text("code", "field-path", line.path),
+      createFieldPath(line.path),
       text("span", "field-type", line.type),
-      text("span", "field-constraints muted", line.constraints),
+      ...renderConstraintTokens(line.constraints),
       createDescription(line.description),
     );
     list.append(row);
   }
   return list;
+}
+
+/** Renders a dotted path with the parent segments dimmed and the leaf bold. */
+function createFieldPath(path: string): HTMLElement {
+  const element = document.createElement("code");
+  element.className = "field-path";
+  const cut = path.lastIndexOf(".");
+  if (cut === -1) {
+    element.append(text("span", "field-path-leaf", path));
+  } else {
+    element.append(
+      text("span", "field-path-parent", path.slice(0, cut + 1)),
+      text("span", "field-path-leaf", path.slice(cut + 1)),
+    );
+  }
+  return element;
+}
+
+/**
+ * Tokenizes a constraints string following the fields-index line grammar:
+ * parenthesized markers become chips, `key=value` pairs keep the key dim and
+ * the value highlighted. Values are JSON-encoded upstream, so a quoted pattern
+ * never splits mid-token.
+ */
+function renderConstraintTokens(constraints: string): HTMLElement[] {
+  const tokens: HTMLElement[] = [];
+  const pattern = /\((required|immutable|deprecated|cluster-scoped)\)|([a-z]+)=("(?:[^"\\]|\\.)*"|\S+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(constraints)) !== null) {
+    if (match[1] !== undefined) {
+      const marker = match[1];
+      const variant = marker === "required" ? "required" : marker === "deprecated" ? "deprecated" : "neutral";
+      tokens.push(text("span", `constraint-marker constraint-${variant}`, marker));
+      continue;
+    }
+    const pair = document.createElement("span");
+    pair.className = "constraint-pair";
+    pair.append(text("span", "constraint-key", `${match[2] ?? ""}=`), text("span", "constraint-value", match[3] ?? ""));
+    pair.title = match[0];
+    tokens.push(pair);
+  }
+  return tokens;
 }
 
 function renderFieldTree(root: FieldNode): HTMLElement {
@@ -289,14 +346,8 @@ function createFieldSummary(node: FieldNode): HTMLElement {
   summary.append(marker, segment);
 
   if (node.line !== undefined) {
-    const constraints = splitConstraints(node.line.constraints);
     summary.append(text("span", "field-type", node.line.type));
-    if (constraints.required) {
-      summary.append(createBadge("(required)", "required-badge"));
-    }
-    if (constraints.remaining !== "") {
-      summary.append(text("span", "field-constraints muted", constraints.remaining));
-    }
+    summary.append(...renderConstraintTokens(node.line.constraints));
     summary.append(createDescription(node.line.description));
   }
 
@@ -309,15 +360,6 @@ function createDescription(description: string): HTMLElement {
     element.title = description;
   }
   return element;
-}
-
-function splitConstraints(value: string): { required: boolean; remaining: string } {
-  const required = /\brequired\b/i.test(value);
-  const remaining = value
-    .replace(/\(?\brequired\b\)?/gi, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-  return { required, remaining };
 }
 
 function schemaUrl(group: string, kind: string, version: string): string {

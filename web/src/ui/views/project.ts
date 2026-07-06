@@ -41,15 +41,7 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
   for (const group of project.groups) {
     const section = document.createElement("section");
     section.className = "group-section";
-    section.append(text("h2", "mono section-title", group.g));
-
-    const scroller = document.createElement("div");
-    scroller.className = "table-scroll";
-    const table = document.createElement("table");
-    table.className = "kind-table";
-    table.append(createTableHead(), createTableBody(group.g, group.kinds));
-    scroller.append(table);
-    section.append(scroller);
+    section.append(text("h2", "mono section-title", group.g), createKindGrid(group.g, group.kinds));
     page.append(section);
   }
 
@@ -75,35 +67,31 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
   return hero;
 }
 
-function createTableHead(): HTMLTableSectionElement {
-  const thead = document.createElement("thead");
-  const row = document.createElement("tr");
-  row.append(text("th", "", "Kind"), text("th", "", "Versions"));
-  thead.append(row);
-  return thead;
-}
-
-function createTableBody(group: string, kinds: KindEntry[]): HTMLTableSectionElement {
-  const tbody = document.createElement("tbody");
+/**
+ * Renders a group's kinds as a responsive grid cell per kind: the kind link
+ * followed by its version chips, so version columns never zigzag down the page.
+ */
+function createKindGrid(group: string, kinds: KindEntry[]): HTMLElement {
+  const grid = document.createElement("div");
+  grid.className = "kind-grid";
   for (const entry of kinds) {
     const latest = latestVersion(entry);
-    const row = document.createElement("tr");
-    const kindCell = document.createElement("td");
-    kindCell.append(link(kindRoute(group, entry[0], latest), kindDisplay(entry), "kind-link mono"));
+    const cell = document.createElement("div");
+    cell.className = "kind-cell";
+    cell.append(link(kindRoute(group, entry[0], latest), kindDisplay(entry), "kind-link mono"));
 
-    const versionsCell = document.createElement("td");
-    versionsCell.className = "version-list";
+    const versions = document.createElement("span");
+    versions.className = "version-list";
     entry[1].forEach((version, index) => {
       const chip = link(kindRoute(group, entry[0], version), version, "chip");
       if (!hasFields(entry, index)) {
         chip.classList.add("schema-only");
         chip.title = "schema only";
       }
-      versionsCell.append(chip);
+      versions.append(chip);
     });
-
-    row.append(kindCell, versionsCell);
-    tbody.append(row);
+    cell.append(versions);
+    grid.append(cell);
   }
-  return tbody;
+  return grid;
 }
