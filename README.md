@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-105-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C220-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-106-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C239-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-551%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -201,6 +201,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
+| Elastic Cloud | [v3.4.1](build/history/eck-operator.json) | 19 | 2026-07-06 |
 | Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-05 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-05 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-05 |
