@@ -18,16 +18,13 @@ build:
 WORKERS_CI_COMMIT_SHA ?= $(shell git rev-parse HEAD)
 RCLONE_VERSION := v1.74.3
 RCLONE := $(or $(shell command -v rclone 2>/dev/null),/tmp/rclone-$(RCLONE_VERSION)-linux-amd64/rclone)
-BUN_VERSION := 1.3.14
-BUN_DIR := /tmp/bun-$(BUN_VERSION)
 
-# The CF build image's Bun is too old for this build (Bun.YAML needs >= 1.2.21)
-# and the image ignores its own BUN_VERSION build variable, so when the ambient
-# Bun does not match the pin, install the exact version into a versioned /tmp
-# prefix (never touching ~/.bun) and put it first on PATH for the whole build.
+# The CF build image's default Bun is too old for this build (Bun.YAML needs
+# >= 1.2.21); the BUN_VERSION build variable in the Workers Builds settings
+# pins the version CF installs.
 web-build:
-	@[ "$$(bun --version 2>/dev/null)" = "$(BUN_VERSION)" ] || [ -x "$(BUN_DIR)/bin/bun" ] || (echo "Bun $(BUN_VERSION) required; installing to $(BUN_DIR)" && curl -fsSL https://bun.sh/install | BUN_INSTALL="$(BUN_DIR)" bash -s "bun-v$(BUN_VERSION)")
-	@export PATH="$(BUN_DIR)/bin:$$PATH" && cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build
+	@bun --version
+	cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build
 
 # Needs RCLONE_CONFIG_R2_* env vars pointing at the R2 bucket's S3 endpoint;
 # the CF build image has no rclone, so fetch the pinned static binary when missing.
