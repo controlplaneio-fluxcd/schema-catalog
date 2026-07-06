@@ -1,42 +1,67 @@
-.PHONY: deps lint test build web-build web-sync web-deploy web-run
+# Copyright 2024 Stefan Prodan.
+# SPDX-License-Identifier: AGPL-3.0
 
-deps:
+# Makefile for building the schema catalog and deploying the web app + mcp at https://schemas.fluxoperator.dev
+
+# Setting SHELL to bash allows bash commands to be executed by recipes.
+# Options are set to exit when a recipe line exits non-zero or a piped command fails.
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
+
+# A bare `make` prints the help instead of running the full catalog build.
+.DEFAULT_GOAL := help
+
+.PHONY: all
+all: deps lint test build ## Run all catalog build and test targets.
+
+##@ Catalog
+
+.PHONY: deps
+deps: ## Install the build system dependencies.
 	cd build && bun install
 
-lint:
+.PHONY: lint
+lint: ## Run the TypeScript compiler checks on the build system.
 	cd build && bunx tsc -p tsconfig.json --noEmit
 
-test:
+.PHONY: test
+test: ## Run the build system unit tests.
 	cd build && bun test
 
-build:
+.PHONY: build
+build: ## Build the schema catalog (FORCE_BUILD=1 forces, BUILD_SUMMARY=<path> writes a summary).
 	cd build && bun src/main.ts build $(if $(FORCE_BUILD),--force) $(if $(BUILD_SUMMARY),--summary $(BUILD_SUMMARY))
 
-# Workers Builds runs these from the repo root (CF build command: make web-build,
-# deploy command: make web-sync web-deploy). WORKERS_CI_COMMIT_SHA is injected by
-# CF; local runs fall back to git HEAD for the cache-busting CATALOG_VERSION.
+##@ Web
+
+# Workers Builds runs the web targets from the repo root (CF build command:
+# make web-build, deploy command: make web-sync web-deploy).
+# WORKERS_CI_COMMIT_SHA is injected by CF; local runs fall back to git HEAD
+# for the cache-busting CATALOG_VERSION.
 WORKERS_CI_COMMIT_SHA ?= $(shell git rev-parse HEAD)
 RCLONE_VERSION := v1.74.3
 RCLONE := $(or $(shell command -v rclone 2>/dev/null),/tmp/rclone-$(RCLONE_VERSION)-linux-amd64/rclone)
 
-# The CF build image's default Bun is too old for this build (Bun.YAML needs
-# >= 1.2.21); the BUN_VERSION build variable in the Workers Builds settings
-# pins the version CF installs.
-web-build:
-	@bun --version
+.PHONY: web-build
+web-build: ## Install, lint, test and bundle the web app.
 	cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build
 
-# Needs RCLONE_CONFIG_R2_* env vars pointing at the R2 bucket's S3 endpoint;
-# the CF build image has no rclone, so fetch the pinned static binary when missing.
-web-sync:
+.PHONY: web-run
+web-run: ## Run the Worker locally on :8787 without CF credentials.
+	cd web && bun install --frozen-lockfile && bun run build && bun scripts/dev.ts
+
+.PHONY: web-sync
+web-sync: ## Sync catalog/ to the R2 bucket (needs RCLONE_CONFIG_R2_* env vars).
 	@env | sort | grep -o '^RCLONE_CONFIG_R2_[A-Z_]*' || echo "no RCLONE_CONFIG_R2_* vars in env"
 	@test -x "$(RCLONE)" || (curl -fsSL https://downloads.rclone.org/$(RCLONE_VERSION)/rclone-$(RCLONE_VERSION)-linux-amd64.zip -o /tmp/rclone.zip && unzip -oq /tmp/rclone.zip -d /tmp)
 	$(RCLONE) sync catalog r2:schema-catalog --checksum --fast-list --transfers 32 --stats-one-line -v
 
-web-deploy:
+.PHONY: web-deploy
+web-deploy: ## Deploy the Worker with the commit SHA as CATALOG_VERSION.
 	cd web && bunx wrangler deploy --var CATALOG_VERSION:$(WORKERS_CI_COMMIT_SHA)
 
-# Run the Worker fully locally (no Cloudflare credentials): the UI and MCP on
-# http://localhost:8787, with /catalog/* served from the local catalog/ tree.
-web-run:
-	cd web && bun install --frozen-lockfile && bun run build && bun scripts/dev.ts
+##@ General
+
+.PHONY: help
+help: ## Display this help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)

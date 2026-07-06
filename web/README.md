@@ -25,22 +25,22 @@ location.
 
 ## Module map
 
-| Path                                   | Responsibility                                                                 |
-| -------------------------------------- | ------------------------------------------------------------------------------ |
-| `scripts/gen-index.ts`                 | `build/history` + `sources.yaml` -> `dist/assets/index.json`                   |
-| `scripts/build-ui.ts`                  | Bundles `src/ui/main.ts`, copies `static/` and `styles.css` into assets        |
-| `scripts/dev.ts`                       | Local dev: catalog file server + `wrangler dev` with `CATALOG_DEV_ORIGIN`      |
-| `src/worker/index.ts`                  | Worker router for `/catalog/*`, `/mcp`, and Workers Assets                     |
-| `src/worker/catalog.ts`                | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling    |
-| `src/worker/mcp.ts`                    | Streamable HTTP MCP server and tool registration                               |
-| `src/worker/mcp-core.ts`               | Pure catalog/MCP result formatting and schema/fields lookup helpers            |
-| `src/worker/index-data.ts`             | Loads and memoizes the generated index asset per `CATALOG_VERSION`             |
-| `src/shared/types.ts`                  | Compact generated index types shared by Worker, UI, tests, and generator       |
-| `src/shared/index-query.ts`            | Version ordering, exact kind lookup, and ranked catalog search                 |
-| `src/shared/fields.ts`                 | `.fields.txt` parser, filter, and tree builder                                 |
-| `src/ui/**`                            | Dependency-free vanilla TypeScript SPA with hash routing                       |
-| `static/`                              | Files copied verbatim into `dist/assets`                                       |
-| `test/`                                | Bun tests for pure shared logic, Worker catalog behavior, MCP helpers          |
+| Path                        | Responsibility                                                              |
+|-----------------------------|-----------------------------------------------------------------------------|
+| `scripts/gen-index.ts`      | `build/history` + `sources.yaml` -> `dist/assets/index.json`                |
+| `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/` and `styles.css` into assets     |
+| `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev` with `CATALOG_DEV_ORIGIN`   |
+| `src/worker/index.ts`       | Worker router for `/catalog/*`, `/mcp`, and Workers Assets                  |
+| `src/worker/catalog.ts`     | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling |
+| `src/worker/mcp.ts`         | Streamable HTTP MCP server and tool registration                            |
+| `src/worker/mcp-core.ts`    | Pure catalog/MCP result formatting and schema/fields lookup helpers         |
+| `src/worker/index-data.ts`  | Loads and memoizes the generated index asset per `CATALOG_VERSION`          |
+| `src/shared/types.ts`       | Compact generated index types shared by Worker, UI, tests, and generator    |
+| `src/shared/index-query.ts` | Version ordering, exact kind lookup, and ranked catalog search              |
+| `src/shared/fields.ts`      | `.fields.txt` parser, filter, and tree builder                              |
+| `src/ui/**`                 | Dependency-free vanilla TypeScript SPA with hash routing                    |
+| `static/`                   | Files copied verbatim into `dist/assets`                                    |
+| `test/`                     | Bun tests for pure shared logic, Worker catalog behavior, MCP helpers       |
 
 `scripts/dev.ts` is credential-free: it serves the repo-local `catalog/` tree on
 a side port and passes `CATALOG_DEV_ORIGIN` into local Wrangler, so R2 is not
@@ -86,13 +86,13 @@ beta, beta before alpha, higher major/sequence before lower. Bit `i` in
 
 Endpoint: streamable HTTP at <https://schemas.fluxoperator.dev/mcp>.
 
-| Tool             | Description                                                                 |
-| ---------------- | --------------------------------------------------------------------------- |
-| `search_catalog` | Search projects, API groups, and kinds; returns latest schema URLs          |
-| `list_projects`  | List projects, optionally filtered by CNCF category                         |
-| `get_project`    | Return one project with groups, kinds, versions, and fields availability    |
-| `get_schema`     | Return schema text, unless it exceeds the 256 KiB inline response guard     |
-| `search_fields`  | Search a `.fields.txt` index by raw query and/or field path prefix          |
+| Tool             | Description                                                              |
+|------------------|--------------------------------------------------------------------------|
+| `search_catalog` | Search projects, API groups, and kinds; returns latest schema URLs       |
+| `list_projects`  | List projects, optionally filtered by CNCF category                      |
+| `get_project`    | Return one project with groups, kinds, versions, and fields availability |
+| `get_schema`     | Return schema text, unless it exceeds the 256 KiB inline response guard  |
+| `search_fields`  | Search a `.fields.txt` index by raw query and/or field path prefix       |
 
 ```shell
 claude mcp add --transport http flux-schema-catalog https://schemas.fluxoperator.dev/mcp
@@ -130,14 +130,24 @@ ambient declarations overlap and conflict if compiled as one project.
 Cloudflare Workers Builds is git-connected. The build command is
 `make web-build`; the deploy command is `make web-sync web-deploy`.
 
-The build image's default Bun is too old (`Bun.YAML` needs >= 1.2.21), so the
-Bun version is pinned by the `BUN_VERSION` **build** variable in the Workers
-Builds settings (Settings > Build > Build variables and secrets — the build
-store, not the Worker's runtime variables). `web-build` prints `bun --version`
-first so every build log records which Bun ran.
+The build environment is configured in the Workers Builds settings under
+Settings > Build > Build variables and secrets:
 
-`make web-sync` needs `RCLONE_CONFIG_R2_*` build secrets for the R2 S3 endpoint
-and syncs the local `catalog/` tree into the `schema-catalog` bucket.
+| Variable                             | Value                                           | Type      |
+|--------------------------------------|-------------------------------------------------|-----------|
+| `BUN_VERSION`                        | `1` (resolves to the latest 1.x)                | plaintext |
+| `RCLONE_CONFIG_R2_TYPE`              | `s3`                                            | plaintext |
+| `RCLONE_CONFIG_R2_PROVIDER`          | `Cloudflare`                                    | plaintext |
+| `RCLONE_CONFIG_R2_ENDPOINT`          | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` | plaintext |
+| `RCLONE_CONFIG_R2_ACCESS_KEY_ID`     | R2 API token key ID                             | secret    |
+| `RCLONE_CONFIG_R2_SECRET_ACCESS_KEY` | R2 API token secret                             | secret    |
+
+`BUN_VERSION` is pinned because the image's default Bun is too old for
+`Bun.YAML` (needs >= 1.2.21); the build log's setup phase records the resolved
+version. The R2 API token has Object Read & Write
+permission scoped to the `schema-catalog` bucket only. `make web-sync` uses the
+`RCLONE_CONFIG_R2_*` variables to sync the local `catalog/` tree into that
+bucket.
 `make web-deploy` sets `CATALOG_VERSION` from `WORKERS_CI_COMMIT_SHA`; local
 runs fall back to `git rev-parse HEAD`. The first deploy provisions the
 `schemas.fluxoperator.dev` custom domain from `wrangler.jsonc` routes.
