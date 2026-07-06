@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /**
- * Hash-route union for the SPA. Project routes carry the source name, and kind
+ * Path-route union for the SPA. Project routes carry the source name, and kind
  * routes carry canonical group/kind/version segments that map to catalog object
  * paths.
  */
@@ -14,48 +14,88 @@ export type Route =
   | { name: "kind"; group: string; kind: string; version: string }
   | { name: "not-found"; path: string };
 
+let dispatch: ((route: Route) => void) | undefined;
+
 /**
- * Installs the hash router and immediately renders the current route. The
- * returned cleanup function removes the listener for tests or future embedding.
+ * Installs the history router and immediately renders the current route.
+ * Internal link clicks are intercepted and pushed onto the history stack;
+ * links whose path does not parse to a known route (raw /catalog files,
+ * external URLs, downloads) navigate normally. Legacy `#/...` hash URLs are
+ * rewritten to their path equivalents before the first render. The returned
+ * cleanup function removes the listeners for tests or future embedding.
  */
 export function installRouter(render: (route: Route) => void): () => void {
-  const onHashChange = (): void => render(parseRoute(location.hash));
-  addEventListener("hashchange", onHashChange);
-  onHashChange();
-  return () => removeEventListener("hashchange", onHashChange);
+  dispatch = render;
+  const onNavigate = (): void => render(parseRoute(location.pathname));
+  const onClick = (event: MouseEvent): void => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    const target = event.target instanceof Element ? event.target.closest("a") : null;
+    if (target === null || target.target !== "" || target.origin !== location.origin) {
+      return;
+    }
+    if (parseRoute(target.pathname).name === "not-found") {
+      return;
+    }
+    event.preventDefault();
+    navigate(target.pathname);
+  };
+
+  addEventListener("popstate", onNavigate);
+  document.addEventListener("click", onClick);
+
+  if (location.hash.startsWith("#/")) {
+    history.replaceState(null, "", location.hash.slice(1));
+  }
+  onNavigate();
+  return () => {
+    removeEventListener("popstate", onNavigate);
+    document.removeEventListener("click", onClick);
+    dispatch = undefined;
+  };
 }
 
-/** Returns the hash URL for the catalog overview. */
+/** Pushes a path onto the history stack and renders its route. */
+export function navigate(path: string): void {
+  if (path !== location.pathname) {
+    history.pushState(null, "", path);
+  }
+  dispatch?.(parseRoute(path));
+}
+
+/** Returns the URL path for the catalog overview. */
 export function homeRoute(): string {
-  return "#/";
+  return "/";
 }
 
-/** Returns the hash URL for the AI agents (MCP server) page. */
+/** Returns the URL path for the AI agents (MCP server) page. */
 export function agentsRoute(): string {
-  return "#/agents";
+  return "/agents";
 }
 
-/** Returns the hash URL for the flux-schema CLI page. */
+/** Returns the URL path for the flux-schema CLI page. */
 export function cliRoute(): string {
-  return "#/cli";
+  return "/cli";
 }
 
-/** Returns the hash URL for a project source name, URL-encoding the segment. */
+/** Returns the URL path for a project source name, URL-encoding the segment. */
 export function projectRoute(project: string): string {
-  return `#/p/${encodeSegment(project)}`;
+  return `/p/${encodeSegment(project)}`;
 }
 
-/** Returns the hash URL for a concrete group/kind/version tuple. */
+/** Returns the URL path for a concrete group/kind/version tuple. */
 export function kindRoute(group: string, kind: string, version: string): string {
-  return `#/k/${encodeSegment(group)}/${encodeSegment(kind)}/${encodeSegment(version)}`;
+  return `/k/${encodeSegment(group)}/${encodeSegment(kind)}/${encodeSegment(version)}`;
 }
 
 /**
- * Parses a hash into a route without throwing. Invalid percent-encoding or an
- * unsupported path shape returns `not-found` with the original path text.
+ * Parses a URL path into a route without throwing. A legacy `#`-prefixed hash
+ * value is accepted too. Invalid percent-encoding or an unsupported path shape
+ * returns `not-found` with the original path text.
  */
-export function parseRoute(hash: string): Route {
-  const path = hash.startsWith("#") ? hash.slice(1) : hash;
+export function parseRoute(value: string): Route {
+  const path = value.startsWith("#") ? value.slice(1) : value;
   if (path === "" || path === "/") {
     return { name: "home" };
   }

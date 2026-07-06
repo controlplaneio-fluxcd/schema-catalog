@@ -5,7 +5,7 @@ import { latestVersion, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
 import type { CatalogIndex } from "../../shared/types.ts";
 import { clear, createCodeBlock, kindCount, link, schemaCount, text } from "../dom.ts";
-import { agentsRoute, cliRoute, kindRoute, projectRoute } from "../router.ts";
+import { agentsRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
 const MCP_COMMAND = `claude mcp add --transport http flux-schema-catalog \\
   https://schemas.fluxoperator.dev/mcp`;
@@ -161,7 +161,7 @@ export function renderHome(index: CatalogIndex): HTMLElement {
     if (event.key === "Enter") {
       const target = rows[selected] ?? rows[0];
       if (target !== undefined) {
-        location.hash = target.getAttribute("href")?.slice(1) ?? "";
+        navigate(target.pathname);
       }
       return;
     }

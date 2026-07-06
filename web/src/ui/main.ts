@@ -1,9 +1,10 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
+import { findKind, kindDisplay } from "../shared/index-query.ts";
 import type { CatalogIndex } from "../shared/types.ts";
 import { clear, createSiteFooter, createSiteHeader, notFoundView, text } from "./dom.ts";
-import { installRouter, type Route } from "./router.ts";
+import { installRouter, navigate, type Route } from "./router.ts";
 import { initializeTheme } from "./theme.ts";
 import { renderCli } from "./views/cli.ts";
 import { renderHome } from "./views/home.ts";
@@ -40,8 +41,8 @@ function installSearchShortcut(): void {
       return;
     }
     event.preventDefault();
-    if (location.hash !== "" && location.hash !== "#/") {
-      location.hash = "#/";
+    if (location.pathname !== "/") {
+      navigate("/");
     }
     requestAnimationFrame(() => document.querySelector<HTMLInputElement>("#search")?.focus());
   });
@@ -58,9 +59,29 @@ async function fetchCatalogIndex(): Promise<CatalogIndex> {
 function renderRoute(route: Route): void {
   clear(appElement);
   appElement.append(createSiteHeader(navHighlight(route)), renderView(route), createSiteFooter());
+  document.title = titleFor(route);
   // Full-page re-render: reset the viewport so navigation reads as a page
   // change instead of landing mid-scroll.
   scrollTo(0, 0);
+}
+
+function titleFor(route: Route): string {
+  if (route.name === "mcp") {
+    return "Flux Schema MCP Server · AI agents";
+  }
+  if (route.name === "cli") {
+    return "Flux Schema CLI · CI validation";
+  }
+  if (route.name === "project") {
+    const project = catalogIndex.projects.find((candidate) => candidate.name === route.project);
+    return `${project?.alias ?? route.project} · Flux Schema Catalog`;
+  }
+  if (route.name === "kind") {
+    const found = findKind(catalogIndex, route.group, route.kind);
+    const display = found === undefined ? route.kind : kindDisplay(found.entry);
+    return `${display} ${route.group}/${route.version} · Flux Schema Catalog`;
+  }
+  return "Flux Schema Catalog: Kubernetes schemas for AI agents and CI pipelines";
 }
 
 function navHighlight(route: Route): "catalog" | "agents" | "cli" | "" {

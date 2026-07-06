@@ -96,8 +96,9 @@ async function serveFile(root: string, relative: string): Promise<Response> {
 }
 
 /**
- * Serves a bundled UI asset, falling back to `index.html` for SPA hash routes
- * and any unknown path. `index.html` is served with the live-reload snippet
+ * Serves a bundled UI asset, mirroring Workers Assets html_handling: `/agents`
+ * resolves to `agents.html`, and any unknown path falls back to `index.html`
+ * for the history-routed SPA. HTML is served with the live-reload snippet
  * injected; assets carry `no-store` so a rebuilt bundle is never cached.
  */
 async function serveAsset(pathname: string): Promise<Response> {
@@ -106,12 +107,16 @@ async function serveAsset(pathname: string): Promise<Response> {
   let file = Bun.file(path);
 
   const inside = path === assetsDir || path.startsWith(assetsDir + "/");
+  if (inside && !(await file.exists()) && !relative.includes(".")) {
+    path = `${path}.html`;
+    file = Bun.file(path);
+  }
   if (!inside || !(await file.exists())) {
     path = join(assetsDir, "index.html");
     file = Bun.file(path);
   }
 
-  if (path.endsWith("index.html")) {
+  if (path.endsWith(".html")) {
     const html = (await file.text()).replace("</body>", `    ${LIVE_RELOAD}\n  </body>`);
     return new Response(html, {
       headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

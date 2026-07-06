@@ -39,7 +39,7 @@ location.
 | `src/shared/types.ts`       | Compact generated index types shared by Worker, UI, tests, and generator    |
 | `src/shared/index-query.ts` | Version ordering, exact kind lookup, and ranked catalog search              |
 | `src/shared/fields.ts`      | `.fields.txt` parser, filter, and tree builder                              |
-| `src/ui/**`                 | Dependency-free vanilla TypeScript SPA with hash routing                    |
+| `src/ui/**`                 | Dependency-free vanilla TypeScript SPA with history routing                 |
 | `static/`                   | Files copied verbatim into `dist/assets`                                    |
 | `test/`                     | Bun tests for pure shared logic, Worker catalog behavior, MCP helpers       |
 
@@ -90,8 +90,12 @@ authentication. The catalog is framed to agents as an LLM-friendly
 `kubectl explain` — an authoritative, cluster-free source of
 Kubernetes-ecosystem API definitions for generating, editing, and validating
 manifests — not as a `flux-schema` backend. The human-facing overview page is
-at <https://schemas.fluxoperator.dev/#/agents> (SPA route
-`src/ui/views/mcp.ts`; `#/mcp-server` is a legacy alias).
+at <https://schemas.fluxoperator.dev/agents> (SPA route
+`src/ui/views/mcp.ts`; `/mcp-server` and legacy `#/...` hash URLs are
+aliases). The `/`, `/agents`, and `/cli` pages are prerendered at build time
+with page-specific meta/OG tags and listed in `sitemap.xml`; every other
+path falls back to the app shell via the assets `not_found_handling`
+single-page-application mode.
 
 | Tool             | Description                                                                   |
 |------------------|-------------------------------------------------------------------------------|

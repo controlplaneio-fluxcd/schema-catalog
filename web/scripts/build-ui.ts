@@ -42,3 +42,42 @@ for (const entry of await readdir(staticDir, { withFileTypes: true })) {
 }
 
 await copyFile(join(webRoot, "src/ui/styles.css"), join(assetsDir, "styles.css"));
+
+/**
+ * Indexable pages prerendered from the app shell with page-specific meta.
+ * Workers Assets serves `/agents` from `agents.html`, and the SPA takes over
+ * on load; every other path falls back to `index.html` (see wrangler.jsonc
+ * `not_found_handling`).
+ */
+const PAGES: Array<{ file: string; path: string; title: string; description: string }> = [
+  {
+    file: "agents.html",
+    path: "/agents",
+    title: "Flux Schema MCP Server: an LLM-friendly kubectl explain",
+    description:
+      "Connect any MCP client to the Flux Schema Catalog: your agent greps exact Kubernetes fields, types, and constraints for the whole CNCF ecosystem, no cluster required.",
+  },
+  {
+    file: "cli.html",
+    path: "/cli",
+    title: "Flux Schema CLI: validate Kubernetes manifests in CI",
+    description:
+      "Static validation for GitOps workflows with Kubernetes API server semantics. Catch invalid manifests in pull requests, before Flux reconciles them on clusters.",
+  },
+];
+
+const shell = await Bun.file(join(assetsDir, "index.html")).text();
+for (const page of PAGES) {
+  const url = `https://schemas.fluxoperator.dev${page.path}`;
+  const html = shell
+    .replace(/<title>[^<]*<\/title>/, `<title>${page.title}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*(")/, `$1${page.description}$2`)
+    .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${page.title}$2`)
+    .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${page.description}$2`)
+    .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`)
+    .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
+  if (html === shell) {
+    throw new Error(`prerender produced no changes for ${page.path}: check the index.html meta tags`);
+  }
+  await Bun.write(join(assetsDir, page.file), html);
+}
