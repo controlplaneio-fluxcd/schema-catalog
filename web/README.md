@@ -130,11 +130,10 @@ ambient declarations overlap and conflict if compiled as one project.
 Cloudflare Workers Builds is git-connected. The build command is
 `make web-build`; the deploy command is `make web-sync web-deploy`.
 
-The build environment must set the `BUN_VERSION=1` build variable: the build
-image's default Bun predates `Bun.YAML` (needs >= 1.2.21), and a floating major
-tracks the latest 1.x without further bumps. Bun has no version-file support in
-Workers Builds, so this lives in the dashboard (Settings > Build > Build
-Variables and Secrets), not in the repo.
+The build image's default Bun predates `Bun.YAML` (needs >= 1.2.21) and the
+image ignores the `BUN_VERSION` build variable, so `make web-build` self-heals:
+when the ambient Bun lacks `Bun.YAML` it installs the latest Bun and prepends
+it to `PATH` for the rest of the build. No dashboard configuration is needed.
 
 `make web-sync` needs `RCLONE_CONFIG_R2_*` build secrets for the R2 S3 endpoint
 and syncs the local `catalog/` tree into the `schema-catalog` bucket.
