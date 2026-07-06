@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C314-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-565%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C337-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-566%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -107,7 +107,9 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Cert Manager | [v1.20.3](build/history/cert-manager.json) | 6 | 2026-07-05 |
 | Cluster API | [v1.13.3](build/history/cluster-api.json) | 36 | 2026-07-05 |
 | Cluster API Add-on Provider Helm | [v0.6.4](build/history/cluster-api-addon-provider-helm.json) | 2 | 2026-07-05 |
+| Cluster API OpenStack | [v0.14.6](build/history/cluster-api-provider-openstack.json) | 7 | 2026-07-06 |
 | Cluster API Operator | [v0.27.0](build/history/cluster-api-operator.json) | 7 | 2026-07-05 |
+| Cluster API vSphere | [v1.16.1](build/history/cluster-api-provider-vsphere.json) | 16 | 2026-07-06 |
 | Crossplane | [v2.3.3](build/history/crossplane.json) | 25 | 2026-07-05 |
 | External Secrets | [v2.7.0](build/history/external-secrets.json) | 28 | 2026-07-05 |
 | GCP Config Connector | [v1.152.0](build/history/config-connector.json) | 548 | 2026-07-05 |
