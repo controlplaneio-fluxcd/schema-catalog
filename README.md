@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-103-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C210-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-104-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C217-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-550%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -137,6 +137,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Rook | [v1.20.1](build/history/rook.json) | 21 | 2026-07-05 |
 | Submariner | [v0.24.0](build/history/submariner.json) | 9 | 2026-07-05 |
 | Submariner Operator | [v0.24.0](build/history/submariner-operator.json) | 3 | 2026-07-05 |
+| Tailscale | [v1.98.8](build/history/tailscale.json) | 7 | 2026-07-06 |
 | Tigera Operator | [v3.32.1](build/history/tigera-operator.json) | 9 | 2026-07-05 |
 | Velero | [v1.18.2](build/history/velero.json) | 11 | 2026-07-05 |
 
