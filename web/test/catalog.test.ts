@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { describe, expect, test } from "bun:test";
 import { serveCatalog } from "../src/worker/catalog.ts";
 import type { Env } from "../src/worker/index.ts";

@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { describe, expect, test } from "bun:test";
 import { generateIndex } from "../scripts/gen-index.ts";
 import type { HistoryEntry, Source } from "../../build/src/types.ts";

@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /** A source rebuilt during this run, for the PR body. */
 export interface BuildChange {
   repo: string;

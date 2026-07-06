@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /** flux-schema extract subcommand; k8s and openshift fetch their own swagger. */
 export type ExtractKind = "k8s" | "openshift" | "crd";
 

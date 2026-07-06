@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import type { CatalogIndex } from "../shared/types.ts";
 import { clear, notFoundView, text } from "./dom.ts";
 import { installRouter, type Route } from "./router.ts";

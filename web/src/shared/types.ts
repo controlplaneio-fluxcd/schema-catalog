@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /**
  * Generated catalog search index consumed by the Worker, UI, MCP helpers, and
  * tests. Version `v` is the schema version for this compact JSON contract; new

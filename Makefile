@@ -1,4 +1,4 @@
-# Copyright 2024 Stefan Prodan.
+# Copyright 2026 Stefan Prodan.
 # SPDX-License-Identifier: AGPL-3.0
 
 # Makefile for building the schema catalog and deploying the web app + mcp at https://schemas.fluxoperator.dev

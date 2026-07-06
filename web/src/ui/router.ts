@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /**
  * Hash-route union for the SPA. Project routes carry the source name, and kind
  * routes carry canonical group/kind/version segments that map to catalog object

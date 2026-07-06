@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { CATEGORIES } from "./config.ts";
 import type { SourceCategory } from "./types.ts";
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /**
  * Runs local development without Cloudflare credentials. A side Bun server
  * exposes the repo's `catalog/` tree, then `wrangler dev` receives

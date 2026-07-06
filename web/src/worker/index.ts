@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { serveCatalog } from "./catalog.ts";
 import { handleMcp } from "./mcp.ts";
 

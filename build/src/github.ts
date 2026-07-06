@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 const API_BASE = "https://api.github.com";
 
 export interface ReleaseAsset {

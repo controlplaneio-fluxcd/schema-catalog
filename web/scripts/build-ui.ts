@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /**
  * Bundles the vanilla TypeScript UI for Workers Assets and copies static files
  * into `dist/assets`. This script assumes `scripts/gen-index.ts` has already

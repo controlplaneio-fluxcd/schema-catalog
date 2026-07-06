@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { YAML } from "bun";
 import type { CrdInput, FluxInstance, Source, SourceCategory } from "./types.ts";
 

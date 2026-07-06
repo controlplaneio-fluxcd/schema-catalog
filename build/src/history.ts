@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { mkdir, readdir, rename, rm, rmdir } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { CATALOG_DIR, HISTORY_DIR, ROOT_DIR } from "./paths.ts";

@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 import { describe, expect, test } from "bun:test";
 import { CATEGORIES } from "./config.ts";
 import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";

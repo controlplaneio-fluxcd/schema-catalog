@@ -1,3 +1,6 @@
+// Copyright 2026 Stefan Prodan.
+// SPDX-License-Identifier: AGPL-3.0
+
 /**
  * localStorage key for the user's explicit theme choice. Absence means the UI
  * follows `prefers-color-scheme` through CSS/media behavior.
