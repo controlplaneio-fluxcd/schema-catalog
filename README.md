@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-109-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C281-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-562%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-111-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C297-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-563%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -184,6 +184,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Flagger | [v1.43.0](build/history/flagger.json) | 3 | 2026-07-05 |
 | Flux | [v2.9.0](build/history/flux.json) | 15 | 2026-07-05 |
 | Flux Operator | [v0.53.0](build/history/flux-operator.json) | 4 | 2026-07-05 |
+| Kargo | [v1.10.8](build/history/kargo.json) | 9 | 2026-07-06 |
 | Knative Eventing | [knative-v1.22.2](build/history/knative-eventing.json) | 20 | 2026-07-05 |
 | Knative Serving | [knative-v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-05 |
 | KServe | [v0.19.0](build/history/kserve.json) | 6 | 2026-07-05 |
@@ -207,6 +208,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-06 |
 | OpenSearch Operator | [opensearch-operator-3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-06 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-05 |
+| Perses Operator | [v0.4.0](build/history/perses-operator.json) | 7 | 2026-07-06 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-05 |
 | VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 24 | 2026-07-05 |
 
