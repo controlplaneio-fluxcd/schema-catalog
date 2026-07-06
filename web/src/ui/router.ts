@@ -9,6 +9,7 @@
 export type Route =
   | { name: "home" }
   | { name: "mcp" }
+  | { name: "cli" }
   | { name: "project"; project: string }
   | { name: "kind"; group: string; kind: string; version: string }
   | { name: "not-found"; path: string };
@@ -29,9 +30,14 @@ export function homeRoute(): string {
   return "#/";
 }
 
-/** Returns the hash URL for the MCP server page. */
-export function mcpRoute(): string {
-  return "#/mcp-server";
+/** Returns the hash URL for the AI agents (MCP server) page. */
+export function agentsRoute(): string {
+  return "#/agents";
+}
+
+/** Returns the hash URL for the flux-schema CLI page. */
+export function cliRoute(): string {
+  return "#/cli";
 }
 
 /** Returns the hash URL for a project source name, URL-encoding the segment. */
@@ -62,8 +68,13 @@ export function parseRoute(hash: string): Route {
     return { name: "not-found", path };
   }
 
-  if (parts[0] === "mcp-server" && parts.length === 1) {
+  // "mcp-server" is the legacy alias for the agents page.
+  if ((parts[0] === "agents" || parts[0] === "mcp-server") && parts.length === 1) {
     return { name: "mcp" };
+  }
+
+  if (parts[0] === "cli" && parts.length === 1) {
+    return { name: "cli" };
   }
 
   if (parts[0] === "p" && parts.length === 2 && parts[1] !== undefined && parts[1] !== "") {

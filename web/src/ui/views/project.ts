@@ -8,7 +8,6 @@ import {
   createBadge,
   createBreadcrumb,
   createPage,
-  createSiteHeader,
   formatDate,
   hasFields,
   kindCount,
@@ -32,7 +31,6 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
 
   const page = createPage("project-page");
   page.append(
-    createSiteHeader(),
     createBreadcrumb([
       { label: "Home", href: homeRoute() },
       { label: project.alias },

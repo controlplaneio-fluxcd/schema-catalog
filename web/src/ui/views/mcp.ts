@@ -4,10 +4,10 @@
 import type { CatalogIndex } from "../../shared/types.ts";
 import {
   createBreadcrumb,
+  createCodeBlock,
+  createCopyButton,
   createPage,
-  createSiteHeader,
   kindCount,
-  link,
   schemaCount,
   text,
 } from "../dom.ts";
@@ -17,6 +17,8 @@ import { homeRoute } from "../router.ts";
 const MCP_ENDPOINT = "https://schemas.fluxoperator.dev/mcp";
 
 const CLAUDE_COMMAND = `claude mcp add --transport http flux-schema-catalog ${MCP_ENDPOINT}`;
+
+const CODEX_COMMAND = `codex mcp add flux-schema-catalog --url ${MCP_ENDPOINT}`;
 
 const CLIENT_CONFIG = `{
   "mcpServers": {
@@ -29,24 +31,24 @@ const CLIENT_CONFIG = `{
 
 const FEATURES: Array<{ title: string; body: string }> = [
   {
-    title: "Ground truth, not guesses",
+    title: "Extracted from upstream",
     body:
       "Every kind, field, type, and constraint is extracted from the project's published API definitions. The agent looks it up instead of reconstructing it from training data.",
   },
   {
     title: "Write valid manifests",
     body:
-      "A HelmRelease, a Gateway, a Cilium policy — the agent pulls the schema for the exact apiVersion it targets and only uses fields that actually exist.",
+      "A HelmRelease, a Gateway, a Cilium policy: the agent pulls the schema for the exact apiVersion it targets and only uses fields that exist.",
   },
   {
-    title: "Review with authority",
+    title: "Review manifests",
     body:
-      "Point the agent at existing manifests and it verifies field paths, required values, and deprecations against the real schema — before the cluster rejects them.",
+      "Point the agent at existing manifests and it verifies field paths, required values, and deprecations against the real schema, before the cluster rejects them.",
   },
   {
     title: "Rebuilt daily",
     body:
-      "The catalog tracks upstream releases automatically, so new CRDs, kinds, and apiVersions land within a day of shipping — nothing for you to update.",
+      "The catalog tracks upstream releases, so new CRDs, kinds, and apiVersions land within a day of shipping, nothing for you to update.",
   },
 ];
 
@@ -55,7 +57,7 @@ const TOOLS: Array<{ name: string; description: string }> = [
   { name: "list_projects", description: "Enumerate the covered projects, optionally by CNCF category." },
   { name: "get_project", description: "Fetch one project's groups, kinds, versions, and field-index coverage." },
   { name: "get_schema", description: "Fetch the complete JSON Schema for a group/kind/version." },
-  { name: "search_fields", description: "Look up exact field paths, types, constraints, and descriptions for a kind — one line per field, cheaper than the full schema." },
+  { name: "grep_schema", description: "Grep a kind's flattened field index with case-insensitive regex: kubectl explain, greppable." },
 ];
 
 /**
@@ -66,13 +68,11 @@ const TOOLS: Array<{ name: string; description: string }> = [
 export function renderMcp(index: CatalogIndex): HTMLElement {
   const page = createPage("mcp-page");
   page.append(
-    createSiteHeader(),
-    createBreadcrumb([{ label: "Home", href: homeRoute() }, { label: "MCP server" }]),
+    createBreadcrumb([{ label: "Home", href: homeRoute() }, { label: "AI agents" }]),
     createHero(index),
     createWhySection(),
     createConfigSection(),
     createToolsSection(),
-    createPageFooter(),
   );
   return page;
 }
@@ -86,11 +86,11 @@ function createHero(index: CatalogIndex): HTMLElement {
   const schemas = index.projects.reduce((total, project) => total + schemaCount(project), 0);
 
   hero.append(
-    text("h1", "", "MCP Server"),
+    text("h1", "", "Flux Schema MCP Server"),
     text(
       "p",
       "mcp-tagline",
-      "Stop your AI agent from guessing Kubernetes YAML. One endpoint serves the exact schema — kinds, fields, types, constraints, apiVersions — for every resource it writes, edits, or reviews.",
+      "An LLM-friendly kubectl explain for the whole Kubernetes ecosystem, no cluster required. One endpoint serves the kinds, fields, types, constraints, and apiVersions for every resource your agent writes or reviews.",
     ),
     createEndpoint(),
     text(
@@ -118,7 +118,7 @@ function createWhySection(): HTMLElement {
     text(
       "p",
       "mcp-lead",
-      "Language models write Kubernetes YAML with confidence but without a source: invented field names, misremembered apiVersions, required values silently dropped. This server closes the gap. It streams curated JSON Schemas and greppable field indexes for the Kubernetes ecosystem — core Kubernetes, OpenShift, the Flux ecosystem, and a growing set of CNCF projects, controllers, and operators — straight into your agent over MCP.",
+      "Language models writing Kubernetes YAML from training data invent field names, misremember apiVersions, and drop required values. This server gives the agent the real schemas instead: curated JSON Schemas and greppable field indexes for core Kubernetes, OpenShift, the Flux ecosystem, and a growing set of CNCF projects, controllers, and operators, served over MCP.",
     ),
   );
 
@@ -140,19 +140,21 @@ function createConfigSection(): HTMLElement {
     text(
       "p",
       "mcp-lead",
-      "Standard streamable-HTTP MCP transport, no authentication, no API key. Point any MCP-capable agent at the endpoint and it is ready.",
+      "Standard streamable-HTTP MCP transport, no authentication or API key. Point any MCP client at the endpoint.",
     ),
     text("h3", "", "Claude Code"),
     createCodeBlock(CLAUDE_COMMAND),
+    text("h3", "", "Codex"),
+    createCodeBlock(CODEX_COMMAND),
     text("h3", "", "Other MCP clients (Cursor, VS Code, Windsurf, …)"),
-    createCodeBlock(CLIENT_CONFIG),
+    createCodeBlock(CLIENT_CONFIG, "json"),
   );
   return section;
 }
 
 function createToolsSection(): HTMLElement {
   const section = createSection("Tools");
-  section.append(text("p", "mcp-lead", "Five tools, meant to be called in narrowing order: discover the group and kind, check individual fields cheaply, and pull the full schema only when needed."));
+  section.append(text("p", "mcp-lead", "Five tools, meant to be called in narrowing order: discover the group and kind, grep the flattened schema cheaply, and pull the full JSON Schema only when needed."));
 
   const scroller = document.createElement("div");
   scroller.className = "table-scroll";
@@ -179,55 +181,9 @@ function createToolsSection(): HTMLElement {
   return section;
 }
 
-function createPageFooter(): HTMLElement {
-  const footer = document.createElement("footer");
-  footer.className = "mcp-page-footer";
-  footer.append(
-    link(homeRoute(), "Browse the catalog"),
-    link("https://github.com/controlplaneio-fluxcd/schema-catalog", "GitHub"),
-    link("https://fluxoperator.dev", "fluxoperator.dev"),
-  );
-  return footer;
-}
-
 function createSection(title: string): HTMLElement {
   const section = document.createElement("section");
   section.className = "mcp-section";
   section.append(text("h2", "", title));
   return section;
-}
-
-function createCodeBlock(code: string): HTMLElement {
-  const block = document.createElement("div");
-  block.className = "code-block";
-
-  const pre = document.createElement("pre");
-  const codeElement = document.createElement("code");
-  codeElement.textContent = code;
-  pre.append(codeElement);
-
-  block.append(pre, createCopyButton(code, "Copy", "code-copy"));
-  return block;
-}
-
-function createCopyButton(value: string, label: string, variantClass: string): HTMLButtonElement {
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = variantClass === "" ? "copy-button" : `copy-button ${variantClass}`;
-  copy.textContent = "Copy";
-  copy.setAttribute("aria-label", label);
-  copy.addEventListener("click", () => {
-    void navigator.clipboard.writeText(value).then(
-      () => {
-        copy.textContent = "Copied";
-        setTimeout(() => {
-          copy.textContent = "Copy";
-        }, 1600);
-      },
-      () => {
-        copy.textContent = "Copy failed";
-      },
-    );
-  });
-  return copy;
 }

@@ -10,7 +10,6 @@ import {
   createBadge,
   createBreadcrumb,
   createPage,
-  createSiteHeader,
   hasFields,
   link,
   notFoundView,
@@ -44,7 +43,6 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
   const display = kindDisplay(found.entry);
   const page = createPage("kind-page");
   page.append(
-    createSiteHeader(),
     createBreadcrumb([
       { label: "Home", href: homeRoute() },
       { label: found.project.alias, href: projectRoute(found.project.name) },
@@ -200,12 +198,12 @@ function renderFieldsExplorer(content: HTMLElement, lines: FieldLine[]): void {
       return;
     }
 
-    const filtered = filterFieldLines(lines, { query, limit: FILTER_RENDER_CAP });
+    const filtered = filterFieldLines(lines, { query, limit: FILTER_RENDER_CAP, queryMode: "regex-or-substring" });
     count.textContent = `${filtered.total} of ${lines.length} fields`;
     results.append(renderFieldList(filtered.matches));
     if (filtered.total > filtered.matches.length) {
       results.append(
-        text("p", "field-list-note", `Showing the first ${filtered.matches.length} matches — narrow the filter for the rest.`),
+        text("p", "field-list-note", `Showing the first ${filtered.matches.length} matches, narrow the filter for the rest.`),
       );
     }
   };

@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import type { CatalogIndex } from "../shared/types.ts";
-import { clear, notFoundView, text } from "./dom.ts";
+import { clear, createSiteFooter, createSiteHeader, notFoundView, text } from "./dom.ts";
 import { installRouter, type Route } from "./router.ts";
 import { initializeTheme } from "./theme.ts";
+import { renderCli } from "./views/cli.ts";
 import { renderHome } from "./views/home.ts";
 import { renderKind } from "./views/kind.ts";
 import { renderMcp } from "./views/mcp.ts";
@@ -56,23 +57,39 @@ async function fetchCatalogIndex(): Promise<CatalogIndex> {
 
 function renderRoute(route: Route): void {
   clear(appElement);
+  appElement.append(createSiteHeader(navHighlight(route)), renderView(route), createSiteFooter());
+  // Full-page re-render: reset the viewport so navigation reads as a page
+  // change instead of landing mid-scroll.
+  scrollTo(0, 0);
+}
+
+function navHighlight(route: Route): "catalog" | "agents" | "cli" | "" {
+  if (route.name === "mcp") {
+    return "agents";
+  }
+  if (route.name === "cli") {
+    return "cli";
+  }
+  return route.name === "not-found" ? "" : "catalog";
+}
+
+function renderView(route: Route): HTMLElement {
   if (route.name === "home") {
-    appElement.append(renderHome(catalogIndex));
-    return;
+    return renderHome(catalogIndex);
   }
   if (route.name === "mcp") {
-    appElement.append(renderMcp(catalogIndex));
-    return;
+    return renderMcp(catalogIndex);
+  }
+  if (route.name === "cli") {
+    return renderCli(catalogIndex);
   }
   if (route.name === "project") {
-    appElement.append(renderProject(catalogIndex, route.project));
-    return;
+    return renderProject(catalogIndex, route.project);
   }
   if (route.name === "kind") {
-    appElement.append(renderKind(catalogIndex, route.group, route.kind, route.version));
-    return;
+    return renderKind(catalogIndex, route.group, route.kind, route.version);
   }
-  appElement.append(notFoundView(`Route "${route.path}" is not recognized.`));
+  return notFoundView(`Route "${route.path}" is not recognized.`);
 }
 
 function renderStartupError(error: unknown): void {
