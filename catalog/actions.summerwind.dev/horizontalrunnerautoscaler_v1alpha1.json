@@ -1,0 +1,317 @@
+{
+  "description": "HorizontalRunnerAutoscaler is the Schema for the horizontalrunnerautoscaler API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "HorizontalRunnerAutoscalerSpec defines the desired state of HorizontalRunnerAutoscaler",
+      "properties": {
+        "capacityReservations": {
+          "items": {
+            "additionalProperties": false,
+            "description": "CapacityReservation specifies the number of replicas temporarily added\nto the scale target until ExpirationTime.",
+            "properties": {
+              "effectiveTime": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "expirationTime": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "replicas": {
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "githubAPICredentialsFrom": {
+          "additionalProperties": false,
+          "properties": {
+            "secretRef": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "maxReplicas": {
+          "description": "MaxReplicas is the maximum number of replicas the deployment is allowed to scale",
+          "type": "integer"
+        },
+        "metrics": {
+          "description": "Metrics is the collection of various metric targets to calculate desired number of runners",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "repositoryNames": {
+                "description": "RepositoryNames is the list of repository names to be used for calculating the metric.\nFor example, a repository name is the REPO part of `github.com/USER/REPO`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "scaleDownAdjustment": {
+                "description": "ScaleDownAdjustment is the number of runners removed on scale-down.\nYou can only specify either ScaleDownFactor or ScaleDownAdjustment.",
+                "type": "integer"
+              },
+              "scaleDownFactor": {
+                "description": "ScaleDownFactor is the multiplicative factor applied to the current number of runners used\nto determine how many pods should be removed.",
+                "type": "string"
+              },
+              "scaleDownThreshold": {
+                "description": "ScaleDownThreshold is the percentage of busy runners less than which will\ntrigger the hpa to scale the runners down.",
+                "type": "string"
+              },
+              "scaleUpAdjustment": {
+                "description": "ScaleUpAdjustment is the number of runners added on scale-up.\nYou can only specify either ScaleUpFactor or ScaleUpAdjustment.",
+                "type": "integer"
+              },
+              "scaleUpFactor": {
+                "description": "ScaleUpFactor is the multiplicative factor applied to the current number of runners used\nto determine how many pods should be added.",
+                "type": "string"
+              },
+              "scaleUpThreshold": {
+                "description": "ScaleUpThreshold is the percentage of busy runners greater than which will\ntrigger the hpa to scale runners up.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type is the type of metric to be used for autoscaling.\nIt can be TotalNumberOfQueuedAndInProgressWorkflowRuns or PercentageRunnersBusy.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "minReplicas": {
+          "description": "MinReplicas is the minimum number of replicas the deployment is allowed to scale",
+          "type": "integer"
+        },
+        "scaleDownDelaySecondsAfterScaleOut": {
+          "description": "ScaleDownDelaySecondsAfterScaleUp is the approximate delay for a scale down followed by a scale up\nUsed to prevent flapping (down->up->down->... loop)",
+          "type": "integer"
+        },
+        "scaleTargetRef": {
+          "additionalProperties": false,
+          "description": "ScaleTargetRef is the reference to scaled resource like RunnerDeployment",
+          "properties": {
+            "kind": {
+              "description": "Kind is the type of resource being referenced",
+              "enum": [
+                "RunnerDeployment",
+                "RunnerSet"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name is the name of resource being referenced",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "scaleUpTriggers": {
+          "description": "ScaleUpTriggers is an experimental feature to increase the desired replicas by 1\non each webhook requested received by the webhookBasedAutoscaler.\n\nThis feature requires you to also enable and deploy the webhookBasedAutoscaler onto your cluster.\n\nNote that the added runners remain until the next sync period at least,\nand they may or may not be used by GitHub Actions depending on the timing.\nThey are intended to be used to gain \"resource slack\" immediately after you\nreceive a webhook from GitHub, so that you can loosely expect MinReplicas runners to be always available.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "integer"
+              },
+              "duration": {
+                "type": "string"
+              },
+              "githubEvent": {
+                "additionalProperties": false,
+                "properties": {
+                  "checkRun": {
+                    "additionalProperties": false,
+                    "description": "https://docs.github.com/en/actions/reference/events-that-trigger-workflows#check_run",
+                    "properties": {
+                      "names": {
+                        "description": "Names is a list of GitHub Actions glob patterns.\nAny check_run event whose name matches one of patterns in the list can trigger autoscaling.\nNote that check_run name seem to equal to the job name you've defined in your actions workflow yaml file.\nSo it is very likely that you can utilize this to trigger depending on the job.",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "repositories": {
+                        "description": "Repositories is a list of GitHub repositories.\nAny check_run event whose repository matches one of repositories in the list can trigger autoscaling.",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "types": {
+                        "description": "One of: created, rerequested, or completed",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "pullRequest": {
+                    "additionalProperties": false,
+                    "description": "https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request",
+                    "properties": {
+                      "branches": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "types": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "push": {
+                    "description": "PushSpec is the condition for triggering scale-up on push event\nAlso see https://docs.github.com/en/actions/reference/events-that-trigger-workflows#push",
+                    "type": "object"
+                  },
+                  "workflowJob": {
+                    "description": "https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_job",
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "scheduledOverrides": {
+          "description": "ScheduledOverrides is the list of ScheduledOverride.\nIt can be used to override a few fields of HorizontalRunnerAutoscalerSpec on schedule.\nThe earlier a scheduled override is, the higher it is prioritized.",
+          "items": {
+            "additionalProperties": false,
+            "description": "ScheduledOverride can be used to override a few fields of HorizontalRunnerAutoscalerSpec on schedule.\nA schedule can optionally be recurring, so that the corresponding override happens every day, week, month, or year.",
+            "properties": {
+              "endTime": {
+                "description": "EndTime is the time at which the first override ends.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "minReplicas": {
+                "description": "MinReplicas is the number of runners while overriding.\nIf omitted, it doesn't override minReplicas.",
+                "minimum": 0,
+                "nullable": true,
+                "type": "integer"
+              },
+              "recurrenceRule": {
+                "additionalProperties": false,
+                "properties": {
+                  "frequency": {
+                    "description": "Frequency is the name of a predefined interval of each recurrence.\nThe valid values are \"Daily\", \"Weekly\", \"Monthly\", and \"Yearly\".\nIf empty, the corresponding override happens only once.",
+                    "enum": [
+                      "Daily",
+                      "Weekly",
+                      "Monthly",
+                      "Yearly"
+                    ],
+                    "type": "string"
+                  },
+                  "untilTime": {
+                    "description": "UntilTime is the time of the final recurrence.\nIf empty, the schedule recurs forever.",
+                    "format": "date-time",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "startTime": {
+                "description": "StartTime is the time at which the first override starts.",
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "required": [
+              "endTime",
+              "startTime"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "properties": {
+        "cacheEntries": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "expirationTime": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "desiredReplicas": {
+          "description": "DesiredReplicas is the total number of desired, non-terminated and latest pods to be set for the primary RunnerSet\nThis doesn't include outdated pods while upgrading the deployment and replacing the runnerset.",
+          "type": "integer"
+        },
+        "lastSuccessfulScaleOutTime": {
+          "format": "date-time",
+          "nullable": true,
+          "type": "string"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the most recent generation observed for the target. It corresponds to e.g.\nRunnerDeployment's generation, which is updated on mutation by the API Server.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "scheduledOverridesSummary": {
+          "description": "ScheduledOverridesSummary is the summary of active and upcoming scheduled overrides to be shown in e.g. a column of a `kubectl get hra` output\nfor observability.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object"
+}

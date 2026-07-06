@@ -1,0 +1,59 @@
+# schema source: Actions Runner Controller gha-runner-scale-set-0.14.2 https://github.com/actions/actions-runner-controller
+apiVersion <string> enum=actions.summerwind.dev/v1alpha1
+kind <string> enum=HorizontalRunnerAutoscaler
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# HorizontalRunnerAutoscalerSpec defines the desired state of HorizontalRunnerAutoscaler
+spec.capacityReservations <[]object>
+spec.capacityReservations[].effectiveTime <string> format=date-time
+spec.capacityReservations[].expirationTime <string> format=date-time
+spec.capacityReservations[].name <string>
+spec.capacityReservations[].replicas <integer>
+spec.githubAPICredentialsFrom <object>
+spec.githubAPICredentialsFrom.secretRef <object>
+spec.githubAPICredentialsFrom.secretRef.name <string> (required)
+spec.maxReplicas <integer>	# MaxReplicas is the maximum number of replicas the deployment is allowed to scale
+spec.metrics <[]object>	# Metrics is the collection of various metric targets to calculate desired number of runners
+spec.metrics[].repositoryNames <[]string>	# RepositoryNames is the list of repository names to be used for calculating the metric. For example, a repository name is the REPO part of `github.com/USER/REPO`.
+spec.metrics[].scaleDownAdjustment <integer>	# ScaleDownAdjustment is the number of runners removed on scale-down. You can only specify either ScaleDownFactor or ScaleDownAdjustment.
+spec.metrics[].scaleDownFactor <string>	# ScaleDownFactor is the multiplicative factor applied to the current number of runners used to determine how many pods should be removed.
+spec.metrics[].scaleDownThreshold <string>	# ScaleDownThreshold is the percentage of busy runners less than which will trigger the hpa to scale the runners down.
+spec.metrics[].scaleUpAdjustment <integer>	# ScaleUpAdjustment is the number of runners added on scale-up. You can only specify either ScaleUpFactor or ScaleUpAdjustment.
+spec.metrics[].scaleUpFactor <string>	# ScaleUpFactor is the multiplicative factor applied to the current number of runners used to determine how many pods should be added.
+spec.metrics[].scaleUpThreshold <string>	# ScaleUpThreshold is the percentage of busy runners greater than which will trigger the hpa to scale runners up.
+spec.metrics[].type <string>	# Type is the type of metric to be used for autoscaling. It can be TotalNumberOfQueuedAndInProgressWorkflowRuns or PercentageRunnersBusy.
+spec.minReplicas <integer>	# MinReplicas is the minimum number of replicas the deployment is allowed to scale
+spec.scaleDownDelaySecondsAfterScaleOut <integer>	# ScaleDownDelaySecondsAfterScaleUp is the approximate delay for a scale down followed by a scale up Used to prevent flapping (down->up->down->... loop)
+spec.scaleTargetRef <object>	# ScaleTargetRef is the reference to scaled resource like RunnerDeployment
+spec.scaleTargetRef.kind <string> enum=RunnerDeployment|RunnerSet	# Kind is the type of resource being referenced
+spec.scaleTargetRef.name <string>	# Name is the name of resource being referenced
+spec.scaleUpTriggers <[]object>	# ScaleUpTriggers is an experimental feature to increase the desired replicas by 1 on each webhook requested received by the webhookBasedAutoscaler. This feature requires you to also enable and deploy the webhookBasedAutoscaler onto your cluster. Note that the added runners remain until the next sync period at least, and they may or may not be used by GitHub Actions depending on the timing. They are intended to be used to gain "resource slack" immediately after you receive a webhook from GitHub, so that you can loosely expect MinReplicas runners to be always available.
+spec.scaleUpTriggers[].amount <integer>
+spec.scaleUpTriggers[].duration <string>
+spec.scaleUpTriggers[].githubEvent <object>
+spec.scaleUpTriggers[].githubEvent.checkRun <object>	# https://docs.github.com/en/actions/reference/events-that-trigger-workflows#check_run
+spec.scaleUpTriggers[].githubEvent.checkRun.names <[]string>	# Names is a list of GitHub Actions glob patterns. Any check_run event whose name matches one of patterns in the list can trigger autoscaling. Note that check_run name seem to equal to the job name you've defined in your actions workflow yaml file. So it is very likely that you can utilize this to trigger depending on the job.
+spec.scaleUpTriggers[].githubEvent.checkRun.repositories <[]string>	# Repositories is a list of GitHub repositories. Any check_run event whose repository matches one of repositories in the list can trigger autoscaling.
+spec.scaleUpTriggers[].githubEvent.checkRun.status <string>
+spec.scaleUpTriggers[].githubEvent.checkRun.types <[]string>	# One of: created, rerequested, or completed
+spec.scaleUpTriggers[].githubEvent.pullRequest <object>	# https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request
+spec.scaleUpTriggers[].githubEvent.pullRequest.branches <[]string>
+spec.scaleUpTriggers[].githubEvent.pullRequest.types <[]string>
+spec.scaleUpTriggers[].githubEvent.push <object (free-form)>	# PushSpec is the condition for triggering scale-up on push event Also see https://docs.github.com/en/actions/reference/events-that-trigger-workflows#push
+spec.scaleUpTriggers[].githubEvent.workflowJob <object (free-form)>	# https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_job
+spec.scheduledOverrides <[]object>	# ScheduledOverrides is the list of ScheduledOverride. It can be used to override a few fields of HorizontalRunnerAutoscalerSpec on schedule. The earlier a scheduled override is, the higher it is prioritized.
+spec.scheduledOverrides[].endTime <string> (required) format=date-time	# EndTime is the time at which the first override ends.
+spec.scheduledOverrides[].minReplicas <integer> min=0	# MinReplicas is the number of runners while overriding. If omitted, it doesn't override minReplicas.
+spec.scheduledOverrides[].recurrenceRule <object>
+spec.scheduledOverrides[].recurrenceRule.frequency <string> enum=Daily|Weekly|Monthly|Yearly	# Frequency is the name of a predefined interval of each recurrence. The valid values are "Daily", "Weekly", "Monthly", and "Yearly". If empty, the corresponding override happens only once.
+spec.scheduledOverrides[].recurrenceRule.untilTime <string> format=date-time	# UntilTime is the time of the final recurrence. If empty, the schedule recurs forever.
+spec.scheduledOverrides[].startTime <string> (required) format=date-time	# StartTime is the time at which the first override starts.
+status <object>
+status.cacheEntries <[]object>
+status.cacheEntries[].expirationTime <string> format=date-time
+status.cacheEntries[].key <string>
+status.cacheEntries[].value <integer>
+status.desiredReplicas <integer>	# DesiredReplicas is the total number of desired, non-terminated and latest pods to be set for the primary RunnerSet This doesn't include outdated pods while upgrading the deployment and replacing the runnerset.
+status.lastSuccessfulScaleOutTime <string> format=date-time
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation observed for the target. It corresponds to e.g. RunnerDeployment's generation, which is updated on mutation by the API Server.
+status.scheduledOverridesSummary <string>	# ScheduledOverridesSummary is the summary of active and upcoming scheduled overrides to be shown in e.g. a column of a `kubectl get hra` output for observability.
