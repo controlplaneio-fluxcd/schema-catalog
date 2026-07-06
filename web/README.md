@@ -29,7 +29,8 @@ location.
 |-----------------------------|-----------------------------------------------------------------------------|
 | `scripts/gen-index.ts`      | `build/history` + `sources.yaml` -> `dist/assets/index.json`                |
 | `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/` and `styles.css` into assets     |
-| `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev` with `CATALOG_DEV_ORIGIN`   |
+| `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change |
+| `scripts/serve.ts`          | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload |
 | `src/worker/index.ts`       | Worker router for `/catalog/*`, `/mcp`, and Workers Assets                  |
 | `src/worker/catalog.ts`     | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling |
 | `src/worker/mcp.ts`         | Streamable HTTP MCP server and tool registration                            |
@@ -84,15 +85,23 @@ beta, beta before alpha, higher major/sequence before lower. Bit `i` in
 
 ## MCP
 
-Endpoint: streamable HTTP at <https://schemas.fluxoperator.dev/mcp>.
+Endpoint: streamable HTTP at <https://schemas.fluxoperator.dev/mcp>, no
+authentication. The catalog is framed to agents as an authoritative source of
+Kubernetes-ecosystem API definitions for generating, editing, and validating
+manifests — not as a `flux-schema` backend. The human-facing overview page is
+at <https://schemas.fluxoperator.dev/#/mcp-server> (SPA route
+`src/ui/views/mcp.ts`).
 
-| Tool             | Description                                                              |
-|------------------|--------------------------------------------------------------------------|
-| `search_catalog` | Search projects, API groups, and kinds; returns latest schema URLs       |
-| `list_projects`  | List projects, optionally filtered by CNCF category                      |
-| `get_project`    | Return one project with groups, kinds, versions, and fields availability |
-| `get_schema`     | Return schema text, unless it exceeds the 256 KiB inline response guard  |
-| `search_fields`  | Search a `.fields.txt` index by raw query and/or field path prefix       |
+| Tool             | Description                                                                   |
+|------------------|-------------------------------------------------------------------------------|
+| `search_catalog` | Resolve a keyword (project, group, or kind) to matching groups/kinds/versions |
+| `list_projects`  | Enumerate catalog projects, optionally filtered by CNCF category              |
+| `get_project`    | Fetch one project's groups, kinds, versions, and field-index coverage         |
+| `get_schema`     | Fetch the full JSON Schema for a group/kind/version (256 KiB inline guard)    |
+| `search_fields`  | Look up exact field paths, types, constraints, and descriptions for a kind    |
+
+The server `instructions` steer agents through a discover → `search_fields` →
+`get_schema` escalation so most field questions never load a full schema.
 
 ```shell
 claude mcp add --transport http flux-schema-catalog https://schemas.fluxoperator.dev/mcp
@@ -105,6 +114,7 @@ From the repo root:
 ```shell
 make web-build   # install, lint, test, generate index, bundle UI
 make web-run     # local Worker + local catalog/ file server, no CF credentials
+make web-dev     # UI-only dev server, no wrangler; watches src and live-reloads (no /mcp)
 make web-sync    # rclone sync catalog/ to r2:schema-catalog
 make web-deploy  # wrangler deploy with CATALOG_VERSION from commit SHA
 ```
@@ -116,7 +126,8 @@ bun run lint       # tsc -p tsconfig.worker.json && tsc -p tsconfig.ui.json
 bun test
 bun run gen-index
 bun run build
-bun run dev
+bun run dev         # wrangler dev (Worker + MCP)
+bun run serve       # wrangler-free UI dev server (PORT overrides :8787)
 bun run deploy
 ```
 
