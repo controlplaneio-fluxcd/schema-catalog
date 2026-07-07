@@ -197,7 +197,10 @@ bun src/main.ts regen --concurrent=2 2>&1 | tee /tmp/regen.log
   listed files via the Contents API, so the remaining structural timeout is
   kubectl's hard-coded 27s git timeout on `kustomize` inputs of large repos.
   The run still attempts every source; retry stragglers one at a time with
-  `regen --source <name>` and confirm each reports `+0 -0` files.
+  `regen --source <name>` and confirm each reports `+0 -0 ~0` files. The
+  `~N` counter is the byte-level signal: `+`/`-` only track added and removed
+  paths, so a rebuild that rewrote existing schemas still shows `+0 -0` but
+  reports the rewritten files under `~`.
 - Retries re-render the root README versions table from the on-disk
   manifests, so any table inconsistency from a partial run self-heals.
 - Verify before committing:

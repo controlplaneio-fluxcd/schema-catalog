@@ -12,6 +12,8 @@ export interface BuildChange {
   files: number;
   added: number;
   removed: number;
+  /** Pre-existing catalog files whose content changed (added/removed track paths only). */
+  changed: number;
 }
 
 /** A source GC'd because it left sources.yaml. */
@@ -49,7 +51,8 @@ export function renderBuildSummary(
           c.prevVersion === null || c.prevVersion === c.version
             ? displayVersion(c.version)
             : `${displayVersion(c.prevVersion)} -> ${displayVersion(c.version)}`;
-        const delta = c.added > 0 || c.removed > 0 ? ` (+${c.added} -${c.removed})` : "";
+        const delta =
+          c.added > 0 || c.removed > 0 || c.changed > 0 ? ` (+${c.added} -${c.removed} ~${c.changed})` : "";
         return `| [${c.repo}](https://github.com/${c.repo}) | ${version} | ${c.files}${delta} |`;
       }),
     );

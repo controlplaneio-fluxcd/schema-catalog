@@ -111,7 +111,7 @@ async function processSource(
           ` e.g. ${conflicts[0]}`,
       );
     }
-    const files = await syncCatalog(staging, kept);
+    const { files, changed } = await syncCatalog(staging, kept);
     const kindIds = await kindCasing(kept, (rel) => Bun.file(join(staging, rel)).text());
     const kinds = historyKinds(extraction.resources, kindIds);
     const removed = removedFiles(prev, files, foreign);
@@ -131,7 +131,7 @@ async function processSource(
     const added = files.filter((f) => !prevSet.has(f)).length;
     console.log(
       `  ${source.name}: ${prev ? displayVersion(prev.version) : "none"} -> ${displayVersion(version)},` +
-        ` ${files.length} files (+${added} -${removed.length})`,
+        ` ${files.length} files (+${added} -${removed.length} ~${changed})`,
     );
     return {
       repo: entry.repo,
@@ -140,6 +140,7 @@ async function processSource(
       files: files.length,
       added,
       removed: removed.length,
+      changed,
     };
   } finally {
     await rm(staging, { recursive: true, force: true });

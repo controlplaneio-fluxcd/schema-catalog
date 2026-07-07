@@ -503,6 +503,7 @@ describe("renderBuildSummary", () => {
           files: 32,
           added: 2,
           removed: 0,
+          changed: 30,
         },
         {
           repo: "controlplaneio-fluxcd/flux-operator",
@@ -511,6 +512,7 @@ describe("renderBuildSummary", () => {
           files: 8,
           added: 0,
           removed: 0,
+          changed: 0,
         },
       ],
       [],
@@ -521,7 +523,7 @@ describe("renderBuildSummary", () => {
 
 | Source | Version | Files |
 | --- | --- | --- |
-| [fluxcd/flux2](https://github.com/fluxcd/flux2) | v2.9.0 -> v2.10.0 | 32 (+2 -0) |
+| [fluxcd/flux2](https://github.com/fluxcd/flux2) | v2.9.0 -> v2.10.0 | 32 (+2 -0 ~30) |
 | [controlplaneio-fluxcd/flux-operator](https://github.com/controlplaneio-fluxcd/flux-operator) | v0.53.0 -> v0.54.0 | 8 |
 
 4 source(s) already up to date.
@@ -531,11 +533,21 @@ describe("renderBuildSummary", () => {
 
   test("shows plain versions for new sources and reports orphan removals", () => {
     const out = renderBuildSummary(
-      [{ repo: "cert-manager/cert-manager", prevVersion: null, version: "v1.19.0", files: 12, added: 12, removed: 0 }],
+      [
+        {
+          repo: "cert-manager/cert-manager",
+          prevVersion: null,
+          version: "v1.19.0",
+          files: 12,
+          added: 12,
+          removed: 0,
+          changed: 0,
+        },
+      ],
       [{ name: "flagger", files: 6 }],
       5,
     );
-    expect(out).toContain("| [cert-manager/cert-manager](https://github.com/cert-manager/cert-manager) | v1.19.0 | 12 (+12 -0) |");
+    expect(out).toContain("| [cert-manager/cert-manager](https://github.com/cert-manager/cert-manager) | v1.19.0 | 12 (+12 -0 ~0) |");
     expect(out).toContain("Removed `flagger` (6 files): no longer in sources.yaml.");
   });
 
@@ -547,7 +559,7 @@ describe("renderBuildSummary", () => {
 
   test("renders a warning block listing source failures when passed", () => {
     const out = renderBuildSummary(
-      [{ repo: "fluxcd/flux2", prevVersion: "v2.9.0", version: "v2.10.0", files: 32, added: 2, removed: 0 }],
+      [{ repo: "fluxcd/flux2", prevVersion: "v2.9.0", version: "v2.10.0", files: 32, added: 2, removed: 0, changed: 30 }],
       [],
       4,
       [{ name: "openshift", message: "GET https://endoflife.date/...\nsocket closed" }],

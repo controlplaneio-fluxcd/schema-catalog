@@ -140,14 +140,30 @@ export async function kindCasing(
 /**
  * Copies staged files into catalog/ and returns their repo-root-relative
  * paths (catalog/<group>/<file>), the format stored in history manifests.
+ * Byte-identical files are left untouched; `changed` counts the pre-existing
+ * files whose content actually differed (new files are counted by the
+ * caller's added/removed delta), so the build log can tell a verified no-op
+ * rebuild apart from one that rewrote schemas.
  */
-export async function syncCatalog(dir: string, staged: string[]): Promise<string[]> {
+export async function syncCatalog(
+  dir: string,
+  staged: string[],
+): Promise<{ files: string[]; changed: number }> {
   const files: string[] = [];
+  let changed = 0;
   for (const rel of staged) {
-    await Bun.write(join(CATALOG_DIR, rel), Bun.file(join(dir, rel)));
+    const dest = Bun.file(join(CATALOG_DIR, rel));
+    const next = await Bun.file(join(dir, rel)).bytes();
+    const prev = (await dest.exists()) ? await dest.bytes() : null;
+    if (prev === null || Buffer.compare(prev, next) !== 0) {
+      if (prev !== null) {
+        changed++;
+      }
+      await Bun.write(dest, next);
+    }
     files.push(join("catalog", rel));
   }
-  return files;
+  return { files, changed };
 }
 
 /**
