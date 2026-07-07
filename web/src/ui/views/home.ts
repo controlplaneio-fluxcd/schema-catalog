@@ -39,7 +39,7 @@ export function renderHome(index: CatalogIndex): HTMLElement {
   const dot = document.createElement("span");
   dot.className = "badge-dot";
   dot.setAttribute("aria-hidden", "true");
-  badge.append(dot, document.createTextNode("Kubernetes · OpenShift · Flux · CNCF ecosystem"));
+  badge.append(dot, document.createTextNode("Kubernetes · OpenShift · CNCF Ecosystem"));
 
   const title = document.createElement("h1");
   title.className = "home-title";
@@ -250,7 +250,7 @@ function createLanes(): HTMLElement {
     text(
       "p",
       "",
-      "Connect any MCP client and your agent stops guessing YAML: it greps the real fields, types, and constraints for the exact apiVersion it writes or reviews, no cluster required.",
+      "Connect any MCP client and your agent stops guessing YAML: it greps the real fields, types, and constraints for the exact API version it writes or reviews, no cluster required.",
     ),
     createCodeBlock(MCP_COMMAND),
     aiLink,
@@ -265,7 +265,7 @@ function createLanes(): HTMLElement {
     text(
       "p",
       "",
-      "Validate manifests offline against the same catalog: strict schemas, required fields enforced, unknown fields and deprecations flagged before anything reaches a cluster.",
+      "Validate manifests against the same catalog: strict schemas catch missing, unknown, or deprecated fields, and CEL rules catch cross-field errors — before anything reaches a cluster.",
     ),
     createCodeBlock(VALIDATE_COMMAND),
     ciLink,
