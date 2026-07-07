@@ -1,12 +1,33 @@
-# schema source: GCP Config Connector v1.152.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.153.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=redis.cnrm.cloud.google.com/v1alpha1
 kind <string> enum=RedisCluster
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# RedisClusterSpec defines the desired state of RedisCluster
 spec.authorizationMode <string>	# Optional. The authorization mode of the Redis cluster. If not provided, auth feature is disabled for the cluster.
+spec.automatedBackupConfig <object>	# Optional. The automated backup config for the cluster.
+spec.automatedBackupConfig.automatedBackupMode <string>	# Optional. The automated backup mode. If the mode is disabled, the other fields will be ignored.
+spec.automatedBackupConfig.fixedFrequencySchedule <object>	# Optional. Trigger automated backups at a fixed frequency.
+spec.automatedBackupConfig.fixedFrequencySchedule.startTime <object>	# Required. The start time of every automated backup in UTC. It must be set to the start of an hour. This field is required.
+spec.automatedBackupConfig.fixedFrequencySchedule.startTime.hours <integer> format=int32	# Hours of day in 24 hour format. Should be from 0 to 23. An API may choose to allow the value "24:00:00" for scenarios like business closing time.
+spec.automatedBackupConfig.fixedFrequencySchedule.startTime.minutes <integer> format=int32	# Minutes of hour of day. Must be from 0 to 59.
+spec.automatedBackupConfig.fixedFrequencySchedule.startTime.nanos <integer> format=int32	# Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.
+spec.automatedBackupConfig.fixedFrequencySchedule.startTime.seconds <integer> format=int32	# Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.
+spec.automatedBackupConfig.retention <string>	# Optional. How long to keep automated backups before the backups are deleted. The value should be between 1 day and 365 days. If not specified, the default value is 35 days.
 spec.deletionProtectionEnabled <boolean>	# Optional. The delete operation will fail when the value is set to true.
+spec.kmsKeyRef <object>	# Optional. The KMS key name to encrypt data at rest.
+spec.kmsKeyRef.external <string>	# A reference to an externally managed KMSCryptoKey. Should be in the format `projects/[kms_project_id]/locations/[region]/keyRings/[key_ring_id]/cryptoKeys/[key]`.
+spec.kmsKeyRef.name <string>	# The `name` of a `KMSCryptoKey` resource.
+spec.kmsKeyRef.namespace <string>	# The `namespace` of a `KMSCryptoKey` resource.
 spec.location <string> (required)	# Immutable. Location of the resource.
+spec.maintenancePolicy <object>	# Optional. ClusterMaintenancePolicy determines when to allow or deny updates.
+spec.maintenancePolicy.weeklyMaintenanceWindow <[]object>	# Optional. Maintenance window that is applied to resources covered by this policy. Minimum 1. For the current version, the maximum number of weekly_maintenance_window is expected to be one.
+spec.maintenancePolicy.weeklyMaintenanceWindow[].day <string>	# Allows to define schedule that runs specified day of the week.
+spec.maintenancePolicy.weeklyMaintenanceWindow[].startTime <object>	# Start time of the window in UTC.
+spec.maintenancePolicy.weeklyMaintenanceWindow[].startTime.hours <integer> format=int32	# Hours of day in 24 hour format. Should be from 0 to 23. An API may choose to allow the value "24:00:00" for scenarios like business closing time.
+spec.maintenancePolicy.weeklyMaintenanceWindow[].startTime.minutes <integer> format=int32	# Minutes of hour of day. Must be from 0 to 59.
+spec.maintenancePolicy.weeklyMaintenanceWindow[].startTime.nanos <integer> format=int32	# Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.
+spec.maintenancePolicy.weeklyMaintenanceWindow[].startTime.seconds <integer> format=int32	# Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.
 spec.nodeType <string>	# Optional. The type of a redis node in the cluster. NodeType determines the underlying machine-type of a redis node.
 spec.persistenceConfig <object>	# Optional. Persistence config (RDB, AOF) for the cluster.
 spec.persistenceConfig.aofConfig <object>	# Optional. AOF configuration. This field will be ignored if mode is not AOF.
@@ -22,7 +43,7 @@ spec.projectRef.name <string>	# The `name` field of a `Project` resource.
 spec.projectRef.namespace <string>	# The `namespace` field of a `Project` resource.
 spec.pscConfigs <[]object>	# Required. Each PscConfig configures the consumer network where IPs will be designated to the cluster for client access through Private Service Connect Automation. Currently, only one PscConfig is supported.
 spec.pscConfigs[].networkRef <object> (required)	# Required. The network where the IP address of the discovery endpoint will be reserved, in the form of projects/{network_project}/global/networks/{network_id}.
-spec.pscConfigs[].networkRef.external <string>	# The value of an externally managed ComputeNetwork resource. Should be in the format "https://www.googleapis.com/compute/{{version}}/projects/{{projectId}}/global/networks/{{networkId}}" or "projects/{{projectId}}/global/networks/{{networkId}}"
+spec.pscConfigs[].networkRef.external <string>	# A reference to an externally managed ComputeNetwork resource. Should be in the format "projects/{{projectID}}/global/networks/{{networkID}}".
 spec.pscConfigs[].networkRef.name <string>	# The name of a ComputeNetwork resource.
 spec.pscConfigs[].networkRef.namespace <string>	# The namespace of a ComputeNetwork resource.
 spec.redisConfigs <map[string]string>	# Optional. Key/Value pairs of customer overrides for mutable Redis Configs
@@ -49,6 +70,17 @@ status.observedState.discoveryEndpoints[].address <string>	# Output only. Addres
 status.observedState.discoveryEndpoints[].port <integer> format=int32	# Output only. The port number of the exposed Redis endpoint.
 status.observedState.discoveryEndpoints[].pscConfig <object>	# Output only. Customer configuration for where the endpoint is created and accessed from.
 status.observedState.discoveryEndpoints[].pscConfig.network <string>	# Required. The network where the IP address of the discovery endpoint will be reserved, in the form of projects/{network_project}/global/networks/{network_id}.
+status.observedState.encryptionInfo <object>	# Output only. Encryption information for the client to retrieve.
+status.observedState.encryptionInfo.encryptionType <string>	# Output only. Type of encryption.
+status.observedState.encryptionInfo.kmsKeyPrimaryState <string>	# Output only. The state of the primary version of the KMS key perceived by the system. This field is not populated in backups.
+status.observedState.encryptionInfo.kmsKeyVersions <[]string>	# Output only. KMS key versions that are being used to protect the data at-rest.
+status.observedState.encryptionInfo.lastUpdateTime <string>	# Output only. The most recent time when the encryption info was updated.
+status.observedState.maintenancePolicy <object>	# Optional. ClusterMaintenancePolicy determines when to allow or deny updates.
+status.observedState.maintenancePolicy.createTime <string>	# Output only. The time when the policy was created i.e. Maintenance Window or Deny Period was assigned.
+status.observedState.maintenancePolicy.updateTime <string>	# Output only. The time when the policy was updated i.e. Maintenance Window or Deny Period was updated.
+status.observedState.maintenanceSchedule <object>	# Output only. ClusterMaintenanceSchedule Output only Published maintenance schedule.
+status.observedState.maintenanceSchedule.endTime <string>	# Output only. The end time of any upcoming scheduled maintenance for this instance.
+status.observedState.maintenanceSchedule.startTime <string>	# Output only. The start time of any upcoming scheduled maintenance for this instance.
 status.observedState.preciseSizeGb <number>	# Output only. Precise value of redis memory size in GB for the entire cluster.
 status.observedState.pscConnections <[]object>	# Output only. PSC connections for discovery of the cluster topology and accessing the cluster.
 status.observedState.pscConnections[].address <string>	# Required. The IP allocated on the consumer network for the PSC forwarding rule.
@@ -57,6 +89,9 @@ status.observedState.pscConnections[].network <string>	# Required. The consumer 
 status.observedState.pscConnections[].projectID <string>	# Optional. Project ID of the consumer project where the forwarding rule is created in.
 status.observedState.pscConnections[].pscConnectionID <string>	# Required. The PSC connection id of the forwarding rule connected to the service attachment.
 status.observedState.pscConnections[].serviceAttachment <string>	# Required. The service attachment which is the target of the PSC connection, in the form of projects/{project-id}/regions/{region}/serviceAttachments/{service-attachment-id}.
+status.observedState.pscServiceAttachments <[]object>	# Output only. Service attachment details to configure Psc connections.
+status.observedState.pscServiceAttachments[].connectionType <string>	# Output only. Type of a PSC connection targeting this service attachment.
+status.observedState.pscServiceAttachments[].serviceAttachment <string>	# Output only. Service attachment URI which your self-created PscConnection should use as target
 status.observedState.sizeGb <integer> format=int32	# Output only. Redis memory size in GB for the entire cluster rounded up to the next integer.
 status.observedState.state <string>	# Output only. The current state of this cluster. Can be CREATING, READY, UPDATING, DELETING and SUSPENDED
 status.observedState.stateInfo <object>	# Output only. Additional information about the current state of the cluster.
