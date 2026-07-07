@@ -30,7 +30,9 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-flux-schema-type": "Time",
+          "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "deletionGracePeriodSeconds": {
           "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only.",
@@ -46,7 +48,9 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-flux-schema-type": "Time",
+          "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "finalizers": {
           "description": "Must be empty before the object is deleted from the registry. Each entry is an identifier for the responsible component that will remove the entry from the list. If the deletionTimestamp of the object is non-nil, entries in this list can only be removed. Finalizers may be processed and removed in any order.  Order is NOT enforced because it introduces significant risk of stuck finalizers. finalizers is a shared field, any actor with permission can reorder it. If the finalizer list is processed in order, then this can lead to a situation in which the component responsible for the first finalizer in the list is waiting for a signal (field value, external system, or other) produced by a component responsible for a finalizer later in the list, resulting in a deadlock. Without enforced ordering finalizers are free to order amongst themselves and are not vulnerable to ordering changes in the list.",
@@ -108,7 +112,9 @@
                 "type": [
                   "object",
                   "null"
-                ]
+                ],
+                "x-flux-schema-type": "FieldsV1",
+                "x-flux-schema-type-description": "FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.\n\nEach key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.\n\nThe exact format is defined in sigs.k8s.io/structured-merge-diff"
               },
               "manager": {
                 "description": "Manager is an identifier of the workflow managing these fields.",
@@ -137,10 +143,14 @@
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "x-flux-schema-type": "Time",
+                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               }
             },
-            "type": "object"
+            "type": "object",
+            "x-flux-schema-type": "ManagedFieldsEntry",
+            "x-flux-schema-type-description": "ManagedFieldsEntry is a workflow-id, a FieldSet and the group version of the resource that the fieldset applies to."
           },
           "type": [
             "array",
@@ -204,7 +214,9 @@
               "name",
               "uid"
             ],
-            "type": "object"
+            "type": "object",
+            "x-flux-schema-type": "OwnerReference",
+            "x-flux-schema-type-description": "OwnerReference contains enough information to let you identify an owning object. An owning object must be in the same namespace as the dependent, or be cluster-scoped, so there is no namespace field."
           },
           "type": [
             "array",
@@ -236,7 +248,9 @@
       "type": [
         "object",
         "null"
-      ]
+      ],
+      "x-flux-schema-type": "ObjectMeta",
+      "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
     "spec": {
       "additionalProperties": false,
@@ -262,7 +276,9 @@
                       },
                       "parameters": {
                         "description": "Parameters can contain arbitrary data. It is the responsibility of the driver developer to handle validation and versioning. Typically this includes self-identification and a version (\"kind\" + \"apiVersion\" for Kubernetes types), with conversion between different versions.\n\nThe length of the raw data must be smaller or equal to 10 Ki.",
-                        "type": "object"
+                        "type": "object",
+                        "x-flux-schema-type": "RawExtension",
+                        "x-flux-schema-type-description": "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.Object `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// External package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// On the wire, the JSON will look something like this:\n\n\t{\n\t\t\"kind\":\"MyAPIObject\",\n\t\t\"apiVersion\":\"v1\",\n\t\t\"myPlugin\": {\n\t\t\t\"kind\":\"PluginA\",\n\t\t\t\"aOption\":\"foo\",\n\t\t},\n\t}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)"
                       }
                     },
                     "required": [
@@ -272,7 +288,9 @@
                     "type": [
                       "object",
                       "null"
-                    ]
+                    ],
+                    "x-flux-schema-type": "OpaqueDeviceConfiguration",
+                    "x-flux-schema-type-description": "OpaqueDeviceConfiguration contains configuration parameters for a driver in a format defined by the driver vendor."
                   },
                   "requests": {
                     "description": "Requests lists the names of requests where the configuration applies. If empty, it applies to all requests.\n\nReferences to subrequests must include the name of the main request and may include the subrequest using the format <main request>[/<subrequest>]. If just the main request is given, the configuration applies to all subrequests.",
@@ -285,7 +303,9 @@
                     ]
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-flux-schema-type": "DeviceClaimConfiguration",
+                "x-flux-schema-type-description": "DeviceClaimConfiguration is used for configuration parameters in DeviceClaim."
               },
               "type": [
                 "array",
@@ -323,7 +343,9 @@
                     ]
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-flux-schema-type": "DeviceConstraint",
+                "x-flux-schema-type-description": "DeviceConstraint must have exactly one field set besides Requests."
               },
               "type": [
                 "array",
@@ -357,7 +379,9 @@
                       "requests": {
                         "additionalProperties": {
                           "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
-                          "type": "string"
+                          "type": "string",
+                          "x-flux-schema-type": "Quantity",
+                          "x-flux-schema-type-description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation."
                         },
                         "description": "Requests represent individual device resource requests for distinct resources, all of which must be provided by the device.\n\nThis value is used as an additional filtering condition against the available capacity on the device. This is semantically equivalent to a CEL selector with `device.capacity[<domain>].<name>.compareTo(quantity(<request quantity>)) >= 0`. For example, device.capacity['test-driver.cdi.k8s.io'].counters.compareTo(quantity('2')) >= 0.\n\nWhen a requestPolicy is defined, the requested amount is adjusted upward to the nearest valid value based on the policy. If the requested amount cannot be adjusted to a valid value—because it exceeds what the requestPolicy allows— the device is considered ineligible for allocation.\n\nFor any capacity that is not explicitly requested: - If no requestPolicy is set, the default consumed capacity is equal to the full device capacity\n  (i.e., the whole device is claimed).\n- If a requestPolicy is set, the default consumed capacity is determined according to that policy.\n\nIf the device allows multiple allocation, the aggregated amount across all requests must not exceed the capacity value. The consumed capacity, which may be adjusted based on the requestPolicy if defined, is recorded in the resource claim’s status.devices[*].consumedCapacity field.",
                         "type": [
@@ -369,7 +393,9 @@
                     "type": [
                       "object",
                       "null"
-                    ]
+                    ],
+                    "x-flux-schema-type": "CapacityRequirements",
+                    "x-flux-schema-type-description": "CapacityRequirements defines the capacity requirements for a specific device request."
                   },
                   "count": {
                     "description": "Count is used only when the count mode is \"ExactCount\". Must be greater than zero. If AllocationMode is ExactCount and this field is not specified, the default is one.\n\nThis field can only be set when deviceClassName is set and no subrequests are specified in the firstAvailable list.",
@@ -406,7 +432,9 @@
                             "requests": {
                               "additionalProperties": {
                                 "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
-                                "type": "string"
+                                "type": "string",
+                                "x-flux-schema-type": "Quantity",
+                                "x-flux-schema-type-description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation."
                               },
                               "description": "Requests represent individual device resource requests for distinct resources, all of which must be provided by the device.\n\nThis value is used as an additional filtering condition against the available capacity on the device. This is semantically equivalent to a CEL selector with `device.capacity[<domain>].<name>.compareTo(quantity(<request quantity>)) >= 0`. For example, device.capacity['test-driver.cdi.k8s.io'].counters.compareTo(quantity('2')) >= 0.\n\nWhen a requestPolicy is defined, the requested amount is adjusted upward to the nearest valid value based on the policy. If the requested amount cannot be adjusted to a valid value—because it exceeds what the requestPolicy allows— the device is considered ineligible for allocation.\n\nFor any capacity that is not explicitly requested: - If no requestPolicy is set, the default consumed capacity is equal to the full device capacity\n  (i.e., the whole device is claimed).\n- If a requestPolicy is set, the default consumed capacity is determined according to that policy.\n\nIf the device allows multiple allocation, the aggregated amount across all requests must not exceed the capacity value. The consumed capacity, which may be adjusted based on the requestPolicy if defined, is recorded in the resource claim’s status.devices[*].consumedCapacity field.",
                               "type": [
@@ -418,7 +446,9 @@
                           "type": [
                             "object",
                             "null"
-                          ]
+                          ],
+                          "x-flux-schema-type": "CapacityRequirements",
+                          "x-flux-schema-type-description": "CapacityRequirements defines the capacity requirements for a specific device request."
                         },
                         "count": {
                           "description": "Count is used only when the count mode is \"ExactCount\". Must be greater than zero. If AllocationMode is ExactCount and this field is not specified, the default is one.",
@@ -457,10 +487,14 @@
                                 "type": [
                                   "object",
                                   "null"
-                                ]
+                                ],
+                                "x-flux-schema-type": "CELDeviceSelector",
+                                "x-flux-schema-type-description": "CELDeviceSelector contains a CEL expression for selecting a device."
                               }
                             },
-                            "type": "object"
+                            "type": "object",
+                            "x-flux-schema-type": "DeviceSelector",
+                            "x-flux-schema-type-description": "DeviceSelector must have exactly one field set."
                           },
                           "type": [
                             "array",
@@ -510,7 +544,9 @@
                                 ]
                               }
                             },
-                            "type": "object"
+                            "type": "object",
+                            "x-flux-schema-type": "DeviceToleration",
+                            "x-flux-schema-type-description": "The ResourceClaim this DeviceToleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>."
                           },
                           "type": [
                             "array",
@@ -522,7 +558,9 @@
                         "name",
                         "deviceClassName"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-flux-schema-type": "DeviceSubRequest",
+                      "x-flux-schema-type-description": "DeviceSubRequest describes a request for device provided in the claim.spec.devices.requests[].firstAvailable array. Each is typically a request for a single resource like a device, but can also ask for several identical devices.\n\nDeviceSubRequest is similar to Request, but doesn't expose the AdminAccess or FirstAvailable fields, as those can only be set on the top-level request. AdminAccess is not supported for requests with a prioritized list, and recursive FirstAvailable fields are not supported."
                     },
                     "type": [
                       "array",
@@ -554,10 +592,14 @@
                           "type": [
                             "object",
                             "null"
-                          ]
+                          ],
+                          "x-flux-schema-type": "CELDeviceSelector",
+                          "x-flux-schema-type-description": "CELDeviceSelector contains a CEL expression for selecting a device."
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "x-flux-schema-type": "DeviceSelector",
+                      "x-flux-schema-type-description": "DeviceSelector must have exactly one field set."
                     },
                     "type": [
                       "array",
@@ -607,7 +649,9 @@
                           ]
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "x-flux-schema-type": "DeviceToleration",
+                      "x-flux-schema-type-description": "The ResourceClaim this DeviceToleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>."
                     },
                     "type": [
                       "array",
@@ -618,7 +662,9 @@
                 "required": [
                   "name"
                 ],
-                "type": "object"
+                "type": "object",
+                "x-flux-schema-type": "DeviceRequest",
+                "x-flux-schema-type-description": "DeviceRequest is a request for devices required for a claim. This is typically a request for a single resource like a device, but can also ask for several identical devices."
               },
               "type": [
                 "array",
@@ -629,10 +675,14 @@
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "x-flux-schema-type": "DeviceClaim",
+          "x-flux-schema-type-description": "DeviceClaim defines how to request devices with a ResourceClaim."
         }
       },
-      "type": "object"
+      "type": "object",
+      "x-flux-schema-type": "ResourceClaimSpec",
+      "x-flux-schema-type-description": "ResourceClaimSpec defines what is being requested in a ResourceClaim and how to configure it."
     },
     "status": {
       "additionalProperties": false,
@@ -648,7 +698,9 @@
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-flux-schema-type": "Time",
+              "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
             },
             "devices": {
               "additionalProperties": false,
@@ -670,7 +722,9 @@
                           },
                           "parameters": {
                             "description": "Parameters can contain arbitrary data. It is the responsibility of the driver developer to handle validation and versioning. Typically this includes self-identification and a version (\"kind\" + \"apiVersion\" for Kubernetes types), with conversion between different versions.\n\nThe length of the raw data must be smaller or equal to 10 Ki.",
-                            "type": "object"
+                            "type": "object",
+                            "x-flux-schema-type": "RawExtension",
+                            "x-flux-schema-type-description": "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.Object `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// External package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// On the wire, the JSON will look something like this:\n\n\t{\n\t\t\"kind\":\"MyAPIObject\",\n\t\t\"apiVersion\":\"v1\",\n\t\t\"myPlugin\": {\n\t\t\t\"kind\":\"PluginA\",\n\t\t\t\"aOption\":\"foo\",\n\t\t},\n\t}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)"
                           }
                         },
                         "required": [
@@ -680,7 +734,9 @@
                         "type": [
                           "object",
                           "null"
-                        ]
+                        ],
+                        "x-flux-schema-type": "OpaqueDeviceConfiguration",
+                        "x-flux-schema-type-description": "OpaqueDeviceConfiguration contains configuration parameters for a driver in a format defined by the driver vendor."
                       },
                       "requests": {
                         "description": "Requests lists the names of requests where the configuration applies. If empty, its applies to all requests.\n\nReferences to subrequests must include the name of the main request and may include the subrequest using the format <main request>[/<subrequest>]. If just the main request is given, the configuration applies to all subrequests.",
@@ -700,7 +756,9 @@
                     "required": [
                       "source"
                     ],
-                    "type": "object"
+                    "type": "object",
+                    "x-flux-schema-type": "DeviceAllocationConfiguration",
+                    "x-flux-schema-type-description": "DeviceAllocationConfiguration gets embedded in an AllocationResult."
                   },
                   "type": [
                     "array",
@@ -743,7 +801,9 @@
                       "consumedCapacity": {
                         "additionalProperties": {
                           "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
-                          "type": "string"
+                          "type": "string",
+                          "x-flux-schema-type": "Quantity",
+                          "x-flux-schema-type-description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation."
                         },
                         "description": "ConsumedCapacity tracks the amount of capacity consumed per device as part of the claim request. The consumed amount may differ from the requested amount: it is rounded up to the nearest valid value based on the device’s requestPolicy if applicable (i.e., may not be less than the requested amount).\n\nThe total consumed capacity for each device must not exceed the DeviceCapacity's Value.\n\nThis field is populated only for devices that allow multiple allocations. All capacity entries are included, even if the consumed amount is zero.",
                         "type": [
@@ -817,7 +877,9 @@
                               ]
                             }
                           },
-                          "type": "object"
+                          "type": "object",
+                          "x-flux-schema-type": "DeviceToleration",
+                          "x-flux-schema-type-description": "The ResourceClaim this DeviceToleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>."
                         },
                         "type": [
                           "array",
@@ -831,7 +893,9 @@
                       "pool",
                       "device"
                     ],
-                    "type": "object"
+                    "type": "object",
+                    "x-flux-schema-type": "DeviceRequestAllocationResult",
+                    "x-flux-schema-type-description": "DeviceRequestAllocationResult contains the allocation result for one request."
                   },
                   "type": [
                     "array",
@@ -842,7 +906,9 @@
               "type": [
                 "object",
                 "null"
-              ]
+              ],
+              "x-flux-schema-type": "DeviceAllocationResult",
+              "x-flux-schema-type-description": "DeviceAllocationResult is the result of allocating devices."
             },
             "nodeSelector": {
               "additionalProperties": false,
@@ -883,7 +949,9 @@
                             "key",
                             "operator"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-flux-schema-type": "NodeSelectorRequirement",
+                          "x-flux-schema-type-description": "A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values."
                         },
                         "type": [
                           "array",
@@ -919,7 +987,9 @@
                             "key",
                             "operator"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-flux-schema-type": "NodeSelectorRequirement",
+                          "x-flux-schema-type-description": "A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values."
                         },
                         "type": [
                           "array",
@@ -927,7 +997,9 @@
                         ]
                       }
                     },
-                    "type": "object"
+                    "type": "object",
+                    "x-flux-schema-type": "NodeSelectorTerm",
+                    "x-flux-schema-type-description": "A null or empty node selector term matches no objects. The requirements of them are ANDed. The TopologySelectorTerm type implements a subset of the NodeSelectorTerm."
                   },
                   "type": "array"
                 }
@@ -938,13 +1010,17 @@
               "type": [
                 "object",
                 "null"
-              ]
+              ],
+              "x-flux-schema-type": "NodeSelector",
+              "x-flux-schema-type-description": "A node selector represents the union of the results of one or more label queries over a set of nodes; that is, it represents the OR of the selectors represented by the node selector terms."
             }
           },
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "x-flux-schema-type": "AllocationResult",
+          "x-flux-schema-type-description": "AllocationResult contains attributes of an allocated resource."
         },
         "devices": {
           "description": "Devices contains the status of each device allocated for this claim, as reported by the driver. This can include driver-specific information. Entries are owned by their respective drivers.",
@@ -961,7 +1037,9 @@
                     "lastTransitionTime": {
                       "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
                       "format": "date-time",
-                      "type": "string"
+                      "type": "string",
+                      "x-flux-schema-type": "Time",
+                      "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
                     },
                     "message": {
                       "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
@@ -995,7 +1073,9 @@
                     "reason",
                     "message"
                   ],
-                  "type": "object"
+                  "type": "object",
+                  "x-flux-schema-type": "Condition",
+                  "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
                 },
                 "type": [
                   "array",
@@ -1007,7 +1087,9 @@
                 "type": [
                   "object",
                   "null"
-                ]
+                ],
+                "x-flux-schema-type": "RawExtension",
+                "x-flux-schema-type-description": "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.Object `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// External package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// On the wire, the JSON will look something like this:\n\n\t{\n\t\t\"kind\":\"MyAPIObject\",\n\t\t\"apiVersion\":\"v1\",\n\t\t\"myPlugin\": {\n\t\t\t\"kind\":\"PluginA\",\n\t\t\t\"aOption\":\"foo\",\n\t\t},\n\t}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)"
               },
               "device": {
                 "description": "Device references one device instance via its name in the driver's resource pool. It must be a DNS label.",
@@ -1049,7 +1131,9 @@
                 "type": [
                   "object",
                   "null"
-                ]
+                ],
+                "x-flux-schema-type": "NetworkDeviceData",
+                "x-flux-schema-type-description": "NetworkDeviceData provides network-related details for the allocated device. This information may be filled by drivers or other components to configure or identify the device within a network context."
               },
               "pool": {
                 "description": "This name together with the driver name and the device name field identify which device was allocated (`<driver name>/<pool name>/<device name>`).\n\nMust not be longer than 253 characters and may contain one or more DNS sub-domains separated by slashes.",
@@ -1068,7 +1152,9 @@
               "pool",
               "device"
             ],
-            "type": "object"
+            "type": "object",
+            "x-flux-schema-type": "AllocatedDeviceStatus",
+            "x-flux-schema-type-description": "AllocatedDeviceStatus contains the status of an allocated device, if the driver chooses to report it. This may include driver-specific information.\n\nThe combination of Driver, Pool, Device, and ShareID must match the corresponding key in Status.Allocation.Devices."
           },
           "type": [
             "array",
@@ -1106,7 +1192,9 @@
               "name",
               "uid"
             ],
-            "type": "object"
+            "type": "object",
+            "x-flux-schema-type": "ResourceClaimConsumerReference",
+            "x-flux-schema-type-description": "ResourceClaimConsumerReference contains enough information to let you locate the consumer of a ResourceClaim. The user must be a resource in the same namespace as the ResourceClaim."
           },
           "type": [
             "array",
@@ -1117,7 +1205,9 @@
       "type": [
         "object",
         "null"
-      ]
+      ],
+      "x-flux-schema-type": "ResourceClaimStatus",
+      "x-flux-schema-type-description": "ResourceClaimStatus tracks whether the resource has been allocated and what the result of that was."
     }
   },
   "required": [
@@ -1125,5 +1215,6 @@
     "apiVersion",
     "kind"
   ],
-  "type": "object"
+  "type": "object",
+  "x-flux-schema-type": "ResourceClaim"
 }

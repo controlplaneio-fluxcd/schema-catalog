@@ -1,4 +1,4 @@
-# schema source: Rook v1.20.1 https://github.com/rook/rook
+# schema source: Rook v1.20.2 https://github.com/rook/rook
 apiVersion <string> enum=ceph.rook.io/v1
 kind <string> enum=CephCluster
 metadata.name <string> (required)
@@ -87,6 +87,8 @@ spec.healthCheck.livenessProbe.<key>.probe.tcpSocket.host <string>	# Optional: H
 spec.healthCheck.livenessProbe.<key>.probe.tcpSocket.port <int-or-string> (required)	# Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
 spec.healthCheck.livenessProbe.<key>.probe.terminationGracePeriodSeconds <integer> format=int64
 spec.healthCheck.livenessProbe.<key>.probe.timeoutSeconds <integer> format=int32	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.healthCheck.muteHealthWarning <map[string]object>	# MuteHealthWarning configures muting of Ceph health warnings.
+spec.healthCheck.muteHealthWarning.<key>.policy <string> (required) enum=mute|unmute	# Policy controls whether to mute or unmute a Ceph health warning.
 spec.healthCheck.startupProbe <map[string]object>	# StartupProbe allows changing the startupProbe configuration for a given daemon
 spec.healthCheck.startupProbe.<key>.disabled <boolean>	# Disabled determines whether probe is disable or not
 spec.healthCheck.startupProbe.<key>.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
@@ -804,7 +806,7 @@ spec.storage.volumeClaimTemplates[].spec.volumeAttributesClassName <string>	# vo
 spec.storage.volumeClaimTemplates[].spec.volumeMode <string>	# volumeMode defines what type of volume is required by the claim. Value of Filesystem is implied when not included in claim spec.
 spec.storage.volumeClaimTemplates[].spec.volumeName <string>	# volumeName is the binding reference to the PersistentVolume backing this claim.
 spec.upgradeOSDRequiresHealthyPGs <boolean>	# UpgradeOSDRequiresHealthyPGs defines if OSD upgrade requires PGs are clean. If set to `true` OSD upgrade process won't start until PGs are healthy. This configuration will be ignored if `skipUpgradeChecks` is `true`. Default is false.
-spec.waitTimeoutForHealthyOSDInMinutes <integer> format=int64	# WaitTimeoutForHealthyOSDInMinutes defines the time the operator would wait before an OSD can be stopped for upgrade or restart. If the timeout exceeds and OSD is not ok to stop, then the operator would skip upgrade for the current OSD and proceed with the next one if `continueUpgradeAfterChecksEvenIfNotHealthy` is `false`. If `continueUpgradeAfterChecksEvenIfNotHealthy` is `true`, then operator would continue with the upgrade of an OSD even if its not ok to stop after the timeout. This timeout won't be applied if `skipUpgradeChecks` is `true`. The default wait timeout is 10 minutes.
+spec.waitTimeoutForHealthyOSDInMinutes <integer> format=int64	# WaitTimeoutForHealthyOSDInMinutes defines the time the operator would wait before an OSD can be stopped for upgrade or restart. If the timeout exceeds and OSD is not ok to stop, then the operator would skip upgrade for the current OSD and proceed with the next one if `continueUpgradeAfterChecksEvenIfNotHealthy` is `false`. If `continueUpgradeAfterChecksEvenIfNotHealthy` is `true`, then operator would continue with the upgrade of an OSD even if it's not ok to stop after the timeout. This timeout won't be applied if `skipUpgradeChecks` is `true`. The default wait timeout is 10 minutes.
 status <object>	# ClusterStatus represents the status of a Ceph cluster
 status.ceph <object>	# CephStatus is the details health of a Ceph Cluster
 status.ceph.capacity <object>	# Capacity is the capacity information of a Ceph Cluster
@@ -849,7 +851,7 @@ status.cephx.mgr.keyGeneration <integer> format=int32	# KeyGeneration represents
 status.cephx.mon <object>	# Mon represents the CephX key status of the Monitor daemons
 status.cephx.mon.keyCephVersion <string>	# KeyCephVersion reports the Ceph version that created the current generation's keys. This is same string format as reported by `CephCluster.status.version.version` to allow them to be compared. E.g., `20.2.0-0`. For all newly-created resources, this field set to the version of Ceph that created the key. The special value "Uninitialized" indicates that keys are being created for the first time. An empty string indicates that the version is unknown, as expected in brownfield deployments.
 status.cephx.mon.keyGeneration <integer> format=int32	# KeyGeneration represents the CephX key generation for the last successful reconcile. For all newly-created resources, this field is set to `1`. When keys are rotated due to any rotation policy, the generation is incremented or updated to the configured policy generation. Generation `0` indicates that keys existed prior to the implementation of key tracking.
-status.cephx.osd <object>	# OSD shows the CephX key status of of OSDs
+status.cephx.osd <object>	# OSD shows the CephX key status of OSDs
 status.cephx.osd.keyCephVersion <string>	# KeyCephVersion reports the Ceph version that created the current generation's keys. This is same string format as reported by `CephCluster.status.version.version` to allow them to be compared. E.g., `20.2.0-0`. For all newly-created resources, this field set to the version of Ceph that created the key. The special value "Uninitialized" indicates that keys are being created for the first time. An empty string indicates that the version is unknown, as expected in brownfield deployments.
 status.cephx.osd.keyGeneration <integer> format=int32	# KeyGeneration represents the CephX key generation for the last successful reconcile. For all newly-created resources, this field is set to `1`. When keys are rotated due to any rotation policy, the generation is incremented or updated to the configured policy generation. Generation `0` indicates that keys existed prior to the implementation of key tracking.
 status.cephx.rbdMirrorPeer <object>	# RBDMirrorPeer represents the cephx key rotation status of the `rbd-mirror-peer` user

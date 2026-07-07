@@ -1,9 +1,12 @@
-# schema source: VictoriaMetrics Operator v0.72.0 https://github.com/VictoriaMetrics/operator
+# schema source: VictoriaMetrics Operator v0.73.0 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1beta1
 kind <string> enum=VMUser
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# VMUserSpec defines the desired state of VMUser
+spec.access_log <object>	# AccessLog configures per-user access logging. When set, vmauth logs each request for this user with fields including request_uri, status_code, duration_ms, username, etc. See https://docs.victoriametrics.com/victoriametrics/vmauth/#access-log available since v1.138.0 vmauth version
+spec.access_log.filters <object>	# Filters defines optional filters that control which requests are logged.
+spec.access_log.filters.skip_status_codes <[]integer>	# SkipStatusCodes lists HTTP status codes whose responses are excluded from the access log. For example, [200, 204] suppresses logging of successful responses.
 spec.bearerToken <string>	# BearerToken Authorization header value for accessing protected endpoint.
 spec.default_url <[]string>	# DefaultURLs backend url for non-matching paths filter usually used for default backend with error message
 spec.disable_secret_creation <boolean>	# DisableSecretCreation skips related secret creation for vmuser
@@ -47,6 +50,8 @@ spec.targetRefs[].crd.namespace <string> (required)	# Namespace of the target Ku
 spec.targetRefs[].crd.objects <[]object>	# Objects defines list of name/namespace pairs that define existing k8s object
 spec.targetRefs[].crd.objects[].name <string> (required)	# Name of the target Kubernetes object
 spec.targetRefs[].crd.objects[].namespace <string> (required)	# Namespace of the target Kubernetes object
+spec.targetRefs[].crd.objects[].useExtraService <boolean>	# UseExtraService instructs the operator to prefer the CR's additional service (created via spec.serviceSpec) over the default service when building the target URL.
+spec.targetRefs[].crd.useExtraService <boolean>	# UseExtraService instructs the operator to prefer the CR's additional service (created via spec.serviceSpec) over the default service when building the target URL.
 spec.targetRefs[].discover_backend_ips <boolean>	# DiscoverBackendIPs instructs discovering URLPrefix backend IPs via DNS.
 spec.targetRefs[].drop_src_path_prefix_parts <integer>	# DropSrcPathPrefixParts is the number of `/`-delimited request path prefix parts to drop before proxying the request to backend. See [here](https://docs.victoriametrics.com/victoriametrics/vmauth/#dropping-request-path-prefix) for more details.
 spec.targetRefs[].headers <[]string>	# RequestHeaders represent additional http headers, that vmauth uses in form of ["header_key: header_value"] multiple values for header key: ["header_key: value1,value2"] it's available since 1.68.0 version of vmauth
@@ -106,6 +111,7 @@ spec.tokenRef <object>	# TokenRef allows fetching token from user-created secret
 spec.tokenRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.tokenRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.tokenRef.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.useLegacyNaming <boolean>	# UseLegacyNaming uses standalone Helm chart naming for managed resources: the CR name is used directly instead of the default "<type>-<name>" convention.
 spec.username <string>	# Username basic auth user name for accessing protected endpoint, will be replaced with metadata.name of VMUser if omitted.
 status <object>	# VMUserStatus defines the observed state of VMUser
 status.conditions <[]object>	# Known .status.conditions.type are: "Available", "Progressing", and "Degraded"

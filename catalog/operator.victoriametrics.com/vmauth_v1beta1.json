@@ -206,6 +206,10 @@
                         "namespace": {
                           "description": "Namespace of the target Kubernetes object",
                           "type": "string"
+                        },
+                        "useExtraService": {
+                          "description": "UseExtraService instructs the operator to prefer the CR's additional service\n(created via spec.serviceSpec) over the default service when building the target URL.",
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -215,6 +219,10 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "useExtraService": {
+                    "description": "UseExtraService instructs the operator to prefer the CR's additional service\n(created via spec.serviceSpec) over the default service when building the target URL.",
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -400,7 +408,7 @@
           "type": "array"
         },
         "disableAutomountServiceAccountToken": {
-          "description": "DisableAutomountServiceAccountToken whether to disable serviceAccount auto mount by Kubernetes (available from v0.54.0).\nOperator will conditionally create volumes and volumeMounts for containers if it requires k8s API access.\nFor example, vmagent and vm-config-reloader requires k8s API access.\nOperator creates volumes with name: \"kube-api-access\", which can be used as volumeMount for extraContainers if needed.\nAnd also adds VolumeMounts at /var/run/secrets/kubernetes.io/serviceaccount.",
+          "description": "DisableAutomountServiceAccountToken whether to disable serviceAccount auto mount by Kubernetes\nOperator will conditionally create volumes and volumeMounts for containers if it requires k8s API access.\nFor example, vmagent and vm-config-reloader requires k8s API access.\nOperator creates volumes with name: \"kube-api-access\", which can be used as volumeMount for extraContainers if needed.\nAnd also adds VolumeMounts at /var/run/secrets/kubernetes.io/serviceaccount.",
           "type": "boolean"
         },
         "disableSelfServiceScrape": {
@@ -1347,7 +1355,7 @@
           "type": "object"
         },
         "imagePullSecrets": {
-          "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod",
+          "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
           "items": {
             "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
             "properties": {
@@ -1551,7 +1559,7 @@
           "type": "array"
         },
         "internalListenPort": {
-          "description": "InternalListenPort instructs vmauth to serve internal routes at given port\navailable from v0.56.0 operator\nand v1.111.0 vmauth version\nrelated doc https://docs.victoriametrics.com/victoriametrics/vmauth/#security",
+          "description": "InternalListenPort instructs vmauth to serve internal routes at given port\navailable from v1.111.0 vmauth version\nrelated doc https://docs.victoriametrics.com/victoriametrics/vmauth/#security",
           "type": "string"
         },
         "license": {
@@ -1688,7 +1696,7 @@
               "type": "object"
             },
             "unhealthyPodEvictionPolicy": {
-              "description": "UnhealthyPodEvictionPolicy defines the criteria for when unhealthy pods\n\nValid policies are IfHealthyBudget and AlwaysAllow.\nIf no policy is specified, the default behavior will be used,\nwhich corresponds to the IfHealthyBudget policy.\nAvailable from operator v0.64.0",
+              "description": "UnhealthyPodEvictionPolicy defines the criteria for when unhealthy pods\n\nValid policies are IfHealthyBudget and AlwaysAllow.\nIf no policy is specified, the default behavior will be used,\nwhich corresponds to the IfHealthyBudget policy.",
               "enum": [
                 "IfHealthyBudget",
                 "AlwaysAllow"
@@ -1827,7 +1835,7 @@
           "type": "integer"
         },
         "rollingUpdate": {
-          "description": "RollingUpdate - overrides deployment update params.\nAvailable from operator v0.64.0",
+          "description": "RollingUpdate - overrides deployment update params.",
           "properties": {
             "maxSurge": {
               "description": "The maximum number of pods that can be scheduled above the desired number of\npods.\nValue can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).\nThis can not be 0 if MaxUnavailable is 0.\nAbsolute number is calculated from percentage by rounding up.\nDefaults to 25%.\nExample: when this is set to 30%, the new ReplicaSet can be scaled up immediately when\nthe rolling update starts, such that the total number of old and new pods do not exceed\n130% of desired pods. Once old pods have been killed,\nnew ReplicaSet can be scaled up further, ensuring that total number of pods running\nat any time during the update is at most 130% of desired pods.",
@@ -1994,6 +2002,25 @@
         "unauthorizedUserAccessSpec": {
           "description": "UnauthorizedUserAccessSpec defines unauthorized_user config section of vmauth config",
           "properties": {
+            "access_log": {
+              "description": "AccessLog configures per-user access logging.\nWhen set, vmauth logs each request for this user with fields including\nrequest_uri, status_code, duration_ms, username, etc.\nSee https://docs.victoriametrics.com/victoriametrics/vmauth/#access-log\n\navailable since v1.138.0 vmauth version",
+              "properties": {
+                "filters": {
+                  "description": "Filters defines optional filters that control which requests are logged.",
+                  "properties": {
+                    "skip_status_codes": {
+                      "description": "SkipStatusCodes lists HTTP status codes whose responses are excluded from the access log.\nFor example, [200, 204] suppresses logging of successful responses.",
+                      "items": {
+                        "type": "integer"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
             "default_url": {
               "description": "DefaultURLs backend url for non-matching paths filter\nusually used for default backend with error message",
               "items": {
@@ -2124,6 +2151,10 @@
                             "namespace": {
                               "description": "Namespace of the target Kubernetes object",
                               "type": "string"
+                            },
+                            "useExtraService": {
+                              "description": "UseExtraService instructs the operator to prefer the CR's additional service\n(created via spec.serviceSpec) over the default service when building the target URL.",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -2133,6 +2164,10 @@
                           "type": "object"
                         },
                         "type": "array"
+                      },
+                      "useExtraService": {
+                        "description": "UseExtraService instructs the operator to prefer the CR's additional service\n(created via spec.serviceSpec) over the default service when building the target URL.",
+                        "type": "boolean"
                       }
                     },
                     "required": [
@@ -2557,7 +2592,7 @@
           "type": "object"
         },
         "updateStrategy": {
-          "description": "UpdateStrategy - overrides default update strategy.\nAvailable from operator v0.64.0",
+          "description": "UpdateStrategy - overrides default update strategy.",
           "enum": [
             "Recreate",
             "RollingUpdate"
@@ -2566,6 +2601,10 @@
         },
         "useDefaultResources": {
           "description": "UseDefaultResources controls resource settings\nBy default, operator sets built-in resource requirements",
+          "type": "boolean"
+        },
+        "useLegacyNaming": {
+          "description": "UseLegacyNaming uses standalone Helm chart naming for managed resources:\nthe CR name is used directly instead of the default \"<type>-<name>\" convention.",
           "type": "boolean"
         },
         "useProxyProtocol": {
@@ -2713,7 +2752,7 @@
           "type": "array"
         },
         "volumes": {
-          "description": "Volumes allows configuration of additional volumes on the output Deployment/StatefulSet definition.\nVolumes specified will be appended to other volumes that are generated.\n/ +optional",
+          "description": "Volumes allows configuration of additional volumes on the output Deployment/StatefulSet definition.\nVolumes specified will be appended to other volumes that are generated.",
           "items": {
             "description": "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
             "required": [
@@ -3057,5 +3096,6 @@
       "type": "object"
     }
   },
-  "type": "object"
+  "type": "object",
+  "x-flux-schema-type": "VMAuth"
 }

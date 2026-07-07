@@ -539,6 +539,36 @@
               "description": "LivenessProbe allows changing the livenessProbe configuration for a given daemon",
               "type": "object"
             },
+            "muteHealthWarning": {
+              "additionalProperties": {
+                "additionalProperties": false,
+                "description": "MuteHealthWarningSpec configures muting of a Ceph health warning.",
+                "properties": {
+                  "policy": {
+                    "description": "Policy controls whether to mute or unmute a Ceph health warning.",
+                    "enum": [
+                      "mute",
+                      "unmute"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "policy"
+                ],
+                "type": "object"
+              },
+              "description": "MuteHealthWarning configures muting of Ceph health warnings.",
+              "maxProperties": 10,
+              "minProperties": 0,
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "keys must be valid Ceph health check codes",
+                  "rule": "self.all(k, k.matches('^[A-Z]+(_[A-Z]+)+$'))"
+                }
+              ]
+            },
             "startupProbe": {
               "additionalProperties": {
                 "additionalProperties": false,
@@ -5229,7 +5259,7 @@
           "type": "boolean"
         },
         "waitTimeoutForHealthyOSDInMinutes": {
-          "description": "WaitTimeoutForHealthyOSDInMinutes defines the time the operator would wait before an OSD can be stopped for upgrade or restart.\nIf the timeout exceeds and OSD is not ok to stop, then the operator would skip upgrade for the current OSD and proceed with the next one\nif `continueUpgradeAfterChecksEvenIfNotHealthy` is `false`. If `continueUpgradeAfterChecksEvenIfNotHealthy` is `true`, then operator would\ncontinue with the upgrade of an OSD even if its not ok to stop after the timeout. This timeout won't be applied if `skipUpgradeChecks` is `true`.\nThe default wait timeout is 10 minutes.",
+          "description": "WaitTimeoutForHealthyOSDInMinutes defines the time the operator would wait before an OSD can be stopped for upgrade or restart.\nIf the timeout exceeds and OSD is not ok to stop, then the operator would skip upgrade for the current OSD and proceed with the next one\nif `continueUpgradeAfterChecksEvenIfNotHealthy` is `false`. If `continueUpgradeAfterChecksEvenIfNotHealthy` is `true`, then operator would\ncontinue with the upgrade of an OSD even if it's not ok to stop after the timeout. This timeout won't be applied if `skipUpgradeChecks` is `true`.\nThe default wait timeout is 10 minutes.",
           "format": "int64",
           "type": "integer"
         }
@@ -5461,7 +5491,7 @@
               "type": "object"
             },
             "osd": {
-              "description": "OSD shows the CephX key status of of OSDs",
+              "description": "OSD shows the CephX key status of OSDs",
               "properties": {
                 "keyCephVersion": {
                   "description": "KeyCephVersion reports the Ceph version that created the current generation's keys. This is\nsame string format as reported by `CephCluster.status.version.version` to allow them to be\ncompared. E.g., `20.2.0-0`.\nFor all newly-created resources, this field set to the version of Ceph that created the key.\nThe special value \"Uninitialized\" indicates that keys are being created for the first time.\nAn empty string indicates that the version is unknown, as expected in brownfield deployments.",
@@ -5610,5 +5640,6 @@
     "metadata",
     "spec"
   ],
-  "type": "object"
+  "type": "object",
+  "x-flux-schema-type": "CephCluster"
 }
