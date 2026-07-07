@@ -183,10 +183,12 @@ must come out byte-identical.
 
 ```shell
 cd build
-bun src/main.ts regen --concurrent=8 2>&1 | tee /tmp/regen.log
+bun src/main.ts regen --concurrent=2 2>&1 | tee /tmp/regen.log
 ```
 
-- `--concurrent=8` takes the full run from roughly 11 minutes to under 3.
+- Stick with modest concurrency: the flag's default of 2 finishes a full run
+  in a few minutes, while higher values compound GitHub rate limiting and
+  bandwidth contention on the big-repo fetches.
 - Sources that fetch very large repos can exceed the fixed fetch timeouts on
   slower connections: `kustomize` inputs are subject to kubectl's hard-coded
   27s git timeout (kserve), and `crdDir` tarball downloads race github.ts's
