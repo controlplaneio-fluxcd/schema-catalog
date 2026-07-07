@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C367-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-567%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C369-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-567%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -151,7 +151,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | AWS Load Balancer Controller | [v3.4.0](build/history/aws-load-balancer-controller.json) | 8 | 2026-07-05 |
 | Envoy Gateway | [v1.8.2](build/history/envoy-gateway.json) | 8 | 2026-07-05 |
 | ExternalDNS | [v0.21.0](build/history/external-dns.json) | 1 | 2026-07-05 |
-| Gateway API | [v1.6.0](build/history/gateway-api.json) | 19 | 2026-07-05 |
+| Gateway API | [v1.6.0](build/history/gateway-api.json) | 21 | 2026-07-07 |
 | Istio | [1.30.2](build/history/istio.json) | 33 | 2026-07-05 |
 | JobSet | [v0.12.0](build/history/jobset.json) | 1 | 2026-07-05 |
 | Karpenter | [v1.13.0](build/history/karpenter.json) | 3 | 2026-07-05 |
