@@ -39,7 +39,10 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
     createProjectHero(index, project),
   );
 
-  for (const group of project.groups) {
+  // Index groups are alphabetical; the legacy "core" group (Pod, Service, ...)
+  // is what readers scan for first, so it jumps the queue.
+  const groups = [...project.groups].sort((a, b) => Number(b.g === "core") - Number(a.g === "core"));
+  for (const group of groups) {
     const section = document.createElement("section");
     section.className = "group-section";
     section.append(text("h2", "mono section-title", group.g), createKindGrid(group.g, group.kinds));
