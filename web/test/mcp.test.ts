@@ -84,13 +84,25 @@ describe("MCP catalog helpers", () => {
   test("grepCatalogText returns TypeMeta lines and a matched footer", () => {
     expect(grepCatalogText(index, "fluxcd", 10)).toBe(
       [
-        "kustomize.toolkit.fluxcd.io/v1 Kustomization\t# fluxcd",
-        "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization\t# fluxcd, no fields index",
+        "kustomize.toolkit.fluxcd.io/v1 Kustomization (ks)\t# fluxcd",
+        "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization (ks)\t# fluxcd, no fields index",
         "# matched 2 of 5 schemas",
       ].join("\n"),
     );
 
-    expect(grepCatalogText(index, "^v1 Pod", 10)).toBe("v1 Pod\t# kubernetes\n# matched 1 of 5 schemas");
+    expect(grepCatalogText(index, "^v1 Pod", 10)).toBe("v1 Pod (pods, po)\t# kubernetes\n# matched 1 of 5 schemas");
+  });
+
+  test("grepCatalogText matches short names and irregular resource names", () => {
+    expect(grepCatalogText(index, "\\bks\\b", 10)).toBe(
+      [
+        "kustomize.toolkit.fluxcd.io/v1 Kustomization (ks)\t# fluxcd",
+        "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization (ks)\t# fluxcd, no fields index",
+        "# matched 2 of 5 schemas",
+      ].join("\n"),
+    );
+
+    expect(grepCatalogText(index, "\\bpo\\b", 10)).toBe("v1 Pod (pods, po)\t# kubernetes\n# matched 1 of 5 schemas");
   });
 
   test("grepCatalogText reports invalid regex as a tool result", () => {
@@ -117,8 +129,8 @@ describe("MCP catalog helpers", () => {
     expect(projectText(project)).toBe(
       [
         "# fluxcd v2.8.0 github.com/fluxcd/flux2",
-        "kustomize.toolkit.fluxcd.io/v1 Kustomization",
-        "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization\t# no fields index",
+        "kustomize.toolkit.fluxcd.io/v1 Kustomization (ks)",
+        "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization (ks)\t# no fields index",
       ].join("\n"),
     );
   });

@@ -80,7 +80,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     {
       title: "Grep catalog",
       description:
-        "Grep the catalog of kinds with JavaScript RegExp syntax; returns one line per apiVersion: `<apiVersion> <Kind>  # project`. Start here to resolve what a manifest needs.",
+        "Grep the catalog of kinds with JavaScript RegExp syntax; returns one line per apiVersion: `<apiVersion> <Kind> (aliases)  # project`, where aliases are kubectl short names and irregular resource names. Start here to resolve what a manifest needs.",
       inputSchema: GrepCatalogInput,
     },
     async (args) =>

@@ -347,12 +347,31 @@ function catalogLine(
   versionIndex: number,
   includeProject: boolean,
 ): string {
-  const base = `${formatApiVersion(group, version)} ${kindDisplay(entry)}`;
+  const aliases = storedAliases(entry);
+  const suffix = aliases.length === 0 ? "" : ` (${aliases.join(", ")})`;
+  const base = `${formatApiVersion(group, version)} ${kindDisplay(entry)}${suffix}`;
   const hasFields = hasFieldsAtVersion(entry[2], versionIndex);
   if (includeProject) {
     return `${base}\t# ${project.name}${hasFields ? "" : ", no fields index"}`;
   }
   return hasFields ? base : `${base}\t# no fields index`;
+}
+
+/**
+ * Discovery-name exceptions stored in the index (irregular singular/plural and
+ * short names). Rendering them into catalog lines makes the aliases greppable;
+ * derivable plurals are left out since the kind itself already matches them.
+ */
+function storedAliases(entry: KindEntry): string[] {
+  const resource = entry[4];
+  if (resource === undefined) {
+    return [];
+  }
+  return [
+    ...(resource.s === undefined ? [] : [resource.s]),
+    ...(resource.p === undefined ? [] : [resource.p]),
+    ...(resource.n ?? []),
+  ];
 }
 
 function formatApiVersion(group: string, version: string): string {
