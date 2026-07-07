@@ -34,7 +34,7 @@ const RETRIES = 2;
  * errors. An exhausted API rate limit is reported as such instead of a
  * bare 403 (unauthenticated CI runs sit at 60 requests/hour).
  */
-async function fetchRetry(url: string, init: RequestInit): Promise<Response> {
+export async function fetchRetry(url: string, init: RequestInit = {}): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
     let res: Response;
     try {

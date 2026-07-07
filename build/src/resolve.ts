@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { latestReleaseTag, listReleases, matchAsset, type Release } from "./github.ts";
+import { fetchRetry, latestReleaseTag, listReleases, matchAsset, type Release } from "./github.ts";
 import { repoOf } from "./config.ts";
 import type { Source } from "./types.ts";
 
@@ -22,7 +22,7 @@ export async function resolveVersion(source: Source): Promise<string> {
     return normalizeVersion(source.version);
   }
   if (source.extract === "openshift") {
-    const res = await fetch(ENDOFLIFE_URL);
+    const res = await fetchRetry(ENDOFLIFE_URL);
     if (!res.ok) {
       throw new Error(`GET ${ENDOFLIFE_URL}: ${res.status} ${res.statusText}`);
     }
