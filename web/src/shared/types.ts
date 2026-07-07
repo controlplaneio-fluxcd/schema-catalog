@@ -9,7 +9,7 @@
  */
 export interface CatalogIndex {
   /** Index contract version. */
-  v: 2;
+  v: 3;
   /** ISO timestamp for when `scripts/gen-index.ts` wrote the asset. */
   generatedAt: string;
   /** CNCF category names; `ProjectEntry.cat` stores an index into this array. */
@@ -48,11 +48,25 @@ export interface GroupEntry {
 }
 
 /**
- * Compact kind tuple: `[kind, versions, fieldsBits, display?]`. `kind` is the
- * lowercase catalog slug used for object paths, routes, and lookups. `versions`
- * is sorted by Kubernetes API priority with the preferred/latest version at
- * index 0; bit `i` in `fieldsBits` is set when `versions[i]` has a sibling
- * `.fields.txt` index. `display` is the original-cased kind name for UI text and
- * is omitted when it equals `kind`; read it through `kindDisplay`.
+ * Compact discovery names for kubectl-style resource references. `s` is only
+ * set when singular differs from `kind`, `p` is only set when plural cannot be
+ * derived from `kind`, and `n` contains short names in discovery order. The API
+ * group is stored once on `GroupEntry.g`, never repeated here.
  */
-export type KindEntry = [kind: string, versions: string[], fieldsBits: number, display?: string];
+export interface ResourceEntry {
+  s?: string;
+  p?: string;
+  n?: string[];
+}
+
+/**
+ * Compact kind tuple: `[kind, versions, fieldsBits, display?, resource?]`.
+ * `kind` is the lowercase catalog slug used for object paths, routes, and
+ * lookups. `versions` is sorted by Kubernetes API priority with the latest
+ * version at index 0; bit `i` in `fieldsBits` is set when `versions[i]` has a
+ * sibling `.fields.txt` index. `display` is the original-cased kind name for UI
+ * text and is omitted when it equals `kind`; read it through `kindDisplay`.
+ * `resource` carries only discovery-name exceptions needed for resource
+ * reference lookup and completion.
+ */
+export type KindEntry = [kind: string, versions: string[], fieldsBits: number, display?: string, resource?: ResourceEntry];

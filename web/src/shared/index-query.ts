@@ -74,6 +74,26 @@ export function kindDisplay(entry: KindEntry): string {
   return entry[3] ?? entry[0];
 }
 
+/** Returns normalized resource-reference aliases carried by the compact index. */
+export function resourceAliases(entry: KindEntry): string[] {
+  const aliases = new Set<string>();
+  const add = (value: string | undefined): void => {
+    const normalized = value?.trim().toLowerCase();
+    if (normalized !== undefined && normalized !== "") {
+      aliases.add(normalized);
+    }
+  };
+  add(entry[0]);
+  add(kindDisplay(entry));
+  add(pluralResourceName(entry[0]));
+  add(entry[4]?.s);
+  add(entry[4]?.p);
+  for (const name of entry[4]?.n ?? []) {
+    add(name);
+  }
+  return [...aliases];
+}
+
 /**
  * Searches kind, group, project alias, and project name with simple deterministic
  * scoring. Empty queries and non-positive limits return no hits; results are
@@ -92,7 +112,7 @@ export function searchIndex(index: CatalogIndex, query: string, limit = 20): Sea
       const groupText = group.g.toLowerCase();
       for (const entry of group.kinds) {
         const kindText = entry[0].toLowerCase();
-        const score = scoreMatch(kindText, groupText, projectText, needle);
+        const score = scoreMatch(kindText, groupText, projectText, needle, resourceAliases(entry));
         if (score === 0) {
           continue;
         }
@@ -150,11 +170,11 @@ export function findKind(
   return undefined;
 }
 
-function scoreMatch(kind: string, group: string, project: string, needle: string): number {
-  if (kind.startsWith(needle)) {
+function scoreMatch(kind: string, group: string, project: string, needle: string, aliases: string[]): number {
+  if (kind.startsWith(needle) || aliases.some((alias) => alias.startsWith(needle))) {
     return 4;
   }
-  if (kind.includes(needle)) {
+  if (kind.includes(needle) || aliases.some((alias) => alias.includes(needle))) {
     return 3;
   }
   if (group.includes(needle)) {
@@ -164,6 +184,25 @@ function scoreMatch(kind: string, group: string, project: string, needle: string
     return 1;
   }
   return 0;
+}
+
+/**
+ * Derives the default Kubernetes plural resource name. web/scripts/gen-index.ts
+ * uses this to decide whether to omit compact `p` fields, so the deriver and
+ * generator must stay in sync.
+ */
+export function pluralResourceName(kind: string): string {
+  if (kind.endsWith("y") && kind.length > 1 && !isVowel(kind[kind.length - 2]!)) {
+    return `${kind.slice(0, -1)}ies`;
+  }
+  if (["ch", "sh", "s", "x", "z"].some((suffix) => kind.endsWith(suffix))) {
+    return `${kind}es`;
+  }
+  return `${kind}s`;
+}
+
+function isVowel(value: string): boolean {
+  return value === "a" || value === "e" || value === "i" || value === "o" || value === "u";
 }
 
 function parseApiVersion(version: string): ParsedApiVersion | undefined {

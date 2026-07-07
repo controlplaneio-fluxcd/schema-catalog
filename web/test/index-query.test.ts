@@ -6,7 +6,7 @@ import { compareApiVersion, findKind, searchIndex } from "../src/shared/index-qu
 import type { CatalogIndex } from "../src/shared/types.ts";
 
 const index: CatalogIndex = {
-  v: 2,
+  v: 3,
   generatedAt: "2026-07-06T00:00:00.000Z",
   categories: ["Runtime"],
   projects: [
@@ -18,9 +18,9 @@ const index: CatalogIndex = {
       version: "v1.0.0",
       builtAt: "2026-07-06",
       groups: [
-        { g: "certificates.example.io", kinds: [["Other", ["v1"], 0]] },
-        { g: "infra.example.io", kinds: [["EdgeGateway", ["v1"], 1]] },
-        { g: "networking.example.io", kinds: [["Gateway", ["v1"], 1]] },
+        { g: "certificates.example.io", kinds: [["other", ["v1"], 0, "Other"]] },
+        { g: "infra.example.io", kinds: [["edgegateway", ["v1"], 1, "EdgeGateway"]] },
+        { g: "networking.example.io", kinds: [["gateway", ["v1"], 1, "Gateway", { n: ["gw"] }]] },
       ],
     },
     {
@@ -30,7 +30,7 @@ const index: CatalogIndex = {
       repo: "cert-manager/cert-manager",
       version: "v1.0.0",
       builtAt: "2026-07-06",
-      groups: [{ g: "cert-manager.io", kinds: [["Certificate", ["v1"], 1]] }],
+      groups: [{ g: "cert-manager.io", kinds: [["certificate", ["v1"], 1, "Certificate", { p: "certificates", n: ["cert"] }]] }],
     },
   ],
 };
@@ -69,9 +69,9 @@ describe("searchIndex", () => {
     const hits = searchIndex(index, "gate", 3);
 
     expect(hits.map((hit) => [hit.kind, hit.score])).toEqual([
-      ["Gateway", 4],
-      ["EdgeGateway", 3],
-      ["Other", 1],
+      ["gateway", 4],
+      ["edgegateway", 3],
+      ["other", 1],
     ]);
   });
 
@@ -79,18 +79,23 @@ describe("searchIndex", () => {
     const hits = searchIndex(index, "cert", 2);
 
     expect(hits.map((hit) => [hit.kind, hit.score])).toEqual([
-      ["Certificate", 4],
-      ["Other", 2],
+      ["certificate", 4],
+      ["other", 2],
     ]);
+  });
+
+  test("matches plural and short-name aliases", () => {
+    expect(searchIndex(index, "gw", 1).map((hit) => [hit.kind, hit.score])).toEqual([["gateway", 4]]);
+    expect(searchIndex(index, "cert", 1).map((hit) => [hit.kind, hit.score])).toEqual([["certificate", 4]]);
   });
 });
 
 describe("findKind", () => {
   test("finds exact group and kind", () => {
-    const hit = findKind(index, "networking.example.io", "Gateway");
+    const hit = findKind(index, "networking.example.io", "gateway");
 
     expect(hit?.project.name).toBe("gateway-api");
-    expect(hit?.entry).toEqual(["Gateway", ["v1"], 1]);
+    expect(hit?.entry).toEqual(["gateway", ["v1"], 1, "Gateway", { n: ["gw"] }]);
   });
 
   test("returns undefined for misses", () => {

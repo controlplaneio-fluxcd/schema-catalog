@@ -4,9 +4,9 @@
 import { $, YAML } from "bun";
 import { repoOf } from "./config.ts";
 import { downloadAsset, fetchCrdDir, fetchCrdFile, findReleaseAsset } from "./github.ts";
-import { FLUX_SCHEMA_BIN } from "./paths.ts";
+import { FLUX_SCHEMA_BIN, ROOT_DIR } from "./paths.ts";
 import { bareVersion, displayVersion, openshiftRef } from "./resolve.ts";
-import type { CrdSource, FluxInstance, Source } from "./types.ts";
+import type { CrdSource, FluxInstance, ResourceNames, Source } from "./types.ts";
 
 /** Reports the version of the flux-schema binary in use. */
 export async function fluxSchemaVersion(): Promise<string> {
@@ -14,11 +14,15 @@ export async function fluxSchemaVersion(): Promise<string> {
   return out.trim().replace(/^flux-schema version /, "");
 }
 
+export interface ExtractionResult {
+  resources: Record<string, ResourceNames>;
+}
+
 /**
  * Extracts the source's JSON Schemas and field indexes at the given version
  * into the staging directory.
  */
-export async function extractSource(source: Source, version: string, dir: string): Promise<void> {
+export async function extractSource(source: Source, version: string, dir: string): Promise<ExtractionResult> {
   const flags = [
     "--strip-description=false",
     "--with-field-index",
@@ -30,12 +34,12 @@ export async function extractSource(source: Source, version: string, dir: string
   switch (source.extract) {
     case "k8s":
       await $`${FLUX_SCHEMA_BIN} extract k8s --version ${bareVersion(version)} ${flags}`.quiet();
-      return;
+      return emptyExtractionResult();
     case "openshift":
       await $`${FLUX_SCHEMA_BIN} extract openshift --ref ${openshiftRef(version)} ${flags}`.quiet();
-      return;
+      return emptyExtractionResult();
     case "crd":
-      await extractCrd(source, version, flags);
+      return extractCrd(source, version, flags);
   }
 }
 
@@ -44,9 +48,15 @@ export async function extractSource(source: Source, version: string, dir: string
  * a Bun shell pipeline, like bash without pipefail, only reports the last
  * command's status, letting an upstream failure pass as an empty extraction.
  */
-async function extractCrd(source: CrdSource, version: string, flags: string[]): Promise<void> {
+async function extractCrd(source: CrdSource, version: string, flags: string[]): Promise<ExtractionResult> {
   const yaml = dropEmptyDocs(await crdYaml(source, version));
+  const resources = crdResourceNames(yaml);
   await $`${FLUX_SCHEMA_BIN} extract crd /dev/stdin ${flags} < ${new Response(yaml)}`.quiet();
+  return { resources };
+}
+
+function emptyExtractionResult(): ExtractionResult {
+  return { resources: {} };
 }
 
 /**
@@ -69,6 +79,85 @@ export function dropEmptyDocs(yaml: string): string {
   return kept.join("---\n");
 }
 
+/** Extracts CRD discovery names from a YAML stream, keyed by `<group>/<Kind>`. */
+export function crdResourceNames(yaml: string): Record<string, ResourceNames> {
+  const resources: Record<string, ResourceNames> = {};
+  for (const raw of yaml.split(/^---[ \t]*(?:#[^\n]*)?\r?\n/m)) {
+    const doc = raw.trim();
+    if (doc === "") {
+      continue;
+    }
+    const parsed = YAML.parse(doc);
+    const root = record(parsed);
+    if (root?.kind !== "CustomResourceDefinition") {
+      continue;
+    }
+    const spec = record(root.spec);
+    const names = record(spec?.names);
+    const group = stringValue(spec?.group);
+    const kind = stringValue(names?.kind);
+    if (group === undefined || kind === undefined) {
+      continue;
+    }
+
+    const next = compactResourceNames({
+      singular: stringValue(names?.singular),
+      plural: stringValue(names?.plural),
+      shortNames: stringArray(names?.shortNames),
+    });
+    const key = `${group}/${kind}`;
+    const existing = resources[key];
+    if (existing !== undefined && !sameResourceNames(existing, next)) {
+      throw new Error(`conflicting CRD resource names for ${key}`);
+    }
+    resources[key] = next;
+  }
+
+  return Object.fromEntries(Object.entries(resources).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+function compactResourceNames(names: ResourceNames): ResourceNames {
+  return {
+    ...(names.singular === undefined ? {} : { singular: names.singular }),
+    ...(names.plural === undefined ? {} : { plural: names.plural }),
+    ...(names.shortNames === undefined || names.shortNames.length === 0 ? {} : { shortNames: names.shortNames }),
+  };
+}
+
+function sameResourceNames(a: ResourceNames, b: ResourceNames): boolean {
+  return (
+    a.singular === b.singular &&
+    a.plural === b.plural &&
+    (a.shortNames ?? []).join("\0") === (b.shortNames ?? []).join("\0")
+  );
+}
+
+function record(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" && value !== "" ? value : undefined;
+}
+
+function stringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string" || item === "" || seen.has(item)) {
+      continue;
+    }
+    seen.add(item);
+    out.push(item);
+  }
+  return out;
+}
+
 async function crdYaml(source: CrdSource, version: string): Promise<string> {
   const input = source.input;
   if ("kustomize" in input) {
@@ -86,7 +175,13 @@ async function crdYaml(source: CrdSource, version: string): Promise<string> {
     return fetchCrdFile(repoOf(source), version, input.crdFile);
   }
   const manifest = fluxInstanceManifest(input.fluxInstance, version);
-  return await $`flux-operator build instance -f - < ${new Response(manifest)}`.quiet().text();
+  // The distribution artifact is public; point DOCKER_CONFIG at a dir with no
+  // config.json so the pull stays anonymous instead of invoking the user's
+  // docker credential helpers (which can prompt or time out).
+  return await $`flux-operator build instance -f - < ${new Response(manifest)}`
+    .env({ ...process.env, DOCKER_CONFIG: ROOT_DIR })
+    .quiet()
+    .text();
 }
 
 /** The FluxInstance manifest piped through `flux-operator build instance`. */

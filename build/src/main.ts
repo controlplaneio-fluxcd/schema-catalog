@@ -5,6 +5,7 @@ import { appendFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
+import { parsePositiveIntegerFlag } from "./cli.ts";
 import { loadSources, repoOf } from "./config.ts";
 import { extractSource, fluxSchemaVersion } from "./extract.ts";
 import {
@@ -16,11 +17,13 @@ import {
   listStagedFiles,
   pruneKindsWithoutFields,
   readHistory,
+  resourceNamesForKinds,
   removedFiles,
   syncCatalog,
   writeHistory,
 } from "./history.ts";
 import { README_PATH, ROOT_DIR, SOURCES_PATH } from "./paths.ts";
+import { runBoundedPool } from "./pool.ts";
 import { updateReadme } from "./readme.ts";
 import { displayVersion, resolveVersion } from "./resolve.ts";
 import { renderBuildSummary } from "./summary.ts";
@@ -37,6 +40,7 @@ Options:
   --source <name>   Process a single source from build/config/sources.yaml
   --force           Rebuild even when the resolved version is unchanged
   --summary <path>  Write a markdown summary of the changes (for PR bodies)
+  --concurrent <n>  Process up to n sources at once (default: 2)
   --run-to-completion  Don't abort on a source failure; report failures instead
                        (exit 0 and, with --summary, list them in the PR body)
   -h, --help        Show this help message
@@ -88,7 +92,7 @@ async function processSource(
   const foreign = foreignFiles(history, source.name);
   const staging = await mkdtemp(join(tmpdir(), `schema-catalog-${source.name}-`));
   try {
-    await extractSource(source, version, staging);
+    const extraction = await extractSource(source, version, staging);
     const staged = await listStagedFiles(staging);
     if (staged.length === 0) {
       throw new Error(`extraction at ${version} produced no files`);
@@ -109,6 +113,7 @@ async function processSource(
     }
     const files = await syncCatalog(staging, kept);
     const kinds = await kindCasing(kept, (rel) => Bun.file(join(staging, rel)).text());
+    const resources = resourceNamesForKinds(extraction.resources, kinds);
     const removed = removedFiles(prev, files, foreign);
     await gcCatalog(removed);
     const entry: HistoryEntry = {
@@ -118,6 +123,7 @@ async function processSource(
       builtAt: new Date().toISOString(),
       fluxSchemaVersion: opts.toolVersion,
       kinds,
+      ...(resources === undefined ? {} : { resources }),
       files,
     };
     await writeHistory(entry);
@@ -171,17 +177,26 @@ function errorMessage(err: unknown): string {
 }
 
 async function main(): Promise<number> {
-  const { values, positionals } = parseArgs({
-    args: Bun.argv.slice(2),
-    options: {
-      source: { type: "string" },
-      force: { type: "boolean", default: false },
-      summary: { type: "string" },
-      "run-to-completion": { type: "boolean", default: false },
-      help: { type: "boolean", short: "h", default: false },
-    },
-    allowPositionals: true,
-  });
+  const parseOptions = {
+    source: { type: "string" },
+    force: { type: "boolean", default: false },
+    summary: { type: "string" },
+    concurrent: { type: "string" },
+    "run-to-completion": { type: "boolean", default: false },
+    help: { type: "boolean", short: "h", default: false },
+  } as const;
+  let parsed: ReturnType<typeof parseArgs<{ options: typeof parseOptions; allowPositionals: true }>>;
+  try {
+    parsed = parseArgs({
+      args: Bun.argv.slice(2),
+      options: parseOptions,
+      allowPositionals: true,
+    });
+  } catch (err) {
+    console.error(`error: ${errorMessage(err)}\n\n${USAGE}`);
+    return 1;
+  }
+  const { values, positionals } = parsed;
 
   const command = positionals[0];
   if (values.help) {
@@ -190,6 +205,13 @@ async function main(): Promise<number> {
   }
   if (command !== "build" && command !== "regen") {
     console.error(command === undefined ? USAGE : `error: unknown command '${command}'\n\n${USAGE}`);
+    return 1;
+  }
+  let concurrent: number;
+  try {
+    concurrent = parsePositiveIntegerFlag("--concurrent", values.concurrent, 2);
+  } catch (err) {
+    console.error(`error: ${errorMessage(err)}`);
     return 1;
   }
 
@@ -222,14 +244,15 @@ async function main(): Promise<number> {
   const failures: SourceFailure[] = [];
   const changes: BuildChange[] = [];
   let upToDate = 0;
-  for (const source of sources) {
-    try {
-      const change = await processSource(source, opts, history);
+  const results = await runBoundedPool(sources, concurrent, (source) => processSource(source, opts, history));
+  for (const result of results) {
+    if ("error" in result) {
+      const message = errorMessage(result.error);
+      failures.push({ name: result.item.name, message });
+      console.error(`  ${result.item.name}: error: ${message}`);
+    } else {
+      const change = result.value;
       change !== null ? changes.push(change) : upToDate++;
-    } catch (err) {
-      const message = errorMessage(err);
-      failures.push({ name: source.name, message });
-      console.error(`  ${source.name}: error: ${message}`);
     }
   }
 

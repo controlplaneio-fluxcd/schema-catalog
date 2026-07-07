@@ -73,6 +73,16 @@ export interface CrdSource extends SourceBase {
 
 export type Source = K8sSource | OpenShiftSource | CrdSource;
 
+/** Kubernetes discovery names for kubectl-style resource references. */
+export interface ResourceNames {
+  /** Singular resource name reported by discovery. */
+  singular?: string;
+  /** Plural resource name reported by discovery. */
+  plural?: string;
+  /** Short names reported by discovery, in discovery order. */
+  shortNames?: string[];
+}
+
 /** Last successful build result, stored at build/history/<name>.json. */
 export interface HistoryEntry {
   name: string;
@@ -91,6 +101,8 @@ export interface HistoryEntry {
    * index uses for display; the slug is recovered by lowercasing.
    */
   kinds: string[];
+  /** Discovery names keyed by original-cased `<group>/<Kind>`. */
+  resources?: Record<string, ResourceNames>;
   /** Catalog files owned by this source, repo-root relative, sorted. */
   files: string[];
 }
