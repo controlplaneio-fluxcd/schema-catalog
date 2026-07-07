@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C369-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-567%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-119-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C406-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-579%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -186,14 +186,18 @@ available tools and per-client setup instructions.
 
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
+| Datadog Operator | [v1.28.0](build/history/datadog-operator.json) | 13 | 2026-07-07 |
 | Elastic Cloud | [v3.4.1](build/history/eck-operator.json) | 19 | 2026-07-07 |
 | Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-07 |
 | Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-07 |
+| Jaeger Operator | [v1.65.0](build/history/jaeger-operator.json) | 1 | 2026-07-07 |
+| Logging Operator | [6.7.0](build/history/logging-operator.json) | 21 | 2026-07-07 |
 | Loki Operator | [v0.10.2](build/history/loki-operator.json) | 9 | 2026-07-07 |
 | OpenSearch Operator | [3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-07 |
 | OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-07 |
 | Perses Operator | [v0.4.0](build/history/perses-operator.json) | 7 | 2026-07-07 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-07 |
+| Tempo Operator | [v0.21.0](build/history/tempo-operator.json) | 2 | 2026-07-07 |
 | VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 24 | 2026-07-07 |
 <!-- versions:end -->
 
