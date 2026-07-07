@@ -101,7 +101,6 @@ available tools and per-client setup instructions.
 | OpenReports | [v0.2.1](build/history/openreports.json) | 2 | 2026-07-07 |
 | Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 4 | 2026-07-07 |
 | Sigstore Policy Controller | [v0.15.1](build/history/sigstore-policy-controller.json) | 3 | 2026-07-07 |
-| SPIRE Controller Manager | [v0.6.6](build/history/spire-controller-manager.json) | 4 | 2026-07-07 |
 | Trust Manager | [v0.24.0](build/history/trust-manager.json) | 2 | 2026-07-07 |
 | Upbound AWS Provider | [v2.6.0](build/history/provider-upjet-aws.json) | 2364 | 2026-07-07 |
 | Upbound Azure Provider | [v2.6.0](build/history/provider-upjet-azure.json) | 1789 | 2026-07-07 |
@@ -119,6 +118,7 @@ available tools and per-client setup instructions.
 | Longhorn | [v1.12.0](build/history/longhorn.json) | 23 | 2026-07-07 |
 | Network Policy API | [v0.2.0](build/history/network-policy-api.json) | 1 | 2026-07-07 |
 | Rook | [v1.20.1](build/history/rook.json) | 21 | 2026-07-07 |
+| SPIRE Controller Manager | [v0.6.6](build/history/spire-controller-manager.json) | 4 | 2026-07-07 |
 | Submariner | [v0.24.0](build/history/submariner.json) | 9 | 2026-07-07 |
 | Submariner Operator | [v0.24.0](build/history/submariner-operator.json) | 3 | 2026-07-07 |
 | Tailscale | [v1.98.8](build/history/tailscale.json) | 7 | 2026-07-07 |
