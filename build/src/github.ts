@@ -26,7 +26,9 @@ function headers(): Record<string, string> {
   return h;
 }
 
-const FETCH_TIMEOUT_MS = 60_000;
+// Sized for monorepo tarball downloads on slow links (grafana/loki,
+// kserve/kserve), not just API calls.
+const FETCH_TIMEOUT_MS = 120_000;
 const RETRIES = 2;
 
 /**

@@ -107,7 +107,7 @@ never dropped. Pruning happens before sync, so List schemas never enter the
 catalog; GC removes any left by an earlier build. Because the output template
 lowercases the kind, the field index is the only record of the original casing
 (`kind <string> enum=<Kind>`): `kindCasing` reads it back into the manifest's
-`kinds` array, which the web index uses for display.
+`kinds` map keys, which the web index uses for display.
 
 Before piping, the assembled CRD stream is normalized to drop any empty, blank,
 or comment-only document (`dropEmptyDocs`): flux-schema rejects such a document
@@ -128,11 +128,11 @@ output. Producers run alone via `.text()`, then the YAML is fed to
 ## History manifests — the source of truth
 
 `build/history/<name>.json` records repo, resolved version, build timestamp,
-flux-schema version, the sorted `kinds` array of original-cased `<group>/<Kind>`
-identifiers (one per indexed kind; the slug is recovered by lowercasing),
-optional CRD discovery names keyed by `<group>/<Kind>`, and the sorted list of
-repo-root-relative catalog files the source owns. Everything derives from these
-manifests:
+flux-schema version, the sorted `kinds` map keyed by original-cased
+`<group>/<Kind>` identifiers (one per indexed kind; the slug is recovered by
+lowercasing) with CRD discovery names as values (`{}` when unavailable), and
+the sorted list of repo-root-relative catalog files the source owns. Everything
+derives from these manifests:
 
 - **Skip detection**: resolved version == manifest version AND every listed
   file exists on disk (the existence check makes a partially-synced catalog
@@ -173,6 +173,35 @@ Create PR and smoke-test steps on it).
 `--concurrent` defaults to `2` and controls how many sources are processed at
 once; per-source failure handling is unchanged, every source is always
 attempted.
+
+## Running a full regen
+
+A full regen rebuilds every source at its pinned manifest version and rewrites
+all history manifests. Use it to backfill a new manifest field or to prove a
+build-system change is behavior-preserving: at pinned versions the catalog
+must come out byte-identical.
+
+```shell
+cd build
+bun src/main.ts regen --concurrent=8 2>&1 | tee /tmp/regen.log
+```
+
+- `--concurrent=8` takes the full run from roughly 11 minutes to under 3.
+- Sources that fetch very large repos can exceed the fixed fetch timeouts on
+  slower connections: `kustomize` inputs are subject to kubectl's hard-coded
+  27s git timeout (kserve), and `crdDir` tarball downloads race github.ts's
+  60s fetch timeout (loki-operator pulls the whole grafana/loki monorepo).
+  The run still attempts every source; retry stragglers one at a time with
+  `regen --source <name>` and confirm each reports `+0 -0` files.
+- Retries re-render the root README versions table from the on-disk
+  manifests, so any table inconsistency from a partial run self-heals.
+- Verify before committing:
+  - `git status --short -- catalog` must be empty. Any catalog diff means a
+    code change altered extraction, not a regen artifact.
+  - Every processed manifest churns `builtAt`. Keep only manifests with real
+    content changes: compare each to HEAD ignoring `builtAt` and
+    `git checkout --` the timestamp-only ones, plus the root README when its
+    only diff is dates from restored manifests.
 
 ## Testing boundaries
 

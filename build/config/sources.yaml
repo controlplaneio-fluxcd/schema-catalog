@@ -1,5 +1,5 @@
-# Catalog sources, processed in order by `bun run build`.
-# Config format: see build/src/types.ts.
+# Catalog sources for `bun src/main.ts build`, processed concurrently;
+# results and reporting keep this order. Config format: see build/src/types.ts.
 sources:
   - name: kubernetes
     alias: Kubernetes
@@ -1003,7 +1003,18 @@ sources:
     url: https://github.com/kserve/kserve
     extract: crd
     input:
-      kustomize: config/crd/full
+      # Bare CRD files under config/crd/full; crdDir instead of kustomize so
+      # the fetch uses github.ts (kubectl kustomize's hard-coded 27s git
+      # timeout trips on this large repo). The excludes keep the exact scope
+      # of the full kustomization render: the conversion-webhook patches are
+      # partial CRD docs with no schema, the llminferenceservice files belong
+      # to the kserve-llmisvc source, and the alpha localmodel kinds are not
+      # part of the upstream render.
+      crdDir: config/crd/full
+      exclude:
+        - "*_patch.yaml"
+        - "serving.kserve.io_llminferenceservice*"
+        - "serving.kserve.io_localmodel*"
 
   - name: kserve-llmisvc
     alias: KServe LLM
@@ -1011,7 +1022,12 @@ sources:
     url: https://github.com/kserve/kserve
     extract: crd
     input:
-      kustomize: config/crd/full/llmisvc
+      # Same crdDir-over-kustomize trade as the kserve source. The excluded
+      # conversion-webhook patches only add spec.conversion, which schema
+      # extraction ignores.
+      crdDir: config/crd/full/llmisvc
+      exclude:
+        - "*_patch.yaml"
 
   # Volcano — batch scheduler. Its CRDs span several *.volcano.sh groups as
   # per-kind kubebuilder files with no release asset. The config/crd/*/bases dirs
