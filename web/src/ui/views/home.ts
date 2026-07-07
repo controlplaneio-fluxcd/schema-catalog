@@ -4,7 +4,7 @@
 import { latestVersion, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
-import { clear, createCodeBlock, kindCount, link, schemaCount, text } from "../dom.ts";
+import { clear, createCodeBlock, kindCount, link, REPO_URL, schemaCount, text } from "../dom.ts";
 import { agentsRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
 const MCP_COMMAND = `claude mcp add --transport http flux-schema-catalog \\
@@ -90,7 +90,7 @@ export function renderHome(index: CatalogIndex): HTMLElement {
   );
 
   const browse = createBrowseIndex(index);
-  main.append(hero, createLanes(), browse);
+  main.append(hero, createLanes(), browse, createRequestPanel());
 
   let selected = -1;
   let rows: HTMLAnchorElement[] = [];
@@ -360,6 +360,32 @@ function createCategorySection(category: string, categoryIndex: number, projects
   }
 
   section.append(flow);
+  return section;
+}
+
+/** Invites catalog additions; the button opens the add-project issue form. */
+function createRequestPanel(): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "home-request";
+
+  const panel = document.createElement("div");
+  panel.className = "request-panel";
+  const button = link(
+    `${REPO_URL}/issues/new?template=add-project.yaml`,
+    "Request a project →",
+    "button-link",
+  );
+  button.target = "_blank";
+  button.rel = "noopener noreferrer";
+  const copy = document.createElement("div");
+  copy.className = "request-copy";
+  copy.append(
+    text("h2", "", "Missing a project?"),
+    text("p", "", "Open an issue and its schemas will ship with the daily build."),
+  );
+  panel.append(copy, button);
+
+  section.append(panel);
   return section;
 }
 
