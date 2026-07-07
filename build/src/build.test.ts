@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import { describe, expect, test } from "bun:test";
+import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
 import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
 import { kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, resourceNamesForKinds } from "./history.ts";
+import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
 import {
@@ -17,6 +19,53 @@ import {
   pickLatestRelease,
 } from "./resolve.ts";
 import type { HistoryEntry, SourceCategory } from "./types.ts";
+
+describe("parsePositiveIntegerFlag", () => {
+  test("uses the default when the flag is absent", () => {
+    expect(parsePositiveIntegerFlag("--concurrent", undefined, 2)).toBe(2);
+  });
+
+  test("accepts positive integers", () => {
+    expect(parsePositiveIntegerFlag("--concurrent", "4", 2)).toBe(4);
+  });
+
+  test("rejects invalid values", () => {
+    for (const value of ["", "0", "-1", "1.5", "two"]) {
+      expect(() => parsePositiveIntegerFlag("--concurrent", value, 2)).toThrow(
+        "--concurrent must be a positive integer",
+      );
+    }
+  });
+});
+
+describe("runBoundedPool", () => {
+  test("limits concurrent tasks and preserves input order in results", async () => {
+    let active = 0;
+    let peak = 0;
+    const results = await runBoundedPool([1, 2, 3, 4], 2, async (item) => {
+      active++;
+      peak = Math.max(peak, active);
+      await Bun.sleep(1);
+      active--;
+      return item * 10;
+    });
+
+    expect(peak).toBeLessThanOrEqual(2);
+    expect(results.map((result) => ("value" in result ? result.value : null))).toEqual([10, 20, 30, 40]);
+  });
+
+  test("continues scheduling after failures", async () => {
+    const results = await runBoundedPool([1, 2, 3], 2, async (item) => {
+      if (item === 1) {
+        throw new Error("boom");
+      }
+      return item;
+    });
+
+    expect(results.map((result) => result.item)).toEqual([1, 2, 3]);
+    expect(results.some((result) => "error" in result && result.item === 1)).toBe(true);
+  });
+});
 
 describe("matchAsset", () => {
   test("matches exact names", () => {

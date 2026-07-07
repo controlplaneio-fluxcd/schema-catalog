@@ -157,10 +157,11 @@ never blocks the others; the run exits 1 at the end.
 
 ```shell
 cd build
-bun src/main.ts build [--source <name>] [--force] [--summary <path>]
-bun src/main.ts regen [--source <name>]
+bun src/main.ts build [--source <name>] [--force] [--summary <path>] [--concurrent <n>]
+bun src/main.ts regen [--source <name>] [--concurrent <n>]
 # or from the repo root: make deps / lint / test / build
-# make build honors FORCE_BUILD=1 and BUILD_SUMMARY=<path> env/vars
+# make build honors FORCE_BUILD=1, BUILD_SUMMARY=<path>, RUN_TO_COMPLETION=1
+# and CONCURRENT=<n> env/vars
 ```
 
 Env: `FLUX_SCHEMA_BIN` (single binary path, not a command line),
@@ -168,6 +169,10 @@ Env: `FLUX_SCHEMA_BIN` (single binary path, not a command line),
 backoff and reports an exhausted limit explicitly), `GITHUB_OUTPUT` (when set,
 the build appends `changed=true|false`; the update workflow gates the
 Create PR and smoke-test steps on it).
+
+`--concurrent` defaults to `2` and controls how many sources are processed at
+once; per-source failure handling is unchanged, every source is always
+attempted.
 
 ## Testing boundaries
 
