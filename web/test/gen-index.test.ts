@@ -10,6 +10,8 @@ const sources: Source[] = [
     name: "alpha",
     alias: "Alpha",
     category: "Runtime",
+    cncf: "graduated",
+    pin: 3,
     url: "https://github.com/example/alpha",
     extract: "crd",
     input: { crdDir: "config/crd" },
@@ -64,6 +66,10 @@ describe("generateIndex", () => {
     expect(index.projects.map((project) => project.alias)).toEqual(["Alpha", "Beta"]);
     expect(alpha.repo).toBe("example/alpha");
     expect(alpha.builtAt).toBe("2026-07-06");
+    expect(alpha.cncf).toBe("graduated");
+    expect("cncf" in beta).toBe(false);
+    expect(alpha.pin).toBe(3);
+    expect("pin" in beta).toBe(false);
     expect(alpha.groups[0]?.g).toBe("alpha.example.io");
     // Original casing recorded in `kinds` becomes the 4th tuple element.
     expect(alpha.groups[0]?.kinds[0]).toEqual(["gadget", ["v2", "v1beta1"], 1, "Gadget"]);

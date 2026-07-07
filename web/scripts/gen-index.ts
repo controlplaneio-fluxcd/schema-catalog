@@ -65,6 +65,8 @@ export function generateIndex(sources: Source[], entries: HistoryEntry[]): Catal
       repo: repoOf(source),
       version: displayVersion(entry.version),
       builtAt: entry.builtAt.slice(0, 10),
+      ...(source.cncf === undefined ? {} : { cncf: source.cncf }),
+      ...(source.pin === undefined ? {} : { pin: source.pin }),
       groups,
     });
   }

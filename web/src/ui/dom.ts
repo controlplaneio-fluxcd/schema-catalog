@@ -401,6 +401,17 @@ export function createBadge(label: string, className = ""): HTMLElement {
   return badge;
 }
 
+/** Creates a repository link with the GitHub mark in front of the full host path. */
+export function createRepoLink(repo: string): HTMLAnchorElement {
+  const anchor = link(`https://github.com/${repo}`, "", "repo-link external-link");
+  const icon = document.createElement("span");
+  icon.className = "repo-icon";
+  icon.innerHTML = GITHUB_ICON;
+  icon.setAttribute("aria-hidden", "true");
+  anchor.append(icon, document.createTextNode(`github.com/${repo}`));
+  return anchor;
+}
+
 /** Resolves a project's category name from its compact category index. */
 export function categoryName(index: CatalogIndex, project: ProjectEntry): string {
   return index.categories[project.cat] ?? "Uncategorized";

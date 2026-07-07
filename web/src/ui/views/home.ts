@@ -3,7 +3,7 @@
 
 import { latestVersion, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
-import type { CatalogIndex } from "../../shared/types.ts";
+import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
 import { clear, createCodeBlock, kindCount, link, schemaCount, text } from "../dom.ts";
 import { agentsRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
@@ -287,6 +287,17 @@ function createResultRow(hit: SearchHit): HTMLAnchorElement {
   return row;
 }
 
+/** How many projects each category previews before its "+N more" expander. */
+const CATEGORY_PREVIEW = 5;
+
+/** Category indexes left open by their expander; survives view re-renders. */
+const expandedCategories = new Set<number>();
+
+/**
+ * Renders the browse index: one section per CNCF category showing its project
+ * count, a five-project preview, and a "+N more" expander for the rest, so
+ * every category is visible without the page becoming a wall of names.
+ */
 function createBrowseIndex(index: CatalogIndex): HTMLElement {
   const browse = document.createElement("section");
   browse.className = "home-browse";
@@ -301,23 +312,55 @@ function createBrowseIndex(index: CatalogIndex): HTMLElement {
     if (projects.length === 0) {
       continue;
     }
-
-    const section = document.createElement("section");
-    section.className = "category-section";
-    section.append(text("h3", "category-title", category));
-
-    const flow = document.createElement("div");
-    flow.className = "project-flow";
-    for (const project of projects) {
-      const item = link(projectRoute(project.name), "", "project-item");
-      item.append(text("span", "", project.alias), text("span", "project-version", project.version));
-      flow.append(item);
-    }
-    section.append(flow);
-    browse.append(section);
+    browse.append(createCategorySection(category, categoryIndex, projects));
   }
 
   return browse;
+}
+
+function createCategorySection(category: string, categoryIndex: number, projects: ProjectEntry[]): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "category-section";
+
+  const title = text("h3", "category-title", category);
+  title.append(text("span", "category-count", String(projects.length)));
+  section.append(title);
+
+  // Pinned projects lead in their configured order (`pin` in sources.yaml);
+  // the rest keep their alphabetical order after them.
+  const ordered = [...projects].sort(
+    (a, b) => (a.pin ?? Number.MAX_SAFE_INTEGER) - (b.pin ?? Number.MAX_SAFE_INTEGER),
+  );
+
+  const expanded = expandedCategories.has(categoryIndex);
+  const flow = document.createElement("div");
+  flow.className = "project-flow";
+  for (const project of expanded ? ordered : ordered.slice(0, CATEGORY_PREVIEW)) {
+    const item = link(projectRoute(project.name), "", "project-item");
+    item.append(text("span", "", project.alias), text("span", "project-version", project.version));
+    flow.append(item);
+  }
+
+  const hidden = ordered.length - CATEGORY_PREVIEW;
+  if (hidden > 0) {
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "flow-toggle";
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.textContent = expanded ? "Show less" : `+${hidden} more`;
+    toggle.addEventListener("click", () => {
+      if (expanded) {
+        expandedCategories.delete(categoryIndex);
+      } else {
+        expandedCategories.add(categoryIndex);
+      }
+      section.replaceWith(createCategorySection(category, categoryIndex, projects));
+    });
+    flow.append(toggle);
+  }
+
+  section.append(flow);
+  return section;
 }
 
 function createKbd(label: string): HTMLElement {
