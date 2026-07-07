@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { CATEGORIES, loadSources, repoOf } from "../../build/src/config.ts";
 import { displayVersion } from "../../build/src/resolve.ts";
 import type { HistoryEntry, ResourceNames, Source } from "../../build/src/types.ts";
-import { compareApiVersion } from "../src/shared/index-query.ts";
+import { compareApiVersion, pluralResourceName } from "../src/shared/index-query.ts";
 import type { CatalogIndex, GroupEntry, KindEntry, ProjectEntry, ResourceEntry } from "../src/shared/types.ts";
 
 /**
@@ -131,20 +131,6 @@ function compactResource(kind: string, names: ResourceNames | undefined): Resour
 function normalizedName(value: string | undefined): string | undefined {
   const normalized = value?.trim().toLowerCase();
   return normalized === undefined || normalized === "" ? undefined : normalized;
-}
-
-function pluralResourceName(kind: string): string {
-  if (kind.endsWith("y") && kind.length > 1 && !isVowel(kind[kind.length - 2]!)) {
-    return `${kind.slice(0, -1)}ies`;
-  }
-  if (["ch", "sh", "s", "x", "z"].some((suffix) => kind.endsWith(suffix))) {
-    return `${kind}es`;
-  }
-  return `${kind}s`;
-}
-
-function isVowel(value: string): boolean {
-  return value === "a" || value === "e" || value === "i" || value === "o" || value === "u";
 }
 
 async function loadHistory(dir: string): Promise<HistoryEntry[]> {

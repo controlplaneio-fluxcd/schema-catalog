@@ -157,7 +157,6 @@ describe("MCP catalog helpers", () => {
     expect(resolved?.entry[0]).toBe("kustomization");
   });
 
-
   test("resolveKind matches compact resource aliases", () => {
     const resolved = resolveKind(index, "kustomize.toolkit.fluxcd.io", "ks");
 

@@ -83,13 +83,12 @@ describe("searchIndex", () => {
       ["other", 2],
     ]);
   });
-});
-
 
   test("matches plural and short-name aliases", () => {
     expect(searchIndex(index, "gw", 1).map((hit) => [hit.kind, hit.score])).toEqual([["gateway", 4]]);
     expect(searchIndex(index, "cert", 1).map((hit) => [hit.kind, hit.score])).toEqual([["certificate", 4]]);
   });
+});
 
 describe("findKind", () => {
   test("finds exact group and kind", () => {

@@ -80,7 +80,6 @@ describe("generateIndex", () => {
     expect(beta.groups[0]?.kinds[0]).toEqual(["widget", ["v1"], 0]);
   });
 
-
   test("stores only non-derivable discovery names in kind tuples", () => {
     const entries: HistoryEntry[] = [
       {

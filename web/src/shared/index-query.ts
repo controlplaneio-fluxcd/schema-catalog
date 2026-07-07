@@ -186,7 +186,12 @@ function scoreMatch(kind: string, group: string, project: string, needle: string
   return 0;
 }
 
-function pluralResourceName(kind: string): string {
+/**
+ * Derives the default Kubernetes plural resource name. web/scripts/gen-index.ts
+ * uses this to decide whether to omit compact `p` fields, so the deriver and
+ * generator must stay in sync.
+ */
+export function pluralResourceName(kind: string): string {
   if (kind.endsWith("y") && kind.length > 1 && !isVowel(kind[kind.length - 2]!)) {
     return `${kind.slice(0, -1)}ies`;
   }

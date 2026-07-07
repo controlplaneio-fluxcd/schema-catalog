@@ -368,7 +368,6 @@ describe("kindCasing", () => {
   });
 });
 
-
 describe("resourceNamesForKinds", () => {
   test("keeps only resources for indexed kinds", () => {
     expect(
@@ -576,7 +575,6 @@ describe("fluxInstanceManifest", () => {
     expect(doc.spec.components).toEqual(["source-controller"]);
   });
 });
-
 
 describe("crdResourceNames", () => {
   test("extracts plural, singular and short names from CRD streams", () => {
