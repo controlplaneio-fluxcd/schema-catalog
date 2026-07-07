@@ -4,6 +4,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createMcpHandler, WorkerTransport } from "agents/mcp";
 import { z } from "zod";
+import { SERVER_INFO } from "./server-card.ts";
 import {
   findProject,
   getSchemaText,
@@ -70,12 +71,9 @@ export function handleMcp(req: Request, env: Env, ctx: ExecutionContext): Promis
 }
 
 function createCatalogMcpServer(env: Env): McpServer {
-  const server = new McpServer(
-    { name: "flux-schema-catalog", version: "0.1.0" },
-    {
-      instructions,
-    },
-  );
+  const server = new McpServer(SERVER_INFO, {
+    instructions,
+  });
 
   server.registerTool(
     "grep_catalog",

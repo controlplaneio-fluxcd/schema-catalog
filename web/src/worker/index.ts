@@ -3,6 +3,7 @@
 
 import { serveCatalog } from "./catalog.ts";
 import { handleMcp } from "./mcp.ts";
+import { serveMcpCatalog, serveServerCard } from "./server-card.ts";
 
 /**
  * Cloudflare Worker bindings. `CATALOG_VERSION` is part of the edge cache key
@@ -26,6 +27,16 @@ export default {
 
     if (pathname === "/mcp") {
       return handleMcp(req, env, ctx);
+    }
+
+    // SEP-2127 agent discovery: the Server Card at its spec-reserved location
+    // plus the legacy .well-known path scanners probe, and the MCP Catalog.
+    if (pathname === "/mcp/server-card" || pathname === "/.well-known/mcp/server-card.json") {
+      return serveServerCard(req);
+    }
+
+    if (pathname === "/.well-known/mcp/catalog.json") {
+      return serveMcpCatalog(req);
     }
 
     return env.ASSETS.fetch(req);

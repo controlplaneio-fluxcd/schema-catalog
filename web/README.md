@@ -11,9 +11,17 @@ agents.
 One Worker handles all dynamic traffic. The R2 bucket `schema-catalog` holds the
 generated `catalog/` tree, synced by CI with rclone. Static assets are served
 from Workers Assets: the dependency-free UI bundle, copied files from
-`static/`, and the generated `index.json`. `wrangler.jsonc` sets
-`assets.run_worker_first` to `["/catalog/*", "/mcp"]`, so catalog and MCP
-requests enter the Worker while UI assets stay on the static path.
+`static/`, and the generated `index.json`. `wrangler.jsonc` lists the dynamic
+paths in `assets.run_worker_first` (`/catalog/*`, `/mcp`, `/mcp/server-card`,
+`/.well-known/mcp/*`), so those requests enter the Worker while UI assets stay
+on the static path.
+
+For agent discovery (MCP SEP-2127), the Worker serves a static Server Card at
+`/mcp/server-card` (the spec-reserved location) and
+`/.well-known/mcp/server-card.json` (probed by discovery scanners), plus the
+MCP Catalog entrypoint at `/.well-known/mcp/catalog.json`. The card mirrors
+the live server's identity and capabilities and points at the `/mcp`
+endpoint; all three responses carry open CORS and an hour of caching.
 
 `/catalog/*` uses the edge Cache API. Cache keys include
 `?v=${CATALOG_VERSION}`, and deployment sets `CATALOG_VERSION` from the commit
@@ -31,9 +39,10 @@ location.
 | `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/` and `styles.css` into assets     |
 | `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change |
 | `scripts/serve.ts`          | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload |
-| `src/worker/index.ts`       | Worker router for `/catalog/*`, `/mcp`, and Workers Assets                  |
+| `src/worker/index.ts`       | Worker router for `/catalog/*`, `/mcp`, discovery docs, and Workers Assets  |
 | `src/worker/catalog.ts`     | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling |
 | `src/worker/mcp.ts`         | Streamable HTTP MCP server and tool registration                            |
+| `src/worker/server-card.ts` | MCP Server Card and Catalog discovery documents (SEP-2127)                  |
 | `src/worker/mcp-core.ts`    | Pure catalog/MCP result formatting and schema/fields lookup helpers         |
 | `src/worker/index-data.ts`  | Loads and memoizes the generated index asset per `CATALOG_VERSION`          |
 | `src/shared/types.ts`       | Compact generated index types shared by Worker, UI, tests, and generator    |
