@@ -161,12 +161,12 @@ available tools and per-client setup instructions.
 | Argo CD | [v3.4.4](build/history/argo-cd.json) | 3 | 2026-07-05 |
 | Argo Events | [v1.9.10](build/history/argo-events.json) | 3 | 2026-07-05 |
 | Argo Rollouts | [v1.9.0](build/history/argo-rollouts.json) | 5 | 2026-07-05 |
-| Argo Workflows | [v4.0.6](build/history/argo-workflows.json) | 8 | 2026-07-05 |
+| Argo Workflows | [v4.0.7](build/history/argo-workflows.json) | 8 | 2026-07-07 |
 | CloudNativePG | [v1.30.0](build/history/cloudnative-pg.json) | 11 | 2026-07-05 |
 | Dapr | [v1.18.1](build/history/dapr.json) | 8 | 2026-07-05 |
 | Flagger | [v1.43.0](build/history/flagger.json) | 3 | 2026-07-05 |
-| Flux | [v2.9.0](build/history/flux.json) | 15 | 2026-07-05 |
-| Flux Operator | [v0.53.0](build/history/flux-operator.json) | 4 | 2026-07-05 |
+| Flux | [v2.9.1](build/history/flux.json) | 15 | 2026-07-07 |
+| Flux Operator | [v0.54.0](build/history/flux-operator.json) | 4 | 2026-07-07 |
 | Kargo | [v1.10.8](build/history/kargo.json) | 9 | 2026-07-06 |
 | Knative Eventing | [v1.22.2](build/history/knative-eventing.json) | 20 | 2026-07-06 |
 | Knative Serving | [v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-06 |
