@@ -55,8 +55,8 @@ available tools and per-client setup instructions.
 
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
-| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-05 |
-| OpenShift | [v4.20](build/history/openshift.json) | 133 | 2026-07-05 |
+| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-07 |
+| OpenShift | [v4.20](build/history/openshift.json) | 133 | 2026-07-07 |
 
 ### Provisioning
 
