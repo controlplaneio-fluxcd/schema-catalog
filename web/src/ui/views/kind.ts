@@ -25,6 +25,12 @@ const MCP_ICON =
 const DOWNLOAD_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
+const DOCS_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+
+/** Projects whose CRDs have reference pages at fluxoperator.dev/docs/crd/<kind>/. */
+const FLUX_DOCS_PROJECTS = new Set(["flux", "flux-operator"]);
+
 /**
  * Renders a concrete group/kind/version page with schema links and, when
  * available, the fields explorer. Missing kinds or versions return a not-found
@@ -95,16 +101,25 @@ function createKindHero(
     }
     switcher.append(chip);
   });
-  meta.append(switcher, createHeroActions(group, kind, version));
+  meta.append(switcher, createHeroActions(project, group, kind, version));
 
   hero.append(title, gvk, meta);
   return hero;
 }
 
 /** MCP copy and schema download, kept on the version row instead of a bar. */
-function createHeroActions(group: string, kind: string, version: string): HTMLElement {
+function createHeroActions(project: ProjectEntry, group: string, kind: string, version: string): HTMLElement {
   const actions = document.createElement("div");
   actions.className = "meta-actions";
+
+  if (FLUX_DOCS_PROJECTS.has(project.name)) {
+    const docs = link(`https://fluxoperator.dev/docs/crd/${encodeURIComponent(kind)}/`, "", "button-link docs-link");
+    docs.innerHTML = DOCS_ICON;
+    docs.append(text("span", "", "API Docs"));
+    docs.target = "_blank";
+    docs.rel = "noopener noreferrer";
+    actions.append(docs);
+  }
 
   const mcp = document.createElement("button");
   mcp.type = "button";
