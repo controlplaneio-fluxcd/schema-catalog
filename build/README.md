@@ -115,7 +115,9 @@ with "document is not a YAML mapping". These show up as a leading license/usage
 banner (rook's `crds.yaml`) and, in helm-rendered installs, as interior
 `# Source: …` separators where a template produced no output (longhorn's
 `longhorn.yaml`). Splitting on column-0 `---` is safe because block-scalar
-content is always indented.
+content is always indented. The same normalized stream is parsed for CRD
+`spec.names` so history can record discovery names needed by kubectl-style
+resource references.
 
 **Pipeline stages are separate `$` calls on purpose.** A Bun-shell pipeline,
 like bash without pipefail, reports only the last command's exit code — a
@@ -127,9 +129,10 @@ output. Producers run alone via `.text()`, then the YAML is fed to
 
 `build/history/<name>.json` records repo, resolved version, build timestamp,
 flux-schema version, the sorted `kinds` array of original-cased `<group>/<Kind>`
-identifiers (one per indexed kind; the slug is recovered by lowercasing), and
-the sorted list of repo-root-relative catalog files the source owns. Everything
-derives from these manifests:
+identifiers (one per indexed kind; the slug is recovered by lowercasing),
+optional CRD discovery names keyed by `<group>/<Kind>`, and the sorted list of
+repo-root-relative catalog files the source owns. Everything derives from these
+manifests:
 
 - **Skip detection**: resolved version == manifest version AND every listed
   file exists on disk (the existence check makes a partially-synced catalog
