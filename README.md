@@ -4,21 +4,15 @@
 ![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C369-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-567%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
-A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
-Flux and other CNCF projects, generated with
-[flux-schema](https://github.com/fluxcd/flux-schema) and refreshed daily from
+A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
+generated with [flux-schema](https://github.com/fluxcd/flux-schema) and refreshed daily from
 upstream stable releases.
 
-Point `flux schema validate` at this catalog to validate your manifests against
-always-current schemas, including CRDs beyond the CLI's built-in `default`
-catalog (e.g. cert-manager), without having to extract them yourself or
-upgrade the CLI to pick up new versions.
+## Using the catalog for validation
 
-## Using the catalog
-
-The catalog is served from the edge at
+The catalog is served from Cloudflare's global network at
 [schemas.fluxoperator.dev](https://schemas.fluxoperator.dev), where you can
-also search and browse every project, kind and field index.
+also search and browse every project and their schemas.
 
 Pass the base URL as a `--schema-location`:
 
@@ -27,25 +21,10 @@ flux schema validate ./manifests \
   --schema-location https://schemas.fluxoperator.dev/catalog
 ```
 
-### Config file
+See the [CLI guide](https://schemas.fluxoperator.dev/cli) for installation,
+CI usage and configuration.
 
-To make the catalog the default for a repository, set it in a `.fluxschema.yml`
-config file so local runs and CI share the same configuration:
-
-```yaml
-apiVersion: schema.plugin.fluxcd.io/v1beta1
-kind: Config
-validate:
-  schemaLocation:
-    - https://schemas.fluxoperator.dev/catalog
-  verbose: true
-```
-
-```shell
-flux schema validate ./manifests --config .fluxschema.yml
-```
-
-## MCP server for AI agents
+## MCP Server for AI agents
 
 The catalog is exposed as a remote MCP server (streamable HTTP, no
 authentication) at `https://schemas.fluxoperator.dev/mcp`. It gives AI agents
@@ -66,17 +45,19 @@ To use it, add the MCP config to your project's `.mcp.json`:
 }
 ```
 
-| Tool             | Description                                                               |
-| ---------------- | ------------------------------------------------------------------------- |
-| `search_catalog` | Search projects, API groups, and kinds; returns latest schema URLs        |
-| `list_projects`  | List projects, optionally filtered by CNCF category                       |
-| `get_project`    | Return one project with groups, kinds, versions, and fields availability  |
-| `get_schema`     | Return the JSON Schema for a group/kind/version                           |
-| `search_fields`  | Grep a kind's field index by query and/or field path prefix               |
+See the [AI agents guide](https://schemas.fluxoperator.dev/agents) for the
+available tools and per-client setup instructions.
 
 ## Catalog
 
 <!-- versions:start -->
+### Platform
+
+| Project | Version | Schemas | Updated |
+| --- | --- | --- | --- |
+| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-05 |
+| OpenShift | [v4.20](build/history/openshift.json) | 133 | 2026-07-05 |
+
 ### Provisioning
 
 | Project | Version | Schemas | Updated |
@@ -163,7 +144,6 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | kgateway | [v2.3.5](build/history/kgateway.json) | 8 | 2026-07-06 |
 | kjob | [v0.1.0](build/history/kjob.json) | 5 | 2026-07-05 |
 | KubeEdge | [v1.23.0](build/history/kubeedge.json) | 18 | 2026-07-05 |
-| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-05 |
 | Kueue | [v0.18.2](build/history/kueue.json) | 22 | 2026-07-05 |
 | KWOK | [v0.8.0](build/history/kwok.json) | 12 | 2026-07-05 |
 | LeaderWorkerSet | [v0.9.0](build/history/lws.json) | 2 | 2026-07-05 |
@@ -215,12 +195,6 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Perses Operator | [v0.4.0](build/history/perses-operator.json) | 7 | 2026-07-06 |
 | Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-05 |
 | VictoriaMetrics Operator | [v0.72.0](build/history/victoriametrics-operator.json) | 24 | 2026-07-05 |
-
-### Platform
-
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| OpenShift | [v4.20](build/history/openshift.json) | 133 | 2026-07-05 |
 <!-- versions:end -->
 
 ## Documentation
