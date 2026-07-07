@@ -39,14 +39,13 @@ describe("generateIndex", () => {
       {
         ...baseEntry,
         name: "beta",
-        kinds: [],
+        kinds: {},
         files: ["catalog/beta.example.io/widget_v1.json"],
       },
       {
         ...baseEntry,
         name: "alpha",
-        kinds: ["alpha.example.io/Gadget"],
-        resources: {
+        kinds: {
           "alpha.example.io/Gadget": { singular: "gadget", plural: "gadgets", shortNames: ["gd"] },
         },
         files: [
@@ -85,8 +84,7 @@ describe("generateIndex", () => {
       {
         ...baseEntry,
         name: "alpha",
-        kinds: ["alpha.example.io/NetworkPolicy", "alpha.example.io/Person"],
-        resources: {
+        kinds: {
           "alpha.example.io/NetworkPolicy": { singular: "networkpolicy", plural: "networkpolicies", shortNames: ["netpol"] },
           "alpha.example.io/Person": { singular: "human", plural: "people" },
         },
@@ -112,7 +110,7 @@ describe("generateIndex", () => {
       {
         ...baseEntry,
         name: "alpha",
-        kinds: [],
+        kinds: {},
         files: ["catalog/Foo/bar.json"],
       },
     ];

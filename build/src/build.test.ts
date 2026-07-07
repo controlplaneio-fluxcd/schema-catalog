@@ -6,7 +6,7 @@ import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
 import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
-import { kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, resourceNamesForKinds } from "./history.ts";
+import { historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
@@ -292,7 +292,7 @@ describe("removedFiles", () => {
     version: "v1",
     builtAt: "",
     fluxSchemaVersion: "",
-    kinds: ["g/A", "g/B"],
+    kinds: { "g/A": {}, "g/B": {} },
     files: ["catalog/g/A_v1.json", "catalog/g/A_v1.fields.txt", "catalog/g/B_v1.json"],
   };
 
@@ -417,21 +417,30 @@ describe("kindCasing", () => {
   });
 });
 
-describe("resourceNamesForKinds", () => {
-  test("keeps only resources for indexed kinds", () => {
+describe("historyKinds", () => {
+  test("merges sorted indexed kinds with matching resources", () => {
     expect(
-      resourceNamesForKinds(
+      historyKinds(
         {
           "example.io/Widget": { plural: "widgets", shortNames: ["wdg"] },
           "example.io/WidgetList": { plural: "widgetlists" },
         },
-        ["example.io/Widget"],
+        ["example.io/Widget", "example.io/Gadget"],
       ),
-    ).toEqual({ "example.io/Widget": { plural: "widgets", shortNames: ["wdg"] } });
+    ).toEqual({
+      "example.io/Gadget": {},
+      "example.io/Widget": { plural: "widgets", shortNames: ["wdg"] },
+    });
   });
 
-  test("returns undefined when no resources match", () => {
-    expect(resourceNamesForKinds({ "example.io/Widget": { plural: "widgets" } }, ["example.io/Gadget"])).toBeUndefined();
+  test("returns empty objects when no resources match", () => {
+    expect(historyKinds({ "example.io/Widget": { plural: "widgets" } }, ["example.io/Gadget"])).toEqual({
+      "example.io/Gadget": {},
+    });
+  });
+
+  test("returns an empty map when there are no indexed kinds", () => {
+    expect(historyKinds({ "example.io/Widget": { plural: "widgets" } }, [])).toEqual({});
   });
 });
 

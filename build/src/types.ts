@@ -96,13 +96,13 @@ export interface HistoryEntry {
   fluxSchemaVersion: string;
   /**
    * Original-cased kind identifiers `<group>/<Kind>` for every kind that has a
-   * field index, sorted and unique. Catalog filenames lowercase the kind, so
-   * this is the only record of the real casing (e.g. `.../ArchiveRule`) the web
-   * index uses for display; the slug is recovered by lowercasing.
+   * field index, sorted and unique, mapped to discovery names. Catalog filenames
+   * lowercase the kind, so the key is the only record of the real casing (e.g.
+   * `.../ArchiveRule`) the web index uses for display; the slug is recovered by
+   * lowercasing. An empty object means the extractor had no discovery names for
+   * that kind.
    */
-  kinds: string[];
-  /** Discovery names keyed by original-cased `<group>/<Kind>`. */
-  resources?: Record<string, ResourceNames>;
+  kinds: Record<string, ResourceNames>;
   /** Catalog files owned by this source, repo-root relative, sorted. */
   files: string[];
 }

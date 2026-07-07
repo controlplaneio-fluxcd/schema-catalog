@@ -12,12 +12,12 @@ import {
   deleteHistory,
   gcCatalog,
   historyFilesPresent,
+  historyKinds,
   kindCasing,
   listHistoryNames,
   listStagedFiles,
   pruneKindsWithoutFields,
   readHistory,
-  resourceNamesForKinds,
   removedFiles,
   syncCatalog,
   writeHistory,
@@ -112,8 +112,8 @@ async function processSource(
       );
     }
     const files = await syncCatalog(staging, kept);
-    const kinds = await kindCasing(kept, (rel) => Bun.file(join(staging, rel)).text());
-    const resources = resourceNamesForKinds(extraction.resources, kinds);
+    const kindIds = await kindCasing(kept, (rel) => Bun.file(join(staging, rel)).text());
+    const kinds = historyKinds(extraction.resources, kindIds);
     const removed = removedFiles(prev, files, foreign);
     await gcCatalog(removed);
     const entry: HistoryEntry = {
@@ -123,7 +123,6 @@ async function processSource(
       builtAt: new Date().toISOString(),
       fluxSchemaVersion: opts.toolVersion,
       kinds,
-      ...(resources === undefined ? {} : { resources }),
       files,
     };
     await writeHistory(entry);

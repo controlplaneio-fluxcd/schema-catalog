@@ -146,11 +146,11 @@ function collectGroups(entry: HistoryEntry): GroupEntry[] {
   // Recover the original casing recorded by the build: `<group>/<Kind>` keyed by
   // its lowercase `<group>/<slug>` so it joins back to catalog filenames.
   const casing = new Map<string, string>();
-  for (const id of entry.kinds ?? []) {
+  for (const id of Object.keys(entry.kinds ?? {})) {
     casing.set(id.toLowerCase(), id.slice(id.indexOf("/") + 1));
   }
   const resources = new Map<string, ResourceNames>();
-  for (const [id, names] of Object.entries(entry.resources ?? {})) {
+  for (const [id, names] of Object.entries(entry.kinds ?? {})) {
     resources.set(id.toLowerCase(), names);
   }
 
