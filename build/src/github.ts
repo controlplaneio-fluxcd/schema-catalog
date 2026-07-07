@@ -1,6 +1,8 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
+import { runBoundedPool } from "./pool.ts";
+
 const API_BASE = "https://api.github.com";
 
 export interface ReleaseAsset {
@@ -26,14 +28,14 @@ function headers(): Record<string, string> {
   return h;
 }
 
-// Sized for monorepo tarball downloads on slow links (grafana/loki,
-// kserve/kserve), not just API calls.
-const FETCH_TIMEOUT_MS = 120_000;
+// Sized for API calls, release-asset downloads and single-file raw downloads.
+const FETCH_TIMEOUT_MS = 60_000;
 const RETRIES = 2;
 
 /**
- * fetch with a timeout, and retries with backoff on 429, 5xx and network
- * errors. An exhausted API rate limit is reported as such instead of a
+ * fetch with a timeout, and retries with backoff on 429, 5xx, network errors
+ * and 403 secondary rate limits (GitHub signals those with a Retry-After
+ * header). An exhausted API rate limit is reported as such instead of a
  * bare 403 (unauthenticated CI runs sit at 60 requests/hour).
  */
 export async function fetchRetry(url: string, init: RequestInit = {}): Promise<Response> {
@@ -51,8 +53,9 @@ export async function fetchRetry(url: string, init: RequestInit = {}): Promise<R
     if (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0") {
       throw new Error(`GET ${url}: GitHub API rate limit exceeded; set GITHUB_TOKEN to raise it`);
     }
-    if ((res.status === 429 || res.status >= 500) && attempt < RETRIES) {
-      const after = Number(res.headers.get("retry-after"));
+    const after = Number(res.headers.get("retry-after"));
+    const secondaryLimit = res.status === 403 && after > 0;
+    if ((res.status === 429 || res.status >= 500 || secondaryLimit) && attempt < RETRIES) {
       await Bun.sleep(after > 0 ? after * 1000 : 1000 * 2 ** attempt);
       continue;
     }
@@ -66,15 +69,6 @@ async function apiJson(path: string): Promise<unknown> {
     throw new Error(`GET ${path}: ${res.status} ${res.statusText}`);
   }
   return res.json();
-}
-
-async function fetchTarball(repo: string, ref: string): Promise<Uint8Array> {
-  const url = `${API_BASE}/repos/${repo}/tarball/${ref}`;
-  const res = await fetchRetry(url, { headers: headers() });
-  if (!res.ok) {
-    throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
-  }
-  return new Uint8Array(await res.arrayBuffer());
 }
 
 /** Returns the tag name of the latest GitHub release of owner/name. */
@@ -142,11 +136,48 @@ interface ContentEntry {
   download_url: string | null;
 }
 
+/** Contents API path for a repo file or directory, with the path segments
+ * and ref percent-encoded (refs like `operator/v0.10.2` are legal, but `#`,
+ * `&`, `+` or spaces would otherwise corrupt the query). */
+function contentsPath(repo: string, path: string, ref: string): string {
+  const encoded = path.split("/").map(encodeURIComponent).join("/");
+  return `/repos/${repo}/contents/${encoded}?ref=${encodeURIComponent(ref)}`;
+}
+
+async function listYamlFiles(
+  repo: string,
+  ref: string,
+  dir: string,
+): Promise<{ path: string; downloadUrl: string }[]> {
+  const entries = await apiJson(contentsPath(repo, dir, ref));
+  if (!Array.isArray(entries)) {
+    throw new Error(`${repo}@${ref}: '${dir}' is not a directory`);
+  }
+  if (entries.length === 1000) {
+    throw new Error(`${repo}@${ref}: '${dir}' directory listing hit the GitHub Contents API cap of 1000 entries`);
+  }
+
+  const files: { path: string; downloadUrl: string }[] = [];
+  for (const entry of entries as ContentEntry[]) {
+    if (entry.type === "dir") {
+      files.push(...(await listYamlFiles(repo, ref, entry.path)));
+    } else if (entry.type === "file" && entry.name.endsWith(".yaml")) {
+      if (entry.download_url === null) {
+        throw new Error(`${repo}@${ref}: '${entry.path}' has no download_url`);
+      }
+      files.push({ path: entry.path, downloadUrl: entry.download_url });
+    }
+  }
+  return files;
+}
+
 /**
  * Recursively fetches every `*.yaml` file under a repo directory at a git ref
- * and concatenates them into one multi-document stream (sorted by path for a
- * deterministic order). For repos that ship CRDs as bare per-kind files with
- * no release asset or kustomization (e.g. cilium's client/crds tree).
+ * via the GitHub Contents API, with one listing call per directory and raw
+ * per-file downloads instead of a repo tarball, then concatenates them into
+ * one multi-document stream (sorted by path for a deterministic order). For
+ * repos that ship CRDs as bare per-kind files with no release asset or
+ * kustomization (e.g. cilium's client/crds tree).
  *
  * `exclude` drops files whose basename matches any of the given globs (`*`
  * spans any characters) — for a dir that co-locates a CRD another source
@@ -160,13 +191,21 @@ export async function fetchCrdDir(
   dir: string,
   exclude: string[] = [],
 ): Promise<string> {
-  const all = extractTarFiles(await fetchTarball(repo, ref), dir);
+  const all = await listYamlFiles(repo, ref, dir);
   const files = excludeByBasename(all, exclude, `${repo}@${ref} under '${dir}'`);
   if (files.length === 0) {
     throw new Error(`${repo}@${ref}: no .yaml files under '${dir}'`);
   }
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  return files.map((f) => f.text).join("\n---\n");
+  const downloads = await runBoundedPool(files, 8, (f) => downloadText(f.downloadUrl));
+  return downloads
+    .map((result) => {
+      if ("error" in result) {
+        throw result.error;
+      }
+      return result.value;
+    })
+    .join("\n---\n");
 }
 
 /**
@@ -190,92 +229,6 @@ export function excludeByBasename<T extends { path: string }>(
   return kept;
 }
 
-export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; text: string }[] {
-  const tar = Bun.gunzipSync(arrayBufferBytes(gz));
-  const files: { path: string; text: string }[] = [];
-  const decoder = new TextDecoder();
-  const wantedPrefix = `${dir}/`;
-  let offset = 0;
-  let zeroBlocks = 0;
-  let topLevel: string | null = null;
-  // A long path from a pax 'x' (path=) or GNU 'L' header that overrides the
-  // next entry's ustar name/prefix. CRDs whose file name alone exceeds tar's
-  // 100-byte name field (e.g. Config Connector) are addressed this way.
-  let overridePath: string | null = null;
-
-  while (offset < tar.length) {
-    if (offset + 512 > tar.length) {
-      throw new Error("truncated tar archive");
-    }
-    const header = tar.subarray(offset, offset + 512);
-    if (isZeroBlock(header)) {
-      zeroBlocks++;
-      offset += 512;
-      if (zeroBlocks === 2) {
-        return files;
-      }
-      continue;
-    }
-    zeroBlocks = 0;
-
-    const typeflag = header[156]!;
-    const size = tarSize(header);
-    const bodyStart = offset + 512;
-    const bodyEnd = bodyStart + size;
-    const nextOffset = bodyStart + Math.ceil(size / 512) * 512;
-    if (bodyEnd > tar.length || nextOffset > tar.length) {
-      throw new Error("truncated tar archive");
-    }
-    const body = () => decoder.decode(arrayBufferBytes(tar.subarray(bodyStart, bodyEnd)));
-
-    // pax global header: archive-wide metadata (git prepends one), ignore.
-    if (typeflag === 0x67) {
-      offset = nextOffset;
-      continue;
-    }
-    // pax extended header: a `path=` record carries the next entry's long name.
-    if (typeflag === 0x78) {
-      const p = paxPath(body());
-      if (p !== null) {
-        overridePath = p;
-      }
-      offset = nextOffset;
-      continue;
-    }
-    // GNU long name: the body is the next entry's full name.
-    if (typeflag === 0x4c) {
-      overridePath = body().replace(/\0+$/, "");
-      offset = nextOffset;
-      continue;
-    }
-
-    const name = tarString(header, 0, 100);
-    const prefix = tarString(header, 345, 500);
-    const path = overridePath ?? (prefix ? `${prefix}/${name}` : name);
-    overridePath = null;
-
-    if (topLevel === null) {
-      const slash = path.indexOf("/");
-      if (slash < 0) {
-        throw new Error("tar archive missing top-level directory");
-      }
-      topLevel = path.slice(0, slash);
-    }
-    if (typeflag !== 0x30 && typeflag !== 0x00) {
-      offset = nextOffset;
-      continue;
-    }
-
-    const repoRelativePath = path.startsWith(`${topLevel}/`) ? path.slice(topLevel.length + 1) : path;
-    if (repoRelativePath.startsWith(wantedPrefix) && repoRelativePath.endsWith(".yaml")) {
-      files.push({ path: repoRelativePath, text: body() });
-    }
-    offset = nextOffset;
-  }
-
-  throw new Error("truncated tar archive");
-}
-
 /**
  * Fetches a single YAML file from a repo tree at a git ref. For repos that
  * commit their whole CRD set as one bundled file with no release asset and no
@@ -283,7 +236,7 @@ export function extractTarFiles(gz: Uint8Array, dir: string): { path: string; te
  * directory with ~99 unrelated example manifests).
  */
 export async function fetchCrdFile(repo: string, ref: string, path: string): Promise<string> {
-  const entry = await apiJson(`/repos/${repo}/contents/${path}?ref=${ref}`);
+  const entry = await apiJson(contentsPath(repo, path, ref));
   if (Array.isArray(entry) || !(entry as ContentEntry).download_url) {
     throw new Error(`${repo}@${ref}: '${path}' is not a file`);
   }
@@ -297,64 +250,4 @@ export function matchAsset(pattern: string, name: string): boolean {
     .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join(".*");
   return new RegExp(`^${re}$`).test(name);
-}
-
-function isZeroBlock(block: Uint8Array): boolean {
-  return block.every((byte) => byte === 0);
-}
-
-function tarString(block: Uint8Array, start: number, end: number): string {
-  let stop = start;
-  while (stop < end && block[stop] !== 0) {
-    stop++;
-  }
-  return new TextDecoder().decode(block.subarray(start, stop));
-}
-
-function tarSize(header: Uint8Array): number {
-  if ((header[124]! & 0x80) !== 0) {
-    throw new Error("unsupported base-256 tar size");
-  }
-  const raw = Array.from(header.subarray(124, 136))
-    .filter((byte) => byte !== 0 && byte !== 0x20)
-    .map((byte) => String.fromCharCode(byte))
-    .join("");
-  if (raw === "") {
-    return 0;
-  }
-  if (!/^[0-7]+$/.test(raw)) {
-    throw new Error("invalid tar size");
-  }
-  return Number.parseInt(raw, 8);
-}
-
-/**
- * The `path=` value from a pax extended header body, or null if absent. Records
- * are length-prefixed: "<len> key=value\n", where <len> counts the whole record
- * including its own digits.
- */
-function paxPath(body: string): string | null {
-  let offset = 0;
-  while (offset < body.length) {
-    const space = body.indexOf(" ", offset);
-    if (space < 0) {
-      throw new Error("invalid pax header");
-    }
-    const length = Number.parseInt(body.slice(offset, space), 10);
-    if (!Number.isFinite(length) || length <= 0 || offset + length > body.length) {
-      throw new Error("invalid pax header");
-    }
-    const record = body.slice(space + 1, offset + length);
-    if (record.startsWith("path=")) {
-      return record.slice("path=".length).replace(/\n$/, "");
-    }
-    offset += length;
-  }
-  return null;
-}
-
-function arrayBufferBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-  const out: Uint8Array<ArrayBuffer> = new Uint8Array(bytes.length);
-  out.set(bytes);
-  return out;
 }

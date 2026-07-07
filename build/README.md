@@ -192,10 +192,10 @@ bun src/main.ts regen --concurrent=2 2>&1 | tee /tmp/regen.log
 - Stick with modest concurrency: the flag's default of 2 finishes a full run
   in a few minutes, while higher values compound GitHub rate limiting and
   bandwidth contention on the big-repo fetches.
-- Sources that fetch very large repos can exceed the fixed fetch timeouts on
-  slower connections: `kustomize` inputs are subject to kubectl's hard-coded
-  27s git timeout (kserve), and `crdDir` tarball downloads race github.ts's
-  60s fetch timeout (loki-operator pulls the whole grafana/loki monorepo).
+- Sources that fetch very large repos can exceed structural timeouts on slower
+  connections: `crdDir` no longer downloads tarballs, it fetches only the
+  listed files via the Contents API, so the remaining structural timeout is
+  kubectl's hard-coded 27s git timeout on `kustomize` inputs of large repos.
   The run still attempts every source; retry stragglers one at a time with
   `regen --source <name>` and confirm each reports `+0 -0` files.
 - Retries re-render the root README versions table from the on-disk
@@ -234,7 +234,8 @@ the project ships its CRDs:
   releases alongside the app `v*` ones).
 - **`kustomize`** — a kustomize overlay in the repo (`config/crd` and friends).
 - **`crdDir`** — bare per-kind CRD YAML files under a repo directory, with no
-  release asset or kustomization (e.g. cilium's `client/crds` tree). Add an
+  release asset or kustomization (e.g. cilium's `client/crds` tree), fetched
+  individually via the GitHub Contents API with no repo tarball. Add an
   `exclude` list of basename globs when the directory vendors CRDs another
   source already owns (e.g. Calico vendoring a `policy.networking.k8s.io_*`
   CRD); each glob must match at least one file or the build fails.

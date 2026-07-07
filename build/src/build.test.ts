@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
-import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
+import { excludeByBasename, matchAsset } from "./github.ts";
 import { historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
@@ -106,65 +106,6 @@ describe("excludeByBasename", () => {
   test("throws when a glob matches nothing (stale exclude)", () => {
     expect(() => excludeByBasename(files, ["gateway.networking.k8s.io_*"], "ctx")).toThrow(
       /exclude 'gateway.networking.k8s.io_\*' matched no file/,
-    );
-  });
-});
-
-describe("extractTarFiles", () => {
-  test("extracts YAML files under a directory from a git archive", async () => {
-    const fixture = Bun.file(new URL("./testdata/crds-fixture.tar.gz", import.meta.url));
-    const gz = new Uint8Array(await fixture.arrayBuffer());
-    const files = extractTarFiles(gz, "package/crds");
-    files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-
-    expect(files).toEqual([
-      { path: "package/crds/a.yaml", text: "kind: A\n" },
-      {
-        path: "package/crds/really/deeply/nested/subtree/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.yaml",
-        text: "kind: Deep\n",
-      },
-    ]);
-  });
-
-  test("applies a pax path= override to the next entry (long CRD file names)", () => {
-    const long = "package/crds/apiextensions.k8s.io_v1_customresourcedefinition_verylongkind.example.com.yaml";
-    const files = extractTarFiles(
-      tarGz([
-        { name: "top/PaxHeaders/x", typeflag: "x", text: paxRecord(`path=top/${long}`) },
-        { name: "top/ignored-ustar-name", typeflag: "0", text: "kind: Long\n" },
-      ]),
-      "package/crds",
-    );
-    expect(files).toEqual([{ path: long, text: "kind: Long\n" }]);
-  });
-
-  test("applies a GNU long name to the next entry", () => {
-    const files = extractTarFiles(
-      tarGz([
-        { name: "././@LongLink", typeflag: "L", text: "top/package/crds/gnu-long.yaml" },
-        { name: "top/ignored", typeflag: "0", text: "kind: Gnu\n" },
-      ]),
-      "package/crds",
-    );
-    expect(files).toEqual([{ path: "package/crds/gnu-long.yaml", text: "kind: Gnu\n" }]);
-  });
-
-  test("ignores a pax header with no path override (e.g. symlink metadata)", () => {
-    const files = extractTarFiles(
-      tarGz([
-        { name: "top/PaxHeaders/x", typeflag: "x", text: paxRecord("comment=abc") },
-        { name: "top/package/crds/plain.yaml", typeflag: "0", text: "kind: Plain\n" },
-      ]),
-      "package/crds",
-    );
-    expect(files).toEqual([{ path: "package/crds/plain.yaml", text: "kind: Plain\n" }]);
-  });
-
-  test("throws on truncated bodies", () => {
-    const header = tarHeader("top/package/crds/a.yaml", "0", 10);
-    const body = new TextEncoder().encode("kind");
-    expect(() => extractTarFiles(new Uint8Array(Bun.gzipSync(concatBytes([header, body]))), "package/crds")).toThrow(
-      "truncated tar archive",
     );
   });
 });
@@ -723,56 +664,3 @@ describe("dropEmptyDocs", () => {
     expect(dropEmptyDocs(yaml)).toBe(yaml);
   });
 });
-
-function tarGz(entries: { name: string; typeflag: string; text: string }[]): Uint8Array {
-  const chunks: Uint8Array[] = [];
-  for (const entry of entries) {
-    const body = new TextEncoder().encode(entry.text);
-    chunks.push(tarHeader(entry.name, entry.typeflag, body.length));
-    chunks.push(padded(body));
-  }
-  chunks.push(new Uint8Array(1024));
-  return new Uint8Array(Bun.gzipSync(concatBytes(chunks)));
-}
-
-/** A pax record "<len> key=value\n", where len counts the whole record. */
-function paxRecord(kv: string): string {
-  for (let digits = 1; ; digits++) {
-    const len = digits + 1 + kv.length + 1;
-    if (String(len).length === digits) return `${len} ${kv}\n`;
-  }
-}
-
-function tarHeader(name: string, typeflag: string, size: number): Uint8Array {
-  const header = new Uint8Array(512);
-  writeAscii(header, 0, name);
-  writeOctal(header, 124, 12, size);
-  header[156] = typeflag.charCodeAt(0);
-  writeAscii(header, 257, "ustar\0");
-  return header;
-}
-
-function writeAscii(buf: Uint8Array, offset: number, value: string): void {
-  buf.set(new TextEncoder().encode(value), offset);
-}
-
-function writeOctal(buf: Uint8Array, offset: number, length: number, value: number): void {
-  writeAscii(buf, offset, value.toString(8).padStart(length - 1, "0"));
-  buf[offset + length - 1] = 0;
-}
-
-function padded(body: Uint8Array): Uint8Array {
-  const out = new Uint8Array(Math.ceil(body.length / 512) * 512);
-  out.set(body);
-  return out;
-}
-
-function concatBytes(chunks: Uint8Array[]): Uint8Array<ArrayBuffer> {
-  const out: Uint8Array<ArrayBuffer> = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
-  let offset = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return out;
-}
