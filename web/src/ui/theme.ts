@@ -35,9 +35,12 @@ export function createThemeToggle(): HTMLButtonElement {
   return button;
 }
 
+// The icon mirrors the ACTIVE theme like fluxoperator.dev, while the
+// label/title describe the switch the click performs.
 function updateThemeButton(button: HTMLButtonElement): void {
-  const next = activeTheme() === "dark" ? "light" : "dark";
-  button.textContent = next === "dark" ? "☾" : "☀";
+  const active = activeTheme();
+  const next = active === "dark" ? "light" : "dark";
+  button.textContent = active === "dark" ? "☾" : "☀";
   button.setAttribute("aria-label", `Switch to ${next} theme`);
   button.title = `Switch to ${next} theme`;
 }
