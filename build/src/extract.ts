@@ -4,7 +4,7 @@
 import { $, YAML } from "bun";
 import { repoOf } from "./config.ts";
 import { downloadAsset, fetchCrdDir, fetchCrdFile, findReleaseAsset } from "./github.ts";
-import { FLUX_SCHEMA_BIN } from "./paths.ts";
+import { FLUX_SCHEMA_BIN, ROOT_DIR } from "./paths.ts";
 import { bareVersion, displayVersion, openshiftRef } from "./resolve.ts";
 import type { CrdSource, FluxInstance, ResourceNames, Source } from "./types.ts";
 
@@ -175,7 +175,13 @@ async function crdYaml(source: CrdSource, version: string): Promise<string> {
     return fetchCrdFile(repoOf(source), version, input.crdFile);
   }
   const manifest = fluxInstanceManifest(input.fluxInstance, version);
-  return await $`flux-operator build instance -f - < ${new Response(manifest)}`.quiet().text();
+  // The distribution artifact is public; point DOCKER_CONFIG at a dir with no
+  // config.json so the pull stays anonymous instead of invoking the user's
+  // docker credential helpers (which can prompt or time out).
+  return await $`flux-operator build instance -f - < ${new Response(manifest)}`
+    .env({ ...process.env, DOCKER_CONFIG: ROOT_DIR })
+    .quiet()
+    .text();
 }
 
 /** The FluxInstance manifest piped through `flux-operator build instance`. */
