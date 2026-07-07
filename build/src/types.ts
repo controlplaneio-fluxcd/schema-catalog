@@ -48,6 +48,10 @@ interface SourceBase {
   alias: string;
   /** CNCF landscape top-level group. */
   category: SourceCategory;
+  /** CNCF project maturity; set only for projects listed on cncf.io/projects. */
+  cncf?: "graduated";
+  /** Landing-page preview order within the category; lower shows first, unpinned follow alphabetically. */
+  pin?: number;
   /** GitHub repository URL; drives version resolution. */
   url: string;
   /** Optional pin; defaults to the latest release (openshift: release branch). */

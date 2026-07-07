@@ -39,6 +39,11 @@ describe("parseSources", () => {
     expect(sources[0]!.version).toBe("v1.6.0");
   });
 
+  test("accepts CNCF graduated maturity", () => {
+    const sources = parseSources({ sources: [validSource({ cncf: "graduated" })] });
+    expect(sources[0]!.cncf).toBe("graduated");
+  });
+
   test("rejects a non-mapping document", () => {
     expect(() => parseSources([])).toThrow("top-level mapping");
   });
@@ -81,6 +86,46 @@ describe("parseSources", () => {
     expect(() => parseSources({ sources: [validSource({ category: "Networking" })] })).toThrow(
       `category must be one of: ${CATEGORIES.join(", ")}`,
     );
+  });
+
+  test("rejects unsupported CNCF maturity values", () => {
+    expect(() => parseSources({ sources: [validSource({ cncf: "incubating" })] })).toThrow(
+      "cncf must be 'graduated'",
+    );
+  });
+
+  test("rejects non-string CNCF maturity values", () => {
+    expect(() => parseSources({ sources: [validSource({ cncf: 1 })] })).toThrow(
+      "cncf must be 'graduated'",
+    );
+  });
+
+  test("accepts a category preview pin", () => {
+    const sources = parseSources({ sources: [validSource({ pin: 2 })] });
+    expect(sources[0]!.pin).toBe(2);
+  });
+
+  test("rejects non-positive-integer pins", () => {
+    for (const pin of [0, -1, 1.5, "1"]) {
+      expect(() => parseSources({ sources: [validSource({ pin })] })).toThrow(
+        "pin must be a positive integer",
+      );
+    }
+  });
+
+  test("rejects duplicate pins within a category", () => {
+    expect(() =>
+      parseSources({
+        sources: [validSource({ pin: 1 }), validSource({ name: "kueue", pin: 1 })],
+      }),
+    ).toThrow("duplicate pin 1 in category 'Orchestration & Management'");
+  });
+
+  test("allows the same pin across categories", () => {
+    const sources = parseSources({
+      sources: [validSource({ pin: 1 }), validSource({ name: "kueue", category: "Runtime", pin: 1 })],
+    });
+    expect(sources.map((source) => source.pin)).toEqual([1, 1]);
   });
 
   test("rejects non-GitHub URLs", () => {

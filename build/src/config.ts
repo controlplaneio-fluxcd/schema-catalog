@@ -6,14 +6,14 @@ import type { CrdInput, FluxInstance, Source, SourceCategory } from "./types.ts"
 
 const EXTRACT_KINDS = ["k8s", "openshift", "crd"];
 const INPUT_KINDS = ["kustomize", "releaseAsset", "crdDir", "crdFile", "fluxInstance"];
-const SOURCE_KEYS = ["name", "alias", "category", "url", "version", "extract", "input"];
+const SOURCE_KEYS = ["name", "alias", "category", "cncf", "pin", "url", "version", "extract", "input"];
 export const CATEGORIES = [
+  "Platform",
   "Provisioning",
   "Runtime",
   "Orchestration & Management",
   "App Definition & Development",
   "Observability & Analysis",
-  "Platform",
 ] as const satisfies readonly SourceCategory[];
 const NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 const REPO_URL_RE = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/;
@@ -54,12 +54,20 @@ export function parseSources(doc: unknown): Source[] {
   }
 
   const names = new Set<string>();
+  const pins = new Set<string>();
   return doc.sources.map((entry, i) => {
     const source = parseSource(entry, `sources[${i}]`);
     if (names.has(source.name)) {
       throw new Error(`sources[${i}]: duplicate name '${source.name}'`);
     }
     names.add(source.name);
+    if (source.pin !== undefined) {
+      const pinKey = `${source.category}/${source.pin}`;
+      if (pins.has(pinKey)) {
+        throw new Error(`sources[${i}]: duplicate pin ${source.pin} in category '${source.category}'`);
+      }
+      pins.add(pinKey);
+    }
     return source;
   });
 }
@@ -86,6 +94,17 @@ function parseSource(entry: unknown, ctx: string): Source {
   if (!isCategory(category)) {
     throw new Error(`${ctx}: category must be one of: ${CATEGORIES.join(", ")}`);
   }
+  if (entry.cncf !== undefined && entry.cncf !== "graduated") {
+    throw new Error(`${ctx}: cncf must be 'graduated'`);
+  }
+  const cncf = entry.cncf as "graduated" | undefined;
+  if (
+    entry.pin !== undefined &&
+    (typeof entry.pin !== "number" || !Number.isInteger(entry.pin) || entry.pin < 1)
+  ) {
+    throw new Error(`${ctx}: pin must be a positive integer`);
+  }
+  const pin = entry.pin as number | undefined;
   const url = requireString(entry, "url", ctx);
   if (!REPO_URL_RE.test(url) || url.endsWith(".git")) {
     throw new Error(`${ctx}: url must be https://github.com/<owner>/<name> without a .git suffix`);
@@ -104,9 +123,9 @@ function parseSource(entry: unknown, ctx: string): Source {
     if (entry.input !== undefined) {
       throw new Error(`${ctx}: input is only valid for extract: crd`);
     }
-    return { name, alias, category, url, version, extract: extract as "k8s" | "openshift" };
+    return { name, alias, category, cncf, pin, url, version, extract: extract as "k8s" | "openshift" };
   }
-  return { name, alias, category, url, version, extract: "crd", input: parseInput(entry.input, ctx) };
+  return { name, alias, category, cncf, pin, url, version, extract: "crd", input: parseInput(entry.input, ctx) };
 }
 
 function parseInput(input: unknown, ctx: string): CrdInput {

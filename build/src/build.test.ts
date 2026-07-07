@@ -413,20 +413,20 @@ describe("versions table", () => {
     ]);
 
     expect(table).toBe(
-      "### Provisioning\n\n" +
+      "### Platform\n\n" +
+        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
+        "| Platform C | [v1.0.0](build/history/platform-c.json) | 1 | 2026-07-05 |\n\n" +
+        "### Provisioning\n\n" +
         "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
         "| Provisioning A | [v1.0.0](build/history/provisioning-a.json) | 1 | 2026-07-05 |\n\n" +
         "### Runtime\n\n" +
         "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Runtime B | [v1.0.0](build/history/runtime-b.json) | 1 | 2026-07-05 |\n\n" +
-        "### Platform\n\n" +
-        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Platform C | [v1.0.0](build/history/platform-c.json) | 1 | 2026-07-05 |",
+        "| Runtime B | [v1.0.0](build/history/runtime-b.json) | 1 | 2026-07-05 |",
     );
     expect(CATEGORIES.filter((category) => table.includes(`### ${category}`))).toEqual([
+      "Platform",
       "Provisioning",
       "Runtime",
-      "Platform",
     ]);
   });
 
