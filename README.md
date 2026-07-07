@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-121-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C416-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-581%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-122-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C419-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-581%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -193,6 +193,7 @@ available tools and per-client setup instructions.
 | Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-07 |
 | Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-07 |
 | Jaeger Operator | [v1.65.0](build/history/jaeger-operator.json) | 1 | 2026-07-07 |
+| Litmus | [3.30.0](build/history/litmus.json) | 3 | 2026-07-07 |
 | Logging Operator | [6.7.0](build/history/logging-operator.json) | 21 | 2026-07-07 |
 | Loki Operator | [v0.10.2](build/history/loki-operator.json) | 9 | 2026-07-07 |
 | OpenSearch Operator | [3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-07 |
