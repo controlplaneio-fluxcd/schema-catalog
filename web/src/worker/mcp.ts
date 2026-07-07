@@ -93,6 +93,21 @@ function createCatalogMcpServer(env: Env): McpServer {
   );
 
   server.registerTool(
+    "grep_schema",
+    {
+      title: "Grep schema",
+      description:
+        "Grep an apiVersion/kind flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per field line. Constraints are part of each line, so a query like `\\(required\\)` lists every required field. Prefer it over get_schema for targeted field lookup.",
+      inputSchema: GrepSchemaInput,
+    },
+    async (args) =>
+      textResultFrom(async () => {
+        const index = await loadIndex(env);
+        return await grepSchemaText(index, env, args, getCatalogObject);
+      }),
+  );
+
+  server.registerTool(
     "list_projects",
     {
       title: "List projects",
@@ -137,21 +152,6 @@ function createCatalogMcpServer(env: Env): McpServer {
       textResultFrom(async () => {
         const index = await loadIndex(env);
         return await getSchemaText(index, env, args, getCatalogObject);
-      }),
-  );
-
-  server.registerTool(
-    "grep_schema",
-    {
-      title: "Grep schema",
-      description:
-        "Grep an apiVersion/kind flattened field index with JavaScript RegExp syntax; matches are case-insensitive and evaluated per field line. Constraints are part of each line, so a query like `\\(required\\)` lists every required field. Prefer it over get_schema for targeted field lookup.",
-      inputSchema: GrepSchemaInput,
-    },
-    async (args) =>
-      textResultFrom(async () => {
-        const index = await loadIndex(env);
-        return await grepSchemaText(index, env, args, getCatalogObject);
       }),
   );
 

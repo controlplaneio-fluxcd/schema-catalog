@@ -54,10 +54,10 @@ const FEATURES: Array<{ title: string; body: string }> = [
 
 const TOOLS: Array<{ name: string; description: string }> = [
   { name: "grep_catalog", description: "Search the catalog with a regex and get back matching kinds and their API versions." },
+  { name: "grep_schema", description: "Search a kind's fields with a regex and get back paths, types, constraints, and descriptions." },
   { name: "list_projects", description: "List every project in the catalog with its upstream version and kind count." },
   { name: "get_project", description: "List all the kinds and API versions that one project ships." },
   { name: "get_schema", description: "Fetch the complete JSON Schema for a kind and API version." },
-  { name: "grep_schema", description: "Search a kind's fields with a regex and get back paths, types, constraints, and descriptions." },
 ];
 
 /**
