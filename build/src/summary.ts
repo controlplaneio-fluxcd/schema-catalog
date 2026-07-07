@@ -20,14 +20,23 @@ export interface OrphanRemoval {
   files: number;
 }
 
+/** A source that threw during this run, surfaced in the PR body under --run-to-completion. */
+export interface SourceFailure {
+  name: string;
+  message: string;
+}
+
 /**
  * Renders the markdown summary of a build run: one row per changed source,
- * never the full catalog.
+ * never the full catalog. Failures are rendered only when --run-to-completion
+ * passed a non-empty list, so a transient blip on one source is visible in the
+ * PR body instead of silently aborting the run.
  */
 export function renderBuildSummary(
   changes: BuildChange[],
   orphans: OrphanRemoval[],
   upToDate: number,
+  failures: SourceFailure[] = [],
 ): string {
   const lines = ["Automated update of the schema catalog."];
   if (changes.length > 0) {
@@ -53,6 +62,14 @@ export function renderBuildSummary(
   }
   if (upToDate > 0) {
     lines.push("", `${upToDate} source(s) already up to date.`);
+  }
+  if (failures.length > 0) {
+    lines.push(
+      "",
+      "> [!WARNING]",
+      `> ${failures.length} source(s) failed to build:`,
+      ...failures.map((f) => `> - \`${f.name}\`: ${f.message.split("\n").join("; ")}`),
+    );
   }
   return `${lines.join("\n")}\n`;
 }

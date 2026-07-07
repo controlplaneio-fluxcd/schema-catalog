@@ -24,7 +24,7 @@ import { README_PATH, ROOT_DIR, SOURCES_PATH } from "./paths.ts";
 import { updateReadme } from "./readme.ts";
 import { displayVersion, resolveVersion } from "./resolve.ts";
 import { renderBuildSummary } from "./summary.ts";
-import type { BuildChange, OrphanRemoval } from "./summary.ts";
+import type { BuildChange, OrphanRemoval, SourceFailure } from "./summary.ts";
 import type { HistoryEntry, Source } from "./types.ts";
 
 const USAGE = `Usage: bun run <command> [options]
@@ -37,6 +37,8 @@ Options:
   --source <name>   Process a single source from build/config/sources.yaml
   --force           Rebuild even when the resolved version is unchanged
   --summary <path>  Write a markdown summary of the changes (for PR bodies)
+  --run-to-completion  Don't abort on a source failure; report failures instead
+                       (exit 0 and, with --summary, list them in the PR body)
   -h, --help        Show this help message
 `;
 
@@ -175,6 +177,7 @@ async function main(): Promise<number> {
       source: { type: "string" },
       force: { type: "boolean", default: false },
       summary: { type: "string" },
+      "run-to-completion": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
     allowPositionals: true,
@@ -216,7 +219,7 @@ async function main(): Promise<number> {
   const opts: Options = { command, force: values.force, toolVersion: await fluxSchemaVersion() };
   console.log(`${command}: ${sources.length} source(s), flux-schema ${opts.toolVersion}`);
 
-  const failures: string[] = [];
+  const failures: SourceFailure[] = [];
   const changes: BuildChange[] = [];
   let upToDate = 0;
   for (const source of sources) {
@@ -224,8 +227,9 @@ async function main(): Promise<number> {
       const change = await processSource(source, opts, history);
       change !== null ? changes.push(change) : upToDate++;
     } catch (err) {
-      failures.push(source.name);
-      console.error(`  ${source.name}: error: ${errorMessage(err)}`);
+      const message = errorMessage(err);
+      failures.push({ name: source.name, message });
+      console.error(`  ${source.name}: error: ${message}`);
     }
   }
 
@@ -257,7 +261,8 @@ async function main(): Promise<number> {
   }
 
   if (values.summary !== undefined) {
-    await Bun.write(values.summary, renderBuildSummary(changes, orphans, upToDate));
+    const reported = values["run-to-completion"] ? failures : [];
+    await Bun.write(values.summary, renderBuildSummary(changes, orphans, upToDate, reported));
     console.log(`  summary written to ${values.summary}`);
   }
 
@@ -270,8 +275,13 @@ async function main(): Promise<number> {
   }
 
   if (failures.length > 0) {
-    console.error(`\nerror: ${failures.length} source(s) failed: ${failures.join(", ")}`);
-    return 1;
+    const names = failures.map((f) => f.name).join(", ");
+    console.error(`\nerror: ${failures.length} source(s) failed: ${names}`);
+    // --run-to-completion (CI) keeps the run green so the successful sources
+    // still ship a PR; the failures are surfaced in its body instead.
+    if (!values["run-to-completion"]) {
+      return 1;
+    }
   }
   return 0;
 }

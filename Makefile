@@ -29,8 +29,8 @@ test: ## Run the build system unit tests.
 	cd build && bun test
 
 .PHONY: build
-build: ## Build the schema catalog (FORCE_BUILD=1 forces, BUILD_SUMMARY=<path> writes a summary).
-	cd build && bun src/main.ts build $(if $(FORCE_BUILD),--force) $(if $(BUILD_SUMMARY),--summary $(BUILD_SUMMARY))
+build: ## Build the schema catalog (FORCE_BUILD=1 forces, BUILD_SUMMARY=<path> writes a summary, RUN_TO_COMPLETION=1 reports source failures instead of aborting).
+	cd build && bun src/main.ts build $(if $(FORCE_BUILD),--force) $(if $(BUILD_SUMMARY),--summary $(BUILD_SUMMARY)) $(if $(RUN_TO_COMPLETION),--run-to-completion)
 
 ##@ Web
 

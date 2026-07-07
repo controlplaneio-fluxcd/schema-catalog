@@ -527,6 +527,22 @@ describe("renderBuildSummary", () => {
       "Automated update of the schema catalog.\n\nNo changes.\n\n6 source(s) already up to date.\n",
     );
   });
+
+  test("renders a warning block listing source failures when passed", () => {
+    const out = renderBuildSummary(
+      [{ repo: "fluxcd/flux2", prevVersion: "v2.9.0", version: "v2.10.0", files: 32, added: 2, removed: 0 }],
+      [],
+      4,
+      [{ name: "openshift", message: "GET https://endoflife.date/...\nsocket closed" }],
+    );
+    expect(out).toContain("> [!WARNING]");
+    expect(out).toContain("> 1 source(s) failed to build:");
+    expect(out).toContain("> - `openshift`: GET https://endoflife.date/...; socket closed");
+  });
+
+  test("omits the failure block when no failures are passed", () => {
+    expect(renderBuildSummary([], [], 6)).not.toContain("[!WARNING]");
+  });
 });
 
 describe("fluxInstanceManifest", () => {
