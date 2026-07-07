@@ -4,7 +4,7 @@
 import { mkdir, readdir, rename, rm, rmdir } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { CATALOG_DIR, HISTORY_DIR, ROOT_DIR } from "./paths.ts";
-import type { HistoryEntry } from "./types.ts";
+import type { HistoryEntry, ResourceNames } from "./types.ts";
 
 export async function readHistory(name: string): Promise<HistoryEntry | null> {
   const file = Bun.file(join(HISTORY_DIR, `${name}.json`));
@@ -102,6 +102,22 @@ export function parseKindName(fieldsText: string): string | null {
  * `readText`. One entry per kind (casing is version-invariant); a fields index
  * missing its `kind` enum row fails the build loudly rather than losing casing.
  */
+
+/** Filters discovery names down to the indexed kinds recorded in history. */
+export function resourceNamesForKinds(
+  resources: Record<string, ResourceNames>,
+  kinds: string[],
+): Record<string, ResourceNames> | undefined {
+  const out: Record<string, ResourceNames> = {};
+  for (const id of kinds) {
+    const resource = resources[id];
+    if (resource !== undefined) {
+      out[id] = resource;
+    }
+  }
+  return Object.keys(out).length === 0 ? undefined : out;
+}
+
 export async function kindCasing(
   files: string[],
   readText: (file: string) => Promise<string>,

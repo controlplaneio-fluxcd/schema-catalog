@@ -46,6 +46,9 @@ describe("generateIndex", () => {
         ...baseEntry,
         name: "alpha",
         kinds: ["alpha.example.io/Gadget"],
+        resources: {
+          "alpha.example.io/Gadget": { singular: "gadget", plural: "gadgets", shortNames: ["gd"] },
+        },
         files: [
           "catalog/alpha.example.io/gadget_v1beta1.json",
           "catalog/alpha.example.io/gadget_v2.json",
@@ -61,7 +64,7 @@ describe("generateIndex", () => {
       throw new Error("expected alpha and beta projects");
     }
 
-    expect(index.v).toBe(2);
+    expect(index.v).toBe(3);
     expect(index.categories[alpha.cat]).toBe("Runtime");
     expect(index.projects.map((project) => project.alias)).toEqual(["Alpha", "Beta"]);
     expect(alpha.repo).toBe("example/alpha");
@@ -72,9 +75,37 @@ describe("generateIndex", () => {
     expect("pin" in beta).toBe(false);
     expect(alpha.groups[0]?.g).toBe("alpha.example.io");
     // Original casing recorded in `kinds` becomes the 4th tuple element.
-    expect(alpha.groups[0]?.kinds[0]).toEqual(["gadget", ["v2", "v1beta1"], 1, "Gadget"]);
+    expect(alpha.groups[0]?.kinds[0]).toEqual(["gadget", ["v2", "v1beta1"], 1, "Gadget", { n: ["gd"] }]);
     // A kind with no recorded casing keeps the slug and omits the display element.
     expect(beta.groups[0]?.kinds[0]).toEqual(["widget", ["v1"], 0]);
+  });
+
+
+  test("stores only non-derivable discovery names in kind tuples", () => {
+    const entries: HistoryEntry[] = [
+      {
+        ...baseEntry,
+        name: "alpha",
+        kinds: ["alpha.example.io/NetworkPolicy", "alpha.example.io/Person"],
+        resources: {
+          "alpha.example.io/NetworkPolicy": { singular: "networkpolicy", plural: "networkpolicies", shortNames: ["netpol"] },
+          "alpha.example.io/Person": { singular: "human", plural: "people" },
+        },
+        files: [
+          "catalog/alpha.example.io/networkpolicy_v1.json",
+          "catalog/alpha.example.io/networkpolicy_v1.fields.txt",
+          "catalog/alpha.example.io/person_v1.json",
+          "catalog/alpha.example.io/person_v1.fields.txt",
+        ],
+      },
+    ];
+
+    const alpha = generateIndex(sources, entries).projects[0];
+
+    expect(alpha?.groups[0]?.kinds).toEqual([
+      ["networkpolicy", ["v1"], 1, "NetworkPolicy", { n: ["netpol"] }],
+      ["person", ["v1"], 1, "Person", { s: "human", p: "people" }],
+    ]);
   });
 
   test("throws on bad catalog file paths", () => {

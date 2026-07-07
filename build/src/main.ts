@@ -16,6 +16,7 @@ import {
   listStagedFiles,
   pruneKindsWithoutFields,
   readHistory,
+  resourceNamesForKinds,
   removedFiles,
   syncCatalog,
   writeHistory,
@@ -88,7 +89,7 @@ async function processSource(
   const foreign = foreignFiles(history, source.name);
   const staging = await mkdtemp(join(tmpdir(), `schema-catalog-${source.name}-`));
   try {
-    await extractSource(source, version, staging);
+    const extraction = await extractSource(source, version, staging);
     const staged = await listStagedFiles(staging);
     if (staged.length === 0) {
       throw new Error(`extraction at ${version} produced no files`);
@@ -109,6 +110,7 @@ async function processSource(
     }
     const files = await syncCatalog(staging, kept);
     const kinds = await kindCasing(kept, (rel) => Bun.file(join(staging, rel)).text());
+    const resources = resourceNamesForKinds(extraction.resources, kinds);
     const removed = removedFiles(prev, files, foreign);
     await gcCatalog(removed);
     const entry: HistoryEntry = {
@@ -118,6 +120,7 @@ async function processSource(
       builtAt: new Date().toISOString(),
       fluxSchemaVersion: opts.toolVersion,
       kinds,
+      ...(resources === undefined ? {} : { resources }),
       files,
     };
     await writeHistory(entry);

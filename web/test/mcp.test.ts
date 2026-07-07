@@ -20,7 +20,7 @@ import type { CatalogObjectLoader } from "../src/worker/mcp-core.ts";
 import type { Env } from "../src/worker/index.ts";
 
 const index: CatalogIndex = {
-  v: 2,
+  v: 3,
   generatedAt: "2026-07-06T00:00:00.000Z",
   categories: [
     "Provisioning",
@@ -41,7 +41,7 @@ const index: CatalogIndex = {
       groups: [
         {
           g: "kustomize.toolkit.fluxcd.io",
-          kinds: [["kustomization", ["v1", "v1beta2"], 1, "Kustomization"]],
+          kinds: [["kustomization", ["v1", "v1beta2"], 1, "Kustomization", { n: ["ks"] }]],
         },
       ],
     },
@@ -62,7 +62,7 @@ const index: CatalogIndex = {
       version: "v1.34.0",
       builtAt: "2026-07-06",
       groups: [
-        { g: "core", kinds: [["pod", ["v1"], 1, "Pod"]] },
+        { g: "core", kinds: [["pod", ["v1"], 1, "Pod", { p: "pods", n: ["po"] }]] },
         { g: "apps", kinds: [["deployment", ["v1"], 1, "Deployment"]] },
       ],
     },
@@ -153,6 +153,13 @@ describe("MCP catalog helpers", () => {
 
   test("resolveKind is case-insensitive for kind names", () => {
     const resolved = resolveKind(index, "kustomize.toolkit.fluxcd.io", "Kustomization");
+
+    expect(resolved?.entry[0]).toBe("kustomization");
+  });
+
+
+  test("resolveKind matches compact resource aliases", () => {
+    const resolved = resolveKind(index, "kustomize.toolkit.fluxcd.io", "ks");
 
     expect(resolved?.entry[0]).toBe("kustomization");
   });

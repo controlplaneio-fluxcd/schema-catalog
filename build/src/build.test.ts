@@ -3,9 +3,9 @@
 
 import { describe, expect, test } from "bun:test";
 import { CATEGORIES } from "./config.ts";
-import { dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
+import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
 import { excludeByBasename, extractTarFiles, matchAsset } from "./github.ts";
-import { kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles } from "./history.ts";
+import { kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, resourceNamesForKinds } from "./history.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
 import {
@@ -368,6 +368,25 @@ describe("kindCasing", () => {
   });
 });
 
+
+describe("resourceNamesForKinds", () => {
+  test("keeps only resources for indexed kinds", () => {
+    expect(
+      resourceNamesForKinds(
+        {
+          "example.io/Widget": { plural: "widgets", shortNames: ["wdg"] },
+          "example.io/WidgetList": { plural: "widgetlists" },
+        },
+        ["example.io/Widget"],
+      ),
+    ).toEqual({ "example.io/Widget": { plural: "widgets", shortNames: ["wdg"] } });
+  });
+
+  test("returns undefined when no resources match", () => {
+    expect(resourceNamesForKinds({ "example.io/Widget": { plural: "widgets" } }, ["example.io/Gadget"])).toBeUndefined();
+  });
+});
+
 describe("versions table", () => {
   const readme = "# Title\n\n<!-- versions:start -->\nstale\n<!-- versions:end -->\n";
   const versionRow = (
@@ -555,6 +574,71 @@ describe("fluxInstanceManifest", () => {
     expect(doc.kind).toBe("FluxInstance");
     expect(doc.spec.distribution).toEqual({ version: "v2.9.0", registry: "ghcr.io/fluxcd" });
     expect(doc.spec.components).toEqual(["source-controller"]);
+  });
+});
+
+
+describe("crdResourceNames", () => {
+  test("extracts plural, singular and short names from CRD streams", () => {
+    const yaml = `
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+spec:
+  group: source.extensions.fluxcd.io
+  names:
+    kind: ArtifactGenerator
+    plural: artifactgenerators
+    singular: artifactgenerator
+    shortNames:
+      - ag
+---
+apiVersion: v1
+kind: ConfigMap
+`;
+
+    expect(crdResourceNames(yaml)).toEqual({
+      "source.extensions.fluxcd.io/ArtifactGenerator": {
+        singular: "artifactgenerator",
+        plural: "artifactgenerators",
+        shortNames: ["ag"],
+      },
+    });
+  });
+
+  test("deduplicates short names and accepts repeated identical CRDs", () => {
+    const crd = `
+kind: CustomResourceDefinition
+spec:
+  group: example.io
+  names:
+    kind: Widget
+    plural: widgets
+    shortNames: [wdg, wdg]
+`;
+
+    expect(crdResourceNames(`${crd}---\n${crd}`)).toEqual({
+      "example.io/Widget": { plural: "widgets", shortNames: ["wdg"] },
+    });
+  });
+
+  test("fails on conflicting names for the same group and kind", () => {
+    const yaml = `
+kind: CustomResourceDefinition
+spec:
+  group: example.io
+  names:
+    kind: Widget
+    plural: widgets
+---
+kind: CustomResourceDefinition
+spec:
+  group: example.io
+  names:
+    kind: Widget
+    plural: widgets2
+`;
+
+    expect(() => crdResourceNames(yaml)).toThrow("conflicting CRD resource names for example.io/Widget");
   });
 });
 

@@ -3,7 +3,7 @@
 
 import { filterFieldLines, parseFieldsFile } from "../shared/fields.ts";
 import type { FieldLine } from "../shared/fields.ts";
-import { kindDisplay, latestVersion } from "../shared/index-query.ts";
+import { kindDisplay, latestVersion, resourceAliases } from "../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
 import type { Env } from "./index.ts";
 
@@ -129,7 +129,7 @@ export function resolveKind(index: CatalogIndex, group: string, kind: string): R
 
   for (const project of index.projects) {
     const groupEntry = project.groups.find((candidate) => normalize(candidate.g) === normalizedGroup);
-    const kindEntry = groupEntry?.kinds.find((candidate) => normalize(candidate[0]) === normalizedKind);
+    const kindEntry = groupEntry?.kinds.find((candidate) => resourceAliases(candidate).includes(normalizedKind));
     if (groupEntry !== undefined && kindEntry !== undefined) {
       return { project, group: groupEntry.g, entry: kindEntry };
     }
@@ -403,13 +403,14 @@ function closeKindMatches(index: CatalogIndex, group: string, kind: string): Arr
     for (const groupEntry of project.groups) {
       const sameGroup = normalize(groupEntry.g) === normalizedGroup;
       for (const entry of groupEntry.kinds) {
-        const entryKind = normalize(entry[0]);
+        const aliases = resourceAliases(entry);
+        const bestAlias = closestAlias(normalizedKind, aliases) ?? normalize(entry[0]);
         candidates.push({
           apiVersion: formatApiVersion(groupEntry.g, latestVersion(entry)),
           kind: kindDisplay(entry),
-          score: distance(normalizedKind, entryKind),
+          score: distance(normalizedKind, bestAlias),
           sameGroup,
-          includes: entryKind.includes(normalizedKind),
+          includes: aliases.some((alias) => alias.includes(normalizedKind)),
         });
       }
     }
@@ -427,6 +428,19 @@ function closeKindMatches(index: CatalogIndex, group: string, kind: string): Arr
     })
     .slice(0, 5)
     .map(({ apiVersion, kind }) => ({ apiVersion, kind }));
+}
+
+function closestAlias(needle: string, aliases: string[]): string | undefined {
+  let best: string | undefined;
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const alias of aliases) {
+    const score = distance(needle, alias);
+    if (score < bestScore) {
+      best = alias;
+      bestScore = score;
+    }
+  }
+  return best;
 }
 
 function distance(a: string, b: string): number {

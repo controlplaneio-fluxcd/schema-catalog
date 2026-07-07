@@ -64,7 +64,7 @@ committed.
 
 ```json
 {
-  "v": 1,
+  "v": 3,
   "generatedAt": "2026-07-06T00:00:00.000Z",
   "categories": ["Provisioning", "Runtime"],
   "projects": [
@@ -78,7 +78,7 @@ committed.
       "groups": [
         {
           "g": "kustomize.toolkit.fluxcd.io",
-          "kinds": [["kustomization", ["v1", "v1beta2"], 1]]
+          "kinds": [["kustomization", ["v1", "v1beta2"], 1, "Kustomization", { "n": ["ks"] }]]
         }
       ]
     }
@@ -86,11 +86,17 @@ committed.
 }
 ```
 
-`projects[].groups[].kinds[]` is `[kind, versions, fieldsBits]`. `versions` is
-sorted by Kubernetes API priority, newest/preferred first: stable versions before
-beta, beta before alpha, higher major/sequence before lower. Bit `i` in
-`fieldsBits` corresponds to `versions[i]`; set means
-`<kind>_<version>.fields.txt` exists, unset means schema-only.
+`projects[].groups[].kinds[]` is
+`[kind, versions, fieldsBits, display?, resource?]`. `versions` is sorted by
+Kubernetes API priority: stable versions before beta, beta before alpha, higher
+major/sequence before lower. Bit `i` in `fieldsBits` corresponds to
+`versions[i]`; set means `<kind>_<version>.fields.txt` exists, unset means
+schema-only.
+
+`resource` stores only discovery-name exceptions for kubectl-style resource
+references: `s` for singular when it differs from `kind`, `p` for plural when it
+cannot be derived from `kind`, and `n` for short names. The API group is stored
+once in `g`, never repeated per kind.
 
 ## MCP
 

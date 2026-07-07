@@ -6,9 +6,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CATEGORIES, loadSources, repoOf } from "../../build/src/config.ts";
 import { displayVersion } from "../../build/src/resolve.ts";
-import type { HistoryEntry, Source } from "../../build/src/types.ts";
+import type { HistoryEntry, ResourceNames, Source } from "../../build/src/types.ts";
 import { compareApiVersion } from "../src/shared/index-query.ts";
-import type { CatalogIndex, GroupEntry, KindEntry, ProjectEntry } from "../src/shared/types.ts";
+import type { CatalogIndex, GroupEntry, KindEntry, ProjectEntry, ResourceEntry } from "../src/shared/types.ts";
 
 /**
  * Catalog path contract recorded in build history manifests. Non-conforming
@@ -72,7 +72,7 @@ export function generateIndex(sources: Source[], entries: HistoryEntry[]): Catal
   }
 
   return {
-    v: 2,
+    v: 3,
     generatedAt: new Date().toISOString(),
     categories: CATEGORIES,
     projects: projects.sort((a, b) => a.alias.localeCompare(b.alias)),
@@ -96,6 +96,57 @@ if (import.meta.main) {
   console.log(`${index.projects.length} projects, ${groups} groups, ${kinds} kinds, ${bytes} bytes`);
 }
 
+function compactResource(kind: string, names: ResourceNames | undefined): ResourceEntry | undefined {
+  if (names === undefined) {
+    return undefined;
+  }
+  const out: ResourceEntry = {};
+  const singular = normalizedName(names.singular);
+  const plural = normalizedName(names.plural);
+  if (singular !== undefined && singular !== kind) {
+    out.s = singular;
+  }
+  if (plural !== undefined && plural !== pluralResourceName(kind)) {
+    out.p = plural;
+  }
+
+  const redundant = new Set([kind, singular, plural].filter((value): value is string => value !== undefined));
+  const shortNames: string[] = [];
+  const seen = new Set<string>();
+  for (const name of names.shortNames ?? []) {
+    const normalized = normalizedName(name);
+    if (normalized === undefined || redundant.has(normalized) || seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    shortNames.push(normalized);
+  }
+  if (shortNames.length > 0) {
+    out.n = shortNames;
+  }
+
+  return Object.keys(out).length === 0 ? undefined : out;
+}
+
+function normalizedName(value: string | undefined): string | undefined {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === undefined || normalized === "" ? undefined : normalized;
+}
+
+function pluralResourceName(kind: string): string {
+  if (kind.endsWith("y") && kind.length > 1 && !isVowel(kind[kind.length - 2]!)) {
+    return `${kind.slice(0, -1)}ies`;
+  }
+  if (["ch", "sh", "s", "x", "z"].some((suffix) => kind.endsWith(suffix))) {
+    return `${kind}es`;
+  }
+  return `${kind}s`;
+}
+
+function isVowel(value: string): boolean {
+  return value === "a" || value === "e" || value === "i" || value === "o" || value === "u";
+}
+
 async function loadHistory(dir: string): Promise<HistoryEntry[]> {
   const files = (await readdir(dir)).filter((file) => file.endsWith(".json")).sort();
   return Promise.all(
@@ -111,6 +162,10 @@ function collectGroups(entry: HistoryEntry): GroupEntry[] {
   const casing = new Map<string, string>();
   for (const id of entry.kinds ?? []) {
     casing.set(id.toLowerCase(), id.slice(id.indexOf("/") + 1));
+  }
+  const resources = new Map<string, ResourceNames>();
+  for (const [id, names] of Object.entries(entry.resources ?? {})) {
+    resources.set(id.toLowerCase(), names);
   }
 
   for (const file of entry.files) {
@@ -160,6 +215,10 @@ function collectGroups(entry: HistoryEntry): GroupEntry[] {
             }
           });
           const display = casing.get(`${g}/${kind}`);
+          const resource = compactResource(kind, resources.get(`${g}/${display ?? kind}`.toLowerCase()));
+          if (resource !== undefined) {
+            return [kind, versions, fieldsBits, display ?? kind, resource];
+          }
           return display === undefined || display === kind
             ? [kind, versions, fieldsBits]
             : [kind, versions, fieldsBits, display];
