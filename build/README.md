@@ -93,8 +93,11 @@ upstream surfaces as an error rather than a silent no-op. `exclude` is only vali
 alongside `crdDir`.
 
 Every extraction runs with `--strip-description=false --with-field-index
---index-source="<alias> <version> <url>"` and the
-`{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. The binary
+--with-explain-type-metadata --index-source="<alias> <version> <url>"` and the
+`{{ .Group }}/{{ .Kind }}_{{ .Version }}.json` output template. Field indexes
+serve the web/MCP/search use cases, while explain type metadata keeps only the
+JSON-local type hints needed after the ecosystem `index.json` has resolved a
+resource. It does not write alias files or a `.explain/` tree. The binary
 lowercases all template variables, so catalog filenames are lowercase.
 
 **Fieldless kinds are pruned.** After staging, `pruneKindsWithoutFields` drops

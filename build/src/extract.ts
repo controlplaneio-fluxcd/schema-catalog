@@ -26,6 +26,7 @@ export async function extractSource(source: Source, version: string, dir: string
   const flags = [
     "--strip-description=false",
     "--with-field-index",
+    "--with-explain-type-metadata",
     // The header shows the stripped version; the git ref below stays the full tag.
     `--index-source=${source.alias} ${displayVersion(version)} ${source.url}`,
     "--output-format={{ .Group }}/{{ .Kind }}_{{ .Version }}.json",
