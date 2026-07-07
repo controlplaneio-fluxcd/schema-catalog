@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C337-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-566%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-115-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C367-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-567%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes, OpenShift,
@@ -82,7 +82,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
 | 1Password Operator | [v1.12.0](build/history/onepassword-operator.json) | 1 | 2026-07-06 |
-| AWS ACM Controller | [v1.4.1](build/history/ack-acm.json) | 1 | 2026-07-05 |
+| AWS ACM Controller | [v1.4.2](build/history/ack-acm.json) | 1 | 2026-07-07 |
 | AWS API Gateway v2 Controller | [v1.3.2](build/history/ack-apigatewayv2.json) | 9 | 2026-07-05 |
 | AWS DynamoDB Controller | [v1.9.1](build/history/ack-dynamodb.json) | 3 | 2026-07-05 |
 | AWS EC2 Controller | [v1.17.0](build/history/ack-ec2.json) | 20 | 2026-07-05 |
@@ -103,7 +103,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | AWS SNS Controller | [v1.7.0](build/history/ack-sns.json) | 4 | 2026-07-05 |
 | AWS SQS Controller | [v1.5.3](build/history/ack-sqs.json) | 1 | 2026-07-05 |
 | Azure Service Operator | [v2.20.0](build/history/azure-service-operator.json) | 1324 | 2026-07-05 |
-| Capsule | [v0.13.8](build/history/capsule.json) | 12 | 2026-07-05 |
+| Capsule | [v0.13.9](build/history/capsule.json) | 12 | 2026-07-07 |
 | Cert Manager | [v1.20.3](build/history/cert-manager.json) | 6 | 2026-07-05 |
 | Cluster API | [v1.13.3](build/history/cluster-api.json) | 36 | 2026-07-05 |
 | Cluster API Add-on Provider Helm | [v0.6.4](build/history/cluster-api-addon-provider-helm.json) | 2 | 2026-07-05 |
@@ -112,7 +112,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | Cluster API vSphere | [v1.16.1](build/history/cluster-api-provider-vsphere.json) | 16 | 2026-07-06 |
 | Crossplane | [v2.3.3](build/history/crossplane.json) | 25 | 2026-07-05 |
 | External Secrets | [v2.7.0](build/history/external-secrets.json) | 28 | 2026-07-05 |
-| GCP Config Connector | [v1.152.0](build/history/config-connector.json) | 548 | 2026-07-05 |
+| GCP Config Connector | [v1.153.0](build/history/config-connector.json) | 578 | 2026-07-07 |
 | kro | [v0.9.2](build/history/kro.json) | 2 | 2026-07-05 |
 | Kubewarden | [v1.36.0](build/history/kubewarden.json) | 8 | 2026-07-05 |
 | Kyverno | [v1.18.1](build/history/kyverno.json) | 47 | 2026-07-05 |
@@ -195,7 +195,7 @@ To use it, add the MCP config to your project's `.mcp.json`:
 | MariaDB Operator | [26.6.0](build/history/mariadb-operator.json) | 12 | 2026-07-06 |
 | NATS | [v0.23.0](build/history/nats.json) | 8 | 2026-07-05 |
 | OpenFeature Operator | [v0.9.2](build/history/open-feature-operator.json) | 9 | 2026-07-05 |
-| RabbitMQ Cluster Operator | [v2.22.0](build/history/rabbitmq-cluster-operator.json) | 1 | 2026-07-05 |
+| RabbitMQ Cluster Operator | [v2.22.1](build/history/rabbitmq-cluster-operator.json) | 1 | 2026-07-07 |
 | Redis Operator | [v0.25.0](build/history/redis-operator.json) | 4 | 2026-07-05 |
 | ScyllaDB Operator | [v1.21.0](build/history/scylla-operator.json) | 11 | 2026-07-05 |
 | Strimzi | [0.51.0](build/history/strimzi.json) | 24 | 2026-07-05 |
