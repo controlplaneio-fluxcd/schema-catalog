@@ -465,7 +465,7 @@ describe("versions table", () => {
 });
 
 describe("renderCatalogStats", () => {
-  test("renders project count, total schemas and size as shields.io badges", () => {
+  test("renders the presented-project count, total schemas and size as shields.io badges", () => {
     const rows = [
       {
         alias: "Flux",
@@ -484,7 +484,9 @@ describe("renderCatalogStats", () => {
         schemas: 2364,
       },
     ];
-    expect(renderCatalogStats(rows, 1234)).toBe(
+    // The badge count is passed in, not derived from rows: grouped sources
+    // collapse into one presented project.
+    expect(renderCatalogStats(rows, 1234, 2)).toBe(
       "![Projects](https://img.shields.io/badge/Projects-2-2088FF?style=flat-square) " +
         "![Schemas](https://img.shields.io/badge/Schemas-2%2C379-3FB950?style=flat-square) " +
         "![Catalog size](https://img.shields.io/badge/Catalog%20size-1%2C234%20MB-8957E5?style=flat-square)",

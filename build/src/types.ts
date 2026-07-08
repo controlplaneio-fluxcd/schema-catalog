@@ -41,17 +41,50 @@ export interface FluxInstance {
   components: string[];
 }
 
+/**
+ * Display metadata for a project group. Member sources reference it via
+ * `project: <name>` and inherit `category`/`cncf`; the web index and MCP
+ * present the members as this one project. Build outputs stay per-source.
+ */
+export interface ProjectGroup {
+  /** Unique key referenced by member sources; also the web project route. */
+  name: string;
+  /** Display name for the web UI and MCP. */
+  alias: string;
+  /** CNCF landscape top-level group, inherited by member sources. */
+  category: SourceCategory;
+  /** CNCF project maturity, inherited by member sources. */
+  cncf?: "graduated" | "incubating" | "sandbox";
+  /** Landing-page preview order within the category, shared with source pins. */
+  pin?: number;
+  /** GitHub organization or repository URL for the project page link. */
+  url: string;
+}
+
 interface SourceBase {
   /** Unique key; also the history file name under build/history/. */
   name: string;
   /** Display name for the README versions table and field-index headers. */
   alias: string;
-  /** CNCF landscape top-level group. */
+  /**
+   * CNCF landscape top-level group. Inherited from the project group when
+   * `project` is set; parsing fills it in.
+   */
   category: SourceCategory;
-  /** CNCF project maturity from the CNCF landscape (landscape.cncf.io); set only for sources belonging to a CNCF project. */
+  /**
+   * CNCF project maturity from the CNCF landscape (landscape.cncf.io); set only
+   * for sources belonging to a CNCF project. Inherited from the project group
+   * when `project` is set.
+   */
   cncf?: "graduated" | "incubating" | "sandbox";
   /** Landing-page preview order within the category; lower shows first, unpinned follow alphabetically. */
   pin?: number;
+  /**
+   * Optional project-group key from the top-level `projects:` list; members
+   * inherit the group's category/cncf and present as one project in the web
+   * UI and MCP.
+   */
+  project?: string;
   /** GitHub repository URL; drives version resolution. */
   url: string;
   /** Optional pin; defaults to the latest release (openshift: release branch). */
@@ -72,6 +105,12 @@ export interface CrdSource extends SourceBase {
 }
 
 export type Source = K8sSource | OpenShiftSource | CrdSource;
+
+/** Parsed sources.yaml: the flat source list plus the project groups. */
+export interface CatalogConfig {
+  sources: Source[];
+  projects: ProjectGroup[];
+}
 
 /** Kubernetes discovery names for kubectl-style resource references. */
 export interface ResourceNames {

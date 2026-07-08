@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { parsePositiveIntegerFlag } from "./cli.ts";
-import { loadSources, repoOf } from "./config.ts";
+import { loadConfig, repoOf } from "./config.ts";
 import { extractSource, fluxSchemaVersion } from "./extract.ts";
 import {
   deleteHistory,
@@ -215,7 +215,7 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  const allSources = await loadSources(SOURCES_PATH);
+  const { sources: allSources } = await loadConfig(SOURCES_PATH);
   let sources = allSources;
   if (values.source !== undefined) {
     sources = sources.filter((s) => s.name === values.source);
@@ -279,7 +279,11 @@ async function main(): Promise<number> {
     }
   }
   const sizeMB = Math.round(totalBytes / 1024 / 1024);
-  if (rows.length > 0 && (await updateReadme(README_PATH, rows, sizeMB))) {
+  // The stats badge counts presented projects: grouped sources collapse into
+  // their project group in the web UI and MCP, so they count once here too.
+  const groupKeys = new Set(tracked.flatMap(({ source }) => (source.project === undefined ? [] : [source.project])));
+  const projectCount = tracked.filter(({ source }) => source.project === undefined).length + groupKeys.size;
+  if (rows.length > 0 && (await updateReadme(README_PATH, rows, sizeMB, projectCount))) {
     console.log("  README.md: versions table updated");
   }
 

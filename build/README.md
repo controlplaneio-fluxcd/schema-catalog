@@ -51,7 +51,7 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
 | ------------- | ----------------------------------------------------------------------------- |
 | `main.ts`     | CLI (`build`/`regen`), per-source orchestration, failure isolation, CI signal |
 | `types.ts`    | `Source` discriminated union, `CrdInput`, `HistoryEntry` — the config contract |
-| `config.ts`   | sources.yaml parsing with strict validation (unknown keys rejected)           |
+| `config.ts`   | sources.yaml parsing (sources + project groups) with strict validation (unknown keys rejected) |
 | `resolve.ts`  | version resolution + normalization (`v` prefix, OpenShift refs, bare k8s)     |
 | `github.ts`   | GitHub REST via fetch: latest release, asset lookup/download, retry/timeout   |
 | `extract.ts`  | runs flux-schema/kubectl/flux-operator via `Bun.$` into the staging dir       |
@@ -270,6 +270,48 @@ repo org instead, so no `cncf` entry is needed.
 
 No code or test edits. If validation of a popular example repo starts failing
 on a missing schema, that is the signal to add the project here.
+
+### Grouping sources into a project
+
+When several sources are really one upstream project (the twenty `ack-*`
+controllers, the five Cluster API repos), declare a group in the top-level
+`projects:` list and reference it from each member with `project: <name>`:
+
+```yaml
+projects:
+  - name: aws-ack
+    alias: AWS Controllers for Kubernetes
+    category: "Provisioning"
+    url: https://github.com/aws-controllers-k8s
+
+sources:
+  - name: ack-s3
+    alias: AWS S3 Controller
+    project: aws-ack
+    url: https://github.com/aws-controllers-k8s/s3-controller
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+```
+
+Grouping is presentation-only: extraction, history manifests, catalog files,
+and the README versions table stay per-source; the web index and MCP merge the
+members into one project. The validator enforces:
+
+- members inherit `category` and `cncf` from the group and must not set them
+  (nor `pin` — a pinned group carries the pin itself, sharing the per-category
+  uniqueness space with source pins);
+- a group needs at least two members;
+- a group may share its name with one of its own members (the `karpenter`
+  group contains the `karpenter` source), but not with an unrelated source or
+  another group.
+
+The group `url` may be a bare GitHub organization
+(`https://github.com/aws-controllers-k8s`) when no single repo represents the
+project. Kubernetes SIG groups must keep a
+full `kubernetes-sigs/<repo>` URL: the web UI derives the SIG badge and the
+CNCF filter scope from the `kubernetes-sigs/` repo prefix, which an org-only
+URL would not match.
 
 **A green build does not mean the schemas are correct.** The build's guards
 only check that extraction produced files and that no two sources collide —

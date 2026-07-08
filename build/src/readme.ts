@@ -60,12 +60,15 @@ function badge(label: string, message: string, color: string): string {
   return `![${label}](https://img.shields.io/badge/${enc(label)}-${enc(message)}-${color}?style=flat-square)`;
 }
 
-/** Catalog summary badges rendered above the versions table. */
-export function renderCatalogStats(rows: VersionRow[], sizeMB: number): string {
-  const projects = rows.length;
+/**
+ * Catalog summary badges rendered above the versions table. `projectCount` is
+ * the number of presented projects: grouped sources count once via their
+ * project group, matching the web UI and MCP.
+ */
+export function renderCatalogStats(rows: VersionRow[], sizeMB: number, projectCount: number): string {
   const schemas = rows.reduce((sum, row) => sum + row.schemas, 0);
   return [
-    badge("Projects", groupDigits(projects), "2088FF"),
+    badge("Projects", groupDigits(projectCount), "2088FF"),
     badge("Schemas", groupDigits(schemas), "3FB950"),
     badge("Catalog size", `${groupDigits(sizeMB)} MB`, "8957E5"),
   ].join(" ");
@@ -94,11 +97,12 @@ export async function updateReadme(
   path: string,
   rows: VersionRow[],
   sizeMB: number,
+  projectCount: number,
 ): Promise<boolean> {
   const before = await Bun.file(path).text();
   const after = spliceStats(
     spliceVersionsTable(before, renderVersionsTable(rows)),
-    renderCatalogStats(rows, sizeMB),
+    renderCatalogStats(rows, sizeMB, projectCount),
   );
   if (after === before) {
     return false;
