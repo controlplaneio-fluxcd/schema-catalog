@@ -105,7 +105,8 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
  * Builds the [Schemas | Source(s)] tab bar. Schemas leads with the kind grids;
  * the second tab carries the per-source provenance and names the source count
  * when the project groups several. The project stats sit at the right end of
- * the bar.
+ * the bar. The active tab is mirrored in the URL hash (`#sources`) so a tab
+ * is linkable; Schemas is the default and carries no hash.
  */
 function createViewTabs(project: ProjectEntry, schemasPanel: HTMLElement, sourcesPanel: HTMLElement): HTMLElement {
   const wrap = document.createElement("div");
@@ -128,6 +129,10 @@ function createViewTabs(project: ProjectEntry, schemasPanel: HTMLElement, source
       button.setAttribute("aria-pressed", String(i === active));
     });
   };
+  const writeTabUrl = (active: number): void => {
+    const target = active === 1 ? `${location.pathname}#sources` : location.pathname;
+    history.replaceState(history.state, "", target);
+  };
 
   views.forEach(({ label, count }, i) => {
     const button = document.createElement("button");
@@ -137,11 +142,15 @@ function createViewTabs(project: ProjectEntry, schemasPanel: HTMLElement, source
     if (count !== undefined) {
       button.append(text("span", "project-tab-count", String(count)));
     }
-    button.addEventListener("click", () => applyActive(i));
+    button.addEventListener("click", () => {
+      applyActive(i);
+      writeTabUrl(i);
+    });
     buttons.push(button);
     wrap.append(button);
   });
-  applyActive(0);
+  // `#source` is accepted too, matching the singular tab label.
+  applyActive(/^#sources?$/.test(location.hash) ? 1 : 0);
 
   wrap.append(text("span", "project-tabs-stats", `${kindCount(project)} kinds · ${schemaCount(project)} schemas`));
   return wrap;
