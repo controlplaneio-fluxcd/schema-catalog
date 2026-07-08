@@ -8,6 +8,9 @@ import { FLUX_SCHEMA_BIN, ROOT_DIR } from "./paths.ts";
 import { bareVersion, displayVersion, openshiftRef } from "./resolve.ts";
 import type { CrdSource, FluxInstance, ResourceNames, Source } from "./types.ts";
 
+// Splitting on column-0 `---` separators is safe because block-scalar content is always indented.
+const YAML_DOC_SEPARATOR_RE = /^---[ \t]*(?:#[^\n]*)?\r?\n/m;
+
 /** Reports the version of the flux-schema binary in use. */
 export async function fluxSchemaVersion(): Promise<string> {
   const out = await $`${FLUX_SCHEMA_BIN} --version`.text();
@@ -66,11 +69,10 @@ function emptyExtractionResult(): ExtractionResult {
  * ("document is not a YAML mapping"), and CRD bundles routinely contain them:
  * a leading license/usage banner (rook's crds.yaml) or, in helm-rendered
  * installs, interior `# Source: …` separators where a template produced no
- * output (longhorn's longhorn.yaml). Splitting on column-0 `---` separators is
- * safe because block-scalar content is always indented.
+ * output (longhorn's longhorn.yaml).
  */
 export function dropEmptyDocs(yaml: string): string {
-  const docs = yaml.split(/^---[ \t]*(?:#[^\n]*)?\r?\n/m);
+  const docs = yaml.split(YAML_DOC_SEPARATOR_RE);
   const kept = docs.filter((doc) =>
     doc.split("\n").some((line) => {
       const trimmed = line.trim();
@@ -83,7 +85,7 @@ export function dropEmptyDocs(yaml: string): string {
 /** Extracts CRD discovery names from a YAML stream, keyed by `<group>/<Kind>`. */
 export function crdResourceNames(yaml: string): Record<string, ResourceNames> {
   const resources: Record<string, ResourceNames> = {};
-  for (const raw of yaml.split(/^---[ \t]*(?:#[^\n]*)?\r?\n/m)) {
+  for (const raw of yaml.split(YAML_DOC_SEPARATOR_RE)) {
     const doc = raw.trim();
     if (doc === "") {
       continue;
