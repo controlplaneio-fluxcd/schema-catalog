@@ -9,12 +9,14 @@ import {
   CNCF_ICON,
   createBadge,
   createBreadcrumb,
+  createExternalIcon,
   createPage,
   createSearchField,
   createShield,
   formatDate,
   kindCount,
   link,
+  REPO_URL,
   schemaCount,
   text,
 } from "../dom.ts";
@@ -98,9 +100,18 @@ export function renderCatalog(index: CatalogIndex): HTMLElement {
 
   buildChips(index, chipRow, render);
 
+  const addLink = link(`${REPO_URL}/issues/new?template=add-project.yaml`, "", "catalog-add-link");
+  addLink.target = "_blank";
+  addLink.rel = "noopener noreferrer";
+  addLink.append(document.createTextNode("Add a project"), createExternalIcon());
+
+  const searchRow = document.createElement("div");
+  searchRow.className = "catalog-search-row";
+  searchRow.append(searchWrap, addLink);
+
   const toolbar = document.createElement("div");
   toolbar.className = "catalog-toolbar";
-  toolbar.append(searchWrap, chipRow);
+  toolbar.append(searchRow, chipRow);
 
   page.append(toolbar, count, results);
 
