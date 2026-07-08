@@ -62,14 +62,26 @@ jobs:
           path: example
           config: .fluxschema-smoke.yml
       # Each history manifest pins its source's commit, extraction input and
-      # catalog files by digest, so attesting the manifests covers the whole
-      # catalog without listing ~17k schema files as subjects. Verify with:
+      # catalog files by digest, so attesting the manifests this run rebuilt
+      # covers their catalog files without listing schemas as subjects. Only
+      # rebuilt manifests are attested: SLSA subjects must be artifacts this
+      # run produced (a force dispatch rebuilds and attests all). Verify with:
       #   gh attestation verify build/history/<name>.json -R <owner>/<repo>
-      - name: Attest build provenance
+      - name: List rebuilt manifests
         if: steps.build.outputs.changed == 'true'
+        id: manifests
+        run: |
+          {
+            echo 'paths<<EOF'
+            git diff --name-only --diff-filter=d -- build/history
+            git ls-files --others --exclude-standard -- build/history
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - name: Attest build provenance
+        if: steps.build.outputs.changed == 'true' && steps.manifests.outputs.paths != ''
         uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
-          subject-path: build/history/*.json
+          subject-path: ${{ steps.manifests.outputs.paths }}
       - name: Create Pull Request
         if: steps.build.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1

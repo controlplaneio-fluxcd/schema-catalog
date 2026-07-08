@@ -166,10 +166,12 @@ next run converges. A corrupt manifest is dropped with a warning and the
 source rebuilds from scratch. Failures are per-source: one source failing
 never blocks the others; the run exits 1 at the end.
 
-The update workflow signs SLSA build provenance for the manifests
-(`actions/attest`); since each manifest pins its catalog files via
-`filesDigest`, the attestation transitively covers the whole catalog. Verify a
-manifest came out of the CI build with:
+The update workflow signs SLSA build provenance (`actions/attest`) for the
+manifests that run rebuilt — subjects must be artifacts the run produced, so
+unchanged manifests keep the attestation of the run that wrote them, and a
+force dispatch rebuilds and attests all. Since each manifest pins its catalog
+files via `filesDigest`, an attested manifest covers its slice of the catalog.
+Verify a manifest came out of a CI build with:
 
 ```shell
 gh attestation verify build/history/<name>.json -R controlplaneio-fluxcd/schema-catalog
