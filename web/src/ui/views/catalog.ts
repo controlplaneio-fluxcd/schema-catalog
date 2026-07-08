@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
-import { kindCount, schemaCount } from "../../shared/index-query.ts";
+import { kindCount, projectVersionLabel, schemaCount } from "../../shared/index-query.ts";
 import {
   clear,
   CNCF_ICON,
@@ -324,13 +324,13 @@ function createCategoryGroup(category: string, projects: ProjectEntry[]): HTMLEl
 
 function createProjectCard(project: ProjectEntry): HTMLElement {
   const card = link(projectRoute(project.name), "", "explorer-card");
-  card.setAttribute("aria-label", `${project.alias} ${project.version}`);
+  card.setAttribute("aria-label", `${project.alias} ${projectVersionLabel(project)}`);
 
   const head = document.createElement("div");
   head.className = "explorer-card-head";
   head.append(
     text("span", "explorer-card-name", project.alias),
-    createBadge(project.version, "version-badge"),
+    createBadge(projectVersionLabel(project), "version-badge"),
   );
   card.append(head);
 
@@ -359,13 +359,18 @@ function createProjectCard(project: ProjectEntry): HTMLElement {
   return card;
 }
 
-/** Matches a project against a lowercased needle over alias, name, groups, and kinds. */
+/** Matches a project against a lowercased needle over alias, name, members, groups, and kinds. */
 function projectMatches(project: ProjectEntry, needle: string): boolean {
   if (needle === "") {
     return true;
   }
   if (project.alias.toLowerCase().includes(needle) || project.name.toLowerCase().includes(needle)) {
     return true;
+  }
+  for (const member of project.sources ?? []) {
+    if (member.alias.toLowerCase().includes(needle) || member.name.toLowerCase().includes(needle)) {
+      return true;
+    }
   }
   for (const group of project.groups) {
     if (group.g.toLowerCase().includes(needle)) {

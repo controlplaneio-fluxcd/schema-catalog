@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import { describe, expect, test } from "bun:test";
-import { compareApiVersion, findKind, searchIndex } from "../src/shared/index-query.ts";
+import { compareApiVersion, findKind, kindSource, projectVersionLabel, searchIndex } from "../src/shared/index-query.ts";
 import type { CatalogIndex } from "../src/shared/types.ts";
 
 const index: CatalogIndex = {
-  v: 3,
+  v: 4,
   generatedAt: "2026-07-06T00:00:00.000Z",
   categories: ["Runtime"],
   projects: [
@@ -31,6 +31,19 @@ const index: CatalogIndex = {
       version: "v1.0.0",
       builtAt: "2026-07-06",
       groups: [{ g: "cert-manager.io", kinds: [["certificate", ["v1"], 1, "Certificate", { p: "certificates", n: ["cert"] }]] }],
+    },
+    {
+      // A grouped project: no version, member sources listed instead.
+      name: "acme",
+      alias: "ACME Operators",
+      cat: 0,
+      repo: "acme",
+      builtAt: "2026-07-06",
+      sources: [
+        { name: "acme-queue", alias: "ACME Queue Controller", repo: "acme/queue", version: "v2.0.0", builtAt: "2026-07-06" },
+        { name: "acme-storage", alias: "ACME Storage Controller", repo: "acme/storage", version: "v1.0.0", builtAt: "2026-07-06" },
+      ],
+      groups: [{ g: "acme.example.io", kinds: [["bucket", ["v1"], 1, "Bucket"]], src: [1] }],
     },
   ],
 };
@@ -88,6 +101,18 @@ describe("searchIndex", () => {
     expect(searchIndex(index, "gw", 1).map((hit) => [hit.kind, hit.score])).toEqual([["gateway", 4]]);
     expect(searchIndex(index, "cert", 1).map((hit) => [hit.kind, hit.score])).toEqual([["certificate", 4]]);
   });
+
+  test("matches grouped projects via member names and aliases", () => {
+    expect(searchIndex(index, "storage controller", 5).map((hit) => [hit.kind, hit.score])).toEqual([["bucket", 1]]);
+    expect(searchIndex(index, "acme-queue", 5).map((hit) => hit.project)).toEqual(["acme"]);
+  });
+});
+
+describe("projectVersionLabel", () => {
+  test("returns the version for single-source projects and the member count for groups", () => {
+    expect(projectVersionLabel(index.projects[0]!)).toBe("v1.0.0");
+    expect(projectVersionLabel(index.projects[2]!)).toBe("2 sources");
+  });
 });
 
 describe("findKind", () => {
@@ -95,10 +120,29 @@ describe("findKind", () => {
     const hit = findKind(index, "networking.example.io", "gateway");
 
     expect(hit?.project.name).toBe("gateway-api");
+    expect(hit?.group.g).toBe("networking.example.io");
     expect(hit?.entry).toEqual(["gateway", ["v1"], 1, "Gateway", { n: ["gw"] }]);
   });
 
   test("returns undefined for misses", () => {
     expect(findKind(index, "networking.example.io", "Missing")).toBeUndefined();
+  });
+});
+
+describe("kindSource", () => {
+  test("resolves the owning member of a grouped project's kind", () => {
+    const hit = findKind(index, "acme.example.io", "bucket");
+    if (hit === undefined) {
+      throw new Error("expected acme bucket kind");
+    }
+    expect(kindSource(hit.project, hit.group, hit.entry)?.name).toBe("acme-storage");
+  });
+
+  test("returns undefined for single-source projects", () => {
+    const hit = findKind(index, "networking.example.io", "gateway");
+    if (hit === undefined) {
+      throw new Error("expected gateway kind");
+    }
+    expect(kindSource(hit.project, hit.group, hit.entry)).toBeUndefined();
   });
 });

@@ -110,7 +110,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     {
       title: "List projects",
       description:
-        "Enumerate every project in catalog order as plain-text lines with project name, version, GitHub repo, and kind count.",
+        "Enumerate every project in catalog order as plain-text lines with project name, version, GitHub repo, and kind count. Grouped projects report their source count in place of a version.",
       inputSchema: ListProjectsInput,
     },
     async () =>
@@ -125,7 +125,7 @@ function createCatalogMcpServer(env: Env): McpServer {
     {
       title: "Get project",
       description:
-        "Fetch one project's TypeMeta lines by name or alias, including every apiVersion/Kind pair and field-index coverage.",
+        "Fetch one project's TypeMeta lines by name, alias, or member source name (e.g. ack-s3 resolves to the AWS Controllers for Kubernetes project), including every apiVersion/Kind pair and field-index coverage.",
       inputSchema: GetProjectInput,
     },
     async (args) =>

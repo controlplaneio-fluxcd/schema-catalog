@@ -82,7 +82,9 @@ function titleFor(route: Route): string {
     return "Flux Schema CLI · validate and explain";
   }
   if (route.name === "project") {
-    const project = catalogIndex.projects.find((candidate) => candidate.name === route.project);
+    const project =
+      catalogIndex.projects.find((candidate) => candidate.name === route.project) ??
+      catalogIndex.projects.find((candidate) => candidate.sources?.some((member) => member.name === route.project));
     return `${project?.alias ?? route.project} · Flux Schema Catalog`;
   }
   if (route.name === "kind") {

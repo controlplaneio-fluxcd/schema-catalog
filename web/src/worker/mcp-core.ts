@@ -3,8 +3,16 @@
 
 import { filterFieldLines, parseFieldsFile } from "../shared/fields.ts";
 import type { FieldLine } from "../shared/fields.ts";
-import { hasFieldsAtVersion, kindCount, kindDisplay, latestVersion, resourceAliases } from "../shared/index-query.ts";
-import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
+import {
+  hasFieldsAtVersion,
+  kindCount,
+  kindDisplay,
+  kindSource,
+  latestVersion,
+  projectVersionLabel,
+  resourceAliases,
+} from "../shared/index-query.ts";
+import type { CatalogIndex, KindEntry, ProjectEntry, ProjectSourceEntry } from "../shared/types.ts";
 import type { Env } from "./index.ts";
 
 /** Public base URL for catalog objects returned by MCP tools and error messages. */
@@ -57,6 +65,8 @@ export interface ResolvedKind {
   project: ProjectEntry;
   group: string;
   entry: KindEntry;
+  /** Owning member of a grouped project's kind; absent for single-source projects. */
+  source?: ProjectSourceEntry;
 }
 
 interface ParsedApiVersionInput {
@@ -83,10 +93,15 @@ export function grepCatalogText(index: CatalogIndex, query: string, limit = 20):
   return [...matches.slice(0, limit), `# matched ${matches.length} of ${lines.length} schemas`].join("\n");
 }
 
-/** Formats project summaries as one greppable line per project, plus a metadata footer. */
+/**
+ * Formats project summaries as one greppable line per project, plus a metadata
+ * footer. Grouped projects report their member count in the version slot.
+ */
 export function listProjectsText(index: CatalogIndex): string {
   return [
-    ...index.projects.map((project) => `${project.name} ${project.version} github.com/${project.repo} ${kindCount(project)} kinds`),
+    ...index.projects.map(
+      (project) => `${project.name} ${projectVersionLabel(project)} github.com/${project.repo} ${kindCount(project)} kinds`,
+    ),
     `# ${index.projects.length} projects`,
   ].join("\n");
 }
@@ -94,16 +109,37 @@ export function listProjectsText(index: CatalogIndex): string {
 /**
  * Finds a project by config name or display alias using case-insensitive
  * normalized comparison. This lets MCP clients pass either stable source names
- * such as `fluxcd` or user-facing aliases such as `Flux CD`.
+ * such as `fluxcd` or user-facing aliases such as `Flux CD`. Member source
+ * names/aliases resolve to their project group (e.g. `ack-s3` returns AWS
+ * Controllers for Kubernetes); direct project matches always win.
  */
 export function findProject(index: CatalogIndex, value: string): ProjectEntry | undefined {
   const needle = normalize(value);
-  return index.projects.find((project) => normalize(project.name) === needle || normalize(project.alias) === needle);
+  const direct = index.projects.find(
+    (project) => normalize(project.name) === needle || normalize(project.alias) === needle,
+  );
+  if (direct !== undefined) {
+    return direct;
+  }
+  return index.projects.find((project) =>
+    project.sources?.some((member) => normalize(member.name) === needle || normalize(member.alias) === needle),
+  );
 }
 
-/** Formats one project's API surface as a header plus TypeMeta-like lines. */
+/**
+ * Formats one project's API surface as a header plus TypeMeta-like lines.
+ * Grouped projects list their member sources as comment lines after the header
+ * to keep the per-member version and repository attribution.
+ */
 export function projectText(project: ProjectEntry): string {
-  return [`# ${project.name} ${project.version} github.com/${project.repo}`, ...projectCatalogLines(project)].join("\n");
+  const header =
+    project.version === undefined
+      ? `# ${project.name} github.com/${project.repo} (${project.sources?.length ?? 0} sources)`
+      : `# ${project.name} ${project.version} github.com/${project.repo}`;
+  const members = (project.sources ?? []).map(
+    (member) => `# source: ${member.name} ${member.version} github.com/${member.repo}`,
+  );
+  return [header, ...members, ...projectCatalogLines(project)].join("\n");
 }
 
 /**
@@ -131,7 +167,8 @@ export function resolveKind(index: CatalogIndex, group: string, kind: string): R
     const groupEntry = project.groups.find((candidate) => normalize(candidate.g) === normalizedGroup);
     const kindEntry = groupEntry?.kinds.find((candidate) => resourceAliases(candidate).includes(normalizedKind));
     if (groupEntry !== undefined && kindEntry !== undefined) {
-      return { project, group: groupEntry.g, entry: kindEntry };
+      const source = kindSource(project, groupEntry, kindEntry);
+      return { project, group: groupEntry.g, entry: kindEntry, ...(source === undefined ? {} : { source }) };
     }
   }
 
@@ -279,9 +316,17 @@ export async function grepSchemaText(
   }
 
   const text = await new Response(obj.body).text();
+  // Grouped projects attribute the kind to its owning member source, keeping
+  // the real source name, version, and repository in the header; single-source
+  // projects are their own source.
+  const owner = resolved.source ?? {
+    name: resolved.project.name,
+    version: resolved.project.version ?? "unknown",
+    repo: resolved.project.repo,
+  };
   const header =
     `# ${formatApiVersion(resolved.group, resolved.version)} ${kindDisplay(resolved.entry)} ` +
-    `from ${resolved.project.name} ${resolved.project.version} github.com/${resolved.project.repo}`;
+    `from ${owner.name} ${owner.version} github.com/${owner.repo}`;
   return formatGrepSchemaResponse(text, { query: input.query, prefix: input.prefix, limit: input.limit, header });
 }
 
@@ -386,11 +431,20 @@ function invalidRegexMessage(pattern: string, error: unknown): string {
 function closeProjectMatches(index: CatalogIndex, value: string): ProjectEntry[] {
   const needle = normalize(value);
   return index.projects
-    .map((project) => ({
-      project,
-      score: Math.min(distance(needle, normalize(project.name)), distance(needle, normalize(project.alias))),
-      includes: normalize(project.name).includes(needle) || normalize(project.alias).includes(needle),
-    }))
+    .map((project) => {
+      // Grouped projects also match on member names/aliases, so e.g. "s3"
+      // suggests AWS Controllers for Kubernetes.
+      const texts = [
+        project.name,
+        project.alias,
+        ...(project.sources ?? []).flatMap((member) => [member.name, member.alias]),
+      ].map(normalize);
+      return {
+        project,
+        score: Math.min(...texts.map((text) => distance(needle, text))),
+        includes: texts.some((text) => text.includes(needle)),
+      };
+    })
     .sort((a, b) => {
       if (a.includes !== b.includes) {
         return a.includes ? -1 : 1;

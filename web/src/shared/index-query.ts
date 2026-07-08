@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import type { CatalogIndex, KindEntry, ProjectEntry } from "./types.ts";
+import type { CatalogIndex, GroupEntry, KindEntry, ProjectEntry, ProjectSourceEntry } from "./types.ts";
 
 interface ParsedApiVersion {
   original: string;
@@ -100,6 +100,11 @@ export function kindDisplay(entry: KindEntry): string {
   return entry[3] ?? entry[0];
 }
 
+/** Version badge text: the resolved version, or the member count for grouped projects. */
+export function projectVersionLabel(project: ProjectEntry): string {
+  return project.version ?? `${project.sources?.length ?? 0} sources`;
+}
+
 /** Returns normalized resource-reference aliases carried by the compact index. */
 export function resourceAliases(entry: KindEntry): string[] {
   const aliases = new Set<string>();
@@ -133,7 +138,11 @@ export function searchIndex(index: CatalogIndex, query: string, limit = 20): Sea
 
   const hits: SearchHit[] = [];
   for (const project of index.projects) {
-    const projectText = `${project.alias} ${project.name}`.toLowerCase();
+    // Grouped projects also match on their member names/aliases, so e.g.
+    // "s3 controller" still surfaces the AWS Controllers for Kubernetes kinds.
+    const projectText = [project.alias, project.name, ...(project.sources ?? []).flatMap((s) => [s.alias, s.name])]
+      .join(" ")
+      .toLowerCase();
     for (const group of project.groups) {
       const groupText = group.g.toLowerCase();
       for (const entry of group.kinds) {
@@ -185,15 +194,31 @@ export function findKind(
   index: CatalogIndex,
   group: string,
   kind: string,
-): { project: ProjectEntry; entry: KindEntry } | undefined {
+): { project: ProjectEntry; group: GroupEntry; entry: KindEntry } | undefined {
   for (const project of index.projects) {
     const groupEntry = project.groups.find((candidate) => candidate.g === group);
     const kindEntry = groupEntry?.kinds.find((candidate) => candidate[0] === kind);
-    if (kindEntry !== undefined) {
-      return { project, entry: kindEntry };
+    if (groupEntry !== undefined && kindEntry !== undefined) {
+      return { project, group: groupEntry, entry: kindEntry };
     }
   }
   return undefined;
+}
+
+/**
+ * Returns the member source a kind belongs to, resolved through the group's
+ * per-kind `src` owner indexes. For single-source projects the project itself
+ * is the source, so this returns undefined and callers fall back to it.
+ */
+export function kindSource(project: ProjectEntry, group: GroupEntry, entry: KindEntry): ProjectSourceEntry | undefined {
+  if (project.sources === undefined || group.src === undefined) {
+    return undefined;
+  }
+  const kindIndex = group.kinds.indexOf(entry);
+  if (kindIndex === -1) {
+    return undefined;
+  }
+  return project.sources[group.src[kindIndex] ?? -1];
 }
 
 function scoreMatch(kind: string, group: string, project: string, needle: string, aliases: string[]): number {

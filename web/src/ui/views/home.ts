@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { kindCount, schemaCount, searchIndex } from "../../shared/index-query.ts";
+import { kindCount, projectVersionLabel, schemaCount, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
 import { clear, createCodeBlock, link, REPO_URL, text } from "../dom.ts";
@@ -365,7 +365,7 @@ function createCategorySection(category: string, projects: ProjectEntry[]): HTML
   flow.className = "project-flow";
   for (const project of ordered.slice(0, CATEGORY_PREVIEW)) {
     const item = link(projectRoute(project.name), "", "project-item");
-    item.append(text("span", "", project.alias), text("span", "project-version", project.version));
+    item.append(text("span", "", project.alias), text("span", "project-version", projectVersionLabel(project)));
     flow.append(item);
   }
 

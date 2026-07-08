@@ -64,7 +64,7 @@ committed.
 
 ```json
 {
-  "v": 3,
+  "v": 4,
   "generatedAt": "2026-07-06T00:00:00.000Z",
   "categories": ["Provisioning", "Runtime"],
   "projects": [
@@ -98,6 +98,17 @@ references: `s` for singular when it differs from `kind`, `p` for plural when it
 cannot be derived from `kind`, and `n` for short names. The API group is stored
 once in `g`, never repeated per kind.
 
+Sources grouped under a `projects:` entry in `sources.yaml` merge into one
+project entry: `version` is absent, `repo` may be a bare GitHub organization,
+`builtAt` is the latest member build date, and a `sources` array lists each
+member's `name`, `alias`, `repo`, `version`, and `builtAt` sorted by alias.
+Member kinds merge under shared API groups (both KServe sources contribute to
+`serving.kserve.io`), and each group carries `src`, an owning-member index per
+kind into `sources`, so the UI and MCP attribute every schema to the source
+and version that built it. The `groups[].kinds[]` tuple shape is unchanged;
+external consumers of `projects[].groups[]` (e.g. `flux-schema explain`'s
+ecosystem index lookup) are unaffected by grouping.
+
 ## MCP
 
 Endpoint: streamable HTTP at <https://schemas.fluxoperator.dev/mcp>, no
@@ -115,8 +126,8 @@ single-page-application mode.
 | Tool             | Description                                                                   |
 |------------------|-------------------------------------------------------------------------------|
 | `grep_catalog`   | Grep TypeMeta lines with case-insensitive regex: apiVersion, Kind, and project |
-| `list_projects`  | Enumerate catalog projects with version, GitHub repo, and kind count          |
-| `get_project`    | Fetch one project's apiVersion/Kind lines and field-index coverage            |
+| `list_projects`  | Enumerate catalog projects with version (or source count for grouped projects), GitHub repo, and kind count |
+| `get_project`    | Fetch one project's apiVersion/Kind lines and field-index coverage; member source names resolve to their group |
 | `get_schema`     | Fetch the full JSON Schema for an apiVersion and kind (256 KiB inline guard)  |
 | `grep_schema`    | Search flattened field index lines for an apiVersion and kind with case-insensitive regex |
 

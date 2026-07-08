@@ -4,6 +4,7 @@
 import { describe, expect, test } from "bun:test";
 import type { CatalogIndex } from "../src/shared/types.ts";
 import {
+  findProject,
   formatGrepSchemaResponse,
   getSchemaText,
   grepCatalogText,
@@ -20,7 +21,7 @@ import type { CatalogObjectLoader } from "../src/worker/mcp-core.ts";
 import type { Env } from "../src/worker/index.ts";
 
 const index: CatalogIndex = {
-  v: 3,
+  v: 4,
   generatedAt: "2026-07-06T00:00:00.000Z",
   categories: [
     "Provisioning",
@@ -46,13 +47,20 @@ const index: CatalogIndex = {
       ],
     },
     {
-      name: "argo-workflows",
-      alias: "Argo Workflows",
-      cat: 3,
-      repo: "argoproj/argo-workflows",
-      version: "v3.8.0",
+      // A grouped project: no version, member sources listed instead.
+      name: "aws-ack",
+      alias: "AWS Controllers for Kubernetes",
+      cat: 0,
+      repo: "aws-controllers-k8s",
       builtAt: "2026-07-06",
-      groups: [{ g: "argoproj.io", kinds: [["workflow", ["v1alpha1"], 0]] }],
+      sources: [
+        { name: "ack-s3", alias: "AWS S3 Controller", repo: "aws-controllers-k8s/s3-controller", version: "v1.8.1", builtAt: "2026-07-06" },
+        { name: "ack-sqs", alias: "AWS SQS Controller", repo: "aws-controllers-k8s/sqs-controller", version: "v1.4.0", builtAt: "2026-07-05" },
+      ],
+      groups: [
+        { g: "s3.services.k8s.aws", kinds: [["bucket", ["v1alpha1"], 1, "Bucket"]], src: [0] },
+        { g: "sqs.services.k8s.aws", kinds: [["queue", ["v1alpha1"], 0]], src: [1] },
+      ],
     },
     {
       name: "kubernetes",
@@ -86,11 +94,17 @@ describe("MCP catalog helpers", () => {
       [
         "kustomize.toolkit.fluxcd.io/v1 Kustomization (ks)\t# fluxcd",
         "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization (ks)\t# fluxcd, no fields index",
-        "# matched 2 of 5 schemas",
+        "# matched 2 of 6 schemas",
       ].join("\n"),
     );
 
-    expect(grepCatalogText(index, "^v1 Pod", 10)).toBe("v1 Pod (pods, po)\t# kubernetes\n# matched 1 of 5 schemas");
+    expect(grepCatalogText(index, "^v1 Pod", 10)).toBe("v1 Pod (pods, po)\t# kubernetes\n# matched 1 of 6 schemas");
+  });
+
+  test("grepCatalogText attributes grouped kinds to the project group name", () => {
+    expect(grepCatalogText(index, "queue", 10)).toBe(
+      "sqs.services.k8s.aws/v1alpha1 queue\t# aws-ack, no fields index\n# matched 1 of 6 schemas",
+    );
   });
 
   test("grepCatalogText matches short names and irregular resource names", () => {
@@ -98,11 +112,11 @@ describe("MCP catalog helpers", () => {
       [
         "kustomize.toolkit.fluxcd.io/v1 Kustomization (ks)\t# fluxcd",
         "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization (ks)\t# fluxcd, no fields index",
-        "# matched 2 of 5 schemas",
+        "# matched 2 of 6 schemas",
       ].join("\n"),
     );
 
-    expect(grepCatalogText(index, "\\bpo\\b", 10)).toBe("v1 Pod (pods, po)\t# kubernetes\n# matched 1 of 5 schemas");
+    expect(grepCatalogText(index, "\\bpo\\b", 10)).toBe("v1 Pod (pods, po)\t# kubernetes\n# matched 1 of 6 schemas");
   });
 
   test("grepCatalogText reports invalid regex as a tool result", () => {
@@ -116,11 +130,20 @@ describe("MCP catalog helpers", () => {
     expect(listProjectsText(index)).toBe(
       [
         "fluxcd v2.8.0 github.com/fluxcd/flux2 1 kinds",
-        "argo-workflows v3.8.0 github.com/argoproj/argo-workflows 1 kinds",
+        "aws-ack 2 sources github.com/aws-controllers-k8s 2 kinds",
         "kubernetes v1.34.0 github.com/kubernetes/kubernetes 2 kinds",
         "# 3 projects",
       ].join("\n"),
     );
+  });
+
+  test("findProject matches names and aliases, and member sources resolve to their group", () => {
+    expect(findProject(index, "fluxcd")?.name).toBe("fluxcd");
+    expect(findProject(index, "Flux CD")?.name).toBe("fluxcd");
+    expect(findProject(index, "aws-ack")?.name).toBe("aws-ack");
+    expect(findProject(index, "ack-s3")?.name).toBe("aws-ack");
+    expect(findProject(index, "AWS SQS Controller")?.name).toBe("aws-ack");
+    expect(findProject(index, "aws-controllers-k8s")).toBeUndefined();
   });
 
   test("projectText returns a header, version lines, and no-fields comments", () => {
@@ -131,6 +154,20 @@ describe("MCP catalog helpers", () => {
         "# fluxcd v2.8.0 github.com/fluxcd/flux2",
         "kustomize.toolkit.fluxcd.io/v1 Kustomization (ks)",
         "kustomize.toolkit.fluxcd.io/v1beta2 Kustomization (ks)\t# no fields index",
+      ].join("\n"),
+    );
+  });
+
+  test("projectText lists grouped members with their own version and repo", () => {
+    const awsAck = index.projects[1]!;
+
+    expect(projectText(awsAck)).toBe(
+      [
+        "# aws-ack github.com/aws-controllers-k8s (2 sources)",
+        "# source: ack-s3 v1.8.1 github.com/aws-controllers-k8s/s3-controller",
+        "# source: ack-sqs v1.4.0 github.com/aws-controllers-k8s/sqs-controller",
+        "s3.services.k8s.aws/v1alpha1 Bucket",
+        "sqs.services.k8s.aws/v1alpha1 queue\t# no fields index",
       ].join("\n"),
     );
   });
@@ -163,6 +200,11 @@ describe("MCP catalog helpers", () => {
     );
   });
 
+  test("project suggestions consider grouped member names and aliases", () => {
+    const suggestions = projectNotFoundMessage(index, "s3");
+    expect(suggestions).toContain("AWS Controllers for Kubernetes (aws-ack)");
+  });
+
   test("resolveKind is case-insensitive for kind names", () => {
     const resolved = resolveKind(index, "kustomize.toolkit.fluxcd.io", "Kustomization");
 
@@ -175,6 +217,12 @@ describe("MCP catalog helpers", () => {
     expect(resolved?.entry[0]).toBe("kustomization");
   });
 
+  test("resolveKind attributes grouped kinds to their owning member source", () => {
+    expect(resolveKind(index, "s3.services.k8s.aws", "bucket")?.source?.name).toBe("ack-s3");
+    expect(resolveKind(index, "sqs.services.k8s.aws", "queue")?.source?.name).toBe("ack-sqs");
+    expect(resolveKind(index, "kustomize.toolkit.fluxcd.io", "kustomization")?.source).toBeUndefined();
+  });
+
   test("getSchemaText uses the loader and returns the size guard instead of large bodies", async () => {
     const loader: CatalogObjectLoader = async () => ({
       body: new Response("{\"too\":\"large\"}").body!,
@@ -182,10 +230,10 @@ describe("MCP catalog helpers", () => {
       size: MAX_SCHEMA_INLINE_BYTES + 1,
     });
 
-    const text = await getSchemaText(index, env, { apiVersion: "argoproj.io", kind: "workflow" }, loader);
+    const text = await getSchemaText(index, env, { apiVersion: "sqs.services.k8s.aws", kind: "queue" }, loader);
 
     expect(text).toContain("exceeds the 262144 byte inline response limit");
-    expect(text).toContain("https://schemas.fluxoperator.dev/catalog/argoproj.io/workflow_v1alpha1.json");
+    expect(text).toContain("https://schemas.fluxoperator.dev/catalog/sqs.services.k8s.aws/queue_v1alpha1.json");
   });
 
   test("getSchemaText resolves apiVersion slash, bare group, bare core version, and core alias forms", async () => {
@@ -243,10 +291,15 @@ describe("MCP catalog helpers", () => {
       throw new Error("loader should not be called when fieldsBits is empty");
     };
 
-    const text = await grepSchemaText(index, env, { apiVersion: "argoproj.io", kind: "workflow", limit: 200 }, loader);
+    const text = await grepSchemaText(
+      index,
+      env,
+      { apiVersion: "sqs.services.k8s.aws", kind: "queue", limit: 200 },
+      loader,
+    );
 
     expect(text).toContain("No fields index is available");
-    expect(text).toContain("https://schemas.fluxoperator.dev/catalog/argoproj.io/workflow_v1alpha1.json");
+    expect(text).toContain("https://schemas.fluxoperator.dev/catalog/sqs.services.k8s.aws/queue_v1alpha1.json");
   });
 
   test("grepSchemaText opens with a resolved-source header and ends with a hash matched footer", async () => {
@@ -270,6 +323,29 @@ describe("MCP catalog helpers", () => {
         "# kustomize.toolkit.fluxcd.io/v1 Kustomization from fluxcd v2.8.0 github.com/fluxcd/flux2",
         "spec.template.spec.containers[].image <string>\t# image",
         "# matched 1 of 2 fields",
+      ].join("\n"),
+    );
+  });
+
+  test("grepSchemaText header attributes grouped kinds to the owning source and its version", async () => {
+    const loader: CatalogObjectLoader = async () => ({
+      body: new Response("spec.name <string>\t# bucket name").body!,
+      etag: "\"test\"",
+      size: 48,
+    });
+
+    const text = await grepSchemaText(
+      index,
+      env,
+      { apiVersion: "s3.services.k8s.aws", kind: "Bucket", query: "name", limit: 200 },
+      loader,
+    );
+
+    expect(text).toBe(
+      [
+        "# s3.services.k8s.aws/v1alpha1 Bucket from ack-s3 v1.8.1 github.com/aws-controllers-k8s/s3-controller",
+        "spec.name <string>\t# bucket name",
+        "# matched 1 of 1 fields",
       ].join("\n"),
     );
   });

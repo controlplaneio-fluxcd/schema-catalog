@@ -3,8 +3,8 @@
 
 import { buildFieldTree, filterFieldLines, parseFieldsFile } from "../../shared/fields.ts";
 import type { FieldLine, FieldNode } from "../../shared/fields.ts";
-import { findKind, hasFields, kindDisplay } from "../../shared/index-query.ts";
-import type { CatalogIndex, KindEntry, ProjectEntry } from "../../shared/types.ts";
+import { findKind, hasFields, kindDisplay, kindSource } from "../../shared/index-query.ts";
+import type { CatalogIndex, GroupEntry, KindEntry, ProjectEntry } from "../../shared/types.ts";
 import {
   clear,
   createBreadcrumb,
@@ -55,7 +55,7 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
       { label: found.project.alias, href: projectRoute(found.project.name) },
       { label: display },
     ]),
-    createKindHero(found.project, found.entry, group, kind, version, display),
+    createKindHero(found.project, found.group, found.entry, group, kind, version, display),
   );
 
   const content = document.createElement("section");
@@ -73,6 +73,7 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
 
 function createKindHero(
   project: ProjectEntry,
+  groupEntry: GroupEntry,
   entry: KindEntry,
   group: string,
   kind: string,
@@ -88,7 +89,15 @@ function createKindHero(
   const gvk = text("p", "mono gvk-line", `${group}/${version}`);
   const meta = document.createElement("div");
   meta.className = "meta-row";
-  meta.append(link(projectRoute(project.name), project.alias, "project-badge badge"));
+  // One provenance badge: the owning source and its release version (e.g.
+  // "AWS S3 Controller v1.8.1"), linking to the project page. The group name
+  // stays out of the hero; the version is never shown bare next to the API
+  // version switcher.
+  const owner = kindSource(project, groupEntry, entry);
+  const alias = owner?.alias ?? project.alias;
+  const release = owner?.version ?? project.version;
+  const label = release === undefined ? alias : `${alias} ${release}`;
+  meta.append(link(projectRoute(project.name), label, "project-badge badge"));
 
   const switcher = document.createElement("div");
   switcher.className = "version-switcher";

@@ -9,7 +9,7 @@
  */
 export interface CatalogIndex {
   /** Index contract version. */
-  v: 3;
+  v: 4;
   /** ISO timestamp for when `scripts/gen-index.ts` wrote the asset. */
   generatedAt: string;
   /** CNCF category names; `ProjectEntry.cat` stores an index into this array. */
@@ -19,22 +19,38 @@ export interface CatalogIndex {
 }
 
 /**
- * One source project from `build/config/sources.yaml` joined with its latest
- * `build/history` manifest. `name` is the stable config key, `alias` is display
- * text, and `builtAt` is truncated to `YYYY-MM-DD` for compact UI rendering.
+ * One presented project: either a single source from `build/config/sources.yaml`
+ * joined with its latest `build/history` manifest, or a project group merging
+ * several member sources (then `sources` lists the members and `version` is
+ * absent). `name` is the stable config key, `alias` is display text, and
+ * `builtAt` is truncated to `YYYY-MM-DD` for compact UI rendering.
  */
 export interface ProjectEntry {
   name: string;
   alias: string;
   cat: number;
+  /** GitHub owner/name; a bare organization for some grouped projects. */
   repo: string;
-  version: string;
+  /** Resolved release version; absent on grouped projects (see `sources`). */
+  version?: string;
+  /** Build date; the latest member build date for grouped projects. */
   builtAt: string;
   /** Set when the source belongs to a CNCF project; value is the project maturity. */
   cncf?: "graduated" | "incubating" | "sandbox";
   /** Landing-page preview order within the category; lower shows first, unpinned follow alphabetically. */
   pin?: number;
+  /** Member sources merged into this project; present only on grouped entries. */
+  sources?: ProjectSourceEntry[];
   groups: GroupEntry[];
+}
+
+/** One member source of a grouped project, sorted by alias. */
+export interface ProjectSourceEntry {
+  name: string;
+  alias: string;
+  repo: string;
+  version: string;
+  builtAt: string;
 }
 
 /**
@@ -45,6 +61,12 @@ export interface ProjectEntry {
 export interface GroupEntry {
   g: string;
   kinds: KindEntry[];
+  /**
+   * Owning member per kind, parallel to `kinds`: an index into the project's
+   * `sources` array. Present only on grouped projects, where it attributes
+   * each kind to the member source (and its version) that built it.
+   */
+  src?: number[];
 }
 
 /**
