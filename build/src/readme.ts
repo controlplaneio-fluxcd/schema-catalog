@@ -4,8 +4,8 @@
 import { CATEGORIES } from "./config.ts";
 import type { SourceCategory } from "./types.ts";
 
-/** The manifests are served from the website's history/ prefix. */
-const HISTORY_URL = "https://schemas.fluxoperator.dev/history";
+/** Project pages are served from the website's /p/ prefix. */
+const PROJECT_URL = "https://schemas.fluxoperator.dev/p";
 
 const VERSIONS_START = "<!-- versions:start -->";
 const VERSIONS_END = "<!-- versions:end -->";
@@ -17,8 +17,13 @@ export interface VersionRow {
   alias: string;
   /** CNCF landscape top-level group; controls README section placement. */
   category: SourceCategory;
-  /** Source key; rendered as the ID column linking to the served manifest. */
+  /** Source key; rendered as the ID column for `gh attestation verify`. */
   name: string;
+  /**
+   * Routable project page: the project group's name when the source is a
+   * member (group members share one page), the source's own name otherwise.
+   */
+  slug: string;
   version: string;
   /** RFC 3339 build timestamp from the history manifest. */
   builtAt: string;
@@ -49,7 +54,7 @@ export function renderVersionsTable(rows: VersionRow[]): string {
     for (const row of categoryRows) {
       const updated = row.builtAt.slice(0, 10);
       lines.push(
-        `| ${row.alias} | [\`${row.name}\`](${HISTORY_URL}/${row.name}.json) | ${row.version} | ${row.schemas} | ${updated} |`,
+        `| [${row.alias}](${PROJECT_URL}/${row.slug}) | \`${row.name}\` | ${row.version} | ${row.schemas} | ${updated} |`,
       );
     }
     sections.push(lines.join("\n"));

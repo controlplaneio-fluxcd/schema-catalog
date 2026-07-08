@@ -420,18 +420,23 @@ describe("versions table", () => {
     category: SourceCategory,
     overrides: Partial<{
       name: string;
+      slug: string;
       version: string;
       builtAt: string;
       schemas: number;
     }> = {},
-  ) => ({
-    alias,
-    category,
-    name: overrides.name ?? alias.toLowerCase().replaceAll(" ", "-"),
-    version: overrides.version ?? "v1.0.0",
-    builtAt: overrides.builtAt ?? "2026-07-05T03:15:00.000Z",
-    schemas: overrides.schemas ?? 1,
-  });
+  ) => {
+    const name = overrides.name ?? alias.toLowerCase().replaceAll(" ", "-");
+    return {
+      alias,
+      category,
+      name,
+      slug: overrides.slug ?? name,
+      version: overrides.version ?? "v1.0.0",
+      builtAt: overrides.builtAt ?? "2026-07-05T03:15:00.000Z",
+      schemas: overrides.schemas ?? 1,
+    };
+  };
 
   test("renders and splices between the markers", () => {
     const table = renderVersionsTable([
@@ -441,8 +446,22 @@ describe("versions table", () => {
       "# Title\n\n<!-- versions:start -->\n" +
         "### Orchestration & Management\n\n" +
         "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
-        "| Flux | [`flux`](https://schemas.fluxoperator.dev/history/flux.json) | v2.9.0 | 34 | 2026-07-05 |\n" +
+        "| [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.0 | 34 | 2026-07-05 |\n" +
         "<!-- versions:end -->\n",
+    );
+  });
+
+  test("links grouped members to their project group's page", () => {
+    const table = renderVersionsTable([
+      versionRow("AWS S3 Controller", "Provisioning", { name: "ack-s3", slug: "ack" }),
+      versionRow("AWS SQS Controller", "Provisioning", { name: "ack-sqs", slug: "ack" }),
+    ]);
+
+    expect(table).toBe(
+      "### Provisioning\n\n" +
+        "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
+        "| [AWS S3 Controller](https://schemas.fluxoperator.dev/p/ack) | `ack-s3` | v1.0.0 | 1 | 2026-07-05 |\n" +
+        "| [AWS SQS Controller](https://schemas.fluxoperator.dev/p/ack) | `ack-sqs` | v1.0.0 | 1 | 2026-07-05 |",
     );
   });
 
@@ -460,13 +479,13 @@ describe("versions table", () => {
     expect(table).toBe(
       "### Platform\n\n" +
         "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
-        "| Platform C | [`platform-c`](https://schemas.fluxoperator.dev/history/platform-c.json) | v1.0.0 | 1 | 2026-07-05 |\n\n" +
+        "| [Platform C](https://schemas.fluxoperator.dev/p/platform-c) | `platform-c` | v1.0.0 | 1 | 2026-07-05 |\n\n" +
         "### Provisioning\n\n" +
         "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
-        "| Provisioning A | [`provisioning-a`](https://schemas.fluxoperator.dev/history/provisioning-a.json) | v1.0.0 | 1 | 2026-07-05 |\n\n" +
+        "| [Provisioning A](https://schemas.fluxoperator.dev/p/provisioning-a) | `provisioning-a` | v1.0.0 | 1 | 2026-07-05 |\n\n" +
         "### Runtime\n\n" +
         "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
-        "| Runtime B | [`runtime-b`](https://schemas.fluxoperator.dev/history/runtime-b.json) | v1.0.0 | 1 | 2026-07-05 |",
+        "| [Runtime B](https://schemas.fluxoperator.dev/p/runtime-b) | `runtime-b` | v1.0.0 | 1 | 2026-07-05 |",
     );
     expect(CATEGORIES.filter((category) => table.includes(`### ${category}`))).toEqual([
       "Platform",
@@ -485,9 +504,9 @@ describe("versions table", () => {
     expect(table).toBe(
       "### Runtime\n\n" +
         "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
-        "| Alpha | [`alpha`](https://schemas.fluxoperator.dev/history/alpha.json) | v1.0.0 | 1 | 2026-07-05 |\n" +
-        "| beta | [`beta`](https://schemas.fluxoperator.dev/history/beta.json) | v1.0.0 | 1 | 2026-07-05 |\n" +
-        "| gamma | [`gamma`](https://schemas.fluxoperator.dev/history/gamma.json) | v1.0.0 | 1 | 2026-07-05 |",
+        "| [Alpha](https://schemas.fluxoperator.dev/p/alpha) | `alpha` | v1.0.0 | 1 | 2026-07-05 |\n" +
+        "| [beta](https://schemas.fluxoperator.dev/p/beta) | `beta` | v1.0.0 | 1 | 2026-07-05 |\n" +
+        "| [gamma](https://schemas.fluxoperator.dev/p/gamma) | `gamma` | v1.0.0 | 1 | 2026-07-05 |",
     );
   });
 });
@@ -499,6 +518,7 @@ describe("renderCatalogStats", () => {
         alias: "Flux",
         category: "Orchestration & Management" as const,
         name: "flux",
+        slug: "flux",
         version: "v2.9.0",
         builtAt: "",
         schemas: 15,
@@ -507,6 +527,7 @@ describe("renderCatalogStats", () => {
         alias: "AWS",
         category: "Provisioning" as const,
         name: "provider-upjet-aws",
+        slug: "provider-upjet-aws",
         version: "v2.6.0",
         builtAt: "",
         schemas: 2364,

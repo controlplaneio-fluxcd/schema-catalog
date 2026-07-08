@@ -280,6 +280,7 @@ async function main(): Promise<number> {
     alias: source.alias,
     category: source.category,
     name: entry.name,
+    slug: source.project ?? source.name,
     version: displayVersion(entry.version),
     builtAt: entry.builtAt,
     schemas: entry.files.filter((f) => f.endsWith(".json")).length,
