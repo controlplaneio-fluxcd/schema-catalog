@@ -35,6 +35,8 @@ export interface ProjectEntry {
   version?: string;
   /** Full resolved tag (the git ref); present only when it differs from `version`. */
   ref?: string;
+  /** 12-char commit SHA prefix the extraction ref pointed at when built. */
+  sha?: string;
   /** Build date; the latest member build date for grouped projects. */
   builtAt: string;
   /** Set when the source belongs to a CNCF project; value is the project maturity. */
@@ -54,6 +56,8 @@ export interface ProjectSourceEntry {
   version: string;
   /** Full resolved tag (the git ref); present only when it differs from `version`. */
   ref?: string;
+  /** 12-char commit SHA prefix the extraction ref pointed at when built. */
+  sha?: string;
   builtAt: string;
 }
 

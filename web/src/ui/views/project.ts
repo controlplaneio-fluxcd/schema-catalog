@@ -187,6 +187,7 @@ function createSourcesPanel(project: ProjectEntry): HTMLElement {
       repo: project.repo,
       version: project.version ?? "",
       ...(project.ref === undefined ? {} : { ref: project.ref }),
+      ...(project.sha === undefined ? {} : { sha: project.sha }),
       builtAt: project.builtAt,
     },
   ];
@@ -206,7 +207,16 @@ function createSourcesPanel(project: ProjectEntry): HTMLElement {
       head.append(createReleaseBadge(member.repo, member.version, member.ref));
     }
     const ref = member.ref ?? (member.version === "" ? undefined : member.version);
-    row.append(head, createRepoLink(member.repo, ref), text("span", "project-source-date", `updated ${formatDate(member.builtAt)}`));
+    const date = text("span", "project-source-date", `updated ${formatDate(member.builtAt)}`);
+    if (member.sha !== undefined) {
+      // 7 chars displayed; the index's 12-char prefix stays in the commit URL.
+      const commit = link(`https://github.com/${member.repo}/commit/${member.sha}`, member.sha.slice(0, 7), "mono");
+      commit.title = member.sha;
+      commit.target = "_blank";
+      commit.rel = "noopener noreferrer";
+      date.append(document.createTextNode(" · "), commit);
+    }
+    row.append(head, createRepoLink(member.repo, ref), date);
     grid.append(row);
   }
   section.append(grid);
