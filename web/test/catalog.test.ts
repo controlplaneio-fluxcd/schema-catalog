@@ -8,6 +8,7 @@ import type { Env } from "../src/worker/index.ts";
 const objects = new Map<string, string>([
   ["flagger.app/canary_v1beta1.json", "{\"a\":1}"],
   ["flagger.app/canary_v1beta1.fields.txt", "spec <object>"],
+  ["history/flagger.json", "{\"name\":\"flagger\"}"],
 ]);
 
 class MemoryCache implements Cache {
@@ -214,9 +215,40 @@ describe("serveCatalog", () => {
       "foo//bar_v1.json",
       "Foo/Bar_v1.json",
       "foo/bar.json",
+      // Manifests are not addressable through the catalog prefix.
+      "history/flagger.json",
     ]) {
       const { ctx } = createCtx();
       const resp = await serveCatalog(catalogReq(key), env, ctx, cache);
+      expect(resp.status).toBe(404);
+    }
+
+    expect(getCount()).toBe(0);
+  });
+
+  test("GET /history/<name>.json returns the provenance manifest", async () => {
+    const { env } = createEnv();
+    const { ctx } = createCtx();
+    const resp = await serveCatalog(req("/history/flagger.json"), env, ctx, new MemoryCache());
+
+    expect(resp.status).toBe(200);
+    expect(resp.headers.get("Content-Type")).toBe("application/json; charset=utf-8");
+    expect(resp.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(await resp.text()).toBe("{\"name\":\"flagger\"}");
+  });
+
+  test("garbage history keys return 404 without touching R2", async () => {
+    const { env, getCount } = createEnv();
+    const cache = new MemoryCache();
+
+    for (const path of [
+      "/history/../etc/passwd",
+      "/history/Flagger.json",
+      "/history/flagger.yaml",
+      "/history/nested/flagger.json",
+    ]) {
+      const { ctx } = createCtx();
+      const resp = await serveCatalog(req(path), env, ctx, cache);
       expect(resp.status).toBe(404);
     }
 

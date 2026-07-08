@@ -9,10 +9,12 @@ agents.
 ## Architecture
 
 One Worker handles all dynamic traffic. The R2 bucket `schema-catalog` holds the
-generated `catalog/` tree, synced by CI with rclone. Static assets are served
+generated `catalog/` tree at its root and the per-source provenance manifests
+under a `history/` prefix, both synced by CI with rclone; the Worker serves
+them as `/catalog/*` and `/history/<source>.json`. Static assets are served
 from Workers Assets: the dependency-free UI bundle, copied files from
 `static/`, and the generated `index.json`. `wrangler.jsonc` lists the dynamic
-paths in `assets.run_worker_first` (`/catalog/*`, `/mcp`, `/mcp/server-card`,
+paths in `assets.run_worker_first` (`/catalog/*`, `/history/*`, `/mcp`, `/mcp/server-card`,
 `/.well-known/mcp/*`), so those requests enter the Worker while UI assets stay
 on the static path.
 

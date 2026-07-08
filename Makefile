@@ -59,10 +59,13 @@ web-run: ## Run the Worker locally on :8787 without CF credentials.
 	cd web && bun install --frozen-lockfile && bun run build && bun scripts/dev.ts
 
 .PHONY: web-sync
-web-sync: ## Sync catalog/ to the R2 bucket (needs RCLONE_CONFIG_R2_* env vars).
+web-sync: ## Sync catalog/ and build/history/ to the R2 bucket (needs RCLONE_CONFIG_R2_* env vars).
 	@env | sort | grep -o '^RCLONE_CONFIG_R2_[A-Z_]*' || echo "no RCLONE_CONFIG_R2_* vars in env"
 	@test -x "$(RCLONE)" || (curl -fsSL https://downloads.rclone.org/$(RCLONE_VERSION)/rclone-$(RCLONE_VERSION)-linux-amd64.zip -o /tmp/rclone.zip && unzip -oq /tmp/rclone.zip -d /tmp)
-	$(RCLONE) sync catalog r2:schema-catalog --checksum --fast-list --transfers 32 --stats-one-line -v
+	# The bucket root mirrors catalog/; --exclude shields the history/ prefix
+	# from this sync's deletions so both trees can share the bucket.
+	$(RCLONE) sync catalog r2:schema-catalog --exclude 'history/**' --checksum --fast-list --transfers 32 --stats-one-line -v
+	$(RCLONE) sync build/history r2:schema-catalog/history --checksum --fast-list --transfers 32 --stats-one-line -v
 
 .PHONY: web-deploy
 web-deploy: ## Deploy the Worker with the commit SHA as CATALOG_VERSION.

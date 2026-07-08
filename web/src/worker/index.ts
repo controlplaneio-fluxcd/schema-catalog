@@ -21,9 +21,10 @@ export default {
   fetch(req, env, ctx) {
     const { pathname } = new URL(req.url);
 
-    // `/catalog/<group>/<file>` streams catalog objects; the bare `/catalog`
+    // `/catalog/<group>/<file>` streams catalog objects and
+    // `/history/<source>.json` the provenance manifests; the bare `/catalog`
     // path is the explorer page and falls through to Workers Assets.
-    if (pathname.startsWith("/catalog/")) {
+    if (pathname.startsWith("/catalog/") || pathname.startsWith("/history/")) {
       return serveCatalog(req, env, ctx);
     }
 

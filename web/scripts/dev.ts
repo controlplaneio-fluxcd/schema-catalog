@@ -15,14 +15,19 @@ import { join, normalize } from "node:path";
 import { watchUi } from "./watch-ui.ts";
 
 const catalogDir = normalize(join(import.meta.dir, "..", "..", "catalog"));
+const historyDir = normalize(join(import.meta.dir, "..", "..", "build", "history"));
 const port = 8788;
 
 const server = Bun.serve({
   port,
   async fetch(req) {
     const pathname = decodeURIComponent(new URL(req.url).pathname);
-    const path = normalize(join(catalogDir, pathname));
-    if (!path.startsWith(catalogDir + "/")) {
+    // history/* keys map to build/history, mirroring the bucket's history/
+    // prefix; everything else is the catalog tree.
+    const history = pathname.startsWith("/history/");
+    const root = history ? historyDir : catalogDir;
+    const path = normalize(join(root, history ? pathname.slice("/history".length) : pathname));
+    if (!path.startsWith(root + "/")) {
       return new Response("forbidden\n", { status: 403 });
     }
     const file = Bun.file(path);

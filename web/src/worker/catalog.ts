@@ -12,6 +12,9 @@ import type { Env } from "./index.ts";
  */
 const keyPattern = /^[a-z0-9.-]+\/[a-z0-9.-]+_[a-z0-9]+\.(json|fields\.txt)$/;
 
+/** Provenance manifests under the bucket's `history/` prefix: `history/<source>.json`. */
+const historyKeyPattern = /^history\/[a-z0-9-]+\.json$/;
+
 function corsHeaders(): HeadersInit {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -34,11 +37,11 @@ function stripHead(req: Request, resp: Response): Response {
 }
 
 /**
- * Serves `/catalog/*` objects with public CORS and edge caching. Only GET,
- * HEAD, and OPTIONS are supported; invalid keys and R2 misses return cacheable
- * 404s because `flux-schema` performs fall-through probes for alternate schema
- * names. Cache keys include `CATALOG_VERSION`, so deploys invalidate without
- * purging old edge entries.
+ * Serves `/catalog/*` objects and `/history/*` provenance manifests with
+ * public CORS and edge caching. Only GET, HEAD, and OPTIONS are supported;
+ * invalid keys and R2 misses return cacheable 404s because `flux-schema`
+ * performs fall-through probes for alternate schema names. Cache keys include
+ * `CATALOG_VERSION`, so deploys invalidate without purging old edge entries.
  */
 export async function serveCatalog(
   req: Request,
@@ -67,14 +70,20 @@ export async function serveCatalog(
 
   const url = new URL(req.url);
   let key: string;
+  let valid: boolean;
 
   try {
-    key = decodeURIComponent(url.pathname.slice("/catalog/".length));
+    const path = decodeURIComponent(url.pathname);
+    // Catalog objects drop the /catalog/ prefix (the bucket root is the
+    // catalog tree); history manifests keep theirs, matching the bucket's
+    // history/ prefix the deploy syncs build/history into.
+    key = path.startsWith("/catalog/") ? path.slice("/catalog/".length) : path.slice(1);
+    valid = path.startsWith("/catalog/") ? keyPattern.test(key) : historyKeyPattern.test(key);
   } catch {
     return stripHead(req, notFound());
   }
 
-  if (!key || !keyPattern.test(key)) {
+  if (!valid) {
     return stripHead(req, notFound());
   }
 
