@@ -19,7 +19,7 @@ import {
   notFoundView,
   text,
 } from "../dom.ts";
-import { catalogCategoryRoute, homeRoute, kindRoute } from "../router.ts";
+import { catalogCategoryRoute, catalogRoute, homeRoute, kindRoute } from "../router.ts";
 
 /**
  * Renders one project page from the generated index. Missing project names
@@ -40,6 +40,7 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
   page.append(
     createBreadcrumb([
       { label: "Home", href: homeRoute() },
+      { label: "Catalog", href: catalogRoute() },
       { label: project.alias },
     ]),
     createProjectHero(index, project),

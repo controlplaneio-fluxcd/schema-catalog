@@ -14,7 +14,7 @@ import {
   notFoundView,
   text,
 } from "../dom.ts";
-import { homeRoute, kindRoute, projectRoute } from "../router.ts";
+import { catalogRoute, homeRoute, kindRoute, projectRoute } from "../router.ts";
 
 /** Streamable-HTTP MCP endpoint copied by the hero's Copy MCP Server button. */
 const MCP_ENDPOINT = "https://schemas.fluxoperator.dev/mcp";
@@ -52,6 +52,7 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
   page.append(
     createBreadcrumb([
       { label: "Home", href: homeRoute() },
+      { label: "Catalog", href: catalogRoute() },
       { label: found.project.alias, href: projectRoute(found.project.name) },
       { label: display },
     ]),
