@@ -111,7 +111,7 @@ describe("searchIndex", () => {
 describe("projectVersionLabel", () => {
   test("returns the version for single-source projects and the member count for groups", () => {
     expect(projectVersionLabel(index.projects[0]!)).toBe("v1.0.0");
-    expect(projectVersionLabel(index.projects[2]!)).toBe("2 sources");
+    expect(projectVersionLabel(index.projects[2]!)).toBe("2 repos");
   });
 });
 

@@ -130,7 +130,7 @@ describe("MCP catalog helpers", () => {
     expect(listProjectsText(index)).toBe(
       [
         "fluxcd v2.8.0 github.com/fluxcd/flux2 1 kinds",
-        "aws-ack 2 sources github.com/aws-controllers-k8s 2 kinds",
+        "aws-ack 2 repos github.com/aws-controllers-k8s 2 kinds",
         "kubernetes v1.34.0 github.com/kubernetes/kubernetes 2 kinds",
         "# 3 projects",
       ].join("\n"),

@@ -100,9 +100,9 @@ export function kindDisplay(entry: KindEntry): string {
   return entry[3] ?? entry[0];
 }
 
-/** Version badge text: the resolved version, or the member count for grouped projects. */
+/** Version badge text: the resolved version, or the member repo count for grouped projects. */
 export function projectVersionLabel(project: ProjectEntry): string {
-  return project.version ?? `${project.sources?.length ?? 0} sources`;
+  return project.version ?? `${project.sources?.length ?? 0} repos`;
 }
 
 /** Returns normalized resource-reference aliases carried by the compact index. */

@@ -328,10 +328,10 @@ function createProjectCard(project: ProjectEntry): HTMLElement {
 
   const head = document.createElement("div");
   head.className = "explorer-card-head";
-  head.append(
-    text("span", "explorer-card-name", project.alias),
-    createBadge(projectVersionLabel(project), "version-badge"),
-  );
+  const name = text("span", "explorer-card-name", project.alias);
+  // The name truncates at the version badge; the full alias stays on hover.
+  name.title = project.alias;
+  head.append(name, createBadge(projectVersionLabel(project), "version-badge"));
   card.append(head);
 
   const shields = document.createElement("div");
