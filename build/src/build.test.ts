@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
-import { excludeByBasename, matchAsset } from "./github.ts";
+import { excludeByBasename, matchAsset, yamlFilesInTree } from "./github.ts";
 import { historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
@@ -82,6 +82,23 @@ describe("matchAsset", () => {
 
   test("treats regex metacharacters literally", () => {
     expect(matchAsset("a.b.yaml", "aXb.yaml")).toBe(false);
+  });
+});
+
+describe("yamlFilesInTree", () => {
+  test("keeps only .yaml blobs under the directory", () => {
+    const entries = [
+      { path: "package/crds/s3.aws.upbound.io_buckets.yaml", type: "blob" },
+      { path: "package/crds/sub/nested.yaml", type: "blob" },
+      { path: "package/crds", type: "tree" },
+      { path: "package/crds/README.md", type: "blob" },
+      { path: "package/crossplane.yaml", type: "blob" },
+      { path: "package/crds-other/decoy.yaml", type: "blob" },
+    ];
+    expect(yamlFilesInTree(entries, "package/crds")).toEqual([
+      "package/crds/s3.aws.upbound.io_buckets.yaml",
+      "package/crds/sub/nested.yaml",
+    ]);
   });
 });
 

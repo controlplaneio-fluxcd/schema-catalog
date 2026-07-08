@@ -168,7 +168,10 @@ async function listYamlFiles(
     throw new Error(`${repo}@${ref}: '${dir}' is not a directory`);
   }
   if (entries.length === 1000) {
-    throw new Error(`${repo}@${ref}: '${dir}' directory listing hit the GitHub Contents API cap of 1000 entries`);
+    // The Contents API caps a directory listing at 1000 entries; one recursive
+    // git tree listing covers the whole ref instead (the upjet providers ship
+    // thousands of per-kind CRD files in package/crds).
+    return listYamlFilesViaTree(repo, ref, dir);
   }
 
   const files: { path: string; downloadUrl: string }[] = [];
@@ -183,6 +186,48 @@ async function listYamlFiles(
     }
   }
   return files;
+}
+
+interface TreeEntry {
+  path: string;
+  type: string;
+}
+
+/** Raw file URL at a ref — what the Contents API's download_url points at. */
+function rawUrl(repo: string, ref: string, path: string): string {
+  const encoded = path.split("/").map(encodeURIComponent).join("/");
+  return `https://raw.githubusercontent.com/${repo}/${encodeURIComponent(ref)}/${encoded}`;
+}
+
+/** The `.yaml` blob paths under `dir` from a recursive git tree listing. */
+export function yamlFilesInTree(entries: TreeEntry[], dir: string): string[] {
+  const prefix = `${dir}/`;
+  return entries
+    .filter((e) => e.type === "blob" && e.path.startsWith(prefix) && e.path.endsWith(".yaml"))
+    .map((e) => e.path);
+}
+
+/**
+ * Lists `*.yaml` files under a repo directory from one recursive git tree
+ * listing — the over-1000-entries fallback for directories the Contents API
+ * cannot list in full. The tree endpoint has its own truncation flag (~100k
+ * entries), which stays a hard error: a silently partial CRD set must never
+ * reach extraction.
+ */
+async function listYamlFilesViaTree(
+  repo: string,
+  ref: string,
+  dir: string,
+): Promise<{ path: string; downloadUrl: string }[]> {
+  const tree = await apiJson(`/repos/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`);
+  if ((tree as { truncated?: boolean }).truncated === true) {
+    throw new Error(`${repo}@${ref}: recursive git tree listing was truncated by the API`);
+  }
+  const entries = (tree as { tree?: TreeEntry[] }).tree;
+  if (!Array.isArray(entries)) {
+    throw new Error(`${repo}@${ref}: unexpected git tree payload`);
+  }
+  return yamlFilesInTree(entries, dir).map((path) => ({ path, downloadUrl: rawUrl(repo, ref, path) }));
 }
 
 /**

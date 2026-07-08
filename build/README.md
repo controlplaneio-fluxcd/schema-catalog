@@ -71,7 +71,9 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
   `releaseAsset` (download a GitHub release asset by name or `*` glob), `crdDir`
   (recursively fetch every `*.yaml` under a repo directory at the ref and
   concatenate them — for repos that ship bare per-kind CRD files with no asset
-  or kustomization, e.g. cilium), `crdFile` (fetch a single committed file at
+  or kustomization, e.g. cilium; a directory over the Contents API's
+  1000-entry listing cap falls back to one recursive git tree call, e.g. the
+  upjet providers' `package/crds`), `crdFile` (fetch a single committed file at
   the ref — for repos that bundle their whole CRD set into one file that shares
   a directory with unrelated manifests, so `crdDir` would over-collect, e.g.
   rook's `deploy/examples/crds.yaml`), or
