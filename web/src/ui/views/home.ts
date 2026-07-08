@@ -7,11 +7,18 @@ import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
 import { clear, createCodeBlock, kindCount, link, REPO_URL, schemaCount, text } from "../dom.ts";
 import { agentsRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
-const MCP_COMMAND = `claude mcp add --transport http flux-schema-catalog \\
-  https://schemas.fluxoperator.dev/mcp`;
+const MCP_CONFIG = `{
+  "mcpServers": {
+    "flux-schema-catalog": {
+      "type": "http",
+      "url": "https://schemas.fluxoperator.dev/mcp"
+    }
+  }
+}`;
 
-const VALIDATE_COMMAND = `flux schema validate ./manifests \\
-  --schema-location https://schemas.fluxoperator.dev/catalog`;
+const VALIDATE_COMMAND = "flux schema validate ./manifests -s ecosystem";
+
+const EXPLAIN_COMMAND = "flux schema explain -s ecosystem hr.spec.dependsOn";
 
 /** Kinds cycled through the search placeholder; only ones present in the index show. */
 const PLACEHOLDER_KINDS = ["HelmRelease", "Ingress", "Certificate", "CiliumNetworkPolicy", "Kustomization", "HTTPRoute"];
@@ -233,7 +240,7 @@ function createStats(projects: number, kinds: number, schemas: number): HTMLElem
   return stats;
 }
 
-/** The two audiences, in priority order: AI agents first, CI second. */
+/** The three audiences, in priority order: AI agents, CI pipelines, humans. */
 function createLanes(): HTMLElement {
   const section = document.createElement("section");
   section.className = "home-lanes";
@@ -244,23 +251,25 @@ function createLanes(): HTMLElement {
   const ai = document.createElement("article");
   ai.className = "lane lane-ai";
   const aiLink = link(agentsRoute(), "Set up your agent →", "lane-link");
-  ai.append(
-    text("p", "lane-eyebrow", "For AI agents · MCP server"),
+  const aiText = document.createElement("div");
+  aiText.className = "lane-text";
+  aiText.append(
+    text("p", "lane-eyebrow", "For AI agents"),
     text("h2", "", "Give your agent ground truth"),
     text(
       "p",
       "",
       "Connect any MCP client and your agent stops guessing YAML: it greps the real fields, types, and constraints for the exact API version it writes or reviews, no cluster required.",
     ),
-    createCodeBlock(MCP_COMMAND),
     aiLink,
   );
+  ai.append(aiText, createCodeBlock(MCP_CONFIG, "json"));
 
   const ci = document.createElement("article");
   ci.className = "lane";
   const ciLink = link(cliRoute(), "Use it in CI →", "lane-link");
   ci.append(
-    text("p", "lane-eyebrow", "For CI pipelines · flux-schema CLI"),
+    text("p", "lane-eyebrow", "For CI pipelines"),
     text("h2", "", "Validate before the cluster does"),
     text(
       "p",
@@ -271,7 +280,22 @@ function createLanes(): HTMLElement {
     ciLink,
   );
 
-  inner.append(ai, ci);
+  const humans = document.createElement("article");
+  humans.className = "lane";
+  const humansLink = link(`${cliRoute()}#explain`, "Explain from your terminal →", "lane-link");
+  humans.append(
+    text("p", "lane-eyebrow", "For developers"),
+    text("h2", "", "Explain without a cluster"),
+    text(
+      "p",
+      "",
+      "Field docs, types, and constraints for the whole ecosystem, straight from your terminal: kinds, plural names, and short names like hr resolve with no kubeconfig in sight.",
+    ),
+    createCodeBlock(EXPLAIN_COMMAND),
+    humansLink,
+  );
+
+  inner.append(ai, ci, humans);
   section.append(inner);
   return section;
 }

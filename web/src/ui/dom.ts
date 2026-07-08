@@ -42,6 +42,20 @@ export function link(href: string, label: string, className = ""): HTMLAnchorEle
   return anchor;
 }
 
+/**
+ * A titled page section whose heading links to its own `#<id>` anchor, so
+ * every section is deep-linkable as `<path>#<id>`.
+ */
+export function createSection(title: string, id: string): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mcp-section";
+  section.id = id;
+  const heading = document.createElement("h2");
+  heading.append(link(`#${id}`, title, "section-anchor"));
+  section.append(heading);
+  return section;
+}
+
 /** Creates a page root with the shared `page` class plus a view-specific class. */
 export function createPage(className: string): HTMLElement {
   const page = document.createElement("main");

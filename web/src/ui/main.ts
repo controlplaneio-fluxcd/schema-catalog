@@ -60,9 +60,14 @@ function renderRoute(route: Route): void {
   clear(appElement);
   appElement.append(createSiteHeader(navHighlight(route)), renderView(route), createSiteFooter());
   document.title = titleFor(route);
-  // Full-page re-render: reset the viewport so navigation reads as a page
-  // change instead of landing mid-scroll.
-  scrollTo(0, 0);
+  // Full-page re-render: land on the URL's anchor target when it has one,
+  // else reset the viewport so navigation reads as a page change.
+  const anchor = location.hash.length > 1 ? document.getElementById(location.hash.slice(1)) : null;
+  if (anchor === null) {
+    scrollTo(0, 0);
+  } else {
+    anchor.scrollIntoView();
+  }
 }
 
 function titleFor(route: Route): string {
@@ -70,7 +75,7 @@ function titleFor(route: Route): string {
     return "Flux Schema MCP Server · AI agents";
   }
   if (route.name === "cli") {
-    return "Flux Schema CLI · CI validation";
+    return "Flux Schema CLI · validate and explain";
   }
   if (route.name === "project") {
     const project = catalogIndex.projects.find((candidate) => candidate.name === route.project);
@@ -102,7 +107,7 @@ function renderView(route: Route): HTMLElement {
     return renderMcp(catalogIndex);
   }
   if (route.name === "cli") {
-    return renderCli(catalogIndex);
+    return renderCli();
   }
   if (route.name === "project") {
     return renderProject(catalogIndex, route.project);

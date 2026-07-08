@@ -39,7 +39,7 @@ export function installRouter(render: (route: Route) => void): () => void {
       return;
     }
     event.preventDefault();
-    navigate(target.pathname);
+    navigate(target.pathname + target.hash);
   };
 
   addEventListener("popstate", onNavigate);
@@ -56,12 +56,16 @@ export function installRouter(render: (route: Route) => void): () => void {
   };
 }
 
-/** Pushes a path onto the history stack and renders its route. */
+/**
+ * Pushes a path (optionally carrying a `#section` anchor) onto the history
+ * stack and renders its route; the renderer scrolls to the anchor target.
+ */
 export function navigate(path: string): void {
-  if (path !== location.pathname) {
+  if (path !== location.pathname + location.hash) {
     history.pushState(null, "", path);
   }
-  dispatch?.(parseRoute(path));
+  const hashIndex = path.indexOf("#");
+  dispatch?.(parseRoute(hashIndex < 0 ? path : path.slice(0, hashIndex)));
 }
 
 /** Returns the URL path for the catalog overview. */

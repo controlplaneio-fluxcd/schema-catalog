@@ -7,6 +7,7 @@ import {
   createCodeBlock,
   createCopyButton,
   createPage,
+  createSection,
   kindCount,
   schemaCount,
   text,
@@ -113,7 +114,7 @@ function createEndpoint(): HTMLElement {
 }
 
 function createWhySection(): HTMLElement {
-  const section = createSection("What your agent gets");
+  const section = createSection("What your agent gets", "features");
   section.append(
     text(
       "p",
@@ -135,7 +136,7 @@ function createWhySection(): HTMLElement {
 }
 
 function createConfigSection(): HTMLElement {
-  const section = createSection("Configure your agent");
+  const section = createSection("Configure your agent", "configure");
   section.append(
     text(
       "p",
@@ -153,7 +154,7 @@ function createConfigSection(): HTMLElement {
 }
 
 function createToolsSection(): HTMLElement {
-  const section = createSection("Tools");
+  const section = createSection("Tools", "tools");
   section.append(text("p", "mcp-lead", "The agent starts broad and narrows down. It finds the right kind, searches its fields, and fetches the full JSON Schema only when it needs everything."));
 
   const scroller = document.createElement("div");
@@ -181,9 +182,3 @@ function createToolsSection(): HTMLElement {
   return section;
 }
 
-function createSection(title: string): HTMLElement {
-  const section = document.createElement("section");
-  section.className = "mcp-section";
-  section.append(text("h2", "", title));
-  return section;
-}

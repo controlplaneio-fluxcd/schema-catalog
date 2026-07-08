@@ -1,20 +1,30 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import type { CatalogIndex } from "../../shared/types.ts";
-import { CLI_URL, createBreadcrumb, createCodeBlock, createPage, kindCount, link, text } from "../dom.ts";
+import { CLI_URL, createBreadcrumb, createCodeBlock, createPage, createSection, link, text } from "../dom.ts";
 import { agentsRoute, homeRoute } from "../router.ts";
 
 const DOCS_URL = "https://fluxcd.io/flux/cli-plugins/flux-schema/";
 
 const INSTALL_COMMAND = "flux plugin install schema";
 
-const VALIDATE_COMMAND = `flux schema validate ./manifests \\
-  --schema-location https://schemas.fluxoperator.dev/catalog`;
+const EXPLAIN_OUTPUT = `$ flux schema explain -s ecosystem hr.spec.dependsOn
 
-const RENDERED_COMMAND = "kustomize build ./clusters/production | flux schema validate --verbose";
+GROUP:      helm.toolkit.fluxcd.io
+KIND:       HelmRelease
+VERSION:    v2
 
-const EXAMPLE_OUTPUT = `$ flux schema validate ./manifests
+FIELD: dependsOn <[]Object>
+
+DESCRIPTION:
+    DependsOn may contain a DependencyReference slice with references to
+    HelmRelease resources that must be ready before this HelmRelease can be
+    reconciled.
+...`;
+
+const RENDERED_COMMAND = "kustomize build ./app/dev | flux schema validate -s ecosystem -v";
+
+const EXAMPLE_OUTPUT = `$ flux schema validate ./manifests -s ecosystem
 
 manifests/releases.yaml - HelmRelease/apps/frontend is invalid: cel violation
   - /spec: Invalid value: either 'chart' or 'chartRef' must be set
@@ -28,7 +38,7 @@ const CI_CONFIG = `apiVersion: schema.plugin.fluxcd.io/v1beta1
 kind: Config
 validate:
   schemaLocation:
-    - https://schemas.fluxoperator.dev/catalog`;
+    - ecosystem`;
 
 const CI_WORKFLOW = `name: flux-schema
 
@@ -76,18 +86,20 @@ const CHECKS: Array<{ title: string; body: string }> = [
 ];
 
 /**
- * Renders the CLI page: validating manifests in CI with the flux-schema
- * plugin, using this catalog as a schema location. The AI-agent story lives on
- * the agents page; this page links there once and stays on CI.
+ * Renders the CLI page: validating manifests in CI and explaining fields from
+ * the terminal with the flux-schema plugin, using this catalog as a schema
+ * location. The AI-agent story lives on the agents page; this page links
+ * there once.
  */
-export function renderCli(index: CatalogIndex): HTMLElement {
+export function renderCli(): HTMLElement {
   const page = createPage("cli-page");
   page.append(
     createBreadcrumb([{ label: "Home", href: homeRoute() }, { label: "CLI" }]),
     createHero(),
-    createCatalogSection(index),
+    createCatalogSection(),
     createChecksSection(),
     createCiSection(),
+    createExplainSection(),
     createAgentsPointer(),
   );
   return page;
@@ -102,7 +114,7 @@ function createHero(): HTMLElement {
     text(
       "p",
       "mcp-tagline",
-      "Static validation for GitOps workflows with Kubernetes API server semantics. Catch invalid manifests in pull requests before Flux reconciles them on clusters.",
+      "Static validation and kubectl-style explain for GitOps workflows, with Kubernetes API server semantics. Catch invalid manifests in pull requests, and look up any field without a cluster.",
     ),
     createCodeBlock(INSTALL_COMMAND),
     createMetaLine(),
@@ -122,7 +134,7 @@ function createMetaLine(): HTMLElement {
   docs.rel = "noopener noreferrer";
 
   meta.append(
-    document.createTextNode("Apache-2.0 · single Go binary · Flux CLI plugin · "),
+    document.createTextNode("Flux CLI plugin · "),
     repo,
     document.createTextNode(" · "),
     docs,
@@ -130,17 +142,15 @@ function createMetaLine(): HTMLElement {
   return meta;
 }
 
-function createCatalogSection(index: CatalogIndex): HTMLElement {
-  const kinds = index.projects.reduce((total, project) => total + kindCount(project), 0);
-
-  const section = createSection("Validate against this catalog");
+function createCatalogSection(): HTMLElement {
+  const section = createSection("Validate against this catalog", "validate");
   section.append(
     text(
       "p",
       "mcp-lead",
-      `One schema location covers ${index.projects.length.toLocaleString("en-US")} projects and ${kinds.toLocaleString("en-US")} kinds, including everything from the plugin's built-in catalog.`,
+      "The ecosystem schema location points the CLI at this catalog, a superset of the plugin's built-in one:",
     ),
-    createCodeBlock(VALIDATE_COMMAND),
+    createCodeBlock(EXAMPLE_OUTPUT, "console"),
     text("h3", "", "Validate what Flux sees"),
     text(
       "p",
@@ -148,14 +158,30 @@ function createCatalogSection(index: CatalogIndex): HTMLElement {
       "Pipe rendered kustomize overlays or Helm charts through the same check to validate the exact manifests Flux applies at reconciliation time.",
     ),
     createCodeBlock(RENDERED_COMMAND),
-    text("h3", "", "Example output"),
-    createCodeBlock(EXAMPLE_OUTPUT, "console"),
+  );
+  return section;
+}
+
+function createExplainSection(): HTMLElement {
+  const section = createSection("Explain fields without a cluster", "explain");
+  section.append(
+    text(
+      "p",
+      "mcp-lead",
+      "The explain command is like kubectl explain without a cluster at hand: answers come straight from the catalog, and kinds, plural names, and short names like hr resolve across every project in it.",
+    ),
+    createCodeBlock(EXPLAIN_OUTPUT, "console"),
+    text(
+      "p",
+      "mcp-lead",
+      "Add --recursive to print nested fields, and --api-version to pick a specific group/version when a kind is served by more than one.",
+    ),
   );
   return section;
 }
 
 function createChecksSection(): HTMLElement {
-  const section = createSection("What it checks");
+  const section = createSection("What it checks", "checks");
 
   const grid = document.createElement("div");
   grid.className = "mcp-features";
@@ -170,7 +196,7 @@ function createChecksSection(): HTMLElement {
 }
 
 function createCiSection(): HTMLElement {
-  const section = createSection("Run it in CI");
+  const section = createSection("Run it in CI", "ci");
   section.append(
     text(
       "p",
@@ -195,7 +221,7 @@ function createCiSection(): HTMLElement {
 }
 
 function createAgentsPointer(): HTMLElement {
-  const section = createSection("Writing manifests with an AI agent?");
+  const section = createSection("Writing manifests with an AI agent?", "agents");
   const lead = document.createElement("p");
   lead.className = "mcp-lead";
   lead.append(
@@ -207,9 +233,3 @@ function createAgentsPointer(): HTMLElement {
   return section;
 }
 
-function createSection(title: string): HTMLElement {
-  const section = document.createElement("section");
-  section.className = "mcp-section";
-  section.append(text("h2", "", title));
-  return section;
-}
