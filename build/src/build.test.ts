@@ -440,8 +440,8 @@ describe("versions table", () => {
     expect(spliceVersionsTable(readme, table)).toBe(
       "# Title\n\n<!-- versions:start -->\n" +
         "### Orchestration & Management\n\n" +
-        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Flux | [v2.9.0](build/history/flux.json) | 34 | 2026-07-05 |\n" +
+        "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
+        "| Flux | [`flux`](https://schemas.fluxoperator.dev/history/flux.json) | v2.9.0 | 34 | 2026-07-05 |\n" +
         "<!-- versions:end -->\n",
     );
   });
@@ -459,14 +459,14 @@ describe("versions table", () => {
 
     expect(table).toBe(
       "### Platform\n\n" +
-        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Platform C | [v1.0.0](build/history/platform-c.json) | 1 | 2026-07-05 |\n\n" +
+        "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
+        "| Platform C | [`platform-c`](https://schemas.fluxoperator.dev/history/platform-c.json) | v1.0.0 | 1 | 2026-07-05 |\n\n" +
         "### Provisioning\n\n" +
-        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Provisioning A | [v1.0.0](build/history/provisioning-a.json) | 1 | 2026-07-05 |\n\n" +
+        "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
+        "| Provisioning A | [`provisioning-a`](https://schemas.fluxoperator.dev/history/provisioning-a.json) | v1.0.0 | 1 | 2026-07-05 |\n\n" +
         "### Runtime\n\n" +
-        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Runtime B | [v1.0.0](build/history/runtime-b.json) | 1 | 2026-07-05 |",
+        "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
+        "| Runtime B | [`runtime-b`](https://schemas.fluxoperator.dev/history/runtime-b.json) | v1.0.0 | 1 | 2026-07-05 |",
     );
     expect(CATEGORIES.filter((category) => table.includes(`### ${category}`))).toEqual([
       "Platform",
@@ -484,10 +484,10 @@ describe("versions table", () => {
 
     expect(table).toBe(
       "### Runtime\n\n" +
-        "| Project | Version | Schemas | Updated |\n| --- | --- | --- | --- |\n" +
-        "| Alpha | [v1.0.0](build/history/alpha.json) | 1 | 2026-07-05 |\n" +
-        "| beta | [v1.0.0](build/history/beta.json) | 1 | 2026-07-05 |\n" +
-        "| gamma | [v1.0.0](build/history/gamma.json) | 1 | 2026-07-05 |",
+        "| Project | ID | Version | Schemas | Updated |\n| --- | --- | --- | --- | --- |\n" +
+        "| Alpha | [`alpha`](https://schemas.fluxoperator.dev/history/alpha.json) | v1.0.0 | 1 | 2026-07-05 |\n" +
+        "| beta | [`beta`](https://schemas.fluxoperator.dev/history/beta.json) | v1.0.0 | 1 | 2026-07-05 |\n" +
+        "| gamma | [`gamma`](https://schemas.fluxoperator.dev/history/gamma.json) | v1.0.0 | 1 | 2026-07-05 |",
     );
   });
 });
