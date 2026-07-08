@@ -21,7 +21,9 @@ export default {
   fetch(req, env, ctx) {
     const { pathname } = new URL(req.url);
 
-    if (pathname === "/catalog" || pathname.startsWith("/catalog/")) {
+    // `/catalog/<group>/<file>` streams catalog objects; the bare `/catalog`
+    // path is the explorer page and falls through to Workers Assets.
+    if (pathname.startsWith("/catalog/")) {
       return serveCatalog(req, env, ctx);
     }
 

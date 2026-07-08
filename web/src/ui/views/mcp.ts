@@ -5,7 +5,7 @@ import type { CatalogIndex } from "../../shared/types.ts";
 import {
   createBreadcrumb,
   createCodeBlock,
-  createCopyButton,
+  createInlineCopy,
   createPage,
   createSection,
   kindCount,
@@ -104,13 +104,7 @@ function createHero(index: CatalogIndex): HTMLElement {
 }
 
 function createEndpoint(): HTMLElement {
-  const row = document.createElement("div");
-  row.className = "mcp-endpoint";
-
-  const url = document.createElement("code");
-  url.textContent = MCP_ENDPOINT;
-  row.append(url, createCopyButton(MCP_ENDPOINT, "Copy endpoint", ""));
-  return row;
+  return createInlineCopy(MCP_ENDPOINT, "Copy endpoint", "ai");
 }
 
 function createWhySection(): HTMLElement {

@@ -9,6 +9,7 @@ import {
   clear,
   createBreadcrumb,
   createPage,
+  createSearchField,
   hasFields,
   link,
   notFoundView,
@@ -203,17 +204,14 @@ function renderFieldsExplorer(content: HTMLElement, lines: FieldLine[]): void {
   const toolbar = document.createElement("div");
   toolbar.className = "fields-toolbar";
 
-  const filter = document.createElement("input");
-  filter.id = "field-filter";
-  filter.name = "field-filter";
-  filter.className = "filter-input";
-  filter.type = "search";
-  filter.placeholder = "Filter fields (regex)…";
-  filter.autocomplete = "off";
-  filter.setAttribute("aria-label", "Filter fields, regex supported");
+  const { field: filterWrap, input: filter } = createSearchField({
+    id: "field-filter",
+    placeholder: "Filter fields (regex)…",
+    ariaLabel: "Filter fields, regex supported",
+  });
 
   const count = text("span", "fields-count", "");
-  toolbar.append(filter, count);
+  toolbar.append(filterWrap, count);
 
   const results = document.createElement("div");
   results.className = "fields-results";

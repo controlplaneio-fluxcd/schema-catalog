@@ -51,6 +51,13 @@ await copyFile(join(webRoot, "src/ui/styles.css"), join(assetsDir, "styles.css")
  */
 const PAGES: Array<{ file: string; path: string; title: string; description: string }> = [
   {
+    file: "catalog.html",
+    path: "/catalog",
+    title: "Flux Schema Catalog: Kubernetes and CNCF schemas",
+    description:
+      "JSON Schemas and field indexes for Kubernetes core, OpenShift, the Flux ecosystem, and CNCF projects. Filter by name, API group, or kind and open a project for its versions.",
+  },
+  {
     file: "agents.html",
     path: "/agents",
     title: "Flux Schema MCP Server: an LLM-friendly kubectl explain",

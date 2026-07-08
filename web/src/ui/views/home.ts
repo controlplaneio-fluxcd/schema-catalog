@@ -5,7 +5,7 @@ import { latestVersion, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
 import { clear, createCodeBlock, kindCount, link, REPO_URL, schemaCount, text } from "../dom.ts";
-import { agentsRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
+import { agentsRoute, catalogCategoryRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
 const MCP_CONFIG = `{
   "mcpServers": {
@@ -259,7 +259,7 @@ function createLanes(): HTMLElement {
     text(
       "p",
       "",
-      "Connect any MCP client and your agent stops guessing YAML: it greps the real fields, types, and constraints for the exact API version it writes or reviews, no cluster required.",
+      "Connect to the MCP Server and your agent stops guessing YAML: it greps the real fields, types, and constraints for the exact API version it writes or reviews, no cluster required.",
     ),
     aiLink,
   );
@@ -311,16 +311,14 @@ function createResultRow(hit: SearchHit): HTMLAnchorElement {
   return row;
 }
 
-/** How many projects each category previews before its "+N more" expander. */
+/** How many projects each category previews before its "+N more" link. */
 const CATEGORY_PREVIEW = 5;
-
-/** Category indexes left open by their expander; survives view re-renders. */
-const expandedCategories = new Set<number>();
 
 /**
  * Renders the browse index: one section per CNCF category showing its project
- * count, a five-project preview, and a "+N more" expander for the rest, so
- * every category is visible without the page becoming a wall of names.
+ * count, a five-project preview, and a "+N more" link into the catalog explorer
+ * with that category preselected, so every category is visible without the page
+ * becoming a wall of names.
  */
 function createBrowseIndex(index: CatalogIndex): HTMLElement {
   const browse = document.createElement("section");
@@ -336,13 +334,13 @@ function createBrowseIndex(index: CatalogIndex): HTMLElement {
     if (projects.length === 0) {
       continue;
     }
-    browse.append(createCategorySection(category, categoryIndex, projects));
+    browse.append(createCategorySection(category, projects));
   }
 
   return browse;
 }
 
-function createCategorySection(category: string, categoryIndex: number, projects: ProjectEntry[]): HTMLElement {
+function createCategorySection(category: string, projects: ProjectEntry[]): HTMLElement {
   const section = document.createElement("section");
   section.className = "category-section";
 
@@ -356,10 +354,9 @@ function createCategorySection(category: string, categoryIndex: number, projects
     (a, b) => (a.pin ?? Number.MAX_SAFE_INTEGER) - (b.pin ?? Number.MAX_SAFE_INTEGER),
   );
 
-  const expanded = expandedCategories.has(categoryIndex);
   const flow = document.createElement("div");
   flow.className = "project-flow";
-  for (const project of expanded ? ordered : ordered.slice(0, CATEGORY_PREVIEW)) {
+  for (const project of ordered.slice(0, CATEGORY_PREVIEW)) {
     const item = link(projectRoute(project.name), "", "project-item");
     item.append(text("span", "", project.alias), text("span", "project-version", project.version));
     flow.append(item);
@@ -367,20 +364,8 @@ function createCategorySection(category: string, categoryIndex: number, projects
 
   const hidden = ordered.length - CATEGORY_PREVIEW;
   if (hidden > 0) {
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = "flow-toggle";
-    toggle.setAttribute("aria-expanded", String(expanded));
-    toggle.textContent = expanded ? "Show less" : `+${hidden} more`;
-    toggle.addEventListener("click", () => {
-      if (expanded) {
-        expandedCategories.delete(categoryIndex);
-      } else {
-        expandedCategories.add(categoryIndex);
-      }
-      section.replaceWith(createCategorySection(category, categoryIndex, projects));
-    });
-    flow.append(toggle);
+    const more = link(catalogCategoryRoute(category), `+${hidden} more`, "flow-toggle");
+    flow.append(more);
   }
 
   section.append(flow);

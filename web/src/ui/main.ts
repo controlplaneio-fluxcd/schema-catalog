@@ -6,6 +6,7 @@ import type { CatalogIndex } from "../shared/types.ts";
 import { clear, createSiteFooter, createSiteHeader, notFoundView, text } from "./dom.ts";
 import { installRouter, navigate, type Route } from "./router.ts";
 import { initializeTheme } from "./theme.ts";
+import { renderCatalog } from "./views/catalog.ts";
 import { renderCli } from "./views/cli.ts";
 import { renderHome } from "./views/home.ts";
 import { renderKind } from "./views/kind.ts";
@@ -71,6 +72,9 @@ function renderRoute(route: Route): void {
 }
 
 function titleFor(route: Route): string {
+  if (route.name === "catalog") {
+    return "Flux Schema Catalog: Kubernetes and CNCF schemas";
+  }
   if (route.name === "mcp") {
     return "Flux Schema MCP Server · AI agents";
   }
@@ -96,12 +100,20 @@ function navHighlight(route: Route): "catalog" | "agents" | "cli" | "" {
   if (route.name === "cli") {
     return "cli";
   }
-  return route.name === "not-found" ? "" : "catalog";
+  // The catalog nav points at /catalog, so only the explorer and the project
+  // and kind pages under it light up; the home page is reached via the brand.
+  if (route.name === "catalog" || route.name === "project" || route.name === "kind") {
+    return "catalog";
+  }
+  return "";
 }
 
 function renderView(route: Route): HTMLElement {
   if (route.name === "home") {
     return renderHome(catalogIndex);
+  }
+  if (route.name === "catalog") {
+    return renderCatalog(catalogIndex);
   }
   if (route.name === "mcp") {
     return renderMcp(catalogIndex);

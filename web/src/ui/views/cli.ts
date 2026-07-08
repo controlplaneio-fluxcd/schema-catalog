@@ -1,10 +1,8 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { CLI_URL, createBreadcrumb, createCodeBlock, createPage, createSection, link, text } from "../dom.ts";
+import { CLI_URL, createBreadcrumb, createCodeBlock, createInlineCopy, createPage, createSection, link, text } from "../dom.ts";
 import { agentsRoute, homeRoute } from "../router.ts";
-
-const DOCS_URL = "https://fluxcd.io/flux/cli-plugins/flux-schema/";
 
 const INSTALL_COMMAND = "flux plugin install schema";
 
@@ -22,7 +20,9 @@ DESCRIPTION:
     reconciled.
 ...`;
 
-const RENDERED_COMMAND = "kustomize build ./app/dev | flux schema validate -s ecosystem -v";
+const KUSTOMIZE_COMMAND = "kustomize build ./app/dev | flux schema validate -s ecosystem -v";
+
+const HELM_COMMAND = "helm template ./charts/app | flux schema validate -s ecosystem -v";
 
 const EXAMPLE_OUTPUT = `$ flux schema validate ./manifests -s ecosystem
 
@@ -116,7 +116,7 @@ function createHero(): HTMLElement {
       "mcp-tagline",
       "Static validation and kubectl-style explain for GitOps workflows, with Kubernetes API server semantics. Catch invalid manifests in pull requests, and look up any field without a cluster.",
     ),
-    createCodeBlock(INSTALL_COMMAND),
+    createInlineCopy(INSTALL_COMMAND, "Copy command", "accent", "shell"),
     createMetaLine(),
   );
   return hero;
@@ -129,16 +129,8 @@ function createMetaLine(): HTMLElement {
   const repo = link(CLI_URL, "fluxcd/flux-schema");
   repo.target = "_blank";
   repo.rel = "noopener noreferrer";
-  const docs = link(DOCS_URL, "documentation");
-  docs.target = "_blank";
-  docs.rel = "noopener noreferrer";
 
-  meta.append(
-    document.createTextNode("Flux CLI plugin · "),
-    repo,
-    document.createTextNode(" · "),
-    docs,
-  );
+  meta.append(document.createTextNode("Flux CLI plugin · "), repo);
   return meta;
 }
 
@@ -155,9 +147,15 @@ function createCatalogSection(): HTMLElement {
     text(
       "p",
       "mcp-lead",
-      "Pipe rendered kustomize overlays or Helm charts through the same check to validate the exact manifests Flux applies at reconciliation time.",
+      "Pipe rendered kustomize overlays through the same check to validate the exact manifests Flux applies at reconciliation time.",
     ),
-    createCodeBlock(RENDERED_COMMAND),
+    createCodeBlock(KUSTOMIZE_COMMAND),
+    text(
+      "p",
+      "mcp-lead",
+      "Do the same with Helm charts: render the templates and validate every generated document before the release reaches a cluster.",
+    ),
+    createCodeBlock(HELM_COMMAND),
   );
   return section;
 }
@@ -211,11 +209,6 @@ function createCiSection(): HTMLElement {
       "The validate action reads .fluxschema.yml from the repository root. Set this catalog as the schema location:",
     ),
     createCodeBlock(CI_CONFIG, "yaml"),
-    text(
-      "p",
-      "mcp-lead",
-      "For other CI systems and air-gapped environments, the ghcr.io/fluxcd/flux-schema container image bundles the entire catalog, so validation runs without network access.",
-    ),
   );
   return section;
 }

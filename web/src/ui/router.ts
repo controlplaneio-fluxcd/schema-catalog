@@ -8,6 +8,7 @@
  */
 export type Route =
   | { name: "home" }
+  | { name: "catalog" }
   | { name: "mcp" }
   | { name: "cli" }
   | { name: "project"; project: string }
@@ -73,6 +74,21 @@ export function homeRoute(): string {
   return "/";
 }
 
+/** Returns the URL path for the catalog explorer. */
+export function catalogRoute(): string {
+  return "/catalog";
+}
+
+/** URL-safe slug for a category name, e.g. "Orchestration & Management" -> "orchestration-management". */
+export function categorySlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/** Returns the catalog explorer URL with a category preselected via the hash. */
+export function catalogCategoryRoute(category: string): string {
+  return `${catalogRoute()}#${categorySlug(category)}`;
+}
+
 /** Returns the URL path for the AI agents (MCP server) page. */
 export function agentsRoute(): string {
   return "/agents";
@@ -110,6 +126,10 @@ export function parseRoute(value: string): Route {
     parts = rawParts.map((part) => decodeURIComponent(part));
   } catch {
     return { name: "not-found", path };
+  }
+
+  if (parts[0] === "catalog" && parts.length === 1) {
+    return { name: "catalog" };
   }
 
   // "mcp-server" is the legacy alias for the agents page.

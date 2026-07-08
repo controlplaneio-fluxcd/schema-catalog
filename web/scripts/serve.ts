@@ -34,7 +34,9 @@ const server = Bun.serve({
     if (pathname === "/__livereload") {
       return liveReloadResponse();
     }
-    if (pathname === "/catalog" || pathname.startsWith("/catalog/")) {
+    // `/catalog/<group>/<file>` streams the local catalog tree; the bare
+    // `/catalog` path is the explorer page and resolves to `catalog.html`.
+    if (pathname.startsWith("/catalog/")) {
       return serveFile(catalogDir, pathname.slice("/catalog/".length));
     }
     return serveAsset(pathname);

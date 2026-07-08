@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
-import { agentsRoute, cliRoute, homeRoute } from "./router.ts";
+import { agentsRoute, catalogRoute, cliRoute, homeRoute } from "./router.ts";
 import { createThemeToggle } from "./theme.ts";
 
 /** Repository behind the catalog, linked from the header and footer. */
@@ -87,7 +87,7 @@ export function createSiteHeader(active: "catalog" | "agents" | "cli" | "" = "")
   nav.className = "site-nav";
   nav.setAttribute("aria-label", "Site");
 
-  const catalogLink = link(homeRoute(), "Catalog", "nav-link");
+  const catalogLink = link(catalogRoute(), "Catalog", "nav-link");
   if (active === "catalog") {
     catalogLink.classList.add("active");
   }
@@ -160,16 +160,16 @@ export function createSiteFooter(): HTMLElement {
   content.append(
     brand,
     createFooterColumn("Catalog", [
-      { label: "Browse projects", href: homeRoute() },
-      { label: "AI agents", href: agentsRoute() },
-      { label: "flux-schema CLI", href: cliRoute() },
-      { label: "Report an issue", href: `${REPO_URL}/issues` },
+      { label: "Add project", href: `${REPO_URL}/issues/new?template=add-project.yaml`, external: true },
+      { label: "Browse projects", href: catalogRoute() },
+      { label: "Flux Schema MCP", href: agentsRoute() },
+      { label: "Flux Schema CLI", href: cliRoute() },
     ]),
     createFooterColumn("Flux Operator", [
-      { label: "Website", href: "https://fluxoperator.dev" },
+      { label: "Get started guide", href: "https://fluxoperator.dev/get-started/" },
       { label: "Documentation", href: "https://fluxoperator.dev/docs/" },
+      { label: "Flux Web UI", href: "https://fluxoperator.dev/web-ui/" },
       { label: "Flux MCP Server", href: "https://fluxoperator.dev/mcp-server/" },
-      { label: "Get started", href: "https://fluxoperator.dev/get-started/" },
     ]),
   );
 
@@ -187,7 +187,13 @@ export function createSiteFooter(): HTMLElement {
   return footer;
 }
 
-function createFooterColumn(title: string, items: Array<{ label: string; href: string }>): HTMLElement {
+const EXTERNAL_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+
+function createFooterColumn(
+  title: string,
+  items: Array<{ label: string; href: string; external?: boolean }>,
+): HTMLElement {
   const column = document.createElement("div");
   column.className = "footer-column";
   column.append(text("h4", "", title));
@@ -199,6 +205,12 @@ function createFooterColumn(title: string, items: Array<{ label: string; href: s
     if (item.href.startsWith("http")) {
       anchor.target = "_blank";
       anchor.rel = "noopener noreferrer";
+    }
+    if (item.external === true) {
+      const mark = text("span", "footer-ext", "");
+      mark.innerHTML = EXTERNAL_ICON;
+      mark.setAttribute("aria-hidden", "true");
+      anchor.append(mark);
     }
     entry.append(anchor);
     list.append(entry);
@@ -240,6 +252,31 @@ export function createCopyButton(value: string, label: string, variantClass = ""
     );
   });
   return copy;
+}
+
+/**
+ * Creates the inline copy box: a bordered pill holding a monospace value and a
+ * copy button, used for the MCP endpoint and the CLI install command. `variant`
+ * tints the border to the page's accent — "ai" (violet) or "accent" (blue).
+ * Passing `lang` runs the value through the same light highlighter as code
+ * blocks so, for example, a shell command's first word reads as a command.
+ */
+export function createInlineCopy(
+  value: string,
+  copyLabel: string,
+  variant: "ai" | "accent" = "accent",
+  lang?: CodeLang,
+): HTMLElement {
+  const row = document.createElement("div");
+  row.className = `inline-copy inline-copy-${variant}`;
+  const code = document.createElement("code");
+  if (lang === undefined) {
+    code.textContent = value;
+  } else {
+    appendHighlighted(code, value, lang);
+  }
+  row.append(code, createCopyButton(value, copyLabel, ""));
+  return row;
 }
 
 /** Languages understood by the lightweight code-block highlighter. */
@@ -413,6 +450,69 @@ export function createBreadcrumb(items: Array<{ label: string; href?: string }>)
 export function createBadge(label: string, className = ""): HTMLElement {
   const badge = text("span", `badge${className === "" ? "" : ` ${className}`}`, label);
   return badge;
+}
+
+/** Award rosette marking CNCF graduated projects. */
+export const CNCF_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"/><path fill="currentColor" d="M20 2H4v2l5.81 4.36a7.004 7.004 0 0 0-4.46 8.84a6.996 6.996 0 0 0 8.84 4.46a7 7 0 0 0 0-13.3L20 4zm-5.06 17.5L12 17.78L9.06 19.5l.78-3.33l-2.59-2.24l3.41-.29L12 10.5l1.34 3.14l3.41.29l-2.59 2.24z"/></svg>';
+
+/** Glyph leading the category shield across project and catalog surfaces. */
+export const CATEGORY_ICON = "❖";
+
+/**
+ * Creates a two-tone split badge: a colored icon segment next to a tinted
+ * label. Icons starting with `<svg` are trusted local markup; anything else
+ * renders as text.
+ */
+export function createShield(icon: string, label: string, variant: string): HTMLElement {
+  const shield = text("span", `shield ${variant}`, "");
+  const glyph = text("span", "shield-icon", "");
+  if (icon.startsWith("<svg")) {
+    glyph.innerHTML = icon;
+  } else {
+    glyph.textContent = icon;
+  }
+  glyph.setAttribute("aria-hidden", "true");
+  shield.append(glyph, text("span", "shield-label", label));
+  return shield;
+}
+
+const SEARCH_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+
+/**
+ * Creates a filter text field with a leading search icon: a `search-field`
+ * wrapper holding the icon and a `filter-input` search box. Shared by the
+ * catalog explorer and the kind-page fields filter so both read the same.
+ */
+export function createSearchField(options: {
+  id: string;
+  placeholder: string;
+  ariaLabel: string;
+  value?: string;
+}): { field: HTMLElement; input: HTMLInputElement } {
+  const field = document.createElement("div");
+  field.className = "search-field";
+
+  const icon = text("span", "search-field-icon", "");
+  icon.innerHTML = SEARCH_ICON;
+  icon.setAttribute("aria-hidden", "true");
+
+  const input = document.createElement("input");
+  input.id = options.id;
+  input.name = options.id;
+  input.className = "filter-input search-field-input";
+  input.type = "search";
+  input.autocomplete = "off";
+  input.spellcheck = false;
+  input.placeholder = options.placeholder;
+  input.setAttribute("aria-label", options.ariaLabel);
+  if (options.value !== undefined) {
+    input.value = options.value;
+  }
+
+  field.append(icon, input);
+  return { field, input };
 }
 
 /** Creates a repository link with the GitHub mark in front of the full host path. */
