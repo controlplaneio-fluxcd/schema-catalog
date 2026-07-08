@@ -536,9 +536,9 @@ export function createSearchField(options: {
 }
 
 /**
- * Creates a repository link with the GitHub mark in front of the full host
- * path. With a `ref` the link targets the source tree at that tag instead of
- * the repo root; slashes in the ref (`operator/v0.10.2`) stay literal because
+ * Creates a repository link: the GitHub mark followed by the owner/name path.
+ * With a `ref` the link targets the source tree at that tag instead of the
+ * repo root; slashes in the ref (`operator/v0.10.2`) stay literal because
  * GitHub resolves tree paths against the longest matching ref.
  */
 export function createRepoLink(repo: string, ref?: string): HTMLAnchorElement {
@@ -550,7 +550,8 @@ export function createRepoLink(repo: string, ref?: string): HTMLAnchorElement {
   icon.className = "repo-icon";
   icon.innerHTML = GITHUB_ICON;
   icon.setAttribute("aria-hidden", "true");
-  anchor.append(icon, document.createTextNode(`github.com/${repo}`));
+  // The GitHub mark already names the host; the text is just owner/name.
+  anchor.append(icon, document.createTextNode(repo));
   return anchor;
 }
 
