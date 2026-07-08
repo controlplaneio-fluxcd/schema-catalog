@@ -14,15 +14,41 @@ The catalog is served from Cloudflare's global network at
 [schemas.fluxoperator.dev](https://schemas.fluxoperator.dev), where you can
 also search and browse every project and their schemas.
 
-Pass the base URL as a `--schema-location`:
-
 ```shell
-flux schema validate ./manifests \
-  --schema-location https://schemas.fluxoperator.dev/catalog
+flux schema validate ./manifests -s ecosystem
 ```
+
+The `ecosystem` schema location expands to
+`https://schemas.fluxoperator.dev/catalog`.
 
 See the [CLI guide](https://schemas.fluxoperator.dev/cli) for installation,
 CI usage and configuration.
+
+## Explaining fields without a cluster
+
+The `explain` command is like `kubectl explain` without a cluster at
+hand (AI agents get the same capability through the MCP server below):
+
+```shell
+flux schema explain -s ecosystem hr.spec.dependsOn
+```
+
+```text
+GROUP:      helm.toolkit.fluxcd.io
+KIND:       HelmRelease
+VERSION:    v2
+
+FIELD: dependsOn <[]Object>
+
+DESCRIPTION:
+    DependsOn may contain a DependencyReference slice with references to
+    HelmRelease resources that must be ready before this HelmRelease can be
+    reconciled.
+...
+```
+
+Add `--recursive` to print nested fields, and `--api-version` to pick a
+specific group/version when a kind is served by more than one.
 
 ## MCP Server for AI agents
 
