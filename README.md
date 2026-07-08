@@ -76,158 +76,168 @@ available tools and per-client setup instructions.
 
 ## Catalog
 
+Each project's ID links to its provenance manifest, which pins the upstream
+commit and the digests of the generated files. The manifests are signed with
+[GitHub Artifact Attestations](https://github.com/controlplaneio-fluxcd/schema-catalog/attestations)
+and can be verified with the GitHub CLI:
+
+```shell
+curl -sO https://schemas.fluxoperator.dev/history/<ID>.json
+gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
+```
+
 <!-- versions:start -->
 ### Platform
 
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| Kubernetes | [v1.36.2](build/history/kubernetes.json) | 101 | 2026-07-08 |
-| OpenShift | [v4.20](build/history/openshift.json) | 133 | 2026-07-08 |
+| Project | ID | Version | Schemas | Updated |
+| --- | --- | --- | --- | --- |
+| Kubernetes | [`kubernetes`](https://schemas.fluxoperator.dev/history/kubernetes.json) | v1.36.2 | 101 | 2026-07-08 |
+| OpenShift | [`openshift`](https://schemas.fluxoperator.dev/history/openshift.json) | v4.20 | 133 | 2026-07-08 |
 
 ### Provisioning
 
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| 1Password Operator | [v1.12.0](build/history/onepassword-operator.json) | 1 | 2026-07-08 |
-| AWS ACM Controller | [v1.4.3](build/history/ack-acm.json) | 1 | 2026-07-08 |
-| AWS API Gateway v2 Controller | [v1.3.3](build/history/ack-apigatewayv2.json) | 9 | 2026-07-08 |
-| AWS DynamoDB Controller | [v1.9.2](build/history/ack-dynamodb.json) | 3 | 2026-07-08 |
-| AWS EC2 Controller | [v1.18.1](build/history/ack-ec2.json) | 20 | 2026-07-08 |
-| AWS ECR Controller | [v1.6.3](build/history/ack-ecr.json) | 3 | 2026-07-08 |
-| AWS EFS Controller | [v1.4.1](build/history/ack-efs.json) | 3 | 2026-07-08 |
-| AWS EKS Controller | [v1.16.2](build/history/ack-eks.json) | 8 | 2026-07-08 |
-| AWS ElastiCache Controller | [v1.5.2](build/history/ack-elasticache.json) | 9 | 2026-07-08 |
-| AWS IAM Controller | [v1.7.3](build/history/ack-iam.json) | 7 | 2026-07-08 |
-| AWS Kinesis Controller | [v1.3.2](build/history/ack-kinesis.json) | 1 | 2026-07-08 |
-| AWS KMS Controller | [v1.3.3](build/history/ack-kms.json) | 3 | 2026-07-08 |
-| AWS Lambda Controller | [v1.14.1](build/history/ack-lambda.json) | 7 | 2026-07-08 |
-| AWS MemoryDB Controller | [v1.4.1](build/history/ack-memorydb.json) | 6 | 2026-07-08 |
-| AWS RDS Controller | [v1.10.1](build/history/ack-rds.json) | 10 | 2026-07-08 |
-| AWS Route 53 Controller | [v1.4.4](build/history/ack-route53.json) | 3 | 2026-07-08 |
-| AWS S3 Controller | [v1.8.1](build/history/ack-s3.json) | 1 | 2026-07-08 |
-| AWS SageMaker Controller | [v1.8.2](build/history/ack-sagemaker.json) | 26 | 2026-07-08 |
-| AWS Secrets Manager Controller | [v1.3.2](build/history/ack-secretsmanager.json) | 1 | 2026-07-08 |
-| AWS SNS Controller | [v1.7.1](build/history/ack-sns.json) | 4 | 2026-07-08 |
-| AWS SQS Controller | [v1.5.4](build/history/ack-sqs.json) | 1 | 2026-07-08 |
-| Azure Service Operator | [v2.20.0](build/history/azure-service-operator.json) | 1324 | 2026-07-08 |
-| Capsule | [v0.13.9](build/history/capsule.json) | 12 | 2026-07-08 |
-| Cert Manager | [v1.20.3](build/history/cert-manager.json) | 6 | 2026-07-08 |
-| Cluster API | [v1.13.3](build/history/cluster-api.json) | 36 | 2026-07-08 |
-| Cluster API Add-on Provider Helm | [v0.6.4](build/history/cluster-api-addon-provider-helm.json) | 2 | 2026-07-08 |
-| Cluster API OpenStack | [v0.14.6](build/history/cluster-api-provider-openstack.json) | 7 | 2026-07-08 |
-| Cluster API Operator | [v0.27.0](build/history/cluster-api-operator.json) | 7 | 2026-07-08 |
-| Cluster API vSphere | [v1.16.1](build/history/cluster-api-provider-vsphere.json) | 16 | 2026-07-08 |
-| Crossplane | [v2.3.3](build/history/crossplane.json) | 25 | 2026-07-08 |
-| External Secrets | [v2.7.0](build/history/external-secrets.json) | 28 | 2026-07-08 |
-| Falco Operator | [v0.4.1](build/history/falco-operator.json) | 5 | 2026-07-08 |
-| GCP Config Connector | [v1.153.0](build/history/config-connector.json) | 578 | 2026-07-08 |
-| kro | [v0.9.2](build/history/kro.json) | 2 | 2026-07-08 |
-| Kubescape Operator | [1.40.2](build/history/kubescape-operator.json) | 5 | 2026-07-08 |
-| Kubewarden | [v1.36.0](build/history/kubewarden.json) | 8 | 2026-07-08 |
-| Kyverno | [v1.18.1](build/history/kyverno.json) | 47 | 2026-07-08 |
-| OPA Gatekeeper | [v3.22.2](build/history/gatekeeper.json) | 27 | 2026-07-08 |
-| OpenReports | [v0.2.1](build/history/openreports.json) | 2 | 2026-07-08 |
-| Secrets Store CSI Driver | [v1.6.0](build/history/secrets-store-csi-driver.json) | 4 | 2026-07-08 |
-| Sigstore Policy Controller | [v0.15.1](build/history/sigstore-policy-controller.json) | 3 | 2026-07-08 |
-| SPIRE Controller Manager | [v0.6.6](build/history/spire-controller-manager.json) | 4 | 2026-07-08 |
-| Trust Manager | [v0.24.0](build/history/trust-manager.json) | 2 | 2026-07-08 |
-| Upbound AWS Provider | [v2.6.0](build/history/provider-upjet-aws.json) | 2364 | 2026-07-08 |
-| Upbound Azure Provider | [v2.6.0](build/history/provider-upjet-azure.json) | 1789 | 2026-07-08 |
-| Upbound GCP Provider | [v2.6.0](build/history/provider-upjet-gcp.json) | 1018 | 2026-07-08 |
+| Project | ID | Version | Schemas | Updated |
+| --- | --- | --- | --- | --- |
+| 1Password Operator | [`onepassword-operator`](https://schemas.fluxoperator.dev/history/onepassword-operator.json) | v1.12.0 | 1 | 2026-07-08 |
+| AWS ACM Controller | [`ack-acm`](https://schemas.fluxoperator.dev/history/ack-acm.json) | v1.4.3 | 1 | 2026-07-08 |
+| AWS API Gateway v2 Controller | [`ack-apigatewayv2`](https://schemas.fluxoperator.dev/history/ack-apigatewayv2.json) | v1.3.3 | 9 | 2026-07-08 |
+| AWS DynamoDB Controller | [`ack-dynamodb`](https://schemas.fluxoperator.dev/history/ack-dynamodb.json) | v1.9.2 | 3 | 2026-07-08 |
+| AWS EC2 Controller | [`ack-ec2`](https://schemas.fluxoperator.dev/history/ack-ec2.json) | v1.18.1 | 20 | 2026-07-08 |
+| AWS ECR Controller | [`ack-ecr`](https://schemas.fluxoperator.dev/history/ack-ecr.json) | v1.6.3 | 3 | 2026-07-08 |
+| AWS EFS Controller | [`ack-efs`](https://schemas.fluxoperator.dev/history/ack-efs.json) | v1.4.1 | 3 | 2026-07-08 |
+| AWS EKS Controller | [`ack-eks`](https://schemas.fluxoperator.dev/history/ack-eks.json) | v1.16.2 | 8 | 2026-07-08 |
+| AWS ElastiCache Controller | [`ack-elasticache`](https://schemas.fluxoperator.dev/history/ack-elasticache.json) | v1.5.2 | 9 | 2026-07-08 |
+| AWS IAM Controller | [`ack-iam`](https://schemas.fluxoperator.dev/history/ack-iam.json) | v1.7.3 | 7 | 2026-07-08 |
+| AWS Kinesis Controller | [`ack-kinesis`](https://schemas.fluxoperator.dev/history/ack-kinesis.json) | v1.3.2 | 1 | 2026-07-08 |
+| AWS KMS Controller | [`ack-kms`](https://schemas.fluxoperator.dev/history/ack-kms.json) | v1.3.3 | 3 | 2026-07-08 |
+| AWS Lambda Controller | [`ack-lambda`](https://schemas.fluxoperator.dev/history/ack-lambda.json) | v1.14.1 | 7 | 2026-07-08 |
+| AWS MemoryDB Controller | [`ack-memorydb`](https://schemas.fluxoperator.dev/history/ack-memorydb.json) | v1.4.1 | 6 | 2026-07-08 |
+| AWS RDS Controller | [`ack-rds`](https://schemas.fluxoperator.dev/history/ack-rds.json) | v1.10.1 | 10 | 2026-07-08 |
+| AWS Route 53 Controller | [`ack-route53`](https://schemas.fluxoperator.dev/history/ack-route53.json) | v1.4.4 | 3 | 2026-07-08 |
+| AWS S3 Controller | [`ack-s3`](https://schemas.fluxoperator.dev/history/ack-s3.json) | v1.8.1 | 1 | 2026-07-08 |
+| AWS SageMaker Controller | [`ack-sagemaker`](https://schemas.fluxoperator.dev/history/ack-sagemaker.json) | v1.8.2 | 26 | 2026-07-08 |
+| AWS Secrets Manager Controller | [`ack-secretsmanager`](https://schemas.fluxoperator.dev/history/ack-secretsmanager.json) | v1.3.2 | 1 | 2026-07-08 |
+| AWS SNS Controller | [`ack-sns`](https://schemas.fluxoperator.dev/history/ack-sns.json) | v1.7.1 | 4 | 2026-07-08 |
+| AWS SQS Controller | [`ack-sqs`](https://schemas.fluxoperator.dev/history/ack-sqs.json) | v1.5.4 | 1 | 2026-07-08 |
+| Azure Service Operator | [`azure-service-operator`](https://schemas.fluxoperator.dev/history/azure-service-operator.json) | v2.20.0 | 1324 | 2026-07-08 |
+| Capsule | [`capsule`](https://schemas.fluxoperator.dev/history/capsule.json) | v0.13.9 | 12 | 2026-07-08 |
+| Cert Manager | [`cert-manager`](https://schemas.fluxoperator.dev/history/cert-manager.json) | v1.20.3 | 6 | 2026-07-08 |
+| Cluster API | [`cluster-api`](https://schemas.fluxoperator.dev/history/cluster-api.json) | v1.13.3 | 36 | 2026-07-08 |
+| Cluster API Add-on Provider Helm | [`cluster-api-addon-provider-helm`](https://schemas.fluxoperator.dev/history/cluster-api-addon-provider-helm.json) | v0.6.4 | 2 | 2026-07-08 |
+| Cluster API OpenStack | [`cluster-api-provider-openstack`](https://schemas.fluxoperator.dev/history/cluster-api-provider-openstack.json) | v0.14.6 | 7 | 2026-07-08 |
+| Cluster API Operator | [`cluster-api-operator`](https://schemas.fluxoperator.dev/history/cluster-api-operator.json) | v0.27.0 | 7 | 2026-07-08 |
+| Cluster API vSphere | [`cluster-api-provider-vsphere`](https://schemas.fluxoperator.dev/history/cluster-api-provider-vsphere.json) | v1.16.1 | 16 | 2026-07-08 |
+| Crossplane | [`crossplane`](https://schemas.fluxoperator.dev/history/crossplane.json) | v2.3.3 | 25 | 2026-07-08 |
+| External Secrets | [`external-secrets`](https://schemas.fluxoperator.dev/history/external-secrets.json) | v2.7.0 | 28 | 2026-07-08 |
+| Falco Operator | [`falco-operator`](https://schemas.fluxoperator.dev/history/falco-operator.json) | v0.4.1 | 5 | 2026-07-08 |
+| GCP Config Connector | [`config-connector`](https://schemas.fluxoperator.dev/history/config-connector.json) | v1.153.0 | 578 | 2026-07-08 |
+| kro | [`kro`](https://schemas.fluxoperator.dev/history/kro.json) | v0.9.2 | 2 | 2026-07-08 |
+| Kubescape Operator | [`kubescape-operator`](https://schemas.fluxoperator.dev/history/kubescape-operator.json) | 1.40.2 | 5 | 2026-07-08 |
+| Kubewarden | [`kubewarden`](https://schemas.fluxoperator.dev/history/kubewarden.json) | v1.36.0 | 8 | 2026-07-08 |
+| Kyverno | [`kyverno`](https://schemas.fluxoperator.dev/history/kyverno.json) | v1.18.1 | 47 | 2026-07-08 |
+| OPA Gatekeeper | [`gatekeeper`](https://schemas.fluxoperator.dev/history/gatekeeper.json) | v3.22.2 | 27 | 2026-07-08 |
+| OpenReports | [`openreports`](https://schemas.fluxoperator.dev/history/openreports.json) | v0.2.1 | 2 | 2026-07-08 |
+| Secrets Store CSI Driver | [`secrets-store-csi-driver`](https://schemas.fluxoperator.dev/history/secrets-store-csi-driver.json) | v1.6.0 | 4 | 2026-07-08 |
+| Sigstore Policy Controller | [`sigstore-policy-controller`](https://schemas.fluxoperator.dev/history/sigstore-policy-controller.json) | v0.15.1 | 3 | 2026-07-08 |
+| SPIRE Controller Manager | [`spire-controller-manager`](https://schemas.fluxoperator.dev/history/spire-controller-manager.json) | v0.6.6 | 4 | 2026-07-08 |
+| Trust Manager | [`trust-manager`](https://schemas.fluxoperator.dev/history/trust-manager.json) | v0.24.0 | 2 | 2026-07-08 |
+| Upbound AWS Provider | [`provider-upjet-aws`](https://schemas.fluxoperator.dev/history/provider-upjet-aws.json) | v2.6.0 | 2364 | 2026-07-08 |
+| Upbound Azure Provider | [`provider-upjet-azure`](https://schemas.fluxoperator.dev/history/provider-upjet-azure.json) | v2.6.0 | 1789 | 2026-07-08 |
+| Upbound GCP Provider | [`provider-upjet-gcp`](https://schemas.fluxoperator.dev/history/provider-upjet-gcp.json) | v2.6.0 | 1018 | 2026-07-08 |
 
 ### Runtime
 
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| Antrea | [v2.6.2](build/history/antrea.json) | 20 | 2026-07-08 |
-| Calico | [v3.32.1](build/history/calico.json) | 22 | 2026-07-08 |
-| Cilium | [v1.19.5](build/history/cilium.json) | 29 | 2026-07-08 |
-| Container Object Storage Interface | [v0.2.2](build/history/cosi.json) | 5 | 2026-07-08 |
-| Kube-OVN | [v1.16.2](build/history/kube-ovn.json) | 24 | 2026-07-08 |
-| Longhorn | [v1.12.0](build/history/longhorn.json) | 23 | 2026-07-08 |
-| Network Policy API | [v0.2.0](build/history/network-policy-api.json) | 1 | 2026-07-08 |
-| Rook | [v1.20.2](build/history/rook.json) | 21 | 2026-07-08 |
-| Submariner | [v0.24.0](build/history/submariner.json) | 9 | 2026-07-08 |
-| Submariner Operator | [v0.24.0](build/history/submariner-operator.json) | 3 | 2026-07-08 |
-| Tailscale | [v1.98.8](build/history/tailscale.json) | 7 | 2026-07-08 |
-| Tigera Operator | [v3.32.1](build/history/tigera-operator.json) | 9 | 2026-07-08 |
-| Velero | [v1.18.2](build/history/velero.json) | 11 | 2026-07-08 |
+| Project | ID | Version | Schemas | Updated |
+| --- | --- | --- | --- | --- |
+| Antrea | [`antrea`](https://schemas.fluxoperator.dev/history/antrea.json) | v2.6.2 | 20 | 2026-07-08 |
+| Calico | [`calico`](https://schemas.fluxoperator.dev/history/calico.json) | v3.32.1 | 22 | 2026-07-08 |
+| Cilium | [`cilium`](https://schemas.fluxoperator.dev/history/cilium.json) | v1.19.5 | 29 | 2026-07-08 |
+| Container Object Storage Interface | [`cosi`](https://schemas.fluxoperator.dev/history/cosi.json) | v0.2.2 | 5 | 2026-07-08 |
+| Kube-OVN | [`kube-ovn`](https://schemas.fluxoperator.dev/history/kube-ovn.json) | v1.16.2 | 24 | 2026-07-08 |
+| Longhorn | [`longhorn`](https://schemas.fluxoperator.dev/history/longhorn.json) | v1.12.0 | 23 | 2026-07-08 |
+| Network Policy API | [`network-policy-api`](https://schemas.fluxoperator.dev/history/network-policy-api.json) | v0.2.0 | 1 | 2026-07-08 |
+| Rook | [`rook`](https://schemas.fluxoperator.dev/history/rook.json) | v1.20.2 | 21 | 2026-07-08 |
+| Submariner | [`submariner`](https://schemas.fluxoperator.dev/history/submariner.json) | v0.24.0 | 9 | 2026-07-08 |
+| Submariner Operator | [`submariner-operator`](https://schemas.fluxoperator.dev/history/submariner-operator.json) | v0.24.0 | 3 | 2026-07-08 |
+| Tailscale | [`tailscale`](https://schemas.fluxoperator.dev/history/tailscale.json) | v1.98.8 | 7 | 2026-07-08 |
+| Tigera Operator | [`tigera-operator`](https://schemas.fluxoperator.dev/history/tigera-operator.json) | v3.32.1 | 9 | 2026-07-08 |
+| Velero | [`velero`](https://schemas.fluxoperator.dev/history/velero.json) | v1.18.2 | 11 | 2026-07-08 |
 
 ### Orchestration & Management
 
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| AWS Load Balancer Controller | [v3.4.1](build/history/aws-load-balancer-controller.json) | 8 | 2026-07-08 |
-| Envoy Gateway | [v1.8.2](build/history/envoy-gateway.json) | 8 | 2026-07-08 |
-| ExternalDNS | [v0.21.0](build/history/external-dns.json) | 1 | 2026-07-08 |
-| Gateway API | [v1.6.0](build/history/gateway-api.json) | 21 | 2026-07-08 |
-| Istio | [1.30.2](build/history/istio.json) | 33 | 2026-07-08 |
-| JobSet | [v0.12.0](build/history/jobset.json) | 1 | 2026-07-08 |
-| Karpenter | [v1.13.0](build/history/karpenter.json) | 3 | 2026-07-08 |
-| Karpenter AWS | [v1.13.0](build/history/karpenter-aws.json) | 1 | 2026-07-08 |
-| Karpenter Azure | [v1.13.1](build/history/karpenter-azure.json) | 2 | 2026-07-08 |
-| Karpenter Cluster API | [v0.2.0](build/history/karpenter-provider-cluster-api.json) | 1 | 2026-07-08 |
-| Karpenter IBM Cloud | [v1.0.4](build/history/karpenter-provider-ibm-cloud.json) | 1 | 2026-07-08 |
-| KEDA | [v2.20.1](build/history/keda.json) | 6 | 2026-07-08 |
-| kgateway | [v2.3.5](build/history/kgateway.json) | 8 | 2026-07-08 |
-| kjob | [v0.1.0](build/history/kjob.json) | 5 | 2026-07-08 |
-| KubeEdge | [v1.23.0](build/history/kubeedge.json) | 18 | 2026-07-08 |
-| Kueue | [v0.18.2](build/history/kueue.json) | 22 | 2026-07-08 |
-| KWOK | [v0.8.0](build/history/kwok.json) | 12 | 2026-07-08 |
-| LeaderWorkerSet | [v0.9.0](build/history/lws.json) | 2 | 2026-07-08 |
-| NFD NodeResourceTopology | [v0.18.3](build/history/node-feature-discovery-nrt.json) | 2 | 2026-07-08 |
-| Node Feature Discovery | [v0.18.3](build/history/node-feature-discovery.json) | 3 | 2026-07-08 |
-| Vertical Pod Autoscaler | [1.7.0](build/history/vertical-pod-autoscaler.json) | 4 | 2026-07-08 |
-| Volcano | [v1.15.0](build/history/volcano.json) | 9 | 2026-07-08 |
-| Volcano JobFlow | [v1.15.0](build/history/volcano-jobflow.json) | 2 | 2026-07-08 |
+| Project | ID | Version | Schemas | Updated |
+| --- | --- | --- | --- | --- |
+| AWS Load Balancer Controller | [`aws-load-balancer-controller`](https://schemas.fluxoperator.dev/history/aws-load-balancer-controller.json) | v3.4.1 | 8 | 2026-07-08 |
+| Envoy Gateway | [`envoy-gateway`](https://schemas.fluxoperator.dev/history/envoy-gateway.json) | v1.8.2 | 8 | 2026-07-08 |
+| ExternalDNS | [`external-dns`](https://schemas.fluxoperator.dev/history/external-dns.json) | v0.21.0 | 1 | 2026-07-08 |
+| Gateway API | [`gateway-api`](https://schemas.fluxoperator.dev/history/gateway-api.json) | v1.6.0 | 21 | 2026-07-08 |
+| Istio | [`istio`](https://schemas.fluxoperator.dev/history/istio.json) | 1.30.2 | 33 | 2026-07-08 |
+| JobSet | [`jobset`](https://schemas.fluxoperator.dev/history/jobset.json) | v0.12.0 | 1 | 2026-07-08 |
+| Karpenter | [`karpenter`](https://schemas.fluxoperator.dev/history/karpenter.json) | v1.13.0 | 3 | 2026-07-08 |
+| Karpenter AWS | [`karpenter-aws`](https://schemas.fluxoperator.dev/history/karpenter-aws.json) | v1.13.0 | 1 | 2026-07-08 |
+| Karpenter Azure | [`karpenter-azure`](https://schemas.fluxoperator.dev/history/karpenter-azure.json) | v1.13.1 | 2 | 2026-07-08 |
+| Karpenter Cluster API | [`karpenter-provider-cluster-api`](https://schemas.fluxoperator.dev/history/karpenter-provider-cluster-api.json) | v0.2.0 | 1 | 2026-07-08 |
+| Karpenter IBM Cloud | [`karpenter-provider-ibm-cloud`](https://schemas.fluxoperator.dev/history/karpenter-provider-ibm-cloud.json) | v1.0.4 | 1 | 2026-07-08 |
+| KEDA | [`keda`](https://schemas.fluxoperator.dev/history/keda.json) | v2.20.1 | 6 | 2026-07-08 |
+| kgateway | [`kgateway`](https://schemas.fluxoperator.dev/history/kgateway.json) | v2.3.5 | 8 | 2026-07-08 |
+| kjob | [`kjob`](https://schemas.fluxoperator.dev/history/kjob.json) | v0.1.0 | 5 | 2026-07-08 |
+| KubeEdge | [`kubeedge`](https://schemas.fluxoperator.dev/history/kubeedge.json) | v1.23.0 | 18 | 2026-07-08 |
+| Kueue | [`kueue`](https://schemas.fluxoperator.dev/history/kueue.json) | v0.18.2 | 22 | 2026-07-08 |
+| KWOK | [`kwok`](https://schemas.fluxoperator.dev/history/kwok.json) | v0.8.0 | 12 | 2026-07-08 |
+| LeaderWorkerSet | [`lws`](https://schemas.fluxoperator.dev/history/lws.json) | v0.9.0 | 2 | 2026-07-08 |
+| NFD NodeResourceTopology | [`node-feature-discovery-nrt`](https://schemas.fluxoperator.dev/history/node-feature-discovery-nrt.json) | v0.18.3 | 2 | 2026-07-08 |
+| Node Feature Discovery | [`node-feature-discovery`](https://schemas.fluxoperator.dev/history/node-feature-discovery.json) | v0.18.3 | 3 | 2026-07-08 |
+| Vertical Pod Autoscaler | [`vertical-pod-autoscaler`](https://schemas.fluxoperator.dev/history/vertical-pod-autoscaler.json) | 1.7.0 | 4 | 2026-07-08 |
+| Volcano | [`volcano`](https://schemas.fluxoperator.dev/history/volcano.json) | v1.15.0 | 9 | 2026-07-08 |
+| Volcano JobFlow | [`volcano-jobflow`](https://schemas.fluxoperator.dev/history/volcano-jobflow.json) | v1.15.0 | 2 | 2026-07-08 |
 
 ### App Definition & Development
 
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| Actions Runner Controller | [0.14.2](build/history/actions-runner-controller.json) | 9 | 2026-07-08 |
-| Argo CD | [v3.4.4](build/history/argo-cd.json) | 3 | 2026-07-08 |
-| Argo Events | [v1.9.10](build/history/argo-events.json) | 3 | 2026-07-08 |
-| Argo Rollouts | [v1.9.0](build/history/argo-rollouts.json) | 5 | 2026-07-08 |
-| Argo Workflows | [v4.0.7](build/history/argo-workflows.json) | 8 | 2026-07-08 |
-| CloudNativePG | [v1.30.0](build/history/cloudnative-pg.json) | 11 | 2026-07-08 |
-| Dapr | [v1.18.1](build/history/dapr.json) | 8 | 2026-07-08 |
-| Flagger | [v1.43.0](build/history/flagger.json) | 3 | 2026-07-08 |
-| Flux | [v2.9.1](build/history/flux.json) | 15 | 2026-07-08 |
-| Flux Operator | [v0.54.0](build/history/flux-operator.json) | 4 | 2026-07-08 |
-| Kargo | [v1.10.8](build/history/kargo.json) | 9 | 2026-07-08 |
-| Knative Eventing | [v1.22.2](build/history/knative-eventing.json) | 20 | 2026-07-08 |
-| Knative Serving | [v1.22.1](build/history/knative-serving.json) | 12 | 2026-07-08 |
-| KServe | [v0.19.0](build/history/kserve.json) | 6 | 2026-07-08 |
-| KServe LLM | [v0.19.0](build/history/kserve-llmisvc.json) | 4 | 2026-07-08 |
-| MariaDB Operator | [26.6.0](build/history/mariadb-operator.json) | 12 | 2026-07-08 |
-| NATS | [v0.23.0](build/history/nats.json) | 8 | 2026-07-08 |
-| OpenFeature Operator | [v0.9.2](build/history/open-feature-operator.json) | 9 | 2026-07-08 |
-| RabbitMQ Cluster Operator | [v2.22.1](build/history/rabbitmq-cluster-operator.json) | 1 | 2026-07-08 |
-| Redis Operator | [v0.25.0](build/history/redis-operator.json) | 4 | 2026-07-08 |
-| ScyllaDB Operator | [v1.21.0](build/history/scylla-operator.json) | 11 | 2026-07-08 |
-| Strimzi | [0.51.0](build/history/strimzi.json) | 24 | 2026-07-08 |
-| Tekton Pipeline | [v1.14.0](build/history/tekton-pipeline.json) | 14 | 2026-07-08 |
-| Vitess Operator | [v2.17.0](build/history/vitess-operator.json) | 8 | 2026-07-08 |
+| Project | ID | Version | Schemas | Updated |
+| --- | --- | --- | --- | --- |
+| Actions Runner Controller | [`actions-runner-controller`](https://schemas.fluxoperator.dev/history/actions-runner-controller.json) | 0.14.2 | 9 | 2026-07-08 |
+| Argo CD | [`argo-cd`](https://schemas.fluxoperator.dev/history/argo-cd.json) | v3.4.4 | 3 | 2026-07-08 |
+| Argo Events | [`argo-events`](https://schemas.fluxoperator.dev/history/argo-events.json) | v1.9.10 | 3 | 2026-07-08 |
+| Argo Rollouts | [`argo-rollouts`](https://schemas.fluxoperator.dev/history/argo-rollouts.json) | v1.9.0 | 5 | 2026-07-08 |
+| Argo Workflows | [`argo-workflows`](https://schemas.fluxoperator.dev/history/argo-workflows.json) | v4.0.7 | 8 | 2026-07-08 |
+| CloudNativePG | [`cloudnative-pg`](https://schemas.fluxoperator.dev/history/cloudnative-pg.json) | v1.30.0 | 11 | 2026-07-08 |
+| Dapr | [`dapr`](https://schemas.fluxoperator.dev/history/dapr.json) | v1.18.1 | 8 | 2026-07-08 |
+| Flagger | [`flagger`](https://schemas.fluxoperator.dev/history/flagger.json) | v1.43.0 | 3 | 2026-07-08 |
+| Flux | [`flux`](https://schemas.fluxoperator.dev/history/flux.json) | v2.9.1 | 15 | 2026-07-08 |
+| Flux Operator | [`flux-operator`](https://schemas.fluxoperator.dev/history/flux-operator.json) | v0.54.0 | 4 | 2026-07-08 |
+| Kargo | [`kargo`](https://schemas.fluxoperator.dev/history/kargo.json) | v1.10.8 | 9 | 2026-07-08 |
+| Knative Eventing | [`knative-eventing`](https://schemas.fluxoperator.dev/history/knative-eventing.json) | v1.22.2 | 20 | 2026-07-08 |
+| Knative Serving | [`knative-serving`](https://schemas.fluxoperator.dev/history/knative-serving.json) | v1.22.1 | 12 | 2026-07-08 |
+| KServe | [`kserve`](https://schemas.fluxoperator.dev/history/kserve.json) | v0.19.0 | 6 | 2026-07-08 |
+| KServe LLM | [`kserve-llmisvc`](https://schemas.fluxoperator.dev/history/kserve-llmisvc.json) | v0.19.0 | 4 | 2026-07-08 |
+| MariaDB Operator | [`mariadb-operator`](https://schemas.fluxoperator.dev/history/mariadb-operator.json) | 26.6.0 | 12 | 2026-07-08 |
+| NATS | [`nats`](https://schemas.fluxoperator.dev/history/nats.json) | v0.23.0 | 8 | 2026-07-08 |
+| OpenFeature Operator | [`open-feature-operator`](https://schemas.fluxoperator.dev/history/open-feature-operator.json) | v0.9.2 | 9 | 2026-07-08 |
+| RabbitMQ Cluster Operator | [`rabbitmq-cluster-operator`](https://schemas.fluxoperator.dev/history/rabbitmq-cluster-operator.json) | v2.22.1 | 1 | 2026-07-08 |
+| Redis Operator | [`redis-operator`](https://schemas.fluxoperator.dev/history/redis-operator.json) | v0.25.0 | 4 | 2026-07-08 |
+| ScyllaDB Operator | [`scylla-operator`](https://schemas.fluxoperator.dev/history/scylla-operator.json) | v1.21.0 | 11 | 2026-07-08 |
+| Strimzi | [`strimzi`](https://schemas.fluxoperator.dev/history/strimzi.json) | 0.51.0 | 24 | 2026-07-08 |
+| Tekton Pipeline | [`tekton-pipeline`](https://schemas.fluxoperator.dev/history/tekton-pipeline.json) | v1.14.0 | 14 | 2026-07-08 |
+| Vitess Operator | [`vitess-operator`](https://schemas.fluxoperator.dev/history/vitess-operator.json) | v2.17.0 | 8 | 2026-07-08 |
 
 ### Observability & Analysis
 
-| Project | Version | Schemas | Updated |
-| --- | --- | --- | --- |
-| Datadog Operator | [v1.28.0](build/history/datadog-operator.json) | 13 | 2026-07-08 |
-| Elastic Cloud | [v3.4.1](build/history/eck-operator.json) | 19 | 2026-07-08 |
-| Fluent Operator | [v3.9.0](build/history/fluent-operator.json) | 22 | 2026-07-08 |
-| Grafana Operator | [v5.24.0](build/history/grafana-operator.json) | 13 | 2026-07-08 |
-| Jaeger Operator | [v1.65.0](build/history/jaeger-operator.json) | 1 | 2026-07-08 |
-| Litmus | [3.30.0](build/history/litmus.json) | 3 | 2026-07-08 |
-| Logging Operator | [6.7.0](build/history/logging-operator.json) | 21 | 2026-07-08 |
-| Loki Operator | [v0.10.2](build/history/loki-operator.json) | 9 | 2026-07-08 |
-| OpenSearch Operator | [3.0.2](build/history/opensearch-operator.json) | 20 | 2026-07-08 |
-| OpenTelemetry | [v0.154.0](build/history/opentelemetry.json) | 5 | 2026-07-08 |
-| Perses Operator | [v0.4.0](build/history/perses-operator.json) | 7 | 2026-07-08 |
-| Prometheus Operator | [v0.92.1](build/history/prometheus-operator.json) | 10 | 2026-07-08 |
-| Tempo Operator | [v0.21.0](build/history/tempo-operator.json) | 2 | 2026-07-08 |
-| VictoriaMetrics Operator | [v0.73.0](build/history/victoriametrics-operator.json) | 24 | 2026-07-08 |
+| Project | ID | Version | Schemas | Updated |
+| --- | --- | --- | --- | --- |
+| Datadog Operator | [`datadog-operator`](https://schemas.fluxoperator.dev/history/datadog-operator.json) | v1.28.0 | 13 | 2026-07-08 |
+| Elastic Cloud | [`eck-operator`](https://schemas.fluxoperator.dev/history/eck-operator.json) | v3.4.1 | 19 | 2026-07-08 |
+| Fluent Operator | [`fluent-operator`](https://schemas.fluxoperator.dev/history/fluent-operator.json) | v3.9.0 | 22 | 2026-07-08 |
+| Grafana Operator | [`grafana-operator`](https://schemas.fluxoperator.dev/history/grafana-operator.json) | v5.24.0 | 13 | 2026-07-08 |
+| Jaeger Operator | [`jaeger-operator`](https://schemas.fluxoperator.dev/history/jaeger-operator.json) | v1.65.0 | 1 | 2026-07-08 |
+| Litmus | [`litmus`](https://schemas.fluxoperator.dev/history/litmus.json) | 3.30.0 | 3 | 2026-07-08 |
+| Logging Operator | [`logging-operator`](https://schemas.fluxoperator.dev/history/logging-operator.json) | 6.7.0 | 21 | 2026-07-08 |
+| Loki Operator | [`loki-operator`](https://schemas.fluxoperator.dev/history/loki-operator.json) | v0.10.2 | 9 | 2026-07-08 |
+| OpenSearch Operator | [`opensearch-operator`](https://schemas.fluxoperator.dev/history/opensearch-operator.json) | 3.0.2 | 20 | 2026-07-08 |
+| OpenTelemetry | [`opentelemetry`](https://schemas.fluxoperator.dev/history/opentelemetry.json) | v0.154.0 | 5 | 2026-07-08 |
+| Perses Operator | [`perses-operator`](https://schemas.fluxoperator.dev/history/perses-operator.json) | v0.4.0 | 7 | 2026-07-08 |
+| Prometheus Operator | [`prometheus-operator`](https://schemas.fluxoperator.dev/history/prometheus-operator.json) | v0.92.1 | 10 | 2026-07-08 |
+| Tempo Operator | [`tempo-operator`](https://schemas.fluxoperator.dev/history/tempo-operator.json) | v0.21.0 | 2 | 2026-07-08 |
+| VictoriaMetrics Operator | [`victoriametrics-operator`](https://schemas.fluxoperator.dev/history/victoriametrics-operator.json) | v0.73.0 | 24 | 2026-07-08 |
 <!-- versions:end -->
 
 ## Documentation
