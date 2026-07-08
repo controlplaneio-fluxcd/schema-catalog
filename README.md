@@ -102,7 +102,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | AWS ACM Controller | [`ack-acm`](https://schemas.fluxoperator.dev/history/ack-acm.json) | v1.4.3 | 1 | 2026-07-08 |
 | AWS API Gateway v2 Controller | [`ack-apigatewayv2`](https://schemas.fluxoperator.dev/history/ack-apigatewayv2.json) | v1.3.3 | 9 | 2026-07-08 |
 | AWS DynamoDB Controller | [`ack-dynamodb`](https://schemas.fluxoperator.dev/history/ack-dynamodb.json) | v1.9.2 | 3 | 2026-07-08 |
-| AWS EC2 Controller | [`ack-ec2`](https://schemas.fluxoperator.dev/history/ack-ec2.json) | v1.18.1 | 20 | 2026-07-08 |
+| AWS EC2 Controller | [`ack-ec2`](https://schemas.fluxoperator.dev/history/ack-ec2.json) | v1.18.2 | 20 | 2026-07-08 |
 | AWS ECR Controller | [`ack-ecr`](https://schemas.fluxoperator.dev/history/ack-ecr.json) | v1.6.3 | 3 | 2026-07-08 |
 | AWS EFS Controller | [`ack-efs`](https://schemas.fluxoperator.dev/history/ack-efs.json) | v1.4.1 | 3 | 2026-07-08 |
 | AWS EKS Controller | [`ack-eks`](https://schemas.fluxoperator.dev/history/ack-eks.json) | v1.16.2 | 8 | 2026-07-08 |
@@ -115,7 +115,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | AWS RDS Controller | [`ack-rds`](https://schemas.fluxoperator.dev/history/ack-rds.json) | v1.10.1 | 10 | 2026-07-08 |
 | AWS Route 53 Controller | [`ack-route53`](https://schemas.fluxoperator.dev/history/ack-route53.json) | v1.4.4 | 3 | 2026-07-08 |
 | AWS S3 Controller | [`ack-s3`](https://schemas.fluxoperator.dev/history/ack-s3.json) | v1.8.1 | 1 | 2026-07-08 |
-| AWS SageMaker Controller | [`ack-sagemaker`](https://schemas.fluxoperator.dev/history/ack-sagemaker.json) | v1.8.2 | 26 | 2026-07-08 |
+| AWS SageMaker Controller | [`ack-sagemaker`](https://schemas.fluxoperator.dev/history/ack-sagemaker.json) | v1.8.3 | 26 | 2026-07-08 |
 | AWS Secrets Manager Controller | [`ack-secretsmanager`](https://schemas.fluxoperator.dev/history/ack-secretsmanager.json) | v1.3.2 | 1 | 2026-07-08 |
 | AWS SNS Controller | [`ack-sns`](https://schemas.fluxoperator.dev/history/ack-sns.json) | v1.7.1 | 4 | 2026-07-08 |
 | AWS SQS Controller | [`ack-sqs`](https://schemas.fluxoperator.dev/history/ack-sqs.json) | v1.5.4 | 1 | 2026-07-08 |
@@ -173,7 +173,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Gateway API | [`gateway-api`](https://schemas.fluxoperator.dev/history/gateway-api.json) | v1.6.0 | 21 | 2026-07-08 |
 | Istio | [`istio`](https://schemas.fluxoperator.dev/history/istio.json) | 1.30.2 | 33 | 2026-07-08 |
 | JobSet | [`jobset`](https://schemas.fluxoperator.dev/history/jobset.json) | v0.12.0 | 1 | 2026-07-08 |
-| Karpenter | [`karpenter`](https://schemas.fluxoperator.dev/history/karpenter.json) | v1.13.0 | 3 | 2026-07-08 |
+| Karpenter | [`karpenter`](https://schemas.fluxoperator.dev/history/karpenter.json) | v1.10.1 | 3 | 2026-07-08 |
 | Karpenter AWS | [`karpenter-aws`](https://schemas.fluxoperator.dev/history/karpenter-aws.json) | v1.13.0 | 1 | 2026-07-08 |
 | Karpenter Azure | [`karpenter-azure`](https://schemas.fluxoperator.dev/history/karpenter-azure.json) | v1.13.1 | 2 | 2026-07-08 |
 | Karpenter Cluster API | [`karpenter-provider-cluster-api`](https://schemas.fluxoperator.dev/history/karpenter-provider-cluster-api.json) | v0.2.0 | 1 | 2026-07-08 |
@@ -204,7 +204,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Dapr | [`dapr`](https://schemas.fluxoperator.dev/history/dapr.json) | v1.18.1 | 8 | 2026-07-08 |
 | Flagger | [`flagger`](https://schemas.fluxoperator.dev/history/flagger.json) | v1.43.0 | 3 | 2026-07-08 |
 | Flux | [`flux`](https://schemas.fluxoperator.dev/history/flux.json) | v2.9.1 | 15 | 2026-07-08 |
-| Flux Operator | [`flux-operator`](https://schemas.fluxoperator.dev/history/flux-operator.json) | v0.54.0 | 4 | 2026-07-08 |
+| Flux Operator | [`flux-operator`](https://schemas.fluxoperator.dev/history/flux-operator.json) | v0.54.1 | 4 | 2026-07-08 |
 | Kargo | [`kargo`](https://schemas.fluxoperator.dev/history/kargo.json) | v1.10.8 | 9 | 2026-07-08 |
 | Knative Eventing | [`knative-eventing`](https://schemas.fluxoperator.dev/history/knative-eventing.json) | v1.22.2 | 20 | 2026-07-08 |
 | Knative Serving | [`knative-serving`](https://schemas.fluxoperator.dev/history/knative-serving.json) | v1.22.1 | 12 | 2026-07-08 |
@@ -237,7 +237,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Perses Operator | [`perses-operator`](https://schemas.fluxoperator.dev/history/perses-operator.json) | v0.4.0 | 7 | 2026-07-08 |
 | Prometheus Operator | [`prometheus-operator`](https://schemas.fluxoperator.dev/history/prometheus-operator.json) | v0.92.1 | 10 | 2026-07-08 |
 | Tempo Operator | [`tempo-operator`](https://schemas.fluxoperator.dev/history/tempo-operator.json) | v0.21.0 | 2 | 2026-07-08 |
-| VictoriaMetrics Operator | [`victoriametrics-operator`](https://schemas.fluxoperator.dev/history/victoriametrics-operator.json) | v0.73.0 | 24 | 2026-07-08 |
+| VictoriaMetrics Operator | [`victoriametrics-operator`](https://schemas.fluxoperator.dev/history/victoriametrics-operator.json) | v0.73.1 | 24 | 2026-07-08 |
 <!-- versions:end -->
 
 ## Documentation
