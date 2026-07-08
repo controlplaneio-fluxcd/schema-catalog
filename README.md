@@ -89,25 +89,25 @@ available tools and per-client setup instructions.
 | Project | Version | Schemas | Updated |
 | --- | --- | --- | --- |
 | 1Password Operator | [v1.12.0](build/history/onepassword-operator.json) | 1 | 2026-07-07 |
-| AWS ACM Controller | [v1.4.2](build/history/ack-acm.json) | 1 | 2026-07-07 |
+| AWS ACM Controller | [v1.4.3](build/history/ack-acm.json) | 1 | 2026-07-08 |
 | AWS API Gateway v2 Controller | [v1.3.3](build/history/ack-apigatewayv2.json) | 9 | 2026-07-07 |
-| AWS DynamoDB Controller | [v1.9.1](build/history/ack-dynamodb.json) | 3 | 2026-07-07 |
+| AWS DynamoDB Controller | [v1.9.2](build/history/ack-dynamodb.json) | 3 | 2026-07-08 |
 | AWS EC2 Controller | [v1.18.1](build/history/ack-ec2.json) | 20 | 2026-07-07 |
 | AWS ECR Controller | [v1.6.3](build/history/ack-ecr.json) | 3 | 2026-07-07 |
-| AWS EFS Controller | [v1.4.0](build/history/ack-efs.json) | 3 | 2026-07-07 |
-| AWS EKS Controller | [v1.16.1](build/history/ack-eks.json) | 8 | 2026-07-07 |
-| AWS ElastiCache Controller | [v1.5.1](build/history/ack-elasticache.json) | 9 | 2026-07-07 |
-| AWS IAM Controller | [v1.7.2](build/history/ack-iam.json) | 7 | 2026-07-07 |
+| AWS EFS Controller | [v1.4.1](build/history/ack-efs.json) | 3 | 2026-07-08 |
+| AWS EKS Controller | [v1.16.2](build/history/ack-eks.json) | 8 | 2026-07-08 |
+| AWS ElastiCache Controller | [v1.5.2](build/history/ack-elasticache.json) | 9 | 2026-07-08 |
+| AWS IAM Controller | [v1.7.3](build/history/ack-iam.json) | 7 | 2026-07-08 |
 | AWS Kinesis Controller | [v1.3.2](build/history/ack-kinesis.json) | 1 | 2026-07-07 |
-| AWS KMS Controller | [v1.3.2](build/history/ack-kms.json) | 3 | 2026-07-07 |
+| AWS KMS Controller | [v1.3.3](build/history/ack-kms.json) | 3 | 2026-07-08 |
 | AWS Lambda Controller | [v1.14.1](build/history/ack-lambda.json) | 7 | 2026-07-07 |
-| AWS MemoryDB Controller | [v1.4.0](build/history/ack-memorydb.json) | 6 | 2026-07-07 |
+| AWS MemoryDB Controller | [v1.4.1](build/history/ack-memorydb.json) | 6 | 2026-07-08 |
 | AWS RDS Controller | [v1.10.1](build/history/ack-rds.json) | 10 | 2026-07-07 |
-| AWS Route 53 Controller | [v1.4.3](build/history/ack-route53.json) | 3 | 2026-07-07 |
-| AWS S3 Controller | [v1.8.0](build/history/ack-s3.json) | 1 | 2026-07-07 |
-| AWS SageMaker Controller | [v1.8.1](build/history/ack-sagemaker.json) | 26 | 2026-07-07 |
-| AWS Secrets Manager Controller | [v1.3.1](build/history/ack-secretsmanager.json) | 1 | 2026-07-07 |
-| AWS SNS Controller | [v1.7.0](build/history/ack-sns.json) | 4 | 2026-07-07 |
+| AWS Route 53 Controller | [v1.4.4](build/history/ack-route53.json) | 3 | 2026-07-08 |
+| AWS S3 Controller | [v1.8.1](build/history/ack-s3.json) | 1 | 2026-07-08 |
+| AWS SageMaker Controller | [v1.8.2](build/history/ack-sagemaker.json) | 26 | 2026-07-08 |
+| AWS Secrets Manager Controller | [v1.3.2](build/history/ack-secretsmanager.json) | 1 | 2026-07-08 |
+| AWS SNS Controller | [v1.7.1](build/history/ack-sns.json) | 4 | 2026-07-08 |
 | AWS SQS Controller | [v1.5.4](build/history/ack-sqs.json) | 1 | 2026-07-07 |
 | Azure Service Operator | [v2.20.0](build/history/azure-service-operator.json) | 1324 | 2026-07-07 |
 | Capsule | [v0.13.9](build/history/capsule.json) | 12 | 2026-07-07 |
