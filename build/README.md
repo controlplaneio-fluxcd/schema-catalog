@@ -166,6 +166,15 @@ next run converges. A corrupt manifest is dropped with a warning and the
 source rebuilds from scratch. Failures are per-source: one source failing
 never blocks the others; the run exits 1 at the end.
 
+The update workflow signs SLSA build provenance for the manifests
+(`actions/attest`); since each manifest pins its catalog files via
+`filesDigest`, the attestation transitively covers the whole catalog. Verify a
+manifest came out of the CI build with:
+
+```shell
+gh attestation verify build/history/<name>.json -R controlplaneio-fluxcd/schema-catalog
+```
+
 ## CLI
 
 ```shell

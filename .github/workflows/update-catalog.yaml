@@ -19,6 +19,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # Signed SLSA provenance for the history manifests (Sigstore via GitHub).
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -58,6 +61,15 @@ jobs:
         with:
           path: example
           config: .fluxschema-smoke.yml
+      # Each history manifest pins its source's commit, extraction input and
+      # catalog files by digest, so attesting the manifests covers the whole
+      # catalog without listing ~17k schema files as subjects. Verify with:
+      #   gh attestation verify build/history/<name>.json -R <owner>/<repo>
+      - name: Attest build provenance
+        if: steps.build.outputs.changed == 'true'
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-path: build/history/*.json
       - name: Create Pull Request
         if: steps.build.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
