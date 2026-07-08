@@ -39,9 +39,13 @@ describe("parseSources", () => {
     expect(sources[0]!.version).toBe("v1.6.0");
   });
 
-  test("accepts CNCF graduated maturity", () => {
-    const sources = parseSources({ sources: [validSource({ cncf: "graduated" })] });
-    expect(sources[0]!.cncf).toBe("graduated");
+  test("accepts CNCF maturity levels", () => {
+    const sources = parseSources({
+      sources: ["graduated", "incubating", "sandbox"].map((cncf, i) =>
+        validSource({ name: `source-${i}`, cncf }),
+      ),
+    });
+    expect(sources.map((source) => source.cncf)).toEqual(["graduated", "incubating", "sandbox"]);
   });
 
   test("rejects a non-mapping document", () => {
@@ -89,14 +93,14 @@ describe("parseSources", () => {
   });
 
   test("rejects unsupported CNCF maturity values", () => {
-    expect(() => parseSources({ sources: [validSource({ cncf: "incubating" })] })).toThrow(
-      "cncf must be 'graduated'",
+    expect(() => parseSources({ sources: [validSource({ cncf: "archived" })] })).toThrow(
+      "cncf must be one of: graduated, incubating, sandbox",
     );
   });
 
   test("rejects non-string CNCF maturity values", () => {
     expect(() => parseSources({ sources: [validSource({ cncf: 1 })] })).toThrow(
-      "cncf must be 'graduated'",
+      "cncf must be one of: graduated, incubating, sandbox",
     );
   });
 

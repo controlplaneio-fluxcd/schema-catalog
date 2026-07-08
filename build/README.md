@@ -252,6 +252,22 @@ line that serves `v1` only; the pin keeps `/releases/latest` from flipping
 between them). A resolved tag is used verbatim as the git ref, so bare tags
 (strimzi's `0.51.0`, no `v`) are supported and appear un-prefixed in the table.
 
+`cncf` is optional and must be one of `graduated`, `incubating`, or `sandbox`.
+Set it when the source belongs to a CNCF project. Leave it unset for non-CNCF
+and archived projects. The authoritative lookup is the CNCF landscape data
+export:
+
+```shell
+curl -sL https://landscape.cncf.io/data/full.json | jq -r --arg repo "<owner>/<repo>" '.items[] | select((.repositories // []) | any(.url | contains($repo))) | "\(.name): \(.maturity)"'
+```
+
+When the source repo is a sub-repo of a CNCF project and does not appear in the
+landscape repositories list, it inherits the parent project's maturity. Flagger
+is part of Flux, so graduated. nack is part of NATS, so incubating. Kubernetes
+SIG repos (`kubernetes-sigs/*`) are Kubernetes sub-projects, not standalone CNCF
+projects, and stay unmarked. The web UI derives a Kubernetes SIG badge from the
+repo org instead, so no `cncf` entry is needed.
+
 No code or test edits. If validation of a popular example repo starts failing
 on a missing schema, that is the signal to add the project here.
 

@@ -4,9 +4,12 @@
 import { YAML } from "bun";
 import type { CrdInput, FluxInstance, Source, SourceCategory } from "./types.ts";
 
+type CncfLevel = NonNullable<Source["cncf"]>;
+
 const EXTRACT_KINDS = ["k8s", "openshift", "crd"];
 const INPUT_KINDS = ["kustomize", "releaseAsset", "crdDir", "crdFile", "fluxInstance"];
 const SOURCE_KEYS = ["name", "alias", "category", "cncf", "pin", "url", "version", "extract", "input"];
+const CNCF_LEVELS = ["graduated", "incubating", "sandbox"] as const satisfies readonly CncfLevel[];
 export const CATEGORIES = [
   "Platform",
   "Provisioning",
@@ -94,10 +97,13 @@ function parseSource(entry: unknown, ctx: string): Source {
   if (!isCategory(category)) {
     throw new Error(`${ctx}: category must be one of: ${CATEGORIES.join(", ")}`);
   }
-  if (entry.cncf !== undefined && entry.cncf !== "graduated") {
-    throw new Error(`${ctx}: cncf must be 'graduated'`);
+  let cncf: CncfLevel | undefined;
+  if (entry.cncf !== undefined) {
+    if (typeof entry.cncf !== "string" || !isCncfLevel(entry.cncf)) {
+      throw new Error(`${ctx}: cncf must be one of: ${CNCF_LEVELS.join(", ")}`);
+    }
+    cncf = entry.cncf;
   }
-  const cncf = entry.cncf as "graduated" | undefined;
   if (
     entry.pin !== undefined &&
     (typeof entry.pin !== "number" || !Number.isInteger(entry.pin) || entry.pin < 1)
@@ -213,6 +219,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isCategory(value: string): value is SourceCategory {
   return CATEGORIES.some((category) => category === value);
+}
+
+function isCncfLevel(value: string): value is CncfLevel {
+  return CNCF_LEVELS.some((level) => level === value);
 }
 
 function requireString(entry: Record<string, unknown>, key: string, ctx: string): string {
