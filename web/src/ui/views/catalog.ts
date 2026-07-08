@@ -3,8 +3,6 @@
 
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
 import {
-  CATEGORY_ICON,
-  categoryName,
   clear,
   CNCF_ICON,
   CNCF_SHIELDS,
@@ -15,6 +13,7 @@ import {
   createSearchField,
   createShield,
   formatDate,
+  GITHUB_ICON,
   K8S_ICON,
   kindCount,
   link,
@@ -28,6 +27,24 @@ import { agentsRoute, catalogCategoryRoute, categorySlug, homeRoute, projectRout
 let activeQuery = "";
 /** Active category index, or -1 for all categories; hydrated from the URL. */
 let activeCategory = -1;
+/** Active scope tab: every project, or CNCF ones (including Kubernetes SIGs). */
+let activeScope: "all" | "cncf" = "all";
+
+/**
+ * A project is in the CNCF scope when it carries a foundation maturity, or when
+ * it belongs to the Kubernetes project itself (kubernetes/ and kubernetes-sigs/
+ * repos, which ship no maturity of their own).
+ */
+function inScope(project: ProjectEntry): boolean {
+  if (activeScope === "all") {
+    return true;
+  }
+  return (
+    project.cncf !== undefined ||
+    project.repo.startsWith("kubernetes/") ||
+    project.repo.startsWith("kubernetes-sigs/")
+  );
+}
 
 /**
  * Renders the catalog explorer: every project as a filterable card, grouped by
@@ -78,13 +95,13 @@ export function renderCatalog(index: CatalogIndex): HTMLElement {
         continue;
       }
       const matches = index.projects
-        .filter((project) => project.cat === categoryIndex && projectMatches(project, needle))
+        .filter((project) => project.cat === categoryIndex && inScope(project) && projectMatches(project, needle))
         .sort((a, b) => a.alias.localeCompare(b.alias));
       if (matches.length === 0) {
         continue;
       }
       shown += matches.length;
-      results.append(createCategoryGroup(index, index.categories[categoryIndex] ?? "", matches));
+      results.append(createCategoryGroup(index.categories[categoryIndex] ?? "", matches));
     }
 
     if (shown === 0) {
@@ -102,14 +119,23 @@ export function renderCatalog(index: CatalogIndex): HTMLElement {
 
   buildChips(index, chipRow, render);
 
-  const addLink = link(`${REPO_URL}/issues/new?template=add-project.yaml`, "", "catalog-add-link");
-  addLink.target = "_blank";
-  addLink.rel = "noopener noreferrer";
-  addLink.append(document.createTextNode("Add a project"), createExternalIcon());
+  const scopeTabs = createScopeTabs(() => {
+    // Drop a category selection that has no projects under the new scope, so
+    // the toolbar never points at a chip that no longer exists.
+    if (
+      activeCategory !== -1 &&
+      !index.projects.some((project) => project.cat === activeCategory && inScope(project))
+    ) {
+      activeCategory = -1;
+      writeCategoryUrl(index, activeCategory);
+    }
+    buildChips(index, chipRow, render);
+    render();
+  });
 
   const searchRow = document.createElement("div");
   searchRow.className = "catalog-search-row";
-  searchRow.append(searchWrap, addLink);
+  searchRow.append(searchWrap, scopeTabs);
 
   const toolbar = document.createElement("div");
   toolbar.className = "catalog-toolbar";
@@ -140,15 +166,23 @@ function createHead(projects: number, kinds: number, schemas: number): HTMLEleme
     document.createTextNode(" indexes for Kubernetes and the CNCF Ecosystem."),
   );
 
-  head.append(
-    text("h1", "catalog-title", "Schema Catalog"),
-    lead,
+  const addLink = link(`${REPO_URL}/issues/new?template=add-project.yaml`, "", "catalog-add-link");
+  addLink.target = "_blank";
+  addLink.rel = "noopener noreferrer";
+  addLink.append(document.createTextNode("Add a project"), createExternalIcon());
+
+  const metaRow = document.createElement("div");
+  metaRow.className = "catalog-meta-row";
+  metaRow.append(
     text(
       "p",
       "catalog-count-line",
       `${projects.toLocaleString("en-US")} projects · ${kinds.toLocaleString("en-US")} kinds · ${schemas.toLocaleString("en-US")} schemas`,
     ),
+    addLink,
   );
+
+  head.append(text("h1", "catalog-title", "Schema Catalog"), lead, metaRow);
   return head;
 }
 
@@ -169,7 +203,52 @@ function createEmptyState(index: CatalogIndex, query: string): HTMLElement {
  * it; clicking the active one clears back to all categories. The selection is
  * written to the URL hash so the view is linkable.
  */
+/**
+ * Builds the [All | CNCF] scope tabs. Switching a tab updates the module scope
+ * and hands control back to the caller to rebuild the dependent UI.
+ */
+function createScopeTabs(onChange: () => void): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "catalog-scope";
+  wrap.setAttribute("role", "group");
+  wrap.setAttribute("aria-label", "Filter by origin");
+
+  const tabs: Array<{ button: HTMLButtonElement; scope: typeof activeScope }> = [];
+
+  const applyActive = (): void => {
+    for (const tab of tabs) {
+      const isActive = tab.scope === activeScope;
+      tab.button.classList.toggle("active", isActive);
+      tab.button.setAttribute("aria-pressed", String(isActive));
+    }
+  };
+
+  for (const option of [
+    { label: "All", scope: "all" },
+    { label: "CNCF", scope: "cncf" },
+  ] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "catalog-scope-tab";
+    button.textContent = option.label;
+    button.addEventListener("click", () => {
+      if (activeScope === option.scope) {
+        return;
+      }
+      activeScope = option.scope;
+      applyActive();
+      onChange();
+    });
+    tabs.push({ button, scope: option.scope });
+    wrap.append(button);
+  }
+
+  applyActive();
+  return wrap;
+}
+
 function buildChips(index: CatalogIndex, row: HTMLElement, render: () => void): void {
+  clear(row);
   const chips: HTMLButtonElement[] = [];
 
   const applyActive = (): void => {
@@ -189,7 +268,7 @@ function buildChips(index: CatalogIndex, row: HTMLElement, render: () => void): 
 
   for (let categoryIndex = 0; categoryIndex < index.categories.length; categoryIndex += 1) {
     const name = index.categories[categoryIndex];
-    const total = index.projects.filter((project) => project.cat === categoryIndex).length;
+    const total = index.projects.filter((project) => project.cat === categoryIndex && inScope(project)).length;
     if (name === undefined || total === 0) {
       continue;
     }
@@ -227,7 +306,7 @@ function writeCategoryUrl(index: CatalogIndex, categoryIndex: number): void {
   history.replaceState(history.state, "", target);
 }
 
-function createCategoryGroup(index: CatalogIndex, category: string, projects: ProjectEntry[]): HTMLElement {
+function createCategoryGroup(category: string, projects: ProjectEntry[]): HTMLElement {
   const section = document.createElement("section");
   section.className = "catalog-group";
 
@@ -238,13 +317,13 @@ function createCategoryGroup(index: CatalogIndex, category: string, projects: Pr
   const grid = document.createElement("div");
   grid.className = "catalog-grid";
   for (const project of projects) {
-    grid.append(createProjectCard(index, project));
+    grid.append(createProjectCard(project));
   }
   section.append(grid);
   return section;
 }
 
-function createProjectCard(index: CatalogIndex, project: ProjectEntry): HTMLElement {
+function createProjectCard(project: ProjectEntry): HTMLElement {
   const card = link(projectRoute(project.name), "", "explorer-card");
   card.setAttribute("aria-label", `${project.alias} ${project.version}`);
 
@@ -254,10 +333,10 @@ function createProjectCard(index: CatalogIndex, project: ProjectEntry): HTMLElem
     text("span", "explorer-card-name", project.alias),
     createBadge(project.version, "version-badge"),
   );
+  card.append(head);
 
   const shields = document.createElement("div");
   shields.className = "explorer-card-shields";
-  shields.append(createShield(CATEGORY_ICON, categoryName(index, project), "shield-category"));
   const cncfShield = project.cncf === undefined ? undefined : CNCF_SHIELDS[project.cncf];
   if (cncfShield !== undefined) {
     shields.append(createShield(CNCF_ICON, cncfShield.label, cncfShield.variant));
@@ -265,10 +344,13 @@ function createProjectCard(index: CatalogIndex, project: ProjectEntry): HTMLElem
   if (project.repo.startsWith("kubernetes-sigs/")) {
     shields.append(createShield(K8S_ICON, "Kubernetes SIG", "shield-k8s-sig"));
   }
+  if (shields.childElementCount === 0) {
+    // No foundation status to show: fall back to provenance, the GitHub org.
+    shields.append(createShield(GITHUB_ICON, project.repo.split("/")[0] ?? project.repo, "shield-repo"));
+  }
+  card.append(shields);
 
   card.append(
-    head,
-    shields,
     text(
       "span",
       "explorer-card-stats",
