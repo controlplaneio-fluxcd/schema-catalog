@@ -1,25 +1,25 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { hasFields, kindCount, kindDisplay, latestVersion, projectVersionLabel, schemaCount } from "../../shared/index-query.ts";
+import { hasFields, kindCount, kindDisplay, latestVersion, schemaCount } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry, ProjectSourceEntry } from "../../shared/types.ts";
 import {
   CATEGORY_ICON,
   categoryName,
   CNCF_ICON,
   CNCF_SHIELDS,
-  createBadge,
   createBreadcrumb,
   createPage,
   createRepoLink,
   createShield,
   formatDate,
+  GITHUB_ICON,
   K8S_ICON,
   link,
   notFoundView,
   text,
 } from "../dom.ts";
-import { homeRoute, kindRoute } from "../router.ts";
+import { catalogCategoryRoute, homeRoute, kindRoute } from "../router.ts";
 
 /**
  * Renders one project page from the generated index. Missing project names
@@ -59,7 +59,7 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
   const sourcesPanel = createSourcesPanel(project);
   sourcesPanel.hidden = true;
 
-  page.append(createViewTabs(schemasPanel, sourcesPanel), schemasPanel, sourcesPanel);
+  page.append(createViewTabs(project, schemasPanel, sourcesPanel), schemasPanel, sourcesPanel);
   return page;
 }
 
@@ -68,46 +68,55 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
   hero.className = "hero";
 
   const title = document.createElement("h1");
-  title.append(document.createTextNode(project.alias), createBadge(projectVersionLabel(project), "version-badge"));
-
-  const meta = document.createElement("div");
-  meta.className = "meta-row";
-  meta.append(createRepoLink(project.repo));
+  title.append(document.createTextNode(project.alias));
+  // The blue badge carries the release version only; grouped projects have no
+  // single version, so they get no badge (the tab row carries the source count).
+  if (project.version !== undefined) {
+    title.append(createReleaseBadge(project.repo, project.version, project.ref));
+  }
 
   const badges = document.createElement("div");
   badges.className = "meta-row";
-  badges.append(createShield(CATEGORY_ICON, categoryName(index, project), "shield-category"));
+  badges.append(
+    createShield(CATEGORY_ICON, categoryName(index, project), "shield-category", catalogCategoryRoute(categoryName(index, project))),
+  );
+  let hasProvenance = false;
   const cncfShield = project.cncf === undefined ? undefined : CNCF_SHIELDS[project.cncf];
   if (cncfShield !== undefined) {
-    badges.append(createShield(CNCF_ICON, cncfShield.label, cncfShield.variant));
+    const cncfUrl = project.cncf === "sandbox" ? "https://www.cncf.io/sandbox-projects/" : "https://www.cncf.io/projects/";
+    badges.append(createShield(CNCF_ICON, cncfShield.label, cncfShield.variant, cncfUrl));
+    hasProvenance = true;
   }
   if (project.repo.startsWith("kubernetes-sigs/")) {
-    badges.append(createShield(K8S_ICON, "Kubernetes SIG", "shield-k8s-sig"));
+    badges.append(createShield(K8S_ICON, "Kubernetes SIG", "shield-k8s-sig", "https://github.com/kubernetes-sigs"));
+    hasProvenance = true;
+  }
+  if (!hasProvenance) {
+    // No foundation status: fall back to the GitHub org, as the catalog does.
+    const org = project.repo.split("/")[0] ?? project.repo;
+    badges.append(createShield(GITHUB_ICON, org, "shield-repo", `https://github.com/${org}`));
   }
 
-  hero.append(
-    title,
-    meta,
-    badges,
-    text("p", "stats-line", `${kindCount(project)} kinds · ${schemaCount(project)} schemas · updated ${formatDate(project.builtAt)}`),
-  );
+  hero.append(title, badges);
   return hero;
 }
 
 /**
- * Builds the [Schemas | Sources] view tabs. Schemas leads with the kind grids;
- * Sources carries the per-source provenance. Reuses the catalog scope-tab
- * pill styling.
+ * Builds the [Schemas | Source(s)] tab bar. Schemas leads with the kind grids;
+ * the second tab carries the per-source provenance and names the source count
+ * when the project groups several. The project stats sit at the right end of
+ * the bar.
  */
-function createViewTabs(schemasPanel: HTMLElement, sourcesPanel: HTMLElement): HTMLElement {
+function createViewTabs(project: ProjectEntry, schemasPanel: HTMLElement, sourcesPanel: HTMLElement): HTMLElement {
   const wrap = document.createElement("div");
-  wrap.className = "catalog-scope project-tabs";
+  wrap.className = "project-tabs";
   wrap.setAttribute("role", "group");
   wrap.setAttribute("aria-label", "Project view");
 
+  const sourceCount = project.sources?.length ?? 1;
   const views = [
-    { label: "Schemas", panel: schemasPanel },
-    { label: "Sources", panel: sourcesPanel },
+    { label: "Schemas", count: undefined, panel: schemasPanel },
+    { label: sourceCount === 1 ? "Source" : "Sources", count: sourceCount === 1 ? undefined : sourceCount, panel: sourcesPanel },
   ];
   const buttons: HTMLButtonElement[] = [];
   const applyActive = (active: number): void => {
@@ -120,17 +129,38 @@ function createViewTabs(schemasPanel: HTMLElement, sourcesPanel: HTMLElement): H
     });
   };
 
-  views.forEach(({ label }, i) => {
+  views.forEach(({ label, count }, i) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "catalog-scope-tab";
-    button.textContent = label;
+    button.className = "project-tab";
+    button.append(document.createTextNode(label));
+    if (count !== undefined) {
+      button.append(text("span", "project-tab-count", String(count)));
+    }
     button.addEventListener("click", () => applyActive(i));
     buttons.push(button);
     wrap.append(button);
   });
   applyActive(0);
+
+  wrap.append(text("span", "project-tabs-stats", `${kindCount(project)} kinds · ${schemaCount(project)} schemas`));
   return wrap;
+}
+
+/**
+ * Version badge linking to the source's GitHub release. The display version is
+ * usually the tag itself; sources whose tags carry a project-name prefix
+ * (`operator/v0.10.2`) ship the full ref separately, and the link must use it.
+ */
+function createReleaseBadge(repo: string, version: string, ref?: string): HTMLElement {
+  const badge = link(
+    `https://github.com/${repo}/releases/tag/${encodeURIComponent(ref ?? version)}`,
+    version,
+    "badge version-badge",
+  );
+  badge.target = "_blank";
+  badge.rel = "noopener noreferrer";
+  return badge;
 }
 
 /**
@@ -145,6 +175,7 @@ function createSourcesPanel(project: ProjectEntry): HTMLElement {
       alias: project.alias,
       repo: project.repo,
       version: project.version ?? "",
+      ...(project.ref === undefined ? {} : { ref: project.ref }),
       builtAt: project.builtAt,
     },
   ];
@@ -152,14 +183,19 @@ function createSourcesPanel(project: ProjectEntry): HTMLElement {
   const section = document.createElement("section");
   section.className = "group-section";
   const grid = document.createElement("div");
-  grid.className = "project-sources";
+  // A lone source spans the full row instead of one auto-fill grid track.
+  grid.className = sources.length === 1 ? "project-sources single" : "project-sources";
   for (const member of sources) {
     const row = document.createElement("div");
     row.className = "project-source-row";
     const head = document.createElement("span");
     head.className = "project-source-name";
-    head.append(document.createTextNode(member.alias), createBadge(member.version, "version-badge"));
-    row.append(head, createRepoLink(member.repo), text("span", "project-source-date", `updated ${formatDate(member.builtAt)}`));
+    head.append(document.createTextNode(member.alias));
+    if (member.version !== "") {
+      head.append(createReleaseBadge(member.repo, member.version, member.ref));
+    }
+    const ref = member.ref ?? (member.version === "" ? undefined : member.version);
+    row.append(head, createRepoLink(member.repo, ref), text("span", "project-source-date", `updated ${formatDate(member.builtAt)}`));
     grid.append(row);
   }
   section.append(grid);

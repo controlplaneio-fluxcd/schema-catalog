@@ -67,12 +67,14 @@ export function generateIndex(config: CatalogConfig, entries: HistoryEntry[]): C
       continue;
     }
 
+    const version = displayVersion(entry.version);
     projects.push({
       name: source.name,
       alias: source.alias,
       cat: categoryIndex(source.category, `source ${source.name}`),
       repo: repoOf(source),
-      version: displayVersion(entry.version),
+      version,
+      ...(version === entry.version ? {} : { ref: entry.version }),
       builtAt: entry.builtAt.slice(0, 10),
       ...(source.cncf === undefined ? {} : { cncf: source.cncf }),
       ...(source.pin === undefined ? {} : { pin: source.pin }),
@@ -104,6 +106,7 @@ export function generateIndex(config: CatalogConfig, entries: HistoryEntry[]): C
         alias: source.alias,
         repo: repoOf(source),
         version: displayVersion(entry.version),
+        ...(displayVersion(entry.version) === entry.version ? {} : { ref: entry.version }),
         builtAt: entry.builtAt.slice(0, 10),
       })),
       groups: collectGroups(members.map(({ entry }) => entry), true),

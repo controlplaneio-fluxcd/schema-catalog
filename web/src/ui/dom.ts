@@ -477,10 +477,15 @@ export const CATEGORY_ICON = "❖";
 /**
  * Creates a two-tone split badge: a colored icon segment next to a tinted
  * label. Icons starting with `<svg` are trusted local markup; anything else
- * renders as text.
+ * renders as text. With an `href` the shield renders as an anchor; external
+ * URLs open in a new tab.
  */
-export function createShield(icon: string, label: string, variant: string): HTMLElement {
-  const shield = text("span", `shield ${variant}`, "");
+export function createShield(icon: string, label: string, variant: string, href?: string): HTMLElement {
+  const shield = href === undefined ? text("span", `shield ${variant}`, "") : link(href, "", `shield ${variant}`);
+  if (shield instanceof HTMLAnchorElement && href !== undefined && href.startsWith("http")) {
+    shield.target = "_blank";
+    shield.rel = "noopener noreferrer";
+  }
   const glyph = text("span", "shield-icon", "");
   if (icon.startsWith("<svg")) {
     glyph.innerHTML = icon;
@@ -530,9 +535,15 @@ export function createSearchField(options: {
   return { field, input };
 }
 
-/** Creates a repository link with the GitHub mark in front of the full host path. */
-export function createRepoLink(repo: string): HTMLAnchorElement {
-  const anchor = link(`https://github.com/${repo}`, "", "repo-link external-link");
+/**
+ * Creates a repository link with the GitHub mark in front of the full host
+ * path. With a `ref` the link targets the source tree at that tag instead of
+ * the repo root; slashes in the ref (`operator/v0.10.2`) stay literal because
+ * GitHub resolves tree paths against the longest matching ref.
+ */
+export function createRepoLink(repo: string, ref?: string): HTMLAnchorElement {
+  const target = ref === undefined ? `https://github.com/${repo}` : `https://github.com/${repo}/tree/${ref}`;
+  const anchor = link(target, "", "repo-link external-link");
   anchor.target = "_blank";
   anchor.rel = "noopener noreferrer";
   const icon = document.createElement("span");

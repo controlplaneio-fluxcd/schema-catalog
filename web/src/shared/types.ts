@@ -33,6 +33,8 @@ export interface ProjectEntry {
   repo: string;
   /** Resolved release version; absent on grouped projects (see `sources`). */
   version?: string;
+  /** Full resolved tag (the git ref); present only when it differs from `version`. */
+  ref?: string;
   /** Build date; the latest member build date for grouped projects. */
   builtAt: string;
   /** Set when the source belongs to a CNCF project; value is the project maturity. */
@@ -50,6 +52,8 @@ export interface ProjectSourceEntry {
   alias: string;
   repo: string;
   version: string;
+  /** Full resolved tag (the git ref); present only when it differs from `version`. */
+  ref?: string;
   builtAt: string;
 }
 
