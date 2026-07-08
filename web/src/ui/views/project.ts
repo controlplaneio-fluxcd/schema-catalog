@@ -7,6 +7,7 @@ import {
   CATEGORY_ICON,
   categoryName,
   CNCF_ICON,
+  CNCF_SHIELDS,
   createBadge,
   createBreadcrumb,
   createPage,
@@ -14,6 +15,7 @@ import {
   createShield,
   formatDate,
   hasFields,
+  K8S_ICON,
   kindCount,
   link,
   notFoundView,
@@ -69,8 +71,12 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
   const badges = document.createElement("div");
   badges.className = "meta-row";
   badges.append(createShield(CATEGORY_ICON, categoryName(index, project), "shield-category"));
-  if (project.cncf === "graduated") {
-    badges.append(createShield(CNCF_ICON, "CNCF Graduated", "shield-cncf"));
+  const cncfShield = project.cncf === undefined ? undefined : CNCF_SHIELDS[project.cncf];
+  if (cncfShield !== undefined) {
+    badges.append(createShield(CNCF_ICON, cncfShield.label, cncfShield.variant));
+  }
+  if (project.repo.startsWith("kubernetes-sigs/")) {
+    badges.append(createShield(K8S_ICON, "Kubernetes SIG", "shield-k8s-sig"));
   }
 
   hero.append(

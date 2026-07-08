@@ -7,6 +7,7 @@ import {
   categoryName,
   clear,
   CNCF_ICON,
+  CNCF_SHIELDS,
   createBadge,
   createBreadcrumb,
   createExternalIcon,
@@ -14,6 +15,7 @@ import {
   createSearchField,
   createShield,
   formatDate,
+  K8S_ICON,
   kindCount,
   link,
   REPO_URL,
@@ -256,8 +258,12 @@ function createProjectCard(index: CatalogIndex, project: ProjectEntry): HTMLElem
   const shields = document.createElement("div");
   shields.className = "explorer-card-shields";
   shields.append(createShield(CATEGORY_ICON, categoryName(index, project), "shield-category"));
-  if (project.cncf === "graduated") {
-    shields.append(createShield(CNCF_ICON, "CNCF Graduated", "shield-cncf"));
+  const cncfShield = project.cncf === undefined ? undefined : CNCF_SHIELDS[project.cncf];
+  if (cncfShield !== undefined) {
+    shields.append(createShield(CNCF_ICON, cncfShield.label, cncfShield.variant));
+  }
+  if (project.repo.startsWith("kubernetes-sigs/")) {
+    shields.append(createShield(K8S_ICON, "Kubernetes SIG", "shield-k8s-sig"));
   }
 
   card.append(

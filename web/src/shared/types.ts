@@ -30,8 +30,8 @@ export interface ProjectEntry {
   repo: string;
   version: string;
   builtAt: string;
-  /** Set when the source belongs to a CNCF graduated project. */
-  cncf?: "graduated";
+  /** Set when the source belongs to a CNCF project; value is the project maturity. */
+  cncf?: "graduated" | "incubating" | "sandbox";
   /** Landing-page preview order within the category; lower shows first, unpinned follow alphabetically. */
   pin?: number;
   groups: GroupEntry[];
