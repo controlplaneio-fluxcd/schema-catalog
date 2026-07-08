@@ -39,7 +39,7 @@ const FEATURES: Array<{ title: string; body: string }> = [
   {
     title: "Write valid manifests",
     body:
-      "The agent pulls the schema for the exact API version a manifest targets and only uses fields that exist. Field descriptions teach it what each field does, including features newer than its training data.",
+      "The agent pulls the schema for the exact API version a manifest targets. Field descriptions teach it what each field does, including new features.",
   },
   {
     title: "Review manifests",
@@ -50,6 +50,27 @@ const FEATURES: Array<{ title: string; body: string }> = [
     title: "Rebuilt daily",
     body:
       "The catalog tracks upstream releases, so new kinds and API versions land here within a day of shipping.",
+  },
+];
+
+/**
+ * Measured on 2026-07-08 with Claude Opus 4.8 in headless Claude Code runs:
+ * four tasks (two field lookups, one manifest to write, one manifest review
+ * with planted errors) over Flux Operator and kgateway CRDs, graded against
+ * the published schemas. Per-task averages, MCP vs web search: 1 vs 5 tool
+ * calls (80% fewer) and 48k vs 112k tokens processed (57% fewer). Both
+ * setups scored 4 of 4; training data alone scored 1 of 4.
+ */
+const BENCHMARK_STATS: Array<{ label: string; value: string; detail: string }> = [
+  {
+    label: "Fewer tokens",
+    value: "57%",
+    detail: "48k tokens per task, vs 112k with web search.",
+  },
+  {
+    label: "Fewer tool calls",
+    value: "80%",
+    detail: "One schema lookup per task, vs five web fetches.",
   },
 ];
 
@@ -72,6 +93,7 @@ export function renderMcp(index: CatalogIndex): HTMLElement {
     createBreadcrumb([{ label: "Home", href: homeRoute() }, { label: "AI agents" }]),
     createHero(index),
     createWhySection(),
+    createBenchmarkSection(),
     createConfigSection(),
     createToolsSection(),
   );
@@ -126,6 +148,39 @@ function createWhySection(): HTMLElement {
     grid.append(card);
   }
   section.append(grid);
+  return section;
+}
+
+function createBenchmarkSection(): HTMLElement {
+  const section = createSection("Measured impact", "benchmark");
+  section.append(
+    text(
+      "p",
+      "mcp-lead",
+      "We gave the same agent (Opus 4.8) four tasks against recently shipped CRDs: two field lookups, one manifest to write, and one manifest review with planted errors. Three setups, graded by Fable 5 against the published schemas.",
+    ),
+  );
+
+  const grid = document.createElement("div");
+  grid.className = "mcp-stats";
+  for (const stat of BENCHMARK_STATS) {
+    const panel = document.createElement("div");
+    panel.className = "mcp-stat";
+    panel.append(
+      text("p", "mcp-stat-label", stat.label),
+      text("p", "mcp-stat-value", stat.value),
+      text("p", "mcp-stat-detail", stat.detail),
+    );
+    grid.append(panel);
+  }
+  section.append(
+    grid,
+    text(
+      "p",
+      "mcp-lead",
+      "Accuracy is what the savings buy. From training data alone the agent got one task of four right: it invented enum values and flagged valid fields as errors. With the MCP or web search it scored four of four, but the web runs crawled raw CRDs to get there. Smaller models depend on the catalog even more: Haiku scored 0 of 4 from memory and 4 of 4 with the MCP at a quarter of the web-search cost.",
+    ),
+  );
   return section;
 }
 
