@@ -353,7 +353,7 @@ function createProjectCard(project: ProjectEntry): HTMLElement {
     text(
       "span",
       "explorer-card-stats",
-      `${kindCount(project)} kinds · ${schemaCount(project)} schemas · updated ${formatDate(project.builtAt)}`,
+      `${kindCount(project)} kinds · ${schemaCount(project)} schemas · ${formatDate(project.builtAt)}`,
     ),
   );
   return card;
