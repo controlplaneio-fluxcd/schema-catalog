@@ -110,6 +110,17 @@ export function pickLatestOpenShift(doc: unknown): string {
 }
 
 /**
+ * The git ref a source's extraction reads at a resolved version: the
+ * release branch for OpenShift, the tag verbatim for everything else
+ * (crd inputs fetch trees/assets at the tag; k8s swagger tags carry the
+ * normalized `v` prefix). This is the ref whose commit SHA the history
+ * manifest records.
+ */
+export function sourceRef(source: Source, version: string): string {
+  return source.extract === "openshift" ? openshiftRef(version) : version;
+}
+
+/**
  * The openshift/api branch for a resolved OpenShift version (v4.20 →
  * release-4.20); a version pinned to a branch name passes through as-is.
  */

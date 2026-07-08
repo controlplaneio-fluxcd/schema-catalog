@@ -94,6 +94,20 @@ export async function listReleases(repo: string): Promise<Release[]> {
 }
 
 /**
+ * Returns the commit SHA a git ref points at. The commits endpoint
+ * dereferences annotated tags to the tagged commit, so the result is always
+ * a commit SHA — the value that pins a build even if the tag later moves.
+ */
+export async function commitSha(repo: string, ref: string): Promise<string> {
+  const commit = await apiJson(`/repos/${repo}/commits/${encodeURIComponent(ref)}`);
+  const sha = (commit as { sha?: unknown }).sha;
+  if (typeof sha !== "string" || !/^[0-9a-f]{40}$/.test(sha)) {
+    throw new Error(`no commit sha for ${repo}@${ref}`);
+  }
+  return sha;
+}
+
+/**
  * Returns the release asset matching the name pattern (supports '*' wildcards)
  * for the given release tag.
  */

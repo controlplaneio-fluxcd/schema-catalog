@@ -25,7 +25,8 @@ import {
 import { README_PATH, ROOT_DIR, SOURCES_PATH } from "./paths.ts";
 import { runBoundedPool } from "./pool.ts";
 import { updateReadme } from "./readme.ts";
-import { displayVersion, resolveVersion } from "./resolve.ts";
+import { commitSha } from "./github.ts";
+import { displayVersion, resolveVersion, sourceRef } from "./resolve.ts";
 import { renderBuildSummary } from "./summary.ts";
 import type { BuildChange, OrphanRemoval, SourceFailure } from "./summary.ts";
 import type { HistoryEntry, Source } from "./types.ts";
@@ -116,10 +117,14 @@ async function processSource(
     const kinds = historyKinds(extraction.resources, kindIds);
     const removed = removedFiles(prev, files, foreign);
     await gcCatalog(removed);
+    // Recorded alongside the version: tags are mutable, so only the SHA pins
+    // what this build actually extracted.
+    const commit = await commitSha(repoOf(source), sourceRef(source, version));
     const entry: HistoryEntry = {
       name: source.name,
       repo: repoOf(source),
       version,
+      commit,
       builtAt: new Date().toISOString(),
       fluxSchemaVersion: opts.toolVersion,
       kinds,

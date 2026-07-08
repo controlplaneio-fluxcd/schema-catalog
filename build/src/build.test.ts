@@ -17,8 +17,9 @@ import {
   openshiftRef,
   pickLatestOpenShift,
   pickLatestRelease,
+  sourceRef,
 } from "./resolve.ts";
-import type { HistoryEntry, SourceCategory } from "./types.ts";
+import type { HistoryEntry, Source, SourceCategory } from "./types.ts";
 
 describe("parsePositiveIntegerFlag", () => {
   test("uses the default when the flag is absent", () => {
@@ -124,6 +125,16 @@ describe("version helpers", () => {
 
   test("openshiftRef passes branch-name pins through unchanged", () => {
     expect(openshiftRef("release-4.20")).toBe("release-4.20");
+  });
+
+  test("sourceRef maps openshift versions to the release branch, others to the tag", () => {
+    const base = { name: "s", alias: "S", category: "Platform" as SourceCategory, url: "https://github.com/o/r" };
+    const openshift: Source = { ...base, extract: "openshift" };
+    const k8s: Source = { ...base, extract: "k8s" };
+    const crd: Source = { ...base, extract: "crd", input: { kustomize: "config/crd" } };
+    expect(sourceRef(openshift, "v4.20")).toBe("release-4.20");
+    expect(sourceRef(k8s, "v1.36.2")).toBe("v1.36.2");
+    expect(sourceRef(crd, "operator/v0.10.2")).toBe("operator/v0.10.2");
   });
 
   test("displayVersion strips the project-name prefix, keeping an upstream v", () => {

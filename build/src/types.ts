@@ -129,6 +129,13 @@ export interface HistoryEntry {
   repo: string;
   /** Resolved version the catalog files were extracted from. */
   version: string;
+  /**
+   * Commit SHA the extraction ref (the version tag, or the release branch for
+   * OpenShift) pointed at when the source was built — tags are mutable, so the
+   * version alone does not pin the input. Absent on manifests written before
+   * the field existed; a regen backfills it.
+   */
+  commit?: string;
   /** RFC 3339 timestamp of the build. */
   builtAt: string;
   /** Version of the flux-schema binary that produced the files. */

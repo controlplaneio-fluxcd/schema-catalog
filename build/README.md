@@ -130,7 +130,9 @@ output. Producers run alone via `.text()`, then the YAML is fed to
 
 ## History manifests — the source of truth
 
-`build/history/<name>.json` records repo, resolved version, build timestamp,
+`build/history/<name>.json` records repo, resolved version, the commit SHA the
+extraction ref pointed at when built (tags are mutable, so only the SHA pins
+the input; for OpenShift it is the release-branch head), build timestamp,
 flux-schema version, the sorted `kinds` map keyed by original-cased
 `<group>/<Kind>` identifiers (one per indexed kind; the slug is recovered by
 lowercasing) with CRD discovery names as values (`{}` when unavailable), and
