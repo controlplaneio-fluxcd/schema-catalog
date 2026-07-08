@@ -173,6 +173,9 @@ const TARBALL_FALLBACK_ENTRIES = 500;
 /** Signals a directory too large to fetch file-by-file; callers fall back to the tarball. */
 class LargeDirectoryError extends Error {}
 
+/** Hard deadline for downloading a source tarball (upjet's are ~20 MB). */
+const TARBALL_TIMEOUT_MS = 300_000;
+
 async function listYamlFiles(
   repo: string,
   ref: string,
@@ -225,8 +228,20 @@ async function fetchCrdDirViaTarball(
     if (!res.ok) {
       throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
     }
+    // fetchRetry's abort signal covers the response headers but does not
+    // reliably fire on a body stream that stalls mid-download (observed as a
+    // regen wedged for half an hour streaming straight into Bun.write), so
+    // the body is buffered under an explicit deadline that cancels the stream.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        void res.body?.cancel().catch(() => {});
+        reject(new Error(`GET ${url}: download timed out after ${TARBALL_TIMEOUT_MS / 1000}s`));
+      }, TARBALL_TIMEOUT_MS);
+    });
+    const bytes = await Promise.race([res.bytes(), deadline]).finally(() => clearTimeout(timer));
     const archive = join(tmp, "src.tar.gz");
-    await Bun.write(archive, res);
+    await Bun.write(archive, bytes);
     await $`tar -xzf ${archive} -C ${tmp}`.quiet();
 
     // Codeload tarballs wrap everything in one `<owner>-<repo>-<short sha>/`
