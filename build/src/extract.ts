@@ -61,7 +61,7 @@ export async function extractSource(source: Source, version: string, dir: string
  * command's status, letting an upstream failure pass as an empty extraction.
  */
 async function extractCrd(source: CrdSource, version: string, flags: string[], commit: string): Promise<ExtractionResult> {
-  const yaml = dropEmptyDocs(await crdYaml(source, version, commit));
+  const yaml = await crdYaml(source, version, commit);
   const resources = crdResourceNames(yaml);
   await $`${FLUX_SCHEMA_BIN} extract crd /dev/stdin ${flags} < ${new Response(yaml)}`.quiet();
   return { resources, inputDigest: sha256(yaml) };
@@ -69,25 +69,6 @@ async function extractCrd(source: CrdSource, version: string, flags: string[], c
 
 function emptyExtractionResult(): ExtractionResult {
   return { resources: {} };
-}
-
-/**
- * Drops YAML documents that carry no mapping — empty, blank, or comment-only
- * documents anywhere in the stream. flux-schema rejects such a document
- * ("document is not a YAML mapping"), and CRD bundles routinely contain them:
- * a leading license/usage banner (rook's crds.yaml) or, in helm-rendered
- * installs, interior `# Source: …` separators where a template produced no
- * output (longhorn's longhorn.yaml).
- */
-export function dropEmptyDocs(yaml: string): string {
-  const docs = yaml.split(YAML_DOC_SEPARATOR_RE);
-  const kept = docs.filter((doc) =>
-    doc.split("\n").some((line) => {
-      const trimmed = line.trim();
-      return trimmed !== "" && !trimmed.startsWith("#");
-    }),
-  );
-  return kept.join("---\n");
 }
 
 /** Extracts CRD discovery names from a YAML stream, keyed by `<group>/<Kind>`. */

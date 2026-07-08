@@ -4,7 +4,7 @@
 import { describe, expect, test } from "bun:test";
 import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
-import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
+import { crdResourceNames, fluxInstanceManifest } from "./extract.ts";
 import { excludeByBasename, matchAsset } from "./github.ts";
 import { digestFiles, historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, sha256 } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
@@ -699,31 +699,5 @@ spec:
 `;
 
     expect(() => crdResourceNames(yaml)).toThrow("conflicting CRD resource names for example.io/Widget");
-  });
-});
-
-describe("dropEmptyDocs", () => {
-  test("strips a leading comment banner terminated by ---", () => {
-    const yaml = "# banner line 1\n# banner line 2\n---\napiVersion: v1\nkind: Foo\n";
-    expect(dropEmptyDocs(yaml)).toBe("apiVersion: v1\nkind: Foo\n");
-  });
-
-  test("strips a lone leading document marker", () => {
-    expect(dropEmptyDocs("---\nkind: Foo\n")).toBe("kind: Foo\n");
-  });
-
-  test("drops an interior comment-only document", () => {
-    const yaml = "kind: Foo\n---\n# Source: chart/empty.yaml\n---\nkind: Bar\n";
-    expect(dropEmptyDocs(yaml)).toBe("kind: Foo\n---\nkind: Bar\n");
-  });
-
-  test("leaves a stream that opens with content untouched", () => {
-    const yaml = "apiVersion: v1\nkind: Foo\n---\nkind: Bar\n";
-    expect(dropEmptyDocs(yaml)).toBe(yaml);
-  });
-
-  test("does not strip past the first document", () => {
-    const yaml = "kind: Foo\n---\nkind: Bar\n";
-    expect(dropEmptyDocs(yaml)).toBe(yaml);
   });
 });
