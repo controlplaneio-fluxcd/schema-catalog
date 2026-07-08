@@ -253,6 +253,12 @@ function createLanes(): HTMLElement {
   const aiLink = link(agentsRoute(), "Set up your agent →", "lane-link");
   const aiText = document.createElement("div");
   aiText.className = "lane-text";
+  const aiStats = document.createElement("p");
+  aiStats.className = "lane-stats";
+  aiStats.append(
+    text("span", "lane-stat", "57% fewer tokens"),
+    text("span", "lane-stat-note", "vs web tools"),
+  );
   aiText.append(
     text("p", "lane-eyebrow", "For AI agents"),
     text("h2", "", "Give your agent ground truth"),
@@ -261,6 +267,7 @@ function createLanes(): HTMLElement {
       "",
       "Connect to the MCP Server and your agent stops guessing YAML: it greps the real fields, types, and constraints for the exact API version it writes or reviews, no cluster required.",
     ),
+    aiStats,
     aiLink,
   );
   ai.append(aiText, createCodeBlock(MCP_CONFIG, "json"));
