@@ -533,6 +533,8 @@ export function createSearchField(options: {
 /** Creates a repository link with the GitHub mark in front of the full host path. */
 export function createRepoLink(repo: string): HTMLAnchorElement {
   const anchor = link(`https://github.com/${repo}`, "", "repo-link external-link");
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
   const icon = document.createElement("span");
   icon.className = "repo-icon";
   icon.innerHTML = GITHUB_ICON;
