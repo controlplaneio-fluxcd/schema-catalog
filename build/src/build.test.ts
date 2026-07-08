@@ -5,8 +5,8 @@ import { describe, expect, test } from "bun:test";
 import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, dropEmptyDocs, fluxInstanceManifest } from "./extract.ts";
-import { excludeByBasename, matchAsset, yamlFilesInTree } from "./github.ts";
-import { historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles } from "./history.ts";
+import { excludeByBasename, matchAsset } from "./github.ts";
+import { digestFiles, historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, sha256 } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
 import { renderBuildSummary } from "./summary.ts";
@@ -85,20 +85,20 @@ describe("matchAsset", () => {
   });
 });
 
-describe("yamlFilesInTree", () => {
-  test("keeps only .yaml blobs under the directory", () => {
-    const entries = [
-      { path: "package/crds/s3.aws.upbound.io_buckets.yaml", type: "blob" },
-      { path: "package/crds/sub/nested.yaml", type: "blob" },
-      { path: "package/crds", type: "tree" },
-      { path: "package/crds/README.md", type: "blob" },
-      { path: "package/crossplane.yaml", type: "blob" },
-      { path: "package/crds-other/decoy.yaml", type: "blob" },
-    ];
-    expect(yamlFilesInTree(entries, "package/crds")).toEqual([
-      "package/crds/s3.aws.upbound.io_buckets.yaml",
-      "package/crds/sub/nested.yaml",
-    ]);
+describe("digests", () => {
+  const contents: Record<string, string> = { "catalog/g/a.json": "{}", "catalog/g/b.json": "[]" };
+  const read = (file: string): Promise<Uint8Array> => Promise.resolve(new TextEncoder().encode(contents[file] ?? ""));
+
+  test("sha256 is prefixed and matches a known vector", () => {
+    // sha256("") — the canonical empty-input vector.
+    expect(sha256("")).toBe("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+  });
+
+  test("digestFiles is order-independent and content-sensitive", async () => {
+    const digest = await digestFiles(["catalog/g/a.json", "catalog/g/b.json"], read);
+    expect(await digestFiles(["catalog/g/b.json", "catalog/g/a.json"], read)).toBe(digest);
+    contents["catalog/g/b.json"] = "[1]";
+    expect(await digestFiles(["catalog/g/a.json", "catalog/g/b.json"], read)).not.toBe(digest);
   });
 });
 

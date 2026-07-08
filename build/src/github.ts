@@ -1,6 +1,10 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
+import { $ } from "bun";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, relative } from "node:path";
 import { runBoundedPool } from "./pool.ts";
 
 const API_BASE = "https://api.github.com";
@@ -158,6 +162,17 @@ function contentsPath(repo: string, path: string, ref: string): string {
   return `/repos/${repo}/contents/${encoded}?ref=${encodeURIComponent(ref)}`;
 }
 
+/**
+ * A directory listing this large means hundreds of raw per-file downloads,
+ * which trip raw.githubusercontent rate limits when several big sources build
+ * in one run (and at 1000 the Contents API truncates the listing outright).
+ * Such directories fetch the ref's source tarball once instead.
+ */
+const TARBALL_FALLBACK_ENTRIES = 500;
+
+/** Signals a directory too large to fetch file-by-file; callers fall back to the tarball. */
+class LargeDirectoryError extends Error {}
+
 async function listYamlFiles(
   repo: string,
   ref: string,
@@ -167,11 +182,8 @@ async function listYamlFiles(
   if (!Array.isArray(entries)) {
     throw new Error(`${repo}@${ref}: '${dir}' is not a directory`);
   }
-  if (entries.length === 1000) {
-    // The Contents API caps a directory listing at 1000 entries; one recursive
-    // git tree listing covers the whole ref instead (the upjet providers ship
-    // thousands of per-kind CRD files in package/crds).
-    return listYamlFilesViaTree(repo, ref, dir);
+  if (entries.length >= TARBALL_FALLBACK_ENTRIES) {
+    throw new LargeDirectoryError(`${repo}@${ref}: '${dir}' lists ${entries.length} entries`);
   }
 
   const files: { path: string; downloadUrl: string }[] = [];
@@ -188,46 +200,66 @@ async function listYamlFiles(
   return files;
 }
 
-interface TreeEntry {
-  path: string;
-  type: string;
-}
-
-/** Raw file URL at a ref — what the Contents API's download_url points at. */
-function rawUrl(repo: string, ref: string, path: string): string {
-  const encoded = path.split("/").map(encodeURIComponent).join("/");
-  return `https://raw.githubusercontent.com/${repo}/${encodeURIComponent(ref)}/${encoded}`;
-}
-
-/** The `.yaml` blob paths under `dir` from a recursive git tree listing. */
-export function yamlFilesInTree(entries: TreeEntry[], dir: string): string[] {
-  const prefix = `${dir}/`;
-  return entries
-    .filter((e) => e.type === "blob" && e.path.startsWith(prefix) && e.path.endsWith(".yaml"))
-    .map((e) => e.path);
-}
-
 /**
- * Lists `*.yaml` files under a repo directory from one recursive git tree
- * listing — the over-1000-entries fallback for directories the Contents API
- * cannot list in full. The tree endpoint has its own truncation flag (~100k
- * entries), which stays a hard error: a silently partial CRD set must never
- * reach extraction.
+ * Fetches every `*.yaml` under a repo directory by downloading the source
+ * tarball once and unpacking it — the large-directory fallback. One ~20 MB
+ * request replaces hundreds of raw downloads (the upjet providers ship
+ * 800-1200 per-kind CRD files in package/crds, a burst raw.githubusercontent
+ * rate-limits). The archive is fetched by the resolved commit SHA, not the
+ * tag, so the input provably matches the manifest's provenance even if the
+ * tag moves mid-build; the archive's embedded short SHA is asserted against
+ * it. The full tarball is extracted with system tar (bsdtar and GNU tar
+ * diverge on member-glob flags) and only the target directory is read.
  */
-async function listYamlFilesViaTree(
+async function fetchCrdDirViaTarball(
   repo: string,
   ref: string,
+  commit: string,
   dir: string,
-): Promise<{ path: string; downloadUrl: string }[]> {
-  const tree = await apiJson(`/repos/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`);
-  if ((tree as { truncated?: boolean }).truncated === true) {
-    throw new Error(`${repo}@${ref}: recursive git tree listing was truncated by the API`);
+  exclude: string[],
+): Promise<string> {
+  const tmp = await mkdtemp(join(tmpdir(), "schema-catalog-tarball-"));
+  try {
+    const url = `${API_BASE}/repos/${repo}/tarball/${commit}`;
+    const res = await fetchRetry(url, { headers: headers() });
+    if (!res.ok) {
+      throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+    }
+    const archive = join(tmp, "src.tar.gz");
+    await Bun.write(archive, res);
+    await $`tar -xzf ${archive} -C ${tmp}`.quiet();
+
+    // Codeload tarballs wrap everything in one `<owner>-<repo>-<short sha>/`
+    // dir; the suffix must prefix the commit we asked for.
+    const top = (await readdir(tmp, { withFileTypes: true })).filter((e) => e.isDirectory());
+    if (top.length !== 1) {
+      throw new Error(`${repo}@${ref}: expected one top-level directory in the source tarball, found ${top.length}`);
+    }
+    const short = top[0]!.name.slice(top[0]!.name.lastIndexOf("-") + 1);
+    if (!commit.startsWith(short)) {
+      throw new Error(`${repo}@${ref}: source tarball is at ${short}, expected ${commit}`);
+    }
+    const root = join(tmp, top[0]!.name);
+    const target = join(root, dir);
+    const entries = await readdir(target, { recursive: true, withFileTypes: true }).catch(() => {
+      throw new Error(`${repo}@${ref}: '${dir}' is not in the source tarball`);
+    });
+    const all = entries
+      .filter((e) => e.isFile() && e.name.endsWith(".yaml"))
+      .map((e) => ({ path: join(dir, relative(target, join(e.parentPath, e.name))) }));
+    const files = excludeByBasename(all, exclude, `${repo}@${ref} under '${dir}'`);
+    if (files.length === 0) {
+      throw new Error(`${repo}@${ref}: no .yaml files under '${dir}'`);
+    }
+    files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+    const texts: string[] = [];
+    for (const file of files) {
+      texts.push(await Bun.file(join(root, file.path)).text());
+    }
+    return texts.join("\n---\n");
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
   }
-  const entries = (tree as { tree?: TreeEntry[] }).tree;
-  if (!Array.isArray(entries)) {
-    throw new Error(`${repo}@${ref}: unexpected git tree payload`);
-  }
-  return yamlFilesInTree(entries, dir).map((path) => ({ path, downloadUrl: rawUrl(repo, ref, path) }));
 }
 
 /**
@@ -247,10 +279,19 @@ async function listYamlFilesViaTree(
 export async function fetchCrdDir(
   repo: string,
   ref: string,
+  commit: string,
   dir: string,
   exclude: string[] = [],
 ): Promise<string> {
-  const all = await listYamlFiles(repo, ref, dir);
+  let all: { path: string; downloadUrl: string }[];
+  try {
+    all = await listYamlFiles(repo, ref, dir);
+  } catch (err) {
+    if (err instanceof LargeDirectoryError) {
+      return fetchCrdDirViaTarball(repo, ref, commit, dir, exclude);
+    }
+    throw err;
+  }
   const files = excludeByBasename(all, exclude, `${repo}@${ref} under '${dir}'`);
   if (files.length === 0) {
     throw new Error(`${repo}@${ref}: no .yaml files under '${dir}'`);

@@ -71,9 +71,10 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
   `releaseAsset` (download a GitHub release asset by name or `*` glob), `crdDir`
   (recursively fetch every `*.yaml` under a repo directory at the ref and
   concatenate them — for repos that ship bare per-kind CRD files with no asset
-  or kustomization, e.g. cilium; a directory over the Contents API's
-  1000-entry listing cap falls back to one recursive git tree call, e.g. the
-  upjet providers' `package/crds`), `crdFile` (fetch a single committed file at
+  or kustomization, e.g. cilium; a directory listing 500+ entries falls back
+  to downloading the source tarball once at the resolved commit SHA instead of
+  hundreds of rate-limited raw fetches, e.g. the upjet providers'
+  `package/crds`), `crdFile` (fetch a single committed file at
   the ref — for repos that bundle their whole CRD set into one file that shares
   a directory with unrelated manifests, so `crdDir` would over-collect, e.g.
   rook's `deploy/examples/crds.yaml`), or
@@ -135,7 +136,12 @@ output. Producers run alone via `.text()`, then the YAML is fed to
 `build/history/<name>.json` records repo, resolved version, the commit SHA the
 extraction ref pointed at when built (tags are mutable, so only the SHA pins
 the input; for OpenShift it is the release-branch head), build timestamp,
-flux-schema version, the sorted `kinds` map keyed by original-cased
+flux-schema version, two provenance digests — `inputDigest`, the sha256 of the
+YAML stream piped to flux-schema (pins what the commit cannot: release assets
+can be re-uploaded on a tag; absent for the swagger extractors, whose CLI
+fetches its own input), and `filesDigest`, a sha256 over one
+`<path>:<sha256(content)>` line per catalog file sorted by path (tamper
+evidence for the source's file set) — the sorted `kinds` map keyed by original-cased
 `<group>/<Kind>` identifiers (one per indexed kind; the slug is recovered by
 lowercasing) with CRD discovery names as values (`{}` when unavailable), and
 the sorted list of repo-root-relative catalog files the source owns. Everything
@@ -197,9 +203,10 @@ bun src/main.ts regen --concurrent=2 2>&1 | tee /tmp/regen.log
   in a few minutes, while higher values compound GitHub rate limiting and
   bandwidth contention on the big-repo fetches.
 - Sources that fetch very large repos can exceed structural timeouts on slower
-  connections: `crdDir` no longer downloads tarballs, it fetches only the
-  listed files via the Contents API, so the remaining structural timeout is
-  kubectl's hard-coded 27s git timeout on `kustomize` inputs of large repos.
+  connections: `crdDir` fetches only the listed files via the Contents API
+  (falling back to one commit-pinned source tarball for 500+ entry
+  directories), so the remaining structural timeout is kubectl's hard-coded
+  27s git timeout on `kustomize` inputs of large repos.
   The run still attempts every source; retry stragglers one at a time with
   `regen --source <name>` and confirm each reports `+0 -0 ~0` files. The
   `~N` counter is the byte-level signal: `+`/`-` only track added and removed

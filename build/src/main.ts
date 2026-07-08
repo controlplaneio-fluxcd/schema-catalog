@@ -10,6 +10,7 @@ import { loadConfig, repoOf } from "./config.ts";
 import { extractSource, fluxSchemaVersion } from "./extract.ts";
 import {
   deleteHistory,
+  digestFiles,
   gcCatalog,
   historyFilesPresent,
   historyKinds,
@@ -91,9 +92,13 @@ async function processSource(
   }
 
   const foreign = foreignFiles(history, source.name);
+  // Resolved before extraction so the tarball fallback can fetch the source
+  // archive at this exact commit; tags are mutable, so only the SHA pins what
+  // this build extracts.
+  const commit = await commitSha(repoOf(source), sourceRef(source, version));
   const staging = await mkdtemp(join(tmpdir(), `schema-catalog-${source.name}-`));
   try {
-    const extraction = await extractSource(source, version, staging);
+    const extraction = await extractSource(source, version, staging, commit);
     const staged = await listStagedFiles(staging);
     if (staged.length === 0) {
       throw new Error(`extraction at ${version} produced no files`);
@@ -117,9 +122,9 @@ async function processSource(
     const kinds = historyKinds(extraction.resources, kindIds);
     const removed = removedFiles(prev, files, foreign);
     await gcCatalog(removed);
-    // Recorded alongside the version: tags are mutable, so only the SHA pins
-    // what this build actually extracted.
-    const commit = await commitSha(repoOf(source), sourceRef(source, version));
+    // Digested from the catalog tree after sync, so the manifest attests the
+    // bytes actually on disk.
+    const filesDigest = await digestFiles(files, (file) => Bun.file(join(ROOT_DIR, file)).bytes());
     const entry: HistoryEntry = {
       name: source.name,
       repo: repoOf(source),
@@ -127,6 +132,8 @@ async function processSource(
       commit,
       builtAt: new Date().toISOString(),
       fluxSchemaVersion: opts.toolVersion,
+      ...(extraction.inputDigest === undefined ? {} : { inputDigest: extraction.inputDigest }),
+      filesDigest,
       kinds,
       files,
     };

@@ -4,6 +4,7 @@
 import { $, YAML } from "bun";
 import { repoOf } from "./config.ts";
 import { downloadAsset, fetchCrdDir, fetchCrdFile, findReleaseAsset } from "./github.ts";
+import { sha256 } from "./history.ts";
 import { FLUX_SCHEMA_BIN, ROOT_DIR } from "./paths.ts";
 import { bareVersion, displayVersion, openshiftRef } from "./resolve.ts";
 import type { CrdSource, FluxInstance, ResourceNames, Source } from "./types.ts";
@@ -19,13 +20,20 @@ export async function fluxSchemaVersion(): Promise<string> {
 
 export interface ExtractionResult {
   resources: Record<string, ResourceNames>;
+  /**
+   * sha256 of the YAML stream piped to flux-schema; absent for the swagger
+   * extractors (k8s, openshift), whose CLI fetches its own input.
+   */
+  inputDigest?: string;
 }
 
 /**
  * Extracts the source's JSON Schemas and field indexes at the given version
- * into the staging directory.
+ * into the staging directory. `commit` is the SHA the version's ref resolved
+ * to; the crdDir tarball fallback fetches the source archive by it so the
+ * input provably matches the manifest's provenance.
  */
-export async function extractSource(source: Source, version: string, dir: string): Promise<ExtractionResult> {
+export async function extractSource(source: Source, version: string, dir: string, commit: string): Promise<ExtractionResult> {
   const flags = [
     "--strip-description=false",
     "--with-field-index",
@@ -43,7 +51,7 @@ export async function extractSource(source: Source, version: string, dir: string
       await $`${FLUX_SCHEMA_BIN} extract openshift --ref ${openshiftRef(version)} ${flags}`.quiet();
       return emptyExtractionResult();
     case "crd":
-      return extractCrd(source, version, flags);
+      return extractCrd(source, version, flags, commit);
   }
 }
 
@@ -52,11 +60,11 @@ export async function extractSource(source: Source, version: string, dir: string
  * a Bun shell pipeline, like bash without pipefail, only reports the last
  * command's status, letting an upstream failure pass as an empty extraction.
  */
-async function extractCrd(source: CrdSource, version: string, flags: string[]): Promise<ExtractionResult> {
-  const yaml = dropEmptyDocs(await crdYaml(source, version));
+async function extractCrd(source: CrdSource, version: string, flags: string[], commit: string): Promise<ExtractionResult> {
+  const yaml = dropEmptyDocs(await crdYaml(source, version, commit));
   const resources = crdResourceNames(yaml);
   await $`${FLUX_SCHEMA_BIN} extract crd /dev/stdin ${flags} < ${new Response(yaml)}`.quiet();
-  return { resources };
+  return { resources, inputDigest: sha256(yaml) };
 }
 
 function emptyExtractionResult(): ExtractionResult {
@@ -161,7 +169,7 @@ function stringArray(value: unknown): string[] | undefined {
   return out;
 }
 
-async function crdYaml(source: CrdSource, version: string): Promise<string> {
+async function crdYaml(source: CrdSource, version: string, commit: string): Promise<string> {
   const input = source.input;
   if ("kustomize" in input) {
     const overlay = `https://github.com/${repoOf(source)}/${input.kustomize}?ref=${version}`;
@@ -172,7 +180,7 @@ async function crdYaml(source: CrdSource, version: string): Promise<string> {
     return downloadAsset(asset);
   }
   if ("crdDir" in input) {
-    return fetchCrdDir(repoOf(source), version, input.crdDir, input.exclude);
+    return fetchCrdDir(repoOf(source), version, commit, input.crdDir, input.exclude);
   }
   if ("crdFile" in input) {
     return fetchCrdFile(repoOf(source), version, input.crdFile);

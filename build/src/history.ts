@@ -90,6 +90,30 @@ export function pruneKindsWithoutFields(files: string[]): string[] {
   });
 }
 
+/** sha256 digest of a string or byte buffer, in `sha256:<hex>` form. */
+export function sha256(data: string | Uint8Array): string {
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(data);
+  return `sha256:${hasher.digest("hex")}`;
+}
+
+/**
+ * Aggregate digest over a source's catalog files: sha256 over one
+ * `<path>:<sha256(content)>` line per file, sorted by path. One field makes
+ * the whole file set tamper-evident without storing thousands of per-file
+ * digests in the manifest.
+ */
+export async function digestFiles(
+  files: string[],
+  readBytes: (file: string) => Promise<Uint8Array>,
+): Promise<string> {
+  const lines: string[] = [];
+  for (const file of [...files].sort()) {
+    lines.push(`${file}:${sha256(await readBytes(file))}`);
+  }
+  return sha256(lines.join("\n"));
+}
+
 /** Extracts the original-cased kind from a `.fields.txt`'s `kind <string> enum=<Kind>` row. */
 export function parseKindName(fieldsText: string): string | null {
   const match = fieldsText.match(/^kind <string> enum=(\S+)/m);

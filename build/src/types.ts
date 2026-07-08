@@ -141,6 +141,19 @@ export interface HistoryEntry {
   /** Version of the flux-schema binary that produced the files. */
   fluxSchemaVersion: string;
   /**
+   * sha256 of the YAML stream piped to flux-schema. Pins what the commit
+   * cannot: release assets can be re-uploaded on an existing tag, and
+   * kustomize/flux-operator inputs are tool output. Absent for the swagger
+   * extractors (k8s, openshift), whose CLI fetches its own input.
+   */
+  inputDigest?: string;
+  /**
+   * sha256 over one `<path>:<sha256(content)>` line per catalog file, sorted
+   * by path — tamper evidence for the source's whole file set. Absent on
+   * manifests written before the field existed; a regen backfills it.
+   */
+  filesDigest?: string;
+  /**
    * Original-cased kind identifiers `<group>/<Kind>` for every kind that has a
    * field index, sorted and unique, mapped to discovery names. Catalog filenames
    * lowercase the kind, so the key is the only record of the real casing (e.g.
