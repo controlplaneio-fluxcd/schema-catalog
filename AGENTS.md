@@ -33,12 +33,17 @@ changing that subsystem:
 
 - **Never hand-edit generated files**: everything under `catalog/`,
   `build/history/`, and the README versions table is owned by the build.
-  Change them by running `make build` (or let CI do it).
+  They ship from CI (`update-catalog`), which signs attestations for the
+  history manifests; locally built copies break verification, so run
+  `make build` to verify a change but do not commit its output. If pushing
+  locally built manifests is ever unavoidable, force-dispatch
+  `update-catalog` right after to rebuild and re-attest everything.
 - **Bun-native only**: no npm runtime dependencies (`@types/bun` is the only
   dev dependency), no eslint/prettier. Reach for `Bun.YAML`, `Bun.semver`,
   `Bun.$`, `bun test` and node builtins.
-- **Adding a catalog source is config-only**: edit `build/config/sources.yaml`,
-  nothing else — no code, no test changes. See the
+- **Adding a catalog source is config-only**: the commit is the
+  `build/config/sources.yaml` edit and nothing else, no code, no test
+  changes, no generated files (CI builds and attests those). See the
   [recipe](build/README.md#adding-a-source).
 - **flux-schema binary**: resolved from `FLUX_SCHEMA_BIN` (a single binary
   path), else PATH. Locally, Bun auto-loads the git-ignored `build/.env`;
@@ -47,8 +52,8 @@ changing that subsystem:
   When bumping a pin, dereference annotated tags to the underlying commit —
   the tag object SHA will not resolve.
 - **Commits**: signed off (`git commit -s`), compact and logically split;
-  when a change spans code and generated catalog files, commit the catalog
-  changes last and separately.
+  generated catalog and history files stay out of local commits and ship
+  through the `update-catalog` PR instead.
 
 ## Commands
 
