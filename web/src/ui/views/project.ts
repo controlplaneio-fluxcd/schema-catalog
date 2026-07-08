@@ -83,7 +83,8 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
   let hasProvenance = false;
   const cncfShield = project.cncf === undefined ? undefined : CNCF_SHIELDS[project.cncf];
   if (cncfShield !== undefined) {
-    const cncfUrl = project.cncf === "sandbox" ? "https://www.cncf.io/sandbox-projects/" : "https://www.cncf.io/projects/";
+    // The CNCF landscape filtered to the project's maturity level.
+    const cncfUrl = `https://landscape.cncf.io/?group=projects-and-products&view-mode=grid&project=${project.cncf}`;
     badges.append(createShield(CNCF_ICON, cncfShield.label, cncfShield.variant, cncfUrl));
     hasProvenance = true;
   }
