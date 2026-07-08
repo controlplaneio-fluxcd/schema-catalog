@@ -3,14 +3,13 @@
 
 import { buildFieldTree, filterFieldLines, parseFieldsFile } from "../../shared/fields.ts";
 import type { FieldLine, FieldNode } from "../../shared/fields.ts";
-import { findKind, kindDisplay } from "../../shared/index-query.ts";
+import { findKind, hasFields, kindDisplay } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../../shared/types.ts";
 import {
   clear,
   createBreadcrumb,
   createPage,
   createSearchField,
-  hasFields,
   link,
   notFoundView,
   text,

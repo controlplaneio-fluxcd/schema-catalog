@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
+import type { CatalogIndex, ProjectEntry } from "../shared/types.ts";
 import { agentsRoute, catalogRoute, cliRoute, homeRoute } from "./router.ts";
 import { createThemeToggle } from "./theme.ts";
 
@@ -546,24 +546,6 @@ export function createRepoLink(repo: string): HTMLAnchorElement {
 /** Resolves a project's category name from its compact category index. */
 export function categoryName(index: CatalogIndex, project: ProjectEntry): string {
   return index.categories[project.cat] ?? "Uncategorized";
-}
-
-/** Counts distinct kinds in a project, not schema versions. */
-export function kindCount(project: ProjectEntry): number {
-  return project.groups.reduce((total, group) => total + group.kinds.length, 0);
-}
-
-/** Counts schema versions in a project by summing each kind's version list. */
-export function schemaCount(project: ProjectEntry): number {
-  return project.groups.reduce(
-    (total, group) => total + group.kinds.reduce((sum, entry) => sum + entry[1].length, 0),
-    0,
-  );
-}
-
-/** Decodes whether the kind has a `.fields.txt` index at `versions[versionIndex]`. */
-export function hasFields(entry: KindEntry, versionIndex: number): boolean {
-  return (entry[2] & (1 << versionIndex)) !== 0;
 }
 
 /** Formats an ISO timestamp or date-like string as `YYYY-MM-DD` for UI badges. */

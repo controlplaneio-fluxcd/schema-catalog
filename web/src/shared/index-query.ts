@@ -69,6 +69,32 @@ export function latestVersion(entry: KindEntry): string {
   return entry[1][0] ?? "";
 }
 
+/**
+ * Decodes the `fieldsBits` bitmap for a version index. Bit `0` corresponds to
+ * `versions[0]`, bit `1` to `versions[1]`, and so on.
+ */
+export function hasFieldsAtVersion(fieldsBits: number, versionIndex: number): boolean {
+  return (fieldsBits & (1 << versionIndex)) !== 0;
+}
+
+/** Decodes whether the kind has a `.fields.txt` index at `versions[versionIndex]`. */
+export function hasFields(entry: KindEntry, versionIndex: number): boolean {
+  return hasFieldsAtVersion(entry[2], versionIndex);
+}
+
+/** Counts distinct kinds in a project, not schema versions. */
+export function kindCount(project: ProjectEntry): number {
+  return project.groups.reduce((total, group) => total + group.kinds.length, 0);
+}
+
+/** Counts schema versions in a project by summing each kind's version list. */
+export function schemaCount(project: ProjectEntry): number {
+  return project.groups.reduce(
+    (total, group) => total + group.kinds.reduce((sum, entry) => sum + entry[1].length, 0),
+    0,
+  );
+}
+
 /** Returns the original-cased kind name for display, falling back to the slug. */
 export function kindDisplay(entry: KindEntry): string {
   return entry[3] ?? entry[0];

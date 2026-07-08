@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { kindDisplay, latestVersion } from "../../shared/index-query.ts";
+import { hasFields, kindCount, kindDisplay, latestVersion, schemaCount } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../../shared/types.ts";
 import {
   CATEGORY_ICON,
@@ -14,12 +14,9 @@ import {
   createRepoLink,
   createShield,
   formatDate,
-  hasFields,
   K8S_ICON,
-  kindCount,
   link,
   notFoundView,
-  schemaCount,
   text,
 } from "../dom.ts";
 import { homeRoute, kindRoute } from "../router.ts";

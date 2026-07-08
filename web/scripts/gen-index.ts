@@ -1,10 +1,11 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { mkdir, readdir } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CATEGORIES, loadSources, repoOf } from "../../build/src/config.ts";
+import { listHistoryNames, readHistory } from "../../build/src/history.ts";
 import { displayVersion } from "../../build/src/resolve.ts";
 import type { HistoryEntry, ResourceNames, Source } from "../../build/src/types.ts";
 import { compareApiVersion, pluralResourceName } from "../src/shared/index-query.ts";
@@ -81,7 +82,9 @@ export function generateIndex(sources: Source[], entries: HistoryEntry[]): Catal
 
 if (import.meta.main) {
   const sources = await loadSources(join(repoRoot, "build/config/sources.yaml"));
-  const entries = await loadHistory(join(repoRoot, "build/history"));
+  const entries = (await Promise.all((await listHistoryNames()).map((name) => readHistory(name)))).filter(
+    (entry): entry is HistoryEntry => entry !== null,
+  );
   const index = generateIndex(sources, entries);
   const outputPath = join(repoRoot, "web/dist/assets/index.json");
   const json = JSON.stringify(index);
@@ -131,13 +134,6 @@ function compactResource(kind: string, names: ResourceNames | undefined): Resour
 function normalizedName(value: string | undefined): string | undefined {
   const normalized = value?.trim().toLowerCase();
   return normalized === undefined || normalized === "" ? undefined : normalized;
-}
-
-async function loadHistory(dir: string): Promise<HistoryEntry[]> {
-  const files = (await readdir(dir)).filter((file) => file.endsWith(".json")).sort();
-  return Promise.all(
-    files.map(async (file) => JSON.parse(await Bun.file(join(dir, file)).text()) as HistoryEntry),
-  );
 }
 
 function collectGroups(entry: HistoryEntry): GroupEntry[] {

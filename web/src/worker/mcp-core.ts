@@ -3,7 +3,7 @@
 
 import { filterFieldLines, parseFieldsFile } from "../shared/fields.ts";
 import type { FieldLine } from "../shared/fields.ts";
-import { kindDisplay, latestVersion, resourceAliases } from "../shared/index-query.ts";
+import { hasFieldsAtVersion, kindCount, kindDisplay, latestVersion, resourceAliases } from "../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry } from "../shared/types.ts";
 import type { Env } from "./index.ts";
 
@@ -222,14 +222,6 @@ export function schemaUrl(group: string, kind: string, version: string): string 
 }
 
 /**
- * Decodes the `fieldsBits` bitmap for a version index. Bit `0` corresponds to
- * `versions[0]`, bit `1` to `versions[1]`, and so on.
- */
-export function hasFieldsAtVersion(fieldsBits: number, versionIndex: number): boolean {
-  return (fieldsBits & (1 << versionIndex)) !== 0;
-}
-
-/**
  * Resolves and returns a schema body for `get_schema`. Missing kinds, versions,
  * objects, and over-limit bodies are reported as text responses instead of
  * thrown errors so agents receive actionable messages.
@@ -321,10 +313,6 @@ function parseApiVersionInput(apiVersion: string): ParsedApiVersionInput {
   return /^v\d+((alpha|beta)\d*)?$/.test(normalize(trimmed))
     ? { group: "core", version: trimmed }
     : { group: normalizeCoreGroup(trimmed) };
-}
-
-function kindCount(project: ProjectEntry): number {
-  return project.groups.reduce((total, group) => total + group.kinds.length, 0);
 }
 
 function catalogLines(index: CatalogIndex): string[] {

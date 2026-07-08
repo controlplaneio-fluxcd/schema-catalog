@@ -1,6 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
+import type { CatalogObject } from "./mcp-core.ts";
 import type { Env } from "./index.ts";
 
 /**
@@ -115,10 +116,7 @@ export async function serveCatalog(
  * `make web-run` can exercise `/catalog/*` against the repo-local catalog tree
  * without Cloudflare credentials.
  */
-export async function getCatalogObject(
-  env: Env,
-  key: string,
-): Promise<{ body: ReadableStream; etag: string; size: number | null } | null> {
+export async function getCatalogObject(env: Env, key: string): Promise<CatalogObject | null> {
   if (env.CATALOG_DEV_ORIGIN) {
     const resp = await fetch(`${env.CATALOG_DEV_ORIGIN.replace(/\/$/, "")}/${key}`);
     if (!resp.ok || resp.body === null) {

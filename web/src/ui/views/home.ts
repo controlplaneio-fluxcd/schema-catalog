@@ -1,10 +1,10 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { latestVersion, searchIndex } from "../../shared/index-query.ts";
+import { kindCount, schemaCount, searchIndex } from "../../shared/index-query.ts";
 import type { SearchHit } from "../../shared/index-query.ts";
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
-import { clear, createCodeBlock, kindCount, link, REPO_URL, schemaCount, text } from "../dom.ts";
+import { clear, createCodeBlock, link, REPO_URL, text } from "../dom.ts";
 import { agentsRoute, catalogCategoryRoute, cliRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
 const MCP_CONFIG = `{
@@ -308,7 +308,7 @@ function createLanes(): HTMLElement {
 }
 
 function createResultRow(hit: SearchHit): HTMLAnchorElement {
-  const version = latestVersion([hit.kind, hit.versions, hit.fieldsBits]);
+  const version = hit.versions[0] ?? "";
   const row = link(kindRoute(hit.group, hit.kind, version), "", "result-row");
   row.append(
     text("span", "result-kind", hit.display),

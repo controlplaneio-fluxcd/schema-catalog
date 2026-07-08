@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import type { CatalogIndex, ProjectEntry } from "../../shared/types.ts";
+import { kindCount, schemaCount } from "../../shared/index-query.ts";
 import {
   clear,
   CNCF_ICON,
@@ -15,10 +16,8 @@ import {
   formatDate,
   GITHUB_ICON,
   K8S_ICON,
-  kindCount,
   link,
   REPO_URL,
-  schemaCount,
   text,
 } from "../dom.ts";
 import { agentsRoute, catalogCategoryRoute, categorySlug, homeRoute, projectRoute } from "../router.ts";
@@ -199,11 +198,6 @@ function createEmptyState(index: CatalogIndex, query: string): HTMLElement {
 }
 
 /**
- * Builds one toggle button per non-empty category. Clicking a category selects
- * it; clicking the active one clears back to all categories. The selection is
- * written to the URL hash so the view is linkable.
- */
-/**
  * Builds the [All | CNCF] scope tabs. Switching a tab updates the module scope
  * and hands control back to the caller to rebuild the dependent UI.
  */
@@ -247,6 +241,11 @@ function createScopeTabs(onChange: () => void): HTMLElement {
   return wrap;
 }
 
+/**
+ * Builds one toggle button per non-empty category. Clicking a category selects
+ * it; clicking the active one clears back to all categories. The selection is
+ * written to the URL hash so the view is linkable.
+ */
 function buildChips(index: CatalogIndex, row: HTMLElement, render: () => void): void {
   clear(row);
   const chips: HTMLButtonElement[] = [];

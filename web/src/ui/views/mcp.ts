@@ -1,6 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
+import { kindCount, schemaCount } from "../../shared/index-query.ts";
 import type { CatalogIndex } from "../../shared/types.ts";
 import {
   createBreadcrumb,
@@ -8,8 +9,6 @@ import {
   createInlineCopy,
   createPage,
   createSection,
-  kindCount,
-  schemaCount,
   text,
 } from "../dom.ts";
 import { homeRoute } from "../router.ts";
@@ -230,4 +229,3 @@ function createToolsSection(): HTMLElement {
   section.append(scroller);
   return section;
 }
-

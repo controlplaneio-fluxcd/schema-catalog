@@ -8,8 +8,8 @@
  * SSE. It does NOT run the Worker, so `/mcp` is unavailable here — use
  * `make web-run` (wrangler) when you need to exercise the MCP endpoint.
  */
-import { watch } from "node:fs";
 import { join, normalize } from "node:path";
+import { watchUi } from "./watch-ui.ts";
 
 const webRoot = join(import.meta.dir, "..");
 const assetsDir = normalize(join(webRoot, "dist", "assets"));
@@ -43,7 +43,7 @@ const server = Bun.serve({
   },
 });
 
-const watcher = watchUi(webRoot);
+const watcher = watchUi(webRoot, reloadClients);
 
 console.log(`[dev] UI on http://localhost:${server.port} (no wrangler; /mcp not served here)`);
 console.log(`[dev] catalog tree: ${catalogDir}`);
@@ -125,53 +125,4 @@ async function serveAsset(pathname: string): Promise<Response> {
     });
   }
   return new Response(file, { headers: { "cache-control": "no-store" } });
-}
-
-/**
- * Watches `src/` and rebundles the UI when a file the UI bundle depends on
- * changes, then live-reloads connected browsers. Rebuilds are debounced and
- * serialized so bursts of saves collapse into one build and never overlap.
- */
-function watchUi(root: string): ReturnType<typeof watch> {
-  const srcDir = join(root, "src");
-  const buildScript = join(import.meta.dir, "build-ui.ts");
-  let building = false;
-  let pending = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-
-  const rebuild = async (): Promise<void> => {
-    if (building) {
-      pending = true;
-      return;
-    }
-    building = true;
-    const proc = Bun.spawn(["bun", buildScript], { cwd: root, stdout: "inherit", stderr: "inherit" });
-    const code = await proc.exited;
-    building = false;
-    if (code === 0) {
-      console.log("[dev] UI rebuilt");
-      reloadClients();
-    } else {
-      console.log(`[dev] UI build failed (exit ${code})`);
-    }
-    if (pending) {
-      pending = false;
-      await rebuild();
-    }
-  };
-
-  const watcher = watch(srcDir, { recursive: true }, (_event, filename) => {
-    if (filename === null) {
-      return;
-    }
-    const path = filename.replaceAll("\\", "/");
-    if (!path.startsWith("ui/") && !path.startsWith("shared/")) {
-      return;
-    }
-    clearTimeout(timer);
-    timer = setTimeout(() => void rebuild(), 80);
-  });
-
-  console.log(`[dev] watching ${srcDir} -> rebundling UI on ui/ and shared/ changes`);
-  return watcher;
 }
