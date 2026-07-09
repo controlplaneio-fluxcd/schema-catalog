@@ -34,6 +34,27 @@ const DOCS_ICON =
 const FLUX_DOCS_PROJECTS = new Set(["flux", "flux-operator"]);
 
 /**
+ * Upstream reference page for a kind, when one exists: the Flux ecosystem
+ * documents CRDs on fluxoperator.dev; Kubernetes kinds anchor into the
+ * generated API reference for the catalog's minor version (e.g.
+ * v1.36/#pod-v1-core).
+ */
+function apiDocsUrl(project: ProjectEntry, group: string, kind: string, version: string): string | undefined {
+  if (FLUX_DOCS_PROJECTS.has(project.name)) {
+    return `https://fluxoperator.dev/docs/crd/${encodeURIComponent(kind)}/`;
+  }
+  if (project.name === "kubernetes") {
+    const minor = /^v\d+\.\d+/.exec(project.version ?? "")?.[0];
+    if (minor === undefined) {
+      return undefined;
+    }
+    const anchor = `${kind.toLowerCase()}-${version}-${group.replaceAll(".", "-")}`;
+    return `https://kubernetes.io/docs/reference/generated/kubernetes-api/${minor}/#${anchor}`;
+  }
+  return undefined;
+}
+
+/**
  * Renders a concrete group/kind/version page with schema links and, when
  * available, the fields explorer. Missing kinds or versions return a not-found
  * view so stale hash links fail closed in the UI.
@@ -353,8 +374,9 @@ function createHeroActions(project: ProjectEntry, group: string, kind: string, v
   const actions = document.createElement("div");
   actions.className = "meta-actions";
 
-  if (FLUX_DOCS_PROJECTS.has(project.name)) {
-    const docs = link(`https://fluxoperator.dev/docs/crd/${encodeURIComponent(kind)}/`, "", "button-link docs-link");
+  const docsUrl = apiDocsUrl(project, group, kind, version);
+  if (docsUrl !== undefined) {
+    const docs = link(docsUrl, "", "button-link docs-link");
     docs.innerHTML = DOCS_ICON;
     docs.append(text("span", "", "API Docs"));
     docs.target = "_blank";
