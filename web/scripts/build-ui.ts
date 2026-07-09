@@ -9,6 +9,7 @@
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { CatalogIndex } from "../src/shared/types.ts";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const webRoot = join(scriptDir, "..");
@@ -88,3 +89,23 @@ for (const page of PAGES) {
   }
   await Bun.write(join(assetsDir, page.file), html);
 }
+
+const index = (await Bun.file(join(assetsDir, "index.json")).json()) as CatalogIndex;
+const urls = [
+  "https://schemas.fluxoperator.dev/",
+  "https://schemas.fluxoperator.dev/catalog",
+  "https://schemas.fluxoperator.dev/agents",
+  "https://schemas.fluxoperator.dev/cli",
+  ...index.projects.map((project) => `https://schemas.fluxoperator.dev/p/${encodeURIComponent(project.name)}`),
+];
+
+await Bun.write(
+  join(assetsDir, "sitemap.xml"),
+  [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...urls.map((url) => `  <url><loc>${url}</loc></url>`),
+    "</urlset>",
+    "",
+  ].join("\n"),
+);

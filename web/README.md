@@ -38,11 +38,12 @@ location.
 | Path                        | Responsibility                                                              |
 |-----------------------------|-----------------------------------------------------------------------------|
 | `scripts/gen-index.ts`      | `build/history` + `sources.yaml` -> `dist/assets/index.json`                |
-| `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/` and `styles.css` into assets     |
+| `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/`, prerenders pages, and writes `sitemap.xml` |
 | `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change |
 | `scripts/serve.ts`          | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload |
-| `src/worker/index.ts`       | Worker router for `/catalog/*`, `/mcp`, discovery docs, and Workers Assets  |
+| `src/worker/index.ts`       | Worker router for `/catalog/*`, `/p/*`, `/k/*`, `/mcp`, discovery docs, and Workers Assets |
 | `src/worker/catalog.ts`     | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling |
+| `src/worker/pages.ts`       | Dynamic social/SEO metadata rewrite for history-routed project and kind pages |
 | `src/worker/mcp.ts`         | Streamable HTTP MCP server and tool registration                            |
 | `src/worker/server-card.ts` | MCP Server Card and Catalog discovery documents (SEP-2127)                  |
 | `src/worker/mcp-core.ts`    | Pure catalog/MCP result formatting and schema/fields lookup helpers         |
@@ -120,9 +121,14 @@ Kubernetes-ecosystem API definitions for generating, editing, and validating
 manifests, not as a `flux-schema` backend. The human-facing overview page is
 at <https://schemas.fluxoperator.dev/agents> (SPA route
 `src/ui/views/mcp.ts`; `/mcp-server` and legacy `#/...` hash URLs are
-aliases). The `/`, `/agents`, and `/cli` pages are prerendered at build time
-with page-specific meta/OG tags and listed in `sitemap.xml`; every other
-path falls back to the app shell via the assets `not_found_handling`
+aliases). The `/`, `/catalog`, `/agents`, and `/cli` pages are prerendered at
+build time with page-specific meta/OG tags. `scripts/build-ui.ts` generates
+`sitemap.xml` from the index, listing those four pages plus project pages under
+`/p/<project>`. Project pages and kind pages under
+`/k/<group>/<kind>/<version>` enter the Worker first, which rewrites the app
+shell with route-specific title, description, canonical URL, and OG URL tags
+from the generated index before caching the HTML at the edge. Other UI paths
+fall back to the app shell via the assets `not_found_handling`
 single-page-application mode.
 
 | Tool             | Description                                                                   |

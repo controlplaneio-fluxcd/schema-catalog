@@ -3,6 +3,7 @@
 
 import { serveCatalog } from "./catalog.ts";
 import { handleMcp } from "./mcp.ts";
+import { servePage } from "./pages.ts";
 import { serveMcpCatalog, serveServerCard } from "./server-card.ts";
 
 /**
@@ -26,6 +27,13 @@ export default {
     // path is the explorer page and falls through to Workers Assets.
     if (pathname.startsWith("/catalog/") || pathname.startsWith("/history/")) {
       return serveCatalog(req, env, ctx);
+    }
+
+    if (
+      (pathname.startsWith("/p/") || pathname.startsWith("/k/")) &&
+      (req.method === "GET" || req.method === "HEAD")
+    ) {
+      return servePage(req, env, ctx);
     }
 
     if (pathname === "/mcp") {
