@@ -3,11 +3,6 @@
 # Project groups: members reference these via `project:` and inherit the
 # group's category/cncf; the web UI and MCP present each group as one project.
 projects:
-  - name: aws-ack
-    alias: AWS Controllers for Kubernetes
-    category: "Provisioning"
-    url: https://github.com/aws-controllers-k8s
-
   - name: argo
     alias: Argo
     category: "App Definition & Development"
@@ -15,17 +10,35 @@ projects:
     pin: 4
     url: https://github.com/argoproj
 
-  - name: karpenter
-    alias: Karpenter
-    category: "Orchestration & Management"
-    pin: 4
-    url: https://github.com/kubernetes-sigs/karpenter
+  - name: aws-ack
+    alias: AWS Controllers for Kubernetes
+    category: "Provisioning"
+    url: https://github.com/aws-controllers-k8s
+
+  - name: calico
+    alias: Calico
+    category: "Runtime"
+    pin: 2
+    url: https://github.com/projectcalico/calico
 
   - name: cluster-api
     alias: Cluster API
     category: "Provisioning"
     pin: 1
     url: https://github.com/kubernetes-sigs/cluster-api
+
+  - name: karpenter
+    alias: Karpenter
+    category: "Orchestration & Management"
+    pin: 4
+    url: https://github.com/kubernetes-sigs/karpenter
+
+  - name: knative
+    alias: Knative
+    category: "App Definition & Development"
+    cncf: graduated
+    pin: 5
+    url: https://github.com/knative
 
   - name: kserve
     alias: KServe
@@ -39,12 +52,6 @@ projects:
     cncf: incubating
     url: https://github.com/kubeflow
 
-  - name: volcano
-    alias: Volcano
-    category: "Orchestration & Management"
-    cncf: incubating
-    url: https://github.com/volcano-sh/volcano
-
   - name: node-feature-discovery
     alias: Node Feature Discovery
     category: "Orchestration & Management"
@@ -56,20 +63,15 @@ projects:
     cncf: sandbox
     url: https://github.com/submariner-io
 
-  - name: calico
-    alias: Calico
-    category: "Runtime"
-    pin: 2
-    url: https://github.com/projectcalico/calico
-
-  - name: knative
-    alias: Knative
-    category: "App Definition & Development"
-    cncf: graduated
-    pin: 5
-    url: https://github.com/knative
+  - name: volcano
+    alias: Volcano
+    category: "Orchestration & Management"
+    cncf: incubating
+    url: https://github.com/volcano-sh/volcano
 
 sources:
+  # ===== Platform =====
+
   - name: kubernetes
     alias: Kubernetes
     category: "Platform"
@@ -83,6 +85,110 @@ sources:
     category: "Platform"
     url: https://github.com/openshift/api
     extract: openshift
+
+  # ===== App Definition & Development =====
+
+  - name: actions-runner-controller
+    alias: Actions Runner Controller
+    category: "App Definition & Development"
+    url: https://github.com/actions/actions-runner-controller
+    extract: crd
+    input:
+      # GitHub runner operator ships current and legacy CRDs as bare files;
+      # the sibling kustomization and patches are outside bases. Releases are
+      # gha-runner-scale-set-* and double as the git ref.
+      crdDir: config/crd/bases
+
+  - name: aibrix
+    alias: AIBrix
+    category: "App Definition & Development"
+    url: https://github.com/vllm-project/aibrix
+    extract: crd
+    input:
+      # The CRD-only asset embeds the version, so use a glob.
+      releaseAsset: "aibrix-core-crds-*.yaml"
+
+  # Argo: separate repos share argoproj.io but ship distinct kinds. Each CRD
+  # dir has a self-contained kustomization, so render each member directly.
+  - name: argo-cd
+    alias: Argo CD
+    project: argo
+    url: https://github.com/argoproj/argo-cd
+    extract: crd
+    input:
+      kustomize: manifests/crds
+
+  - name: argo-rollouts
+    alias: Argo Rollouts
+    project: argo
+    url: https://github.com/argoproj/argo-rollouts
+    extract: crd
+    input:
+      kustomize: manifests/crds
+
+  - name: argo-workflows
+    alias: Argo Workflows
+    project: argo
+    url: https://github.com/argoproj/argo-workflows
+    extract: crd
+    input:
+      # Use the full overlay: the minimal sibling has preserve-unknown stubs.
+      kustomize: manifests/base/crds/full
+
+  - name: argo-events
+    alias: Argo Events
+    project: argo
+    url: https://github.com/argoproj/argo-events
+    extract: crd
+    input:
+      kustomize: manifests/base/crds
+
+  - name: cloudnative-pg
+    alias: CloudNativePG
+    category: "App Definition & Development"
+    cncf: sandbox
+    url: https://github.com/cloudnative-pg/cloudnative-pg
+    extract: crd
+    input:
+      # The install bundle embeds the version, so use a glob.
+      releaseAsset: "cnpg-*.yaml"
+
+  - name: crunchy-postgres-operator
+    alias: Crunchy Postgres Operator
+    category: "App Definition & Development"
+    url: https://github.com/CrunchyData/postgres-operator
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: dapr
+    alias: Dapr
+    category: "App Definition & Development"
+    cncf: graduated
+    url: https://github.com/dapr/dapr
+    extract: crd
+    input:
+      # Raw Helm chart CRDs, no kustomization.
+      crdDir: charts/dapr/crds
+
+  - name: flagger
+    alias: Flagger
+    category: "App Definition & Development"
+    cncf: graduated
+    pin: 3
+    url: https://github.com/fluxcd/flagger
+    extract: crd
+    input:
+      kustomize: kustomize/kubernetes
+
+  - name: fleet
+    alias: Fleet
+    category: "App Definition & Development"
+    url: https://github.com/rancher/fleet
+    extract: crd
+    input:
+      # CRDs ship pre-rendered in the fleet-crd chart.
+      crdFile: charts/fleet-crd/templates/crds.yaml
 
   - name: flux
     alias: Flux
@@ -103,16 +209,6 @@ sources:
           - image-reflector-controller
           - image-automation-controller
 
-  - name: flagger
-    alias: Flagger
-    category: "App Definition & Development"
-    cncf: graduated
-    pin: 3
-    url: https://github.com/fluxcd/flagger
-    extract: crd
-    input:
-      kustomize: kustomize/kubernetes
-
   - name: flux-operator
     alias: Flux Operator
     category: "App Definition & Development"
@@ -122,580 +218,23 @@ sources:
     input:
       kustomize: config/crd
 
-  - name: fleet
-    alias: Fleet
-    category: "App Definition & Development"
-    url: https://github.com/rancher/fleet
-    extract: crd
-    input:
-      # fleet.cattle.io CRDs ship pre-rendered in the fleet-crd chart.
-      crdFile: charts/fleet-crd/templates/crds.yaml
-
   - name: k3s-helm-controller
     alias: k3s Helm Controller
     category: "App Definition & Development"
     url: https://github.com/k3s-io/helm-controller
     extract: crd
     input:
-      # helm.cattle.io HelmChart/HelmChartConfig; distinct group from Flux's
-      # helm.toolkit.fluxcd.io.
       crdDir: pkg/crds/yaml/generated
 
-  - name: cluster-api
-    alias: Cluster API
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api
+  - name: kargo
+    alias: Kargo
+    category: "App Definition & Development"
+    url: https://github.com/akuity/kargo
     extract: crd
     input:
-      releaseAsset: cluster-api-components.yaml
-
-  - name: cluster-api-operator
-    alias: Cluster API Operator
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-operator
-    extract: crd
-    input:
-      # operator.cluster.x-k8s.io provider-install CRDs (Core/Bootstrap/ControlPlane/
-      # Infrastructure/Addon/IPAM/RuntimeExtension Provider); distinct group from the
-      # core Cluster API CRDs. Per-kind base files, no release asset.
-      crdDir: config/crd/bases
-
-  - name: cluster-api-addon-provider-helm
-    alias: Cluster API Add-on Provider Helm
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm
-    extract: crd
-    input:
-      # addons.cluster.x-k8s.io HelmChartProxy + HelmReleaseProxy — the same group
-      # as core Cluster API's ClusterResourceSet kinds but distinct kinds, so no
-      # collision. Per-kind base files, no release asset.
-      crdDir: config/crd/bases
-
-  - name: cluster-api-provider-vsphere
-    alias: Cluster API vSphere
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-provider-vsphere
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io VSphere* CRDs (Cluster, ClusterIdentity,
-      # ClusterTemplate, DeploymentZone, FailureDomain, Machine, MachineTemplate,
-      # VM) — the shared CAPI infra-provider group, distinct kinds from the other
-      # providers. infrastructure-components.yaml is the full install bundle and
-      # the extractor keeps the CRDs. (The vmware.infrastructure.* supervisor-mode
-      # CRDs ship in a separate asset and are intentionally left out.)
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-openstack
-    alias: Cluster API OpenStack
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-provider-openstack
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io OpenStack* CRDs (Cluster, ClusterIdentity,
-      # ClusterTemplate, FloatingIPPool, Machine, MachineTemplate, Server) — the
-      # shared CAPI infra-provider group, distinct kinds from the other providers.
-      # infrastructure-components.yaml is the full install bundle; extractor keeps
-      # the CRDs.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-aws
-    alias: Cluster API AWS
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-provider-aws
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io AWS*/ROSA* CRDs plus EKS/NodeAdm bootstrap
-      # and AWSManaged*/ROSA* control-plane CRDs; provider-prefixed kinds avoid
-      # collisions with core Cluster API and other infra providers.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-azure
-    alias: Cluster API Azure
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-provider-azure
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io Azure* CRDs; same shared infra-provider
-      # group as vSphere/OpenStack but distinct provider-prefixed kinds.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-gcp
-    alias: Cluster API GCP
-    project: cluster-api
-    url: https://github.com/kubernetes-sigs/cluster-api-provider-gcp
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io GCP* CRDs plus bootstrap.cluster.x-k8s.io
-      # GKEConfig kinds; shared CAPI groups, distinct provider-prefixed kinds.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-metal3
-    alias: Cluster API Metal3
-    project: cluster-api
-    url: https://github.com/metal3-io/cluster-api-provider-metal3
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io Metal3* CRDs; shared infra-provider group,
-      # distinct kinds from the other providers.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-hetzner
-    alias: Cluster API Hetzner
-    project: cluster-api
-    url: https://github.com/syself/cluster-api-provider-hetzner
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io HCloud* and Hetzner* CRDs; shared
-      # infra-provider group, distinct kinds from the other providers.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-nutanix
-    alias: Cluster API Nutanix
-    project: cluster-api
-    url: https://github.com/nutanix-cloud-native/cluster-api-provider-nutanix
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io Nutanix* CRDs; shared infra-provider group,
-      # distinct kinds from the other providers.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: cluster-api-provider-rke2-bootstrap
-    alias: Cluster API RKE2 Bootstrap
-    project: cluster-api
-    url: https://github.com/rancher/cluster-api-provider-rke2
-    extract: crd
-    input:
-      # bootstrap.cluster.x-k8s.io RKE2Config and RKE2ConfigTemplate; distinct from
-      # kubeadm/EKS/GKE/k0s bootstrap kinds.
-      releaseAsset: bootstrap-components.yaml
-
-  - name: cluster-api-provider-rke2-control-plane
-    alias: Cluster API RKE2 Control Plane
-    project: cluster-api
-    url: https://github.com/rancher/cluster-api-provider-rke2
-    extract: crd
-    input:
-      # controlplane.cluster.x-k8s.io RKE2ControlPlane and template; distinct from
-      # kubeadm and other provider control-plane kinds.
-      releaseAsset: control-plane-components.yaml
-
-  - name: cluster-api-provider-k0smotron-bootstrap
-    alias: Cluster API k0smotron Bootstrap
-    project: cluster-api
-    url: https://github.com/k0sproject/k0smotron
-    extract: crd
-    input:
-      # bootstrap.cluster.x-k8s.io k0s controller/worker config CRDs; distinct
-      # kinds from kubeadm, EKS/GKE and RKE2 bootstrap providers.
-      releaseAsset: bootstrap-components.yaml
-
-  - name: cluster-api-provider-k0smotron-control-plane
-    alias: Cluster API k0smotron Control Plane
-    project: cluster-api
-    url: https://github.com/k0sproject/k0smotron
-    extract: crd
-    input:
-      # controlplane.cluster.x-k8s.io k0s/k0smotron control-plane CRDs plus the
-      # k0smotron.io hosted-control-plane API; no exact kind collision expected.
-      releaseAsset: control-plane-components.yaml
-
-  - name: cluster-api-provider-k0smotron-infrastructure
-    alias: Cluster API k0smotron Infrastructure
-    project: cluster-api
-    url: https://github.com/k0sproject/k0smotron
-    extract: crd
-    input:
-      # infrastructure.cluster.x-k8s.io Remote* CRDs; shared infra-provider group,
-      # distinct kinds from the other cataloged providers.
-      releaseAsset: infrastructure-components.yaml
-
-  - name: turtles
-    alias: Rancher Turtles
-    category: "Provisioning"
-    url: https://github.com/rancher/turtles
-    extract: crd
-    input:
-      crdDir: config/crd/bases
-
-  - name: elemental-operator
-    alias: Elemental Operator
-    category: "Provisioning"
-    url: https://github.com/rancher/elemental-operator
-    extract: crd
-    input:
-      crdDir: config/crd/bases
-
-  - name: system-upgrade-controller
-    alias: System Upgrade Controller
-    category: "Orchestration & Management"
-    url: https://github.com/rancher/system-upgrade-controller
-    extract: crd
-    input:
-      # upgrade.cattle.io Plan CRD ships as a release asset.
-      releaseAsset: crd.yaml
-
-  - name: gateway-api
-    alias: Gateway API
-    category: "Orchestration & Management"
-    pin: 1
-    url: https://github.com/kubernetes-sigs/gateway-api
-    extract: crd
-    input:
-      # The experimental channel is a strict superset of the default (standard)
-      # config/crd: same kinds and served versions, plus the experimental fields
-      # implementations actually use (HTTPRoute timeouts/retry/cors/sessionPersistence,
-      # GRPCRoute retry, …) and the two gateway.networking.x-k8s.io kinds
-      # (XBackendTrafficPolicy, XMesh). Standard-only would falsely reject valid
-      # manifests using those fields (Flagger canaries, Envoy Gateway, kgateway, Cilium).
-      kustomize: config/crd/experimental
-
-  - name: gateway-api-inference-extension
-    alias: Gateway API Inference Extension
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/gateway-api-inference-extension
-    extract: crd
-    input:
-      # inference.networking.k8s.io InferencePool plus inference.networking.x-k8s.io
-      # InferenceObjective/InferenceModelRewrite/InferencePoolImport. manifests.yaml
-      # is the most complete release asset: v1-manifests.yaml is stable-only,
-      # experimental-manifests.yaml lacks InferencePool, and manifests.yaml has no
-      # duplicate group/kind.
-      releaseAsset: manifests.yaml
-
-  - name: mcs-api
-    alias: Multi-Cluster Services API
-    category: "Runtime"
-    url: https://github.com/kubernetes-sigs/mcs-api
-    extract: crd
-    input:
-      # multicluster.x-k8s.io ServiceExport and ServiceImport ship as generated,
-      # schema-bearing per-kind CRDs under config/crd (config/crd-base is schemaless).
-      crdDir: config/crd
-
-  - name: cluster-inventory-api
-    alias: Cluster Inventory API
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/cluster-inventory-api
-    extract: crd
-    input:
-      # multicluster.x-k8s.io ClusterProfile and PlacementDecision ship as
-      # per-kind CRDs in config/crd/bases.
-      crdDir: config/crd/bases
-
-  - name: karmada
-    alias: Karmada
-    category: "Orchestration & Management"
-    cncf: incubating
-    url: https://github.com/karmada-io/karmada
-    extract: crd
-    input:
-      # Per-kind CRD files in grouped subdirs; the sibling kustomization only
-      # patches conversion webhooks. The vendored multicluster.x-k8s.io CRDs are
-      # owned by mcs-api, which ships them as its own source.
-      crdDir: charts/karmada/_crds/bases
-      exclude:
-        - multicluster.x-k8s.io_*
-
-  - name: cert-manager
-    alias: Cert Manager
-    category: "Provisioning"
-    cncf: graduated
-    pin: 2
-    url: https://github.com/cert-manager/cert-manager
-    extract: crd
-    input:
-      releaseAsset: cert-manager.crds.yaml
-
-  - name: trust-manager
-    alias: Trust Manager
-    category: "Provisioning"
-    cncf: graduated
-    url: https://github.com/cert-manager/trust-manager
-    extract: crd
-    input:
-      # cert-manager's trust-manager ships no CRD release asset; the two CRDs
-      # (group trust.cert-manager.io: Bundle, and trust-manager.io: ClusterBundle)
-      # are bare files under deploy/crds — the helm-templated copies live under
-      # deploy/charts, so crdDir fetches the plain deploy/crds tree.
-      crdDir: deploy/crds
-
-  - name: external-secrets
-    alias: External Secrets
-    category: "Provisioning"
-    cncf: sandbox
-    pin: 5
-    url: https://github.com/external-secrets/external-secrets
-    extract: crd
-    input:
-      # external-secrets interleaves helm-chart-* releases with the app v*
-      # releases, so releaseTag pins version resolution to the app tags.
-      releaseTag: "v*"
-      releaseAsset: external-secrets.yaml
-
-  - name: onepassword-operator
-    alias: 1Password Operator
-    category: "Provisioning"
-    url: https://github.com/1Password/onepassword-operator
-    extract: crd
-    input:
-      # onepassword.com (OnePasswordItem); the releases carry no assets, and the
-      # single CRD is the only file under config/crd/bases (no kustomization),
-      # so crdDir fetches the tree.
-      crdDir: config/crd/bases
-
-  - name: cilium
-    alias: Cilium
-    category: "Runtime"
-    cncf: graduated
-    pin: 1
-    url: https://github.com/cilium/cilium
-    extract: crd
-    input:
-      # cilium ships CRDs as bare per-kind YAML files (v2, v2alpha1) with no
-      # release asset or kustomization, so crdDir fetches the tree directly.
-      crdDir: pkg/k8s/apis/cilium.io/client/crds
-
-  - name: tailscale
-    alias: Tailscale
-    category: "Runtime"
-    url: https://github.com/tailscale/tailscale
-    extract: crd
-    input:
-      # tailscale.com CRDs (Connector, DNSConfig, ProxyClass, ProxyGroup,
-      # ProxyGroupPolicy, Recorder, Tailnet) ship as bare per-kind files under
-      # the k8s-operator deploy dir with no release asset, so crdDir fetches
-      # the tree.
-      crdDir: cmd/k8s-operator/deploy/crds
-
-  - name: external-snapshotter
-    alias: CSI External Snapshotter
-    category: "Runtime"
-    url: https://github.com/kubernetes-csi/external-snapshotter
-    extract: crd
-    input:
-      # snapshot.storage.k8s.io and groupsnapshot.storage.k8s.io CRDs
-      # (VolumeSnapshot*, VolumeGroupSnapshot*) ship as bare per-kind files under
-      # client/config/crd; crdDir fetches them (the sibling kustomization.yaml is
-      # a non-CRD doc the extractor drops).
-      crdDir: client/config/crd
-
-  - name: multus-cni
-    alias: Multus CNI
-    category: "Runtime"
-    url: https://github.com/k8snetworkplumbingwg/multus-cni
-    extract: crd
-    input:
-      # k8s.cni.cncf.io NetworkAttachmentDefinition has no dedicated CRD asset
-      # or dir; the quickstart install bundle carries the CRD plus RBAC/DaemonSet,
-      # so crdFile fetches the single committed bundle and the extractor keeps
-      # the CRD.
-      crdFile: deployments/multus-daemonset.yml
-
-  - name: nvidia-network-operator
-    alias: NVIDIA Network Operator
-    category: "Runtime"
-    url: https://github.com/Mellanox/network-operator
-    extract: crd
-    input:
-      # mellanox.com Network Operator CRDs (NicClusterPolicy, HostDeviceNetwork,
-      # IPoIBNetwork, MacvlanNetwork) ship as bare per-kind base files with no
-      # release asset, so crdDir fetches that tree.
-      crdDir: config/crd/bases
-
-  - name: spiderpool
-    alias: Spiderpool
-    category: "Runtime"
-    cncf: sandbox
-    url: https://github.com/spidernet-io/spiderpool
-    extract: crd
-    input:
-      # spiderpool.spidernet.io CRDs (SpiderCoordinator, SpiderEndpoint,
-      # SpiderIPPool, SpiderMultusConfig, SpiderReservedIP, SpiderSubnet) ship as
-      # Helm chart crds/ files. The release asset is a chart archive, not a YAML
-      # CRD bundle, and the dir also vendors Multus and SR-IOV CRDs, so crdDir
-      # fetches the chart CRDs with those foreign groups excluded.
-      crdDir: charts/spiderpool/crds
-      exclude:
-        - k8s.cni.cncf.io_*
-        - sriovnetwork.openshift.io_*
-
-  - name: skupper
-    alias: Skupper
-    category: "Runtime"
-    url: https://github.com/skupperproject/skupper
-    extract: crd
-    input:
-      # skupper.io v2 CRDs (Site, Listener, Connector, Link, AccessGrant,
-      # AccessToken, AttachedConnector*, Certificate, MultiKeyListener,
-      # RouterAccess, SecuredAccess) ship as a CRD-only release asset.
-      releaseAsset: skupper-crds.yaml
-
-  - name: prometheus-operator
-    alias: Prometheus Operator
-    category: "Observability & Analysis"
-    cncf: graduated
-    pin: 1
-    url: https://github.com/prometheus-operator/prometheus-operator
-    extract: crd
-    input:
-      releaseAsset: bundle.yaml
-
-  - name: victoriametrics-operator
-    alias: VictoriaMetrics Operator
-    category: "Observability & Analysis"
-    url: https://github.com/VictoriaMetrics/operator
-    extract: crd
-    input:
-      releaseAsset: crd.yaml
-
-  - name: fluent-operator
-    alias: Fluent Operator
-    category: "Observability & Analysis"
-    cncf: graduated
-    pin: 4
-    url: https://github.com/fluent/fluent-operator
-    extract: crd
-    input:
-      # fluent-operator ships one asset, setup.yaml, a full install bundle;
-      # the extractor picks out the CRDs and drops the RBAC/Deployment docs.
-      releaseAsset: setup.yaml
-
-  - name: grafana-operator
-    alias: Grafana Operator
-    category: "Observability & Analysis"
-    pin: 3
-    url: https://github.com/grafana/grafana-operator
-    extract: crd
-    input:
-      # grafana.integreatly.org CRDs (Grafana, GrafanaDashboard, GrafanaDatasource,
-      # GrafanaFolder, GrafanaAlertRuleGroup, GrafanaContactPoint, and others).
-      # crds.yaml is the CRD-only release asset.
-      releaseAsset: crds.yaml
-
-  - name: loki-operator
-    alias: Loki Operator
-    category: "Observability & Analysis"
-    pin: 5
-    url: https://github.com/grafana/loki
-    extract: crd
-    input:
-      # loki.grafana.com CRDs (LokiStack, AlertingRule, RecordingRule,
-      # RulerConfig) plus the operator's config.grafana.com ProjectConfig
-      # component-config, as bare per-kind files under operator/config/crd/bases.
-      # grafana/loki is a monorepo whose /releases/latest is the Loki app (v3.x),
-      # so releaseTag pins resolution to the operator's own operator/v* line; the
-      # resolved tag doubles as the git ref for the tree fetch.
-      releaseTag: "operator/v*"
-      crdDir: operator/config/crd/bases
-
-  - name: perses-operator
-    alias: Perses Operator
-    category: "Observability & Analysis"
-    cncf: sandbox
-    url: https://github.com/perses/perses-operator
-    extract: crd
-    input:
-      # perses.dev CRDs (Perses, PersesDashboard, PersesDatasource,
-      # PersesGlobalDatasource). No CRD release asset (only operator binaries);
-      # the CRDs are bare per-kind files under config/crd/bases (the kustomization
-      # and patches are siblings, not in bases), so crdDir fetches the tree.
-      crdDir: config/crd/bases
-
-  - name: opensearch-operator
-    alias: OpenSearch Operator
-    category: "Observability & Analysis"
-    url: https://github.com/opensearch-project/opensearch-k8s-operator
-    extract: crd
-    input:
-      # Two API groups: the current opensearch.org and the legacy
-      # opensearch.opster.io (OpenSearchCluster, OpenSearchUser, OpenSearchRole,
-      # and index/template/policy kinds), as bare per-kind files under the
-      # operator subdir's config/crd/bases. The dir also vendors a
-      # monitoring.coreos.com ServiceMonitor CRD already owned by the
-      # prometheus-operator source, so exclude it. The repo interleaves
-      # opensearch-cluster-* and a mistagged v3.0.0-alpha that /releases/latest
-      # would surface, so releaseTag pins resolution to the operator line.
-      releaseTag: "opensearch-operator-*"
-      crdDir: opensearch-operator/config/crd/bases
-      exclude:
-        - crd-servicemonitor.yaml
-
-  - name: jaeger-operator
-    alias: Jaeger Operator
-    category: "Observability & Analysis"
-    cncf: graduated
-    url: https://github.com/jaegertracing/jaeger-operator
-    extract: crd
-    input:
-      # The jaegertracing.io Jaeger CRD. jaeger-operator.yaml is the full
-      # install bundle; the extractor picks out the CRD and drops the
-      # RBAC/Deployment docs.
-      releaseAsset: jaeger-operator.yaml
-
-  - name: tempo-operator
-    alias: Tempo Operator
-    category: "Observability & Analysis"
-    url: https://github.com/grafana/tempo-operator
-    extract: crd
-    input:
-      # tempo.grafana.com CRDs (TempoStack, TempoMonolithic).
-      # tempo-operator.yaml is the full install bundle; the extractor picks
-      # out the CRDs and drops the RBAC/Deployment docs.
-      releaseAsset: tempo-operator.yaml
-
-  - name: logging-operator
-    alias: Logging Operator
-    category: "Observability & Analysis"
-    cncf: sandbox
-    url: https://github.com/kube-logging/logging-operator
-    extract: crd
-    input:
-      # logging.banzaicloud.io and logging-extensions.banzaicloud.io CRDs
-      # (Logging, Flow, Output, their cluster variants, and the syslog-ng
-      # kinds). The chart copies are Helm-templated, so crdDir fetches the
-      # bare per-kind files under config/crd/bases. Releases use bare tags
-      # (6.7.0, no v).
-      crdDir: config/crd/bases
-
-  - name: datadog-operator
-    alias: Datadog Operator
-    category: "Observability & Analysis"
-    url: https://github.com/DataDog/datadog-operator
-    extract: crd
-    input:
-      # datadoghq.com CRDs (DatadogAgent, DatadogMonitor, DatadogSLO,
-      # DatadogPodAutoscaler and others). Release assets are kubectl plugin
-      # binaries only, so crdDir fetches the bare per-kind files under
-      # config/crd/bases/v1.
-      crdDir: config/crd/bases/v1
-
-  - name: litmus
-    alias: Litmus
-    category: "Observability & Analysis"
-    cncf: incubating
-    url: https://github.com/litmuschaos/chaos-operator
-    extract: crd
-    input:
-      # litmuschaos.io CRDs (ChaosEngine, ChaosExperiment, ChaosResult). The
-      # chaos-operator repo owns the CRDs and releases in lockstep with Litmus;
-      # no CRD release asset, so crdDir fetches the bare per-kind files under
-      # deploy/crds, the hand-written set the Litmus install actually deploys.
-      # The kubebuilder-generated config/crd/bases copy is over-strict: it
-      # requires spec.components and rejects the canonical docs examples.
-      # Releases use bare tags (3.30.0, no v).
-      crdDir: deploy/crds
-
-  - name: keda
-    alias: KEDA
-    category: "Orchestration & Management"
-    cncf: graduated
-    pin: 3
-    url: https://github.com/kedacore/keda
-    extract: crd
-    input:
-      # keda's CRD asset embeds the version in its name (keda-<ver>-crds.yaml),
-      # so a glob selects it independent of the resolved release.
-      releaseAsset: "keda-*-crds.yaml"
+      # No CRD release asset; use the bare Helm resources CRD dir, not the
+      # templated crds.yaml under templates/.
+      crdDir: charts/kargo/resources/crds
 
   - name: knative-serving
     alias: Knative Serving
@@ -713,31 +252,139 @@ sources:
     input:
       releaseAsset: eventing-crds.yaml
 
-  - name: tekton-pipeline
-    alias: Tekton Pipeline
-    category: "App Definition & Development"
-    url: https://github.com/tektoncd/pipeline
+  # KServe: config/crd/full is canonical but omits the newer llmisvc subdir,
+  # so LLMInferenceService is pulled as a second source.
+  - name: kserve
+    alias: KServe
+    project: kserve
+    url: https://github.com/kserve/kserve
     extract: crd
     input:
-      # tekton ships no CRD-only asset; release.yaml is the full install
-      # bundle and the extractor picks out the CRDs. (Triggers/Chains are
-      # skipped: Triggers' CRDs are preserve-unknown stubs, Chains has none.)
-      releaseAsset: release.yaml
+      # Use crdDir instead of kustomize because kubectl kustomize times out on
+      # this large repo. Excludes mirror the full render scope and leave llmisvc
+      # to the dedicated source.
+      crdDir: config/crd/full
+      exclude:
+        - "*_patch.yaml"
+        - "serving.kserve.io_llminferenceservice*"
+        - "serving.kserve.io_localmodel*"
 
-  - name: actions-runner-controller
-    alias: Actions Runner Controller
-    category: "App Definition & Development"
-    url: https://github.com/actions/actions-runner-controller
+  - name: kserve-llmisvc
+    alias: KServe LLM
+    project: kserve
+    url: https://github.com/kserve/kserve
     extract: crd
     input:
-      # GitHub's self-hosted runner operator. Two API groups: the current
-      # actions.github.com (AutoscalingRunnerSet, AutoscalingListener,
-      # EphemeralRunner, EphemeralRunnerSet) and the legacy actions.summerwind.dev
-      # (Runner, RunnerDeployment, RunnerReplicaSet, RunnerSet,
-      # HorizontalRunnerAutoscaler). Both ship as bare per-kind files under
-      # config/crd/bases (the kustomization and patches are siblings, not in
-      # bases), so crdDir fetches the tree. Releases are the gha-runner-scale-set-*
-      # line, which /releases/latest resolves to and doubles as the git ref.
+      # Same crdDir-over-kustomize trade as the main KServe source; exclude
+      # conversion-webhook patches that only add spec.conversion.
+      crdDir: config/crd/full/llmisvc
+      exclude:
+        - "*_patch.yaml"
+
+  # Kubeflow: controller repos own distinct APIs, so no collision excludes are
+  # needed.
+  - name: kubeflow-trainer
+    alias: Kubeflow Trainer
+    project: kubeflow
+    url: https://github.com/kubeflow/trainer
+    extract: crd
+    input:
+      crdDir: charts/kubeflow-trainer/crds
+
+  - name: kubeflow-pipelines
+    alias: Kubeflow Pipelines
+    project: kubeflow
+    url: https://github.com/kubeflow/pipelines
+    extract: crd
+    input:
+      crdDir: manifests/kustomize/base/crds
+
+  - name: mpi-operator
+    alias: MPI Operator
+    project: kubeflow
+    url: https://github.com/kubeflow/mpi-operator
+    extract: crd
+    input:
+      crdFile: manifests/base/kubeflow.org_mpijobs.yaml
+
+  - name: spark-operator
+    alias: Spark Operator
+    project: kubeflow
+    url: https://github.com/kubeflow/spark-operator
+    extract: crd
+    input:
+      crdDir: charts/spark-operator-chart/crds
+
+  - name: notebook-controller
+    alias: Kubeflow Notebooks
+    project: kubeflow
+    url: https://github.com/kubeflow/notebooks
+    extract: crd
+    input:
+      crdDir: components/notebook-controller/config/crd/bases
+
+  - name: poddefaults-webhook
+    alias: Kubeflow PodDefaults
+    project: kubeflow
+    url: https://github.com/kubeflow/dashboard
+    extract: crd
+    input:
+      crdFile: components/poddefaults-webhooks/manifests/kustomize/base/crd.yaml
+
+  - name: profile-controller
+    alias: Kubeflow Profiles
+    project: kubeflow
+    url: https://github.com/kubeflow/dashboard
+    extract: crd
+    input:
+      # The CRD dir also holds partial kustomize *_patch.yaml docs, so target
+      # the one complete CRD file.
+      crdFile: components/profile-controller/manifests/kustomize/base/crd/kubeflow.org_profiles.yaml
+
+  - name: pvcviewer-controller
+    alias: Kubeflow PVCViewer
+    project: kubeflow
+    url: https://github.com/kubeflow/notebooks
+    extract: crd
+    input:
+      crdDir: components/pvcviewer-controller/config/crd/bases
+
+  - name: tensorboard-controller
+    alias: Kubeflow Tensorboard
+    project: kubeflow
+    url: https://github.com/kubeflow/notebooks
+    extract: crd
+    input:
+      crdDir: components/tensorboard-controller/config/crd/bases
+
+  - name: mariadb-operator
+    alias: MariaDB Operator
+    category: "App Definition & Development"
+    url: https://github.com/mariadb-operator/mariadb-operator
+    extract: crd
+    input:
+      # The repo interleaves four release lines per version; only
+      # mariadb-operator-crds-* carries the CRD-only asset.
+      releaseTag: "mariadb-operator-crds-*"
+      releaseAsset: crds.yaml
+
+  - name: nats
+    alias: NATS
+    category: "App Definition & Development"
+    cncf: incubating
+    url: https://github.com/nats-io/nack
+    extract: crd
+    input:
+      # CRDs ship from nack; nats-operator is deprecated. crds.yml is CRD-only.
+      releaseAsset: crds.yml
+
+  - name: open-feature-operator
+    alias: OpenFeature Operator
+    category: "App Definition & Development"
+    cncf: incubating
+    url: https://github.com/open-feature/open-feature-operator
+    extract: crd
+    input:
       crdDir: config/crd/bases
 
   - name: openkruise
@@ -747,95 +394,41 @@ sources:
     url: https://github.com/openkruise/kruise
     extract: crd
     input:
-      # apps.kruise.io advanced workload CRDs plus policy.kruise.io
-      # PodUnavailableBudget ship as generated per-kind base files.
       crdDir: config/crd/bases
 
-  - name: kyverno
-    alias: Kyverno
-    category: "Provisioning"
-    cncf: graduated
-    pin: 4
-    url: https://github.com/kyverno/kyverno
-    extract: crd
-    input:
-      # kyverno ships only per-CRD assets (no single CRD bundle), so install.yaml
-      # is the one asset carrying every CRD; the extractor drops the non-CRD docs.
-      releaseAsset: install.yaml
-
-  - name: sigstore-policy-controller
-    alias: Sigstore Policy Controller
-    category: "Provisioning"
-    url: https://github.com/sigstore/policy-controller
-    extract: crd
-    input:
-      # policy.sigstore.dev CRDs (ClusterImagePolicy, TrustRoot). No CRD-only
-      # asset; the config dir's kustomization renders the full install bundle
-      # and the extractor picks out the CRDs, dropping the RBAC/webhook/config
-      # docs.
-      kustomize: config
-
-  - name: falco-operator
-    alias: Falco Operator
-    category: "Provisioning"
-    cncf: graduated
-    url: https://github.com/falcosecurity/falco-operator
-    extract: crd
-    input:
-      # instance.falcosecurity.dev (Falco, Component) and
-      # artifact.falcosecurity.dev (Config, Plugin, Rulesfile) CRDs.
-      # install.yaml is the full install bundle; the extractor picks out the
-      # CRDs and drops the RBAC/Deployment docs.
-      releaseAsset: install.yaml
-
-  - name: trivy-operator
-    alias: Trivy Operator
-    category: "Provisioning"
-    url: https://github.com/aquasecurity/trivy-operator
-    extract: crd
-    input:
-      # aquasecurity.github.io vulnerability/config/RBAC/infra/SBOM/compliance
-      # report CRDs ship as bare files in the Helm chart's crds directory.
-      crdDir: deploy/helm/crds
-
-  - name: kubescape-operator
-    alias: Kubescape Operator
-    category: "Provisioning"
-    cncf: incubating
-    url: https://github.com/kubescape/helm-charts
-    extract: crd
-    input:
-      # kubescape.io CRDs (SecurityException, ClusterSecurityException, Rules,
-      # OperatorCommand) as bare files under the operator chart's crds dir,
-      # the untemplated Helm convention. The CRDs ship with the chart, so the
-      # recorded version is the chart tag; releaseTag pins resolution to the
-      # kubescape-operator-* line and the resolved tag doubles as the git ref.
-      releaseTag: "kubescape-operator-*"
-      crdDir: charts/kubescape-operator/crds
-
-  - name: rook
-    alias: Rook
-    category: "Runtime"
-    cncf: graduated
-    pin: 4
-    url: https://github.com/rook/rook
-    extract: crd
-    input:
-      # rook publishes no release assets; its whole CRD set is one committed file
-      # that shares deploy/examples with ~99 unrelated manifests, so crdFile
-      # fetches just that bundle.
-      crdFile: deploy/examples/crds.yaml
-
-  - name: vitess-operator
-    alias: Vitess Operator
+  - name: rabbitmq-cluster-operator
+    alias: RabbitMQ Cluster Operator
     category: "App Definition & Development"
-    cncf: graduated
-    url: https://github.com/planetscale/vitess-operator
+    url: https://github.com/rabbitmq/cluster-operator
     extract: crd
     input:
-      # vitess CRDs live in the operator repo as bare per-kind files with no
-      # release asset, so crdDir fetches the tree directly.
-      crdDir: deploy/crds
+      releaseAsset: cluster-operator.yml
+
+  - name: redis-operator
+    alias: Redis Operator
+    category: "App Definition & Development"
+    url: https://github.com/OT-CONTAINER-KIT/redis-operator
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: scylla-operator
+    alias: ScyllaDB Operator
+    category: "App Definition & Development"
+    url: https://github.com/scylladb/scylla-operator
+    extract: crd
+    input:
+      # Helm and deploy CRD dirs are symlinks skipped by the tar extractor;
+      # the real generated files live under pkg/api/scylla.
+      crdDir: pkg/api/scylla
+
+  - name: seldon-core
+    alias: Seldon Core v2
+    category: "App Definition & Development"
+    url: https://github.com/SeldonIO/seldon-core
+    extract: crd
+    input:
+      releaseAsset: crds.yaml
 
   - name: strimzi
     alias: Strimzi
@@ -844,24 +437,439 @@ sources:
     url: https://github.com/strimzi/strimzi-kafka-operator
     extract: crd
     input:
-      # strimzi maintains two concurrent lines: 0.x still serves both v1beta2
-      # (what essentially every real manifest uses) and v1, while the newer 1.x
-      # serves v1 only. Pin to 0.x for the wider coverage, and so neither line
-      # regresses the other via GitHub's /releases/latest. The CRD asset embeds
-      # the version, hence the glob.
+      # Pin 0.x for wider v1beta2 coverage; 1.x serves v1 only. The CRD asset
+      # embeds the version, hence the glob.
       releaseTag: "0.*"
       releaseAsset: "strimzi-crds-*.yaml"
 
-  - name: nats
-    alias: NATS
+  - name: tekton-pipeline
+    alias: Tekton Pipeline
     category: "App Definition & Development"
-    cncf: incubating
-    url: https://github.com/nats-io/nack
+    url: https://github.com/tektoncd/pipeline
     extract: crd
     input:
-      # NATS CRDs (JetStream) ship from nack, the NATS Controllers for
-      # Kubernetes; nats-operator is deprecated. crds.yml is the CRD-only asset.
-      releaseAsset: crds.yml
+      # No CRD-only asset; use the full install bundle. Triggers CRDs are
+      # preserve-unknown stubs and Chains has none.
+      releaseAsset: release.yaml
+
+  - name: vitess-operator
+    alias: Vitess Operator
+    category: "App Definition & Development"
+    cncf: graduated
+    url: https://github.com/planetscale/vitess-operator
+    extract: crd
+    input:
+      # Bare per-kind CRDs with no release asset.
+      crdDir: deploy/crds
+
+  # ===== Orchestration & Management =====
+
+  - name: aws-load-balancer-controller
+    alias: AWS Load Balancer Controller
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/aws-load-balancer-controller
+    extract: crd
+    input:
+      # The Helm crds dir has two CRD bundles, but its kustomization lists only
+      # one, so crdDir picks up both bundles.
+      crdDir: helm/aws-load-balancer-controller/crds
+
+  - name: cluster-inventory-api
+    alias: Cluster Inventory API
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/cluster-inventory-api
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: envoy-gateway
+    alias: Envoy Gateway
+    category: "Orchestration & Management"
+    cncf: graduated
+    url: https://github.com/envoyproxy/gateway
+    extract: crd
+    input:
+      # CRD-only asset excludes Gateway API CRDs, avoiding source collisions.
+      releaseAsset: envoy-gateway-crds.yaml
+
+  - name: external-dns
+    alias: ExternalDNS
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/external-dns
+    extract: crd
+    input:
+      # Single CRD file under config/crd/standard, no kustomization.
+      crdDir: config/crd/standard
+
+  - name: gateway-api
+    alias: Gateway API
+    category: "Orchestration & Management"
+    pin: 1
+    url: https://github.com/kubernetes-sigs/gateway-api
+    extract: crd
+    input:
+      # Use experimental: it is a strict superset of standard and includes fields
+      # real implementations use. Standard-only would reject valid manifests.
+      kustomize: config/crd/experimental
+
+  - name: gateway-api-inference-extension
+    alias: Gateway API Inference Extension
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/gateway-api-inference-extension
+    extract: crd
+    input:
+      # manifests.yaml is the complete asset: v1 is stable-only and experimental
+      # lacks InferencePool.
+      releaseAsset: manifests.yaml
+
+  - name: istio
+    alias: Istio
+    category: "Orchestration & Management"
+    cncf: graduated
+    pin: 2
+    url: https://github.com/istio/istio
+    extract: crd
+    input:
+      # Fetch the generated raw bundle consumed by the Helm base chart.
+      crdFile: manifests/charts/base/files/crd-all.gen.yaml
+
+  - name: jobset
+    alias: JobSet
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/jobset
+    extract: crd
+    input:
+      # Base dir holds the full CRD; kustomization and patches sit one level up.
+      crdDir: config/components/crd/bases
+
+  - name: karmada
+    alias: Karmada
+    category: "Orchestration & Management"
+    cncf: incubating
+    url: https://github.com/karmada-io/karmada
+    extract: crd
+    input:
+      # Per-kind CRD files in grouped subdirs; sibling kustomization only patches
+      # webhooks. Vendored MCS CRDs belong to mcs-api.
+      crdDir: charts/karmada/_crds/bases
+      exclude:
+        - multicluster.x-k8s.io_*
+
+  # Karpenter: take shared karpenter.sh CRDs only from core. Provider repos
+  # vendor them too, so each provider source targets only its nodeclass.
+  - name: karpenter
+    alias: Karpenter
+    project: karpenter
+    url: https://github.com/kubernetes-sigs/karpenter
+    extract: crd
+    input:
+      crdDir: pkg/apis/crds
+
+  - name: karpenter-aws
+    alias: Karpenter AWS
+    project: karpenter
+    url: https://github.com/aws/karpenter-provider-aws
+    extract: crd
+    input:
+      # Target only the AWS nodeclass; shared karpenter.sh CRDs come from core.
+      crdFile: pkg/apis/crds/karpenter.k8s.aws_ec2nodeclasses.yaml
+
+  - name: karpenter-azure
+    alias: Karpenter Azure
+    project: karpenter
+    url: https://github.com/Azure/karpenter-provider-azure
+    extract: crd
+    input:
+      # Target only the Azure nodeclass; shared karpenter.sh CRDs come from core.
+      crdFile: pkg/apis/crds/karpenter.azure.com_aksnodeclasses.yaml
+
+  - name: karpenter-provider-cluster-api
+    alias: Karpenter Cluster API
+    project: karpenter
+    url: https://github.com/kubernetes-sigs/karpenter-provider-cluster-api
+    extract: crd
+    input:
+      # Target only the Cluster API nodeclass and skip the sibling List-kind CRD.
+      crdFile: config/crd/bases/karpenter.cluster.x-k8s.io_clusterapinodeclasses.yaml
+
+  - name: karpenter-provider-ibm-cloud
+    alias: Karpenter IBM Cloud
+    project: karpenter
+    url: https://github.com/kubernetes-sigs/karpenter-provider-ibm-cloud
+    extract: crd
+    input:
+      # Target only the IBM nodeclass; shared karpenter.sh CRDs come from core.
+      crdFile: config/components/crds/karpenter-ibm.sh_ibmnodeclasses.yaml
+
+  - name: keda
+    alias: KEDA
+    category: "Orchestration & Management"
+    cncf: graduated
+    pin: 3
+    url: https://github.com/kedacore/keda
+    extract: crd
+    input:
+      # CRD asset embeds the version, so use a glob.
+      releaseAsset: "keda-*-crds.yaml"
+
+  - name: kgateway
+    alias: kgateway
+    category: "Orchestration & Management"
+    cncf: sandbox
+    url: https://github.com/kgateway-dev/kgateway
+    extract: crd
+    input:
+      # No CRD release asset; use the CRD-only Helm chart plain templates.
+      # Vendored Gateway API stays with the gateway-api source.
+      crdDir: install/helm/kgateway-crds/templates
+
+  - name: kjob
+    alias: kjob
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/kjob
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: kubeedge
+    alias: KubeEdge
+    category: "Orchestration & Management"
+    cncf: graduated
+    url: https://github.com/kubeedge/kubeedge
+    extract: crd
+    input:
+      # Fetch generated CRDs under build/crds; manifests and charts are duplicates.
+      crdDir: build/crds
+
+  - name: kuberay
+    alias: KubeRay
+    category: "Orchestration & Management"
+    url: https://github.com/ray-project/kuberay
+    extract: crd
+    input:
+      # Bare per-kind Helm chart CRDs with no release bundle.
+      crdDir: helm-chart/kuberay-operator/crds
+
+  - name: kueue
+    alias: Kueue
+    category: "Orchestration & Management"
+    pin: 5
+    url: https://github.com/kubernetes-sigs/kueue
+    extract: crd
+    input:
+      # Full install bundle; the extractor keeps the CRDs.
+      releaseAsset: manifests.yaml
+
+  - name: kuma
+    alias: Kuma
+    category: "Orchestration & Management"
+    cncf: sandbox
+    url: https://github.com/kumahq/kuma
+    extract: crd
+    input:
+      crdDir: deployments/charts/kuma/crds
+
+  - name: kwok
+    alias: KWOK
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/kwok
+    extract: crd
+    input:
+      crdDir: kustomize/crd/bases
+
+  - name: lws
+    alias: LeaderWorkerSet
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes-sigs/lws
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: linkerd
+    alias: Linkerd
+    category: "Orchestration & Management"
+    cncf: graduated
+    url: https://github.com/linkerd/linkerd2
+    extract: crd
+    input:
+      # Chart CRD templates contain Helm directives and vendored Gateway API, so
+      # use the rendered CLI golden bundle. Releases are edge-* only.
+      crdFile: cli/cmd/testdata/install_crds.golden
+
+  - name: metallb
+    alias: MetalLB
+    category: "Orchestration & Management"
+    cncf: sandbox
+    url: https://github.com/metallb/metallb
+    extract: crd
+    input:
+      # /releases/latest points at chart tags, so constrain to app tags. The
+      # sibling kustomization only patches webhooks.
+      releaseTag: "v*"
+      crdDir: config/crd/bases
+
+  # Node Feature Discovery: target the NFD bundle next to its sample CR, and
+  # pull NodeResourceTopology from its separate dir.
+  - name: node-feature-discovery
+    alias: Node Feature Discovery
+    project: node-feature-discovery
+    url: https://github.com/kubernetes-sigs/node-feature-discovery
+    extract: crd
+    input:
+      crdFile: deployment/base/nfd-crds/nfd-api-crds.yaml
+
+  - name: node-feature-discovery-nrt
+    alias: NFD NodeResourceTopology
+    project: node-feature-discovery
+    url: https://github.com/kubernetes-sigs/node-feature-discovery
+    extract: crd
+    input:
+      crdFile: deployment/base/noderesourcetopologies-crd/noderesourcetopologies.yaml
+
+  - name: system-upgrade-controller
+    alias: System Upgrade Controller
+    category: "Orchestration & Management"
+    url: https://github.com/rancher/system-upgrade-controller
+    extract: crd
+    input:
+      releaseAsset: crd.yaml
+
+  - name: traefik
+    alias: Traefik
+    category: "Orchestration & Management"
+    url: https://github.com/traefik/traefik
+    extract: crd
+    input:
+      # Committed raw CRD bundle.
+      crdFile: docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+
+  - name: vertical-pod-autoscaler
+    alias: Vertical Pod Autoscaler
+    category: "Orchestration & Management"
+    url: https://github.com/kubernetes/autoscaler
+    extract: crd
+    input:
+      # kubernetes/autoscaler monorepo: releaseTag pins VPA tags and avoids
+      # cluster-autoscaler or chart releases.
+      releaseTag: "vertical-pod-autoscaler-*"
+      crdFile: vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+
+  # Volcano: target bases dirs for full all-version CRDs and avoid sibling
+  # v1beta1 stubs. JobFlow lives in its own dir, hence a second source.
+  - name: volcano
+    alias: Volcano
+    project: volcano
+    url: https://github.com/volcano-sh/volcano
+    extract: crd
+    input:
+      crdDir: config/crd/volcano/bases
+
+  - name: volcano-jobflow
+    alias: Volcano JobFlow
+    project: volcano
+    url: https://github.com/volcano-sh/volcano
+    extract: crd
+    input:
+      crdDir: config/crd/jobflow/bases
+
+  # ===== Observability & Analysis =====
+
+  - name: datadog-operator
+    alias: Datadog Operator
+    category: "Observability & Analysis"
+    url: https://github.com/DataDog/datadog-operator
+    extract: crd
+    input:
+      # Release assets are kubectl plugin binaries only, so fetch bare base files.
+      crdDir: config/crd/bases/v1
+
+  - name: eck-operator
+    alias: Elastic Cloud
+    category: "Observability & Analysis"
+    url: https://github.com/elastic/cloud-on-k8s
+    extract: crd
+    input:
+      # No release asset; target generated all-crds.yaml instead of neighboring
+      # resources and patches subdirs.
+      crdFile: config/crds/v1/all-crds.yaml
+
+  - name: fluent-operator
+    alias: Fluent Operator
+    category: "Observability & Analysis"
+    cncf: graduated
+    pin: 4
+    url: https://github.com/fluent/fluent-operator
+    extract: crd
+    input:
+      # Full install bundle; the extractor keeps the CRDs.
+      releaseAsset: setup.yaml
+
+  - name: grafana-operator
+    alias: Grafana Operator
+    category: "Observability & Analysis"
+    pin: 3
+    url: https://github.com/grafana/grafana-operator
+    extract: crd
+    input:
+      # crds.yaml is the CRD-only release asset.
+      releaseAsset: crds.yaml
+
+  - name: jaeger-operator
+    alias: Jaeger Operator
+    category: "Observability & Analysis"
+    cncf: graduated
+    url: https://github.com/jaegertracing/jaeger-operator
+    extract: crd
+    input:
+      # Full install bundle; the extractor keeps the CRD.
+      releaseAsset: jaeger-operator.yaml
+
+  - name: litmus
+    alias: Litmus
+    category: "Observability & Analysis"
+    cncf: incubating
+    url: https://github.com/litmuschaos/chaos-operator
+    extract: crd
+    input:
+      # Use the hand-written CRDs from deploy/crds. The kubebuilder bases are
+      # over-strict and reject canonical examples. Releases use bare tags.
+      crdDir: deploy/crds
+
+  - name: logging-operator
+    alias: Logging Operator
+    category: "Observability & Analysis"
+    cncf: sandbox
+    url: https://github.com/kube-logging/logging-operator
+    extract: crd
+    input:
+      # Chart copies are Helm-templated, so fetch bare base files. Releases use
+      # bare tags, no v prefix.
+      crdDir: config/crd/bases
+
+  - name: loki-operator
+    alias: Loki Operator
+    category: "Observability & Analysis"
+    pin: 5
+    url: https://github.com/grafana/loki
+    extract: crd
+    input:
+      # grafana/loki monorepo: /releases/latest is the Loki app (v3.x), so
+      # releaseTag pins resolution to the operator's own operator/v* line.
+      releaseTag: "operator/v*"
+      crdDir: operator/config/crd/bases
+
+  - name: opensearch-operator
+    alias: OpenSearch Operator
+    category: "Observability & Analysis"
+    url: https://github.com/opensearch-project/opensearch-k8s-operator
+    extract: crd
+    input:
+      # Exclude the vendored ServiceMonitor owned by prometheus-operator.
+      # releaseTag avoids opensearch-cluster-* tags and a mistagged alpha.
+      releaseTag: "opensearch-operator-*"
+      crdDir: opensearch-operator/config/crd/bases
+      exclude:
+        - crd-servicemonitor.yaml
 
   - name: opentelemetry
     alias: OpenTelemetry Operator
@@ -871,73 +879,115 @@ sources:
     url: https://github.com/open-telemetry/opentelemetry-operator
     extract: crd
     input:
-      # No CRD-only asset; opentelemetry-operator.yaml is the full install
-      # bundle and the extractor picks out the CRDs. (Descriptions are sparse
-      # upstream — the collector config is a preserve-unknown-fields map.)
+      # No CRD-only asset, so use the full install bundle. Descriptions are
+      # sparse upstream because collector config preserves unknown fields.
       releaseAsset: opentelemetry-operator.yaml
 
-  - name: gatekeeper
-    alias: OPA Gatekeeper
-    category: "Provisioning"
-    cncf: graduated
-    url: https://github.com/open-policy-agent/gatekeeper
-    extract: crd
-    input:
-      # gatekeeper's releases ship only the gator CLI; the CRDs are bare
-      # per-kind files in the Helm chart, so crdDir fetches that tree. (Only
-      # the framework CRDs are here; per-constraint kinds are generated at
-      # runtime from ConstraintTemplates and cannot be catalogued.)
-      crdDir: charts/gatekeeper/crds
-
-  - name: envoy-gateway
-    alias: Envoy Gateway
-    category: "Orchestration & Management"
-    cncf: graduated
-    url: https://github.com/envoyproxy/gateway
-    extract: crd
-    input:
-      # envoy-gateway-crds.yaml carries only the gateway.envoyproxy.io policy
-      # CRDs (no Gateway API CRDs, so no collision with the gateway-api source).
-      releaseAsset: envoy-gateway-crds.yaml
-
-  - name: kgateway
-    alias: kgateway
-    category: "Orchestration & Management"
+  - name: perses-operator
+    alias: Perses Operator
+    category: "Observability & Analysis"
     cncf: sandbox
-    url: https://github.com/kgateway-dev/kgateway
+    url: https://github.com/perses/perses-operator
     extract: crd
     input:
-      # gateway.kgateway.dev CRDs (Backend, BackendConfigPolicy, TrafficPolicy,
-      # HTTPListenerPolicy, ListenerPolicy, GatewayExtension, GatewayParameters,
-      # DirectResponse). No CRD release asset; the CRD-only Helm chart ships them
-      # as plain (non-templated) files under its templates dir, so crdDir fetches
-      # the tree (the sibling NOTES.txt is skipped by the extractor). The Gateway
-      # API TCPRoute vendored under pkg/kgateway/crds is intentionally left to the
-      # gateway-api source.
-      crdDir: install/helm/kgateway-crds/templates
+      # No CRD release asset, only operator binaries. Fetch bare base files;
+      # kustomization and patches are siblings, not in bases.
+      crdDir: config/crd/bases
 
-  - name: traefik
-    alias: Traefik
-    category: "Orchestration & Management"
-    url: https://github.com/traefik/traefik
-    extract: crd
-    input:
-      # traefik.io IngressRoute/Middleware/ServersTransport/TLS/TraefikService
-      # CRDs ship as one committed raw bundle; the extractor keeps the CRDs.
-      crdFile: docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
-
-  - name: linkerd
-    alias: Linkerd
-    category: "Orchestration & Management"
+  - name: prometheus-operator
+    alias: Prometheus Operator
+    category: "Observability & Analysis"
     cncf: graduated
-    url: https://github.com/linkerd/linkerd2
+    pin: 1
+    url: https://github.com/prometheus-operator/prometheus-operator
     extract: crd
     input:
-      # linkerd's chart CRD templates contain Helm directives (and vendor Gateway
-      # API CRDs), so use the rendered non-templated CLI golden bundle with only
-      # linkerd.io, policy.linkerd.io and workload.linkerd.io CRDs. Releases are
-      # edge-* only; /releases/latest resolves to that line and doubles as the ref.
-      crdFile: cli/cmd/testdata/install_crds.golden
+      releaseAsset: bundle.yaml
+
+  - name: tempo-operator
+    alias: Tempo Operator
+    category: "Observability & Analysis"
+    url: https://github.com/grafana/tempo-operator
+    extract: crd
+    input:
+      # Full install bundle; the extractor keeps the CRDs.
+      releaseAsset: tempo-operator.yaml
+
+  - name: victoriametrics-operator
+    alias: VictoriaMetrics Operator
+    category: "Observability & Analysis"
+    url: https://github.com/VictoriaMetrics/operator
+    extract: crd
+    input:
+      releaseAsset: crd.yaml
+
+  # ===== Runtime =====
+
+  - name: antrea
+    alias: Antrea
+    category: "Runtime"
+    cncf: sandbox
+    url: https://github.com/antrea-io/antrea
+    extract: crd
+    input:
+      # Use the CRD-only release asset, not the full install bundle.
+      releaseAsset: antrea-crds.yml
+
+  - name: calico
+    alias: Calico
+    project: calico
+    url: https://github.com/projectcalico/calico
+    extract: crd
+    input:
+      # Exclude vendored ClusterNetworkPolicy, owned by network-policy-api.
+      crdDir: libcalico-go/config/crd
+      exclude:
+        - policy.networking.k8s.io_*
+
+  - name: tigera-operator
+    alias: Tigera Operator
+    project: calico
+    url: https://github.com/projectcalico/calico
+    extract: crd
+    input:
+      crdDir: charts/crd.projectcalico.org.v1/templates
+
+  - name: cilium
+    alias: Cilium
+    category: "Runtime"
+    cncf: graduated
+    pin: 1
+    url: https://github.com/cilium/cilium
+    extract: crd
+    input:
+      # Bare CRD files, no release asset or kustomization.
+      crdDir: pkg/k8s/apis/cilium.io/client/crds
+
+  - name: cosi
+    alias: Container Object Storage Interface
+    category: "Runtime"
+    url: https://github.com/kubernetes-sigs/container-object-storage-interface
+    extract: crd
+    input:
+      crdDir: client/config/crd
+
+  - name: external-snapshotter
+    alias: CSI External Snapshotter
+    category: "Runtime"
+    url: https://github.com/kubernetes-csi/external-snapshotter
+    extract: crd
+    input:
+      # Bare CRD files; the sibling kustomization.yaml is a non-CRD doc.
+      crdDir: client/config/crd
+
+  - name: kube-ovn
+    alias: Kube-OVN
+    category: "Runtime"
+    cncf: sandbox
+    url: https://github.com/kubeovn/kube-ovn
+    extract: crd
+    input:
+      crdFile: charts/kube-ovn-v2/crds/kube-ovn-crd.yaml
 
   - name: longhorn
     alias: Longhorn
@@ -947,73 +997,112 @@ sources:
     url: https://github.com/longhorn/longhorn
     extract: crd
     input:
-      # longhorn.yaml is the full install bundle; the extractor picks out the
-      # 23 longhorn.io CRDs and drops the RBAC/Deployment/DaemonSet docs.
+      # Full install bundle; the extractor keeps the CRDs.
       releaseAsset: longhorn.yaml
 
-  - name: vertical-pod-autoscaler
-    alias: Vertical Pod Autoscaler
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes/autoscaler
+  - name: mcs-api
+    alias: Multi-Cluster Services API
+    category: "Runtime"
+    url: https://github.com/kubernetes-sigs/mcs-api
     extract: crd
     input:
-      # kubernetes/autoscaler is a monorepo whose /releases/latest is whatever
-      # component shipped last (usually cluster-autoscaler). releaseTag pins
-      # resolution to VPA's own tags; the wildcard-must-be-a-version rule keeps
-      # the vertical-pod-autoscaler-chart-* helm tags from matching. The
-      # resolved tag doubles as the crdFile git ref.
-      releaseTag: "vertical-pod-autoscaler-*"
-      crdFile: vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+      # Use config/crd because config/crd-base is schemaless.
+      crdDir: config/crd
 
-  - name: kueue
-    alias: Kueue
-    category: "Orchestration & Management"
-    pin: 5
-    url: https://github.com/kubernetes-sigs/kueue
+  - name: multus-cni
+    alias: Multus CNI
+    category: "Runtime"
+    url: https://github.com/k8snetworkplumbingwg/multus-cni
     extract: crd
     input:
-      # manifests.yaml is the full install bundle; the extractor picks out the
-      # kueue.x-k8s.io CRDs and drops the non-CRD docs.
-      releaseAsset: manifests.yaml
+      # No dedicated CRD asset or dir; use the committed quickstart install bundle.
+      crdFile: deployments/multus-daemonset.yml
 
-  - name: cloudnative-pg
-    alias: CloudNativePG
-    category: "App Definition & Development"
+  - name: network-policy-api
+    alias: Network Policy API
+    category: "Runtime"
+    url: https://github.com/kubernetes-sigs/network-policy-api
+    extract: crd
+    input:
+      # Render the standard CRD dir. The experimental dir is intentionally left out.
+      kustomize: config/crd/standard
+
+  - name: nvidia-gpu-operator
+    alias: NVIDIA GPU Operator
+    category: "Runtime"
+    url: https://github.com/NVIDIA/gpu-operator
+    extract: crd
+    input:
+      crdDir: deployments/gpu-operator/crds
+
+  - name: nvidia-network-operator
+    alias: NVIDIA Network Operator
+    category: "Runtime"
+    url: https://github.com/Mellanox/network-operator
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: rook
+    alias: Rook
+    category: "Runtime"
+    cncf: graduated
+    pin: 4
+    url: https://github.com/rook/rook
+    extract: crd
+    input:
+      # No release assets; fetch the committed CRD bundle directly from the
+      # examples directory to avoid unrelated manifests.
+      crdFile: deploy/examples/crds.yaml
+
+  - name: skupper
+    alias: Skupper
+    category: "Runtime"
+    url: https://github.com/skupperproject/skupper
+    extract: crd
+    input:
+      releaseAsset: skupper-crds.yaml
+
+  - name: spiderpool
+    alias: Spiderpool
+    category: "Runtime"
     cncf: sandbox
-    url: https://github.com/cloudnative-pg/cloudnative-pg
+    url: https://github.com/spidernet-io/spiderpool
     extract: crd
     input:
-      # the operator install bundle embeds the version in its name
-      # (cnpg-<ver>.yaml), so a glob selects it; the extractor keeps the CRDs.
-      releaseAsset: "cnpg-*.yaml"
+      # The release asset is a chart archive, not a YAML bundle. Fetch chart
+      # CRDs and exclude vendored Multus and SR-IOV groups.
+      crdDir: charts/spiderpool/crds
+      exclude:
+        - k8s.cni.cncf.io_*
+        - sriovnetwork.openshift.io_*
 
-  - name: crunchy-postgres-operator
-    alias: Crunchy Postgres Operator
-    category: "App Definition & Development"
-    url: https://github.com/CrunchyData/postgres-operator
+  # Submariner: operator and main repos split install and runtime CRDs under
+  # the same API group, with distinct kinds.
+  - name: submariner-operator
+    alias: Submariner Operator
+    project: submariner
+    url: https://github.com/submariner-io/submariner-operator
     extract: crd
     input:
-      # postgres-operator.crunchydata.com CRDs as generated per-kind base files.
-      crdDir: config/crd/bases
+      crdDir: deploy/crds
 
-  - name: secrets-store-csi-driver
-    alias: Secrets Store CSI Driver
-    category: "Provisioning"
-    url: https://github.com/kubernetes-sigs/secrets-store-csi-driver
+  - name: submariner
+    alias: Submariner
+    project: submariner
+    url: https://github.com/submariner-io/submariner
     extract: crd
     input:
-      # no CRD release asset; the two CRDs are bare files under config/crd/bases.
-      crdDir: config/crd/bases
+      crdDir: deploy/crds
 
-  - name: sealed-secrets
-    alias: Sealed Secrets
-    category: "Provisioning"
-    url: https://github.com/bitnami-labs/sealed-secrets
+  - name: tailscale
+    alias: Tailscale
+    category: "Runtime"
+    url: https://github.com/tailscale/tailscale
     extract: crd
     input:
-      # controller.yaml is the release install bundle carrying the bitnami.com
-      # SealedSecret CRD; the extractor drops the non-CRD docs.
-      releaseAsset: controller.yaml
+      # Bare per-kind files under the k8s-operator deploy dir, no release asset.
+      crdDir: cmd/k8s-operator/deploy/crds
 
   - name: velero
     alias: Velero
@@ -1022,62 +1111,22 @@ sources:
     url: https://github.com/vmware-tanzu/velero
     extract: crd
     input:
-      # velero ships no CRD asset (its CLI embeds them); the CRDs are bare
-      # per-kind files under config/crd/v1/bases.
+      # No CRD asset; the CLI embeds them, so fetch the bare base files.
       crdDir: config/crd/v1/bases
 
-  - name: crossplane
-    alias: Crossplane
+  # ===== Provisioning =====
+
+  - name: onepassword-operator
+    alias: 1Password Operator
     category: "Provisioning"
-    cncf: graduated
-    pin: 3
-    url: https://github.com/crossplane/crossplane
+    url: https://github.com/1Password/onepassword-operator
     extract: crd
     input:
-      # crossplane ships no CRD release asset (the release carries only the
-      # source tarball); its CRDs are bare per-kind files under cluster/crds,
-      # so crdDir fetches the tree directly.
-      crdDir: cluster/crds
+      # Releases carry no assets; the single CRD is the only base file.
+      crdDir: config/crd/bases
 
-  - name: provider-upjet-aws
-    alias: Upbound AWS Provider
-    category: "Provisioning"
-    url: https://github.com/crossplane-contrib/provider-upjet-aws
-    extract: crd
-    input:
-      # the Upbound AWS provider generates ~2000 CRDs (classic *.aws.upbound.io
-      # plus the .m. v2 namespaced groups) as per-kind files under package/crds,
-      # with no CRD release asset; crdDir fetches the repo tarball and extracts
-      # that tree in one request.
-      crdDir: package/crds
-
-  - name: provider-upjet-azure
-    alias: Upbound Azure Provider
-    category: "Provisioning"
-    url: https://github.com/crossplane-contrib/provider-upjet-azure
-    extract: crd
-    input:
-      # same shape as the AWS provider: ~1500 generated CRDs (classic
-      # *.azure.upbound.io plus .m. v2 groups) under package/crds, no release
-      # asset; fetched via the repo tarball.
-      crdDir: package/crds
-
-  - name: provider-upjet-gcp
-    alias: Upbound GCP Provider
-    category: "Provisioning"
-    url: https://github.com/crossplane-contrib/provider-upjet-gcp
-    extract: crd
-    input:
-      # same shape as the AWS provider: ~800 generated CRDs (classic
-      # *.gcp.upbound.io plus .m. v2 groups) under package/crds, no release
-      # asset; fetched via the repo tarball.
-      crdDir: package/crds
-
-  # AWS Controllers for Kubernetes (ACK) — AWS's official operators, one repo
-  # per service under the aws-controllers-k8s org. Each ships its CRDs
-  # (group <service>.services.k8s.aws) as per-kind files under config/crd/bases
-  # with no release asset, so crdDir fetches the repo tree. A curated set of the
-  # most-used services; distinct from the community *.aws.upbound.io API.
+  # AWS Controllers for Kubernetes: one repo per service, each with bare base
+  # CRDs and no release asset. Curated separately from Upbound provider APIs.
   - name: ack-s3
     alias: AWS S3 Controller
     project: aws-ack
@@ -1308,339 +1357,8 @@ sources:
     url: https://github.com/Azure/azure-service-operator
     extract: crd
     input:
-      # Microsoft's official Azure operator (group *.azure.com). Ships a
-      # CRD-only release asset with the version embedded in its name, so a glob
-      # selects it independent of the resolved release.
+      # CRD-only release asset embeds the version, so a glob selects it.
       releaseAsset: "azureserviceoperator_customresourcedefinitions_*.yaml"
-
-  - name: config-connector
-    alias: GCP Config Connector
-    category: "Provisioning"
-    url: https://github.com/GoogleCloudPlatform/k8s-config-connector
-    extract: crd
-    input:
-      # Google's official GCP operator (group *.cnrm.cloud.google.com). Ships no
-      # CRD release asset; the ~480 CRDs are per-kind files under
-      # config/crds/resources, fetched via the repo tarball.
-      crdDir: config/crds/resources
-
-  # Karpenter — Kubernetes node autoscaler. The neutral control-plane API
-  # (group karpenter.sh: NodePool, NodeClaim, NodeOverlay) lives in the upstream
-  # kubernetes-sigs/karpenter repo as per-kind files under pkg/apis/crds with no
-  # CRD release asset; crdDir fetches the tree. Each cloud provider below bundles
-  # a copy of these same karpenter.sh CRDs next to its own nodeclass, so to avoid
-  # double-writing the shared group we take karpenter.sh only from core here and
-  # pull just the provider-specific nodeclass file from each provider repo.
-  - name: karpenter
-    alias: Karpenter
-    project: karpenter
-    url: https://github.com/kubernetes-sigs/karpenter
-    extract: crd
-    input:
-      crdDir: pkg/apis/crds
-
-  - name: karpenter-aws
-    alias: Karpenter AWS
-    project: karpenter
-    url: https://github.com/aws/karpenter-provider-aws
-    extract: crd
-    input:
-      # only the AWS nodeclass (group karpenter.k8s.aws: EC2NodeClass); this repo
-      # also vendors the karpenter.sh CRDs, which come from the core source above.
-      crdFile: pkg/apis/crds/karpenter.k8s.aws_ec2nodeclasses.yaml
-
-  - name: karpenter-azure
-    alias: Karpenter Azure
-    project: karpenter
-    url: https://github.com/Azure/karpenter-provider-azure
-    extract: crd
-    input:
-      # only the Azure nodeclass (group karpenter.azure.com: AKSNodeClass); this
-      # repo also vendors the karpenter.sh CRDs, which come from the core source.
-      crdFile: pkg/apis/crds/karpenter.azure.com_aksnodeclasses.yaml
-
-  - name: karpenter-provider-cluster-api
-    alias: Karpenter Cluster API
-    project: karpenter
-    url: https://github.com/kubernetes-sigs/karpenter-provider-cluster-api
-    extract: crd
-    input:
-      # only the Cluster API nodeclass (group karpenter.cluster.x-k8s.io:
-      # ClusterAPINodeClass); core karpenter.sh comes from the core source, and the
-      # sibling ...nodeclasslists List-kind CRD is skipped, so crdFile picks one file.
-      crdFile: config/crd/bases/karpenter.cluster.x-k8s.io_clusterapinodeclasses.yaml
-
-  - name: karpenter-provider-ibm-cloud
-    alias: Karpenter IBM Cloud
-    project: karpenter
-    url: https://github.com/kubernetes-sigs/karpenter-provider-ibm-cloud
-    extract: crd
-    input:
-      # only the IBM nodeclass (group karpenter-ibm.sh: IBMNodeClass); this repo
-      # also vendors the karpenter.sh CRDs, which come from the core source, so
-      # crdFile targets just the provider nodeclass.
-      crdFile: config/components/crds/karpenter-ibm.sh_ibmnodeclasses.yaml
-
-  - name: spire-controller-manager
-    alias: SPIRE Controller Manager
-    category: "Provisioning"
-    cncf: graduated
-    url: https://github.com/spiffe/spire-controller-manager
-    extract: crd
-    input:
-      # no CRD release asset; the four spire.spiffe.io CRDs (ClusterSPIFFEID,
-      # ClusterFederatedTrustDomain, ClusterStaticEntry, ControllerManagerConfig)
-      # are bare per-kind files under config/crd/bases, so crdDir fetches the tree.
-      crdDir: config/crd/bases
-
-  # Argo — the argoproj.io API group is shared across four separate projects,
-  # each shipping distinct kinds. Every Argo CRD dir carries a self-contained
-  # kustomization.yaml, so the kustomize extractor renders exactly its CRDs.
-  - name: argo-cd
-    alias: Argo CD
-    project: argo
-    url: https://github.com/argoproj/argo-cd
-    extract: crd
-    input:
-      kustomize: manifests/crds
-
-  - name: argo-rollouts
-    alias: Argo Rollouts
-    project: argo
-    url: https://github.com/argoproj/argo-rollouts
-    extract: crd
-    input:
-      kustomize: manifests/crds
-
-  - name: argo-workflows
-    alias: Argo Workflows
-    project: argo
-    url: https://github.com/argoproj/argo-workflows
-    extract: crd
-    input:
-      # the 'full' overlay carries complete CRD schemas; the sibling 'minimal'
-      # overlay trims them to preserve-unknown-fields stubs.
-      kustomize: manifests/base/crds/full
-
-  - name: argo-events
-    alias: Argo Events
-    project: argo
-    url: https://github.com/argoproj/argo-events
-    extract: crd
-    input:
-      kustomize: manifests/base/crds
-
-  - name: kargo
-    alias: Kargo
-    category: "App Definition & Development"
-    url: https://github.com/akuity/kargo
-    extract: crd
-    input:
-      # kargo.akuity.io CRDs (Project, ProjectConfig, Stage, Warehouse, Freight,
-      # Promotion, PromotionTask, ClusterPromotionTask, ClusterConfig). No CRD
-      # release asset (only the CLI binaries); the CRDs are bare per-kind files
-      # under the Helm chart's resources/crds dir (the templated crds.yaml lives
-      # under templates/), so crdDir fetches the tree.
-      crdDir: charts/kargo/resources/crds
-
-  - name: dapr
-    alias: Dapr
-    category: "App Definition & Development"
-    cncf: graduated
-    url: https://github.com/dapr/dapr
-    extract: crd
-    input:
-      # dapr ships its dapr.io CRDs as raw files in the Helm chart's crds/ dir
-      # (no kustomization), so crdDir fetches the tree directly.
-      crdDir: charts/dapr/crds
-
-  # KServe — ML model serving (group serving.kserve.io). config/crd/full is the
-  # canonical CRD set (its kustomization aggregates the core kinds plus
-  # clusterstoragecontainer, but not the newer llmisvc subdir), so the
-  # LLMInferenceService CRDs come from a second source over that subdir.
-  - name: kserve
-    alias: KServe
-    project: kserve
-    url: https://github.com/kserve/kserve
-    extract: crd
-    input:
-      # Bare CRD files under config/crd/full; crdDir instead of kustomize so
-      # the fetch uses github.ts (kubectl kustomize's hard-coded 27s git
-      # timeout trips on this large repo). The excludes keep the exact scope
-      # of the full kustomization render: the conversion-webhook patches are
-      # partial CRD docs with no schema, the llminferenceservice files belong
-      # to the kserve-llmisvc source, and the alpha localmodel kinds are not
-      # part of the upstream render.
-      crdDir: config/crd/full
-      exclude:
-        - "*_patch.yaml"
-        - "serving.kserve.io_llminferenceservice*"
-        - "serving.kserve.io_localmodel*"
-
-  - name: kserve-llmisvc
-    alias: KServe LLM
-    project: kserve
-    url: https://github.com/kserve/kserve
-    extract: crd
-    input:
-      # Same crdDir-over-kustomize trade as the kserve source. The excluded
-      # conversion-webhook patches only add spec.conversion, which schema
-      # extraction ignores.
-      crdDir: config/crd/full/llmisvc
-      exclude:
-        - "*_patch.yaml"
-
-  # Kubeflow — machine learning toolkit spanning multiple controller repos.
-  # Each member owns a distinct group/kind set, so no collision excludes are
-  # needed.
-  - name: kubeflow-trainer
-    alias: Kubeflow Trainer
-    project: kubeflow
-    url: https://github.com/kubeflow/trainer
-    extract: crd
-    input:
-      # trainer.kubeflow.org TrainJob, TrainingRuntime, and ClusterTrainingRuntime.
-      crdDir: charts/kubeflow-trainer/crds
-
-  - name: kubeflow-pipelines
-    alias: Kubeflow Pipelines
-    project: kubeflow
-    url: https://github.com/kubeflow/pipelines
-    extract: crd
-    input:
-      # pipelines.kubeflow.org Pipeline and PipelineVersion.
-      crdDir: manifests/kustomize/base/crds
-
-  - name: mpi-operator
-    alias: MPI Operator
-    project: kubeflow
-    url: https://github.com/kubeflow/mpi-operator
-    extract: crd
-    input:
-      # kubeflow.org MPIJob (v2beta1).
-      crdFile: manifests/base/kubeflow.org_mpijobs.yaml
-
-  - name: spark-operator
-    alias: Spark Operator
-    project: kubeflow
-    url: https://github.com/kubeflow/spark-operator
-    extract: crd
-    input:
-      # sparkoperator.k8s.io SparkApplication, ScheduledSparkApplication, and SparkConnect.
-      crdDir: charts/spark-operator-chart/crds
-
-  - name: notebook-controller
-    alias: Kubeflow Notebooks
-    project: kubeflow
-    url: https://github.com/kubeflow/notebooks
-    extract: crd
-    input:
-      # kubeflow.org Notebook.
-      crdDir: components/notebook-controller/config/crd/bases
-
-  - name: poddefaults-webhook
-    alias: Kubeflow PodDefaults
-    project: kubeflow
-    url: https://github.com/kubeflow/dashboard
-    extract: crd
-    input:
-      # kubeflow.org PodDefault.
-      crdFile: components/poddefaults-webhooks/manifests/kustomize/base/crd.yaml
-
-  - name: profile-controller
-    alias: Kubeflow Profiles
-    project: kubeflow
-    url: https://github.com/kubeflow/dashboard
-    extract: crd
-    input:
-      # kubeflow.org Profile; the crd dir also holds kustomize *_patch.yaml files
-      # that are partial CustomResourceDefinition docs, so crdFile targets the one
-      # complete CRD file instead of crdDir.
-      crdFile: components/profile-controller/manifests/kustomize/base/crd/kubeflow.org_profiles.yaml
-
-  - name: pvcviewer-controller
-    alias: Kubeflow PVCViewer
-    project: kubeflow
-    url: https://github.com/kubeflow/notebooks
-    extract: crd
-    input:
-      # kubeflow.org PVCViewer.
-      crdDir: components/pvcviewer-controller/config/crd/bases
-
-  - name: tensorboard-controller
-    alias: Kubeflow Tensorboard
-    project: kubeflow
-    url: https://github.com/kubeflow/notebooks
-    extract: crd
-    input:
-      # tensorboard.kubeflow.org Tensorboard.
-      crdDir: components/tensorboard-controller/config/crd/bases
-
-  - name: nvidia-gpu-operator
-    alias: NVIDIA GPU Operator
-    category: "Runtime"
-    url: https://github.com/NVIDIA/gpu-operator
-    extract: crd
-    input:
-      # nvidia.com ClusterPolicy/NVIDIADriver configure the node GPU runtime stack
-      # and ship as bare per-kind files in the operator chart, so crdDir fetches
-      # that tree.
-      crdDir: deployments/gpu-operator/crds
-
-  - name: kuberay
-    alias: KubeRay
-    category: "Orchestration & Management"
-    url: https://github.com/ray-project/kuberay
-    extract: crd
-    input:
-      # ray.io RayCluster/RayJob/RayService/RayCronJob ship as bare per-kind CRDs
-      # in the operator Helm chart with no CRD release bundle, so crdDir fetches
-      # that tree.
-      crdDir: helm-chart/kuberay-operator/crds
-
-  - name: seldon-core
-    alias: Seldon Core v2
-    category: "App Definition & Development"
-    url: https://github.com/SeldonIO/seldon-core
-    extract: crd
-    input:
-      # mlops.seldon.io Model/Pipeline/Server/Experiment/SeldonRuntime plus
-      # SeldonConfig/ServerConfig ship together in the CRD-only crds.yaml release
-      # asset, so releaseAsset avoids the chart archives and install bundles.
-      releaseAsset: crds.yaml
-
-  - name: aibrix
-    alias: AIBrix
-    category: "App Definition & Development"
-    url: https://github.com/vllm-project/aibrix
-    extract: crd
-    input:
-      # autoscaling.aibrix.ai PodAutoscaler, model.aibrix.ai ModelAdapter, and
-      # orchestration.aibrix.ai serving/orchestration CRDs ship in the CRD-only
-      # asset whose name embeds the version; this glob currently matches only
-      # aibrix-core-crds-v0.7.0.yaml on the latest release.
-      releaseAsset: "aibrix-core-crds-*.yaml"
-
-  # Volcano — batch scheduler. Its CRDs span several *.volcano.sh groups as
-  # per-kind kubebuilder files with no release asset. The config/crd/*/bases dirs
-  # hold the full (all-version) CRDs; sibling v1beta1 dirs are legacy stubs of the
-  # same kinds, so crdDir targets bases only to avoid double-writing. JobFlow
-  # (flow.volcano.sh) sits in its own dir, hence a second source.
-  - name: volcano
-    alias: Volcano
-    project: volcano
-    url: https://github.com/volcano-sh/volcano
-    extract: crd
-    input:
-      crdDir: config/crd/volcano/bases
-
-  - name: volcano-jobflow
-    alias: Volcano JobFlow
-    project: volcano
-    url: https://github.com/volcano-sh/volcano
-    extract: crd
-    input:
-      crdDir: config/crd/jobflow/bases
 
   - name: capsule
     alias: Capsule
@@ -1649,104 +1367,204 @@ sources:
     url: https://github.com/projectcapsule/capsule
     extract: crd
     input:
-      # capsule ships its capsule.clastix.io CRDs as raw per-kind files in the
-      # Helm chart's crds/ dir (no kustomization), so crdDir fetches the tree.
+      # Raw per-kind Helm chart CRDs, no kustomization.
       crdDir: charts/capsule/crds
 
-  - name: jobset
-    alias: JobSet
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/jobset
+  - name: cert-manager
+    alias: Cert Manager
+    category: "Provisioning"
+    cncf: graduated
+    pin: 2
+    url: https://github.com/cert-manager/cert-manager
     extract: crd
     input:
-      # single CRD (jobset.x-k8s.io JobSet); the kubebuilder base dir holds just
-      # that file (the kustomization/patches sit one level up), so crdDir fetches it.
-      crdDir: config/components/crd/bases
+      releaseAsset: cert-manager.crds.yaml
 
-  - name: lws
-    alias: LeaderWorkerSet
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/lws
+  - name: cluster-api
+    alias: Cluster API
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api
     extract: crd
     input:
-      # leaderworkerset.x-k8s.io (LeaderWorkerSet) + disaggregatedset.x-k8s.io
-      # (DisaggregatedSet) as per-kind base files, no release asset.
+      releaseAsset: cluster-api-components.yaml
+
+  - name: cluster-api-operator
+    alias: Cluster API Operator
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-operator
+    extract: crd
+    input:
+      # Provider-install CRDs live in a distinct group from core Cluster API.
+      # Bare base files, no release asset.
       crdDir: config/crd/bases
 
-  # Node Feature Discovery — the nfd.k8s-sigs.io CRDs ship as one bundle file
-  # (next to a sample CR, so crdFile targets the bundle), and NodeResourceTopology
-  # (topology.node.k8s.io) sits in its own dir as a single CRD file.
-  - name: node-feature-discovery
-    alias: Node Feature Discovery
-    project: node-feature-discovery
-    url: https://github.com/kubernetes-sigs/node-feature-discovery
+  - name: cluster-api-addon-provider-helm
+    alias: Cluster API Add-on Provider Helm
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm
     extract: crd
     input:
-      crdFile: deployment/base/nfd-crds/nfd-api-crds.yaml
+      # Same API group as core add-ons but distinct kinds. Bare base files, no
+      # release asset.
+      crdDir: config/crd/bases
 
-  - name: node-feature-discovery-nrt
-    alias: NFD NodeResourceTopology
-    project: node-feature-discovery
-    url: https://github.com/kubernetes-sigs/node-feature-discovery
+  - name: cluster-api-provider-vsphere
+    alias: Cluster API vSphere
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-provider-vsphere
     extract: crd
     input:
-      crdFile: deployment/base/noderesourcetopologies-crd/noderesourcetopologies.yaml
+      # Full install bundle; supervisor-mode CRDs ship in a separate asset and
+      # are intentionally left out.
+      releaseAsset: infrastructure-components.yaml
 
-  - name: kwok
-    alias: KWOK
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/kwok
+  - name: cluster-api-provider-openstack
+    alias: Cluster API OpenStack
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-provider-openstack
     extract: crd
     input:
-      # kwok.x-k8s.io CRDs (Stage, Metric, Attach/Exec/Log/PortForward and their
-      # cluster-scoped variants) as per-kind base files, no release asset.
-      crdDir: kustomize/crd/bases
+      # Full install bundle; the extractor keeps provider CRDs.
+      releaseAsset: infrastructure-components.yaml
 
-  - name: network-policy-api
-    alias: Network Policy API
-    category: "Runtime"
-    url: https://github.com/kubernetes-sigs/network-policy-api
+  - name: cluster-api-provider-aws
+    alias: Cluster API AWS
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-provider-aws
     extract: crd
     input:
-      # policy.networking.k8s.io (ClusterNetworkPolicy); the standard CRD dir has
-      # a kustomization, so the kustomize extractor renders it. The experimental
-      # dir (AdminNetworkPolicy et al.) is intentionally left out.
-      kustomize: config/crd/standard
+      releaseAsset: infrastructure-components.yaml
 
-  - name: external-dns
-    alias: ExternalDNS
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/external-dns
+  - name: cluster-api-provider-azure
+    alias: Cluster API Azure
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-provider-azure
     extract: crd
     input:
-      # externaldns.k8s.io DNSEndpoint; a single CRD file under config/crd/standard
-      # (no kustomization), so crdDir fetches the tree.
-      crdDir: config/crd/standard
+      releaseAsset: infrastructure-components.yaml
 
-  - name: aws-load-balancer-controller
-    alias: AWS Load Balancer Controller
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/aws-load-balancer-controller
+  - name: cluster-api-provider-gcp
+    alias: Cluster API GCP
+    project: cluster-api
+    url: https://github.com/kubernetes-sigs/cluster-api-provider-gcp
     extract: crd
     input:
-      # elbv2.k8s.aws (TargetGroupBinding, IngressClassParams, ALBTargetControlConfig),
-      # gateway.k8s.aws and aga.k8s.aws CRDs ship as two bundle files (crds.yaml +
-      # gateway-crds.yaml) in the Helm chart's crds/ dir; the dir's kustomization only
-      # lists crds.yaml, so crdDir is used to pick up both bundles (the non-CRD
-      # kustomization.yaml is skipped by the extractor).
-      crdDir: helm/aws-load-balancer-controller/crds
+      releaseAsset: infrastructure-components.yaml
 
-  - name: metallb
-    alias: MetalLB
-    category: "Orchestration & Management"
+  - name: cluster-api-provider-metal3
+    alias: Cluster API Metal3
+    project: cluster-api
+    url: https://github.com/metal3-io/cluster-api-provider-metal3
+    extract: crd
+    input:
+      releaseAsset: infrastructure-components.yaml
+
+  - name: cluster-api-provider-hetzner
+    alias: Cluster API Hetzner
+    project: cluster-api
+    url: https://github.com/syself/cluster-api-provider-hetzner
+    extract: crd
+    input:
+      releaseAsset: infrastructure-components.yaml
+
+  - name: cluster-api-provider-nutanix
+    alias: Cluster API Nutanix
+    project: cluster-api
+    url: https://github.com/nutanix-cloud-native/cluster-api-provider-nutanix
+    extract: crd
+    input:
+      releaseAsset: infrastructure-components.yaml
+
+  - name: cluster-api-provider-rke2-bootstrap
+    alias: Cluster API RKE2 Bootstrap
+    project: cluster-api
+    url: https://github.com/rancher/cluster-api-provider-rke2
+    extract: crd
+    input:
+      releaseAsset: bootstrap-components.yaml
+
+  - name: cluster-api-provider-rke2-control-plane
+    alias: Cluster API RKE2 Control Plane
+    project: cluster-api
+    url: https://github.com/rancher/cluster-api-provider-rke2
+    extract: crd
+    input:
+      releaseAsset: control-plane-components.yaml
+
+  - name: cluster-api-provider-k0smotron-bootstrap
+    alias: Cluster API k0smotron Bootstrap
+    project: cluster-api
+    url: https://github.com/k0sproject/k0smotron
+    extract: crd
+    input:
+      releaseAsset: bootstrap-components.yaml
+
+  - name: cluster-api-provider-k0smotron-control-plane
+    alias: Cluster API k0smotron Control Plane
+    project: cluster-api
+    url: https://github.com/k0sproject/k0smotron
+    extract: crd
+    input:
+      releaseAsset: control-plane-components.yaml
+
+  - name: cluster-api-provider-k0smotron-infrastructure
+    alias: Cluster API k0smotron Infrastructure
+    project: cluster-api
+    url: https://github.com/k0sproject/k0smotron
+    extract: crd
+    input:
+      releaseAsset: infrastructure-components.yaml
+
+  - name: crossplane
+    alias: Crossplane
+    category: "Provisioning"
+    cncf: graduated
+    pin: 3
+    url: https://github.com/crossplane/crossplane
+    extract: crd
+    input:
+      # No CRD release asset; fetch bare files under cluster/crds.
+      crdDir: cluster/crds
+
+  - name: elemental-operator
+    alias: Elemental Operator
+    category: "Provisioning"
+    url: https://github.com/rancher/elemental-operator
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: external-secrets
+    alias: External Secrets
+    category: "Provisioning"
     cncf: sandbox
-    url: https://github.com/metallb/metallb
+    pin: 5
+    url: https://github.com/external-secrets/external-secrets
     extract: crd
     input:
-      # /releases/latest points at metallb-chart-* releases; constrain to app tags.
-      # Bare per-kind CRD files; the sibling kustomization only patches webhooks.
+      # Interleaves helm-chart-* releases with app tags, so releaseTag pins app tags.
       releaseTag: "v*"
-      crdDir: config/crd/bases
+      releaseAsset: external-secrets.yaml
+
+  - name: falco-operator
+    alias: Falco Operator
+    category: "Provisioning"
+    cncf: graduated
+    url: https://github.com/falcosecurity/falco-operator
+    extract: crd
+    input:
+      # Full install bundle; the extractor keeps the CRDs.
+      releaseAsset: install.yaml
+
+  - name: config-connector
+    alias: GCP Config Connector
+    category: "Provisioning"
+    url: https://github.com/GoogleCloudPlatform/k8s-config-connector
+    extract: crd
+    input:
+      # No CRD release asset; fetch generated config/crds/resources through the
+      # repo tarball.
+      crdDir: config/crds/resources
 
   - name: kro
     alias: kro
@@ -1754,178 +1572,19 @@ sources:
     url: https://github.com/kubernetes-sigs/kro
     extract: crd
     input:
-      # kro.run (ResourceGraphDefinition) + internal.kro.run (GraphRevision) as raw
-      # files in the Helm chart's crds/ dir (no kustomization).
       crdDir: helm/crds
 
-  - name: cosi
-    alias: Container Object Storage Interface
-    category: "Runtime"
-    url: https://github.com/kubernetes-sigs/container-object-storage-interface
-    extract: crd
-    input:
-      # objectstorage.k8s.io (Bucket, BucketClaim, BucketClass, BucketAccess,
-      # BucketAccessClass) as per-kind files under client/config/crd.
-      crdDir: client/config/crd
-
-  - name: kjob
-    alias: kjob
-    category: "Orchestration & Management"
-    url: https://github.com/kubernetes-sigs/kjob
-    extract: crd
-    input:
-      # kjobctl.x-k8s.io (ApplicationProfile, JobTemplate, RayClusterTemplate,
-      # RayJobTemplate, VolumeBundle) as per-kind base files, no release asset.
-      crdDir: config/crd/bases
-
-  - name: istio
-    alias: Istio
-    category: "Orchestration & Management"
-    cncf: graduated
-    pin: 2
-    url: https://github.com/istio/istio
-    extract: crd
-    input:
-      # Istio's full CRD set (networking/security/telemetry/extensions.istio.io)
-      # ships as one generated bundle consumed by the Helm base chart; crdFile
-      # fetches that raw (non-templated) bundle.
-      crdFile: manifests/charts/base/files/crd-all.gen.yaml
-
-  - name: kuma
-    alias: Kuma
-    category: "Orchestration & Management"
-    cncf: sandbox
-    url: https://github.com/kumahq/kuma
-    extract: crd
-    input:
-      # Kuma ships its CRDs as raw files in the Helm chart's crds/ directory.
-      crdDir: deployments/charts/kuma/crds
-
-  - name: kubeedge
-    alias: KubeEdge
-    category: "Orchestration & Management"
-    cncf: graduated
-    url: https://github.com/kubeedge/kubeedge
-    extract: crd
-    input:
-      # KubeEdge CRDs are per-kind files under build/crds, organized in per-group
-      # subdirs (devices/rules/apps/operations/policy/reliablesyncs); crdDir fetches
-      # the tree recursively. The manifests/charts copies are a Helm duplicate.
-      crdDir: build/crds
-
-  - name: open-feature-operator
-    alias: OpenFeature Operator
-    category: "App Definition & Development"
-    cncf: incubating
-    url: https://github.com/open-feature/open-feature-operator
-    extract: crd
-    input:
-      # core.openfeature.dev CRDs (FeatureFlag, FeatureFlagSource, Flagd,
-      # InProcessConfiguration, and the legacy *Configuration kinds) as per-kind
-      # base files, no release asset.
-      crdDir: config/crd/bases
-
-  - name: openreports
-    alias: OpenReports
+  - name: kubescape-operator
+    alias: Kubescape Operator
     category: "Provisioning"
-    url: https://github.com/openreports/reports-api
+    cncf: incubating
+    url: https://github.com/kubescape/helm-charts
     extract: crd
     input:
-      # openreports.io (Report, ClusterReport) — the successor to the
-      # wg-policy PolicyReport API — as per-kind files under config/crd.
-      crdDir: config/crd
-
-  - name: rabbitmq-cluster-operator
-    alias: RabbitMQ Cluster Operator
-    category: "App Definition & Development"
-    url: https://github.com/rabbitmq/cluster-operator
-    extract: crd
-    input:
-      # cluster-operator.yml is the full install bundle; the extractor picks the
-      # rabbitmq.com RabbitmqCluster CRD and drops the RBAC/Deployment docs.
-      releaseAsset: cluster-operator.yml
-
-  - name: redis-operator
-    alias: Redis Operator
-    category: "App Definition & Development"
-    url: https://github.com/OT-CONTAINER-KIT/redis-operator
-    extract: crd
-    input:
-      # redis.redis.opstreelabs.in (Redis, RedisCluster, RedisReplication,
-      # RedisSentinel) as per-kind base files, no release asset.
-      crdDir: config/crd/bases
-
-  - name: scylla-operator
-    alias: ScyllaDB Operator
-    category: "App Definition & Development"
-    url: https://github.com/scylladb/scylla-operator
-    extract: crd
-    input:
-      # scylla.scylladb.com CRDs (ScyllaCluster, ScyllaDBDatacenter, NodeConfig,
-      # ScyllaDBMonitoring, ScyllaDBManagerTask, …). The helm/deploy crds dirs are
-      # symlinks (skipped by the tar extractor); the real generated files live per
-      # version under pkg/api/scylla, which crdDir fetches recursively.
-      crdDir: pkg/api/scylla
-
-  - name: mariadb-operator
-    alias: MariaDB Operator
-    category: "App Definition & Development"
-    url: https://github.com/mariadb-operator/mariadb-operator
-    extract: crd
-    input:
-      # k8s.mariadb.com CRDs (MariaDB, MaxScale, Backup, Restore, Database, User,
-      # Grant, Connection, SqlJob, PhysicalBackup, PointInTimeRecovery,
-      # ExternalMariaDB). The repo interleaves four release lines per version
-      # (bare, mariadb-operator-*, mariadb-cluster-*, mariadb-operator-crds-*);
-      # only the crds line carries the crds.yaml CRD-only asset, so releaseTag
-      # pins resolution to it.
-      releaseTag: "mariadb-operator-crds-*"
-      releaseAsset: crds.yaml
-
-  - name: eck-operator
-    alias: Elastic Cloud
-    category: "Observability & Analysis"
-    url: https://github.com/elastic/cloud-on-k8s
-    extract: crd
-    input:
-      # ECK's 12 *.k8s.elastic.co CRDs (Elasticsearch, Kibana, ApmServer, Beat,
-      # Agent, Logstash, EnterpriseSearch, ElasticMapsServer, ElasticsearchAutoscaler,
-      # AutoOpsAgentPolicy, PackageRegistry, StackConfigPolicy) ship no release
-      # asset; all-crds.yaml is the generated bundle sharing config/crds/v1 with
-      # the per-kind resources/ and patches/ subdirs, so crdFile targets it.
-      crdFile: config/crds/v1/all-crds.yaml
-
-  - name: calico
-    alias: Calico
-    project: calico
-    url: https://github.com/projectcalico/calico
-    extract: crd
-    input:
-      # libcalico-go/config/crd co-locates a vendored policy.networking.k8s.io
-      # ClusterNetworkPolicy already owned by the network-policy-api source, so
-      # exclude it and keep only the crd.projectcalico.org CRDs.
-      crdDir: libcalico-go/config/crd
-      exclude:
-        - policy.networking.k8s.io_*
-
-  - name: tigera-operator
-    alias: Tigera Operator
-    project: calico
-    url: https://github.com/projectcalico/calico
-    extract: crd
-    input:
-      crdDir: charts/crd.projectcalico.org.v1/templates
-
-  - name: antrea
-    alias: Antrea
-    category: "Runtime"
-    cncf: sandbox
-    url: https://github.com/antrea-io/antrea
-    extract: crd
-    input:
-      # antrea-crds.yml is the CRD-only release asset (group crd.antrea.io); the
-      # sibling antrea.yml is the full install bundle.
-      releaseAsset: antrea-crds.yml
+      # CRDs ship with the operator chart, so releaseTag pins chart tags and
+      # the resolved tag doubles as the git ref.
+      releaseTag: "kubescape-operator-*"
+      crdDir: charts/kubescape-operator/crds
 
   - name: kubewarden
     alias: Kubewarden
@@ -1934,39 +1593,130 @@ sources:
     url: https://github.com/kubewarden/kubewarden-controller
     extract: crd
     input:
-      # policies.kubewarden.io CRDs (AdmissionPolicy, ClusterAdmissionPolicy,
-      # PolicyServer, AdmissionPolicyGroup, ClusterAdmissionPolicyGroup) as raw
-      # files in the chart's templates/crds subdir; the vendored wg-policy
-      # PolicyReport CRDs sit one level up, so target the crds subdir.
+      # Target the chart templates/crds subdir to avoid vendored PolicyReport
+      # CRDs one level up.
       crdDir: charts/kubewarden-crds/templates/crds
 
-  - name: kube-ovn
-    alias: Kube-OVN
-    category: "Runtime"
-    cncf: sandbox
-    url: https://github.com/kubeovn/kube-ovn
+  - name: kyverno
+    alias: Kyverno
+    category: "Provisioning"
+    cncf: graduated
+    pin: 4
+    url: https://github.com/kyverno/kyverno
     extract: crd
     input:
-      # kubeovn.io CRDs (Subnet, Vpc, VpcNatGateway, IP, ProviderNetwork, Vlan,
-      # SecurityGroup, …) ship as one raw bundle in the v2 Helm chart's crds/ dir.
-      crdFile: charts/kube-ovn-v2/crds/kube-ovn-crd.yaml
+      # Per-CRD assets only, no single CRD bundle, so use install.yaml.
+      releaseAsset: install.yaml
 
-  # Submariner — multi-cluster networking. The operator repo ships the install
-  # CRDs (Broker, ServiceDiscovery, Submariner); the main repo the runtime CRDs
-  # (Cluster, Endpoint, Gateway, GlobalEgressIP, …). Both under submariner.io with
-  # distinct kinds, as raw per-kind files under deploy/crds.
-  - name: submariner-operator
-    alias: Submariner Operator
-    project: submariner
-    url: https://github.com/submariner-io/submariner-operator
+  - name: gatekeeper
+    alias: OPA Gatekeeper
+    category: "Provisioning"
+    cncf: graduated
+    url: https://github.com/open-policy-agent/gatekeeper
     extract: crd
     input:
+      # Releases ship only the gator CLI, so fetch Helm chart CRDs. Constraint
+      # kinds are generated at runtime and cannot be cataloged.
+      crdDir: charts/gatekeeper/crds
+
+  - name: openreports
+    alias: OpenReports
+    category: "Provisioning"
+    url: https://github.com/openreports/reports-api
+    extract: crd
+    input:
+      crdDir: config/crd
+
+  - name: turtles
+    alias: Rancher Turtles
+    category: "Provisioning"
+    url: https://github.com/rancher/turtles
+    extract: crd
+    input:
+      crdDir: config/crd/bases
+
+  - name: sealed-secrets
+    alias: Sealed Secrets
+    category: "Provisioning"
+    url: https://github.com/bitnami-labs/sealed-secrets
+    extract: crd
+    input:
+      releaseAsset: controller.yaml
+
+  - name: secrets-store-csi-driver
+    alias: Secrets Store CSI Driver
+    category: "Provisioning"
+    url: https://github.com/kubernetes-sigs/secrets-store-csi-driver
+    extract: crd
+    input:
+      # No CRD release asset; fetch bare base files.
+      crdDir: config/crd/bases
+
+  - name: sigstore-policy-controller
+    alias: Sigstore Policy Controller
+    category: "Provisioning"
+    url: https://github.com/sigstore/policy-controller
+    extract: crd
+    input:
+      # No CRD-only asset; render the full install bundle from config.
+      kustomize: config
+
+  - name: spire-controller-manager
+    alias: SPIRE Controller Manager
+    category: "Provisioning"
+    cncf: graduated
+    url: https://github.com/spiffe/spire-controller-manager
+    extract: crd
+    input:
+      # No CRD release asset; fetch bare base files.
+      crdDir: config/crd/bases
+
+  - name: trivy-operator
+    alias: Trivy Operator
+    category: "Provisioning"
+    url: https://github.com/aquasecurity/trivy-operator
+    extract: crd
+    input:
+      # Bare Helm chart CRDs. releaseTag resolves the version from the /releases
+      # list instead of /releases/latest: the repo has 130+ releases and the
+      # latest endpoint trips the CI GITHUB_TOKEN secondary rate limit (403).
+      crdDir: deploy/helm/crds
+      releaseTag: "v*"
+
+  - name: trust-manager
+    alias: Trust Manager
+    category: "Provisioning"
+    cncf: graduated
+    url: https://github.com/cert-manager/trust-manager
+    extract: crd
+    input:
+      # No CRD release asset; fetch plain deploy/crds instead of Helm-templated
+      # copies under deploy/charts.
       crdDir: deploy/crds
 
-  - name: submariner
-    alias: Submariner
-    project: submariner
-    url: https://github.com/submariner-io/submariner
+  - name: provider-upjet-aws
+    alias: Upbound AWS Provider
+    category: "Provisioning"
+    url: https://github.com/crossplane-contrib/provider-upjet-aws
     extract: crd
     input:
-      crdDir: deploy/crds
+      # No CRD release asset; fetch generated package/crds through the repo tarball.
+      crdDir: package/crds
+
+  - name: provider-upjet-azure
+    alias: Upbound Azure Provider
+    category: "Provisioning"
+    url: https://github.com/crossplane-contrib/provider-upjet-azure
+    extract: crd
+    input:
+      # Same shape as AWS: generated package/crds, no release asset.
+      crdDir: package/crds
+
+  - name: provider-upjet-gcp
+    alias: Upbound GCP Provider
+    category: "Provisioning"
+    url: https://github.com/crossplane-contrib/provider-upjet-gcp
+    extract: crd
+    input:
+      # Same shape as AWS: generated package/crds, no release asset.
+      crdDir: package/crds
