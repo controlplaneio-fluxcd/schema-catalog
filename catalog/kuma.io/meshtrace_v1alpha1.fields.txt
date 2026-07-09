@@ -1,0 +1,47 @@
+# schema source: Kuma v2.14.0 https://github.com/kumahq/kuma
+apiVersion <string> enum=kuma.io/v1alpha1
+kind <string> enum=MeshTrace
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# Spec is the specification of the Kuma MeshTrace resource.
+spec.default <object>	# MeshTrace configuration.
+spec.default.backends <[]object> max=1	# A one element array of backend definition. Envoy allows configuring only 1 backend, so the natural way of representing that would be just one object. Unfortunately due to the reasons explained in MADR 009-tracing-policy this has to be a one element array for now.
+spec.default.backends[].datadog <object>	# Datadog backend configuration.
+spec.default.backends[].datadog.splitService <boolean> default=false	# Determines if datadog service name should be split based on traffic direction and destination. For example, with `splitService: true` and a `backend` service that communicates with a couple of databases, you would get service names like `backend_INBOUND`, `backend_OUTBOUND_db1`, and `backend_OUTBOUND_db2` in Datadog.
+spec.default.backends[].datadog.url <string> (required)	# Address of Datadog collector, only host and port are allowed (no paths, fragments etc.)
+spec.default.backends[].openTelemetry <object>	# OpenTelemetry backend configuration.
+spec.default.backends[].openTelemetry.backendRef <object>	# BackendRef is a reference to a MeshOpenTelemetryBackend resource that defines the collector endpoint. Mutually exclusive with Endpoint.
+spec.default.backends[].openTelemetry.backendRef.kind <string> (required) enum=MeshOpenTelemetryBackend	# Kind of the backend resource.
+spec.default.backends[].openTelemetry.backendRef.labels <map[string]string>	# Labels to match the referenced resource. When multiple resources match, the oldest by creation time wins.
+spec.default.backends[].openTelemetry.endpoint <string> default=""	# Address of OpenTelemetry collector. Deprecated: use BackendRef instead.
+spec.default.backends[].type <string> (required) enum=Zipkin|Datadog|OpenTelemetry
+spec.default.backends[].zipkin <object>	# Zipkin backend configuration.
+spec.default.backends[].zipkin.apiVersion <string> enum=httpJson|httpProto default="httpJson"	# Version of the API. https://github.com/envoyproxy/envoy/blob/v1.22.0/api/envoy/config/trace/v3/zipkin.proto#L66
+spec.default.backends[].zipkin.sharedSpanContext <boolean> default=true	# Determines whether client and server spans will share the same span context. https://github.com/envoyproxy/envoy/blob/v1.22.0/api/envoy/config/trace/v3/zipkin.proto#L63
+spec.default.backends[].zipkin.traceId128bit <boolean> default=false	# Generate 128bit traces.
+spec.default.backends[].zipkin.url <string> (required)	# Address of Zipkin collector.
+spec.default.sampling <object>	# Sampling configuration. Sampling is the process by which a decision is made on whether to process/export a span or not.
+spec.default.sampling.client <int-or-string>	# Target percentage of requests that will be force traced if the 'x-client-trace-id' header is set. Mirror of client_sampling in Envoy https://github.com/envoyproxy/envoy/blob/v1.22.0/api/envoy/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#L127-L133 Either int or decimal represented as string. If not specified then the default value is 100.
+spec.default.sampling.overall <int-or-string>	# Target percentage of requests will be traced after all other sampling checks have been applied (client, force tracing, random sampling). This field functions as an upper limit on the total configured sampling rate. For instance, setting client to 100 but overall to 1 will result in only 1% of client requests with the appropriate headers to be force traced. Mirror of overall_sampling in Envoy https://github.com/envoyproxy/envoy/blob/v1.22.0/api/envoy/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#L142-L150 Either int or decimal represented as string. If not specified then the default value is 100.
+spec.default.sampling.random <int-or-string>	# Target percentage of requests that will be randomly selected for trace generation, if not requested by the client or not forced. Mirror of random_sampling in Envoy https://github.com/envoyproxy/envoy/blob/v1.22.0/api/envoy/config/filter/network/http_connection_manager/v2/http_connection_manager.proto#L135-L140 Either int or decimal represented as string. If not specified then the default value is 100.
+spec.default.tags <[]object>	# Custom tags configuration. You can add custom tags to traces based on headers or literal values.
+spec.default.tags[].header <object>	# Tag taken from a header.
+spec.default.tags[].header.default <string>	# Default value to use if header is missing. If the default is missing and there is no value the tag will not be included.
+spec.default.tags[].header.name <string> (required)	# Name of the header.
+spec.default.tags[].literal <string>	# Tag taken from literal value.
+spec.default.tags[].name <string> (required)	# Name of the tag.
+spec.targetRef <object>	# TargetRef is a reference to the resource the policy takes an effect on. The resource could be either a real store object or virtual resource defined inplace.
+spec.targetRef.kind <string> (required) enum=Mesh|MeshSubset|MeshGateway|MeshService|MeshExternalService|MeshMultiZoneService|MeshServiceSubset|MeshHTTPRoute|Dataplane	# Kind of the referenced resource
+spec.targetRef.labels <map[string]string>	# Labels are used to select group of MeshServices that match labels. Either Labels or Name and Namespace can be used.
+spec.targetRef.mesh <string>	# Mesh is reserved for future use to identify cross mesh resources.
+spec.targetRef.name <string>	# Name of the referenced resource. Can only be used with kinds: `MeshService`, `MeshServiceSubset` and `MeshGatewayRoute`
+spec.targetRef.namespace <string>	# Namespace specifies the namespace of target resource. If empty only resources in policy namespace will be targeted.
+spec.targetRef.proxyTypes <[]string>	# ProxyTypes specifies the data plane types that are subject to the policy. When not specified, all data plane types are targeted by the policy.
+spec.targetRef.sectionName <string>	# SectionName is used to target specific section of resource. For example, you can target port from MeshService.ports[] by its name. Only traffic to this port will be affected.
+spec.targetRef.tags <map[string]string>	# Tags used to select a subset of proxies by tags. Can only be used with kinds `MeshSubset` and `MeshServiceSubset`
+status <object>	# Status is the current status of the Kuma MeshTrace resource.
+status.conditions <[]object>
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

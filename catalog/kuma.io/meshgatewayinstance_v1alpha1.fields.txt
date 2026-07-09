@@ -1,0 +1,49 @@
+# schema source: Kuma v2.14.0 https://github.com/kumahq/kuma
+apiVersion <string> enum=kuma.io/v1alpha1
+kind <string> enum=MeshGatewayInstance
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# MeshGatewayInstanceSpec specifies the options available for a GatewayDataplane.
+spec.podTemplate <object>	# PodTemplate configures the Pod owned by this config.
+spec.podTemplate.metadata <object>	# Metadata holds metadata configuration for a Service.
+spec.podTemplate.metadata.annotations <map[string]string>	# Annotations holds annotations to be set on an object.
+spec.podTemplate.metadata.labels <map[string]string>	# Labels holds labels to be set on an objects.
+spec.podTemplate.spec <object>	# Spec holds some customizable fields of a Pod.
+spec.podTemplate.spec.container <object>	# Container corresponds to PodSpec.Container
+spec.podTemplate.spec.container.securityContext <object>	# ContainerSecurityContext corresponds to PodSpec.Container.SecurityContext
+spec.podTemplate.spec.container.securityContext.readOnlyRootFilesystem <boolean>	# ReadOnlyRootFilesystem corresponds to PodSpec.Container.SecurityContext.ReadOnlyRootFilesystem
+spec.podTemplate.spec.securityContext <object>	# PodSecurityContext corresponds to PodSpec.SecurityContext
+spec.podTemplate.spec.securityContext.fsGroup <integer> format=int64	# FSGroup corresponds to PodSpec.SecurityContext.FSGroup
+spec.podTemplate.spec.serviceAccountName <string>	# ServiceAccountName corresponds to PodSpec.ServiceAccountName.
+spec.replicas <integer> default=1 format=int32 min=1	# Replicas is the number of dataplane proxy replicas to create. For now this is a fixed number, but in the future it could be automatically scaled based on metrics.
+spec.resources <object>	# Resources specifies the compute resources for the proxy container. The default can be set in the control plane config.
+spec.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.serviceTemplate <object>	# ServiceTemplate configures the Service owned by this config.
+spec.serviceTemplate.metadata <object>	# Metadata holds metadata configuration for a Service.
+spec.serviceTemplate.metadata.annotations <map[string]string>	# Annotations holds annotations to be set on an object.
+spec.serviceTemplate.metadata.labels <map[string]string>	# Labels holds labels to be set on an objects.
+spec.serviceTemplate.spec <object>	# Spec holds some customizable fields of a Service.
+spec.serviceTemplate.spec.loadBalancerIP <string>	# LoadBalancerIP corresponds to ServiceSpec.LoadBalancerIP.
+spec.serviceType <string> enum=LoadBalancer|ClusterIP|NodePort default="LoadBalancer"	# ServiceType specifies the type of managed Service that will be created to expose the dataplane proxies to traffic from outside the cluster. The ports to expose will be taken from the matching Gateway resource. If there is no matching Gateway, the managed Service will be deleted.
+spec.tags <map[string]string>	# Tags specifies the Kuma tags that are propagated to the managed dataplane proxies. These tags should not include `kuma.io/service` tag since is auto-generated, and should match exactly one Gateway resource.
+status <object>	# MeshGatewayInstanceStatus holds information about the status of the gateway instance.
+status.conditions <[]object>	# Conditions is an array of gateway instance conditions.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.loadBalancer <object>	# LoadBalancer contains the current status of the load-balancer, if one is present.
+status.loadBalancer.ingress <[]object>	# Ingress is a list containing ingress points for the load-balancer. Traffic intended for the service should be sent to these ingress points.
+status.loadBalancer.ingress[].hostname <string>	# Hostname is set for load-balancer ingress points that are DNS based (typically AWS load-balancers)
+status.loadBalancer.ingress[].ip <string>	# IP is set for load-balancer ingress points that are IP based (typically GCE or OpenStack load-balancers)
+status.loadBalancer.ingress[].ipMode <string>	# IPMode specifies how the load-balancer IP behaves, and may only be specified when the ip field is specified. Setting this to "VIP" indicates that traffic is delivered to the node with the destination set to the load-balancer's IP and port. Setting this to "Proxy" indicates that traffic is delivered to the node or pod with the destination set to the node's IP and node port or the pod's IP and port. Service implementations may use this information to adjust traffic routing.
+status.loadBalancer.ingress[].ports <[]object>	# Ports is a list of records of service ports If used, every port defined in the service should have an entry in it
+status.loadBalancer.ingress[].ports[].error <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# Error is to record the problem with the service port The format of the error shall comply with the following rules: - built-in error values shall be specified in this file and those shall use CamelCase names - cloud provider specific error values must have names that comply with the format foo.example.com/CamelCase.
+status.loadBalancer.ingress[].ports[].port <integer> (required) format=int32	# Port is the port number of the service port of which status is recorded here
+status.loadBalancer.ingress[].ports[].protocol <string> (required)	# Protocol is the protocol of the service port of which status is recorded here The supported values are: "TCP", "UDP", "SCTP"

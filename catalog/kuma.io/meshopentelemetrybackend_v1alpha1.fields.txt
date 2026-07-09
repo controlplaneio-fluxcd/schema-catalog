@@ -1,0 +1,21 @@
+# schema source: Kuma v2.14.0 https://github.com/kumahq/kuma
+apiVersion <string> enum=kuma.io/v1alpha1
+kind <string> enum=MeshOpenTelemetryBackend
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# Spec is the specification of the Kuma MeshOpenTelemetryBackend resource.
+spec.endpoint <object>	# Endpoint optionally defines the OTel collector address and port. When omitted, the CP defaults port to 4317 and leaves address empty; kuma-dp resolves the address at runtime using HOST_IP or 127.0.0.1.
+spec.endpoint.address <string>	# Address of the OTel collector (hostname or IP). When omitted, kuma-dp resolves it at runtime using HOST_IP or 127.0.0.1.
+spec.endpoint.path <string>	# Path is an optional base path prefix for HTTP endpoints. The CP appends signal-specific suffixes (/v1/traces, /v1/metrics, /v1/logs). Non-empty value is rejected by validation when protocol is grpc.
+spec.endpoint.port <integer> format=int32	# Port of the OTel collector. Defaults to 4317 when omitted.
+spec.env <object>	# Env controls whether standard OTEL exporter env vars participate in the final exporter config for this backend. Defaults to mode: Optional, precedence: EnvFirst, allowSignalOverrides: true when omitted.
+spec.env.allowSignalOverrides <boolean>	# AllowSignalOverrides controls whether per-signal OTEL env vars (OTEL_EXPORTER_OTLP_TRACES_*, OTEL_EXPORTER_OTLP_METRICS_*, OTEL_EXPORTER_OTLP_LOGS_*) may diverge from the shared OTEL_EXPORTER_OTLP_* values. true (default): per-signal vars override the shared values for that signal. false: per-signal vars are ignored; the shared values apply to all signals. When per-signal overrides are dropped this way, SignalOverridesDisallowed appears in blockedReasons (a soft block - export still works via the shared config).
+spec.env.mode <string> enum=Disabled|Optional|Required default="Optional"	# Mode controls whether OTEL env vars participate in the merge. Disabled: env vars are skipped entirely; only explicit backend fields and built-in defaults apply. Optional (default): env vars are used when present; absence is fine. Required: env vars must supply the missing fields - if any required field is missing the signal is blocked (state: missing, RequiredEnvMissing in blockedReasons) even when an explicit value or default could fill it.
+spec.env.precedence <string> enum=ExplicitFirst|EnvFirst default="EnvFirst"	# Precedence controls which source wins when both an explicit backend field and an env var are present for the same field. EnvFirst (default): env vars win; explicit backend fields fill gaps. ExplicitFirst: explicit backend fields win; env vars fill gaps. In either case, built-in defaults are the last fallback.
+spec.protocol <string> enum=grpc|http	# Protocol selects gRPC or HTTP transport for the collector connection. Defaults to grpc when omitted.
+status <object>	# Status is the current status of the Kuma MeshOpenTelemetryBackend resource.
+status.conditions <[]object>
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

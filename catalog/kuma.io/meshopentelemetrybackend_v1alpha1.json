@@ -1,0 +1,132 @@
+{
+  "description": "MeshOpenTelemetryBackend defines a shared OTel collector endpoint for observability policies.\nAn empty spec is valid and represents the node-local default flow\n(kuma-dp resolves the address at runtime using HOST_IP or 127.0.0.1).",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "Spec is the specification of the Kuma MeshOpenTelemetryBackend resource.",
+      "properties": {
+        "endpoint": {
+          "additionalProperties": false,
+          "description": "Endpoint optionally defines the OTel collector address and port.\nWhen omitted, the CP defaults port to 4317 and leaves address empty;\nkuma-dp resolves the address at runtime using HOST_IP or 127.0.0.1.",
+          "properties": {
+            "address": {
+              "description": "Address of the OTel collector (hostname or IP).\nWhen omitted, kuma-dp resolves it at runtime using HOST_IP or 127.0.0.1.",
+              "type": "string"
+            },
+            "path": {
+              "description": "Path is an optional base path prefix for HTTP endpoints.\nThe CP appends signal-specific suffixes (/v1/traces, /v1/metrics, /v1/logs).\nNon-empty value is rejected by validation when protocol is grpc.",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port of the OTel collector. Defaults to 4317 when omitted.",
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "env": {
+          "additionalProperties": false,
+          "description": "Env controls whether standard OTEL exporter env vars participate in the\nfinal exporter config for this backend.\nDefaults to mode: Optional, precedence: EnvFirst, allowSignalOverrides: true\nwhen omitted.",
+          "properties": {
+            "allowSignalOverrides": {
+              "description": "AllowSignalOverrides controls whether per-signal OTEL env vars\n(OTEL_EXPORTER_OTLP_TRACES_*, OTEL_EXPORTER_OTLP_METRICS_*,\nOTEL_EXPORTER_OTLP_LOGS_*) may diverge from the shared\nOTEL_EXPORTER_OTLP_* values.\ntrue (default): per-signal vars override the shared values for that\nsignal.\nfalse: per-signal vars are ignored; the shared values apply to all\nsignals. When per-signal overrides are dropped this way,\nSignalOverridesDisallowed appears in blockedReasons (a soft block -\nexport still works via the shared config).",
+              "type": "boolean"
+            },
+            "mode": {
+              "default": "Optional",
+              "description": "Mode controls whether OTEL env vars participate in the merge.\nDisabled: env vars are skipped entirely; only explicit backend fields and\nbuilt-in defaults apply.\nOptional (default): env vars are used when present; absence is fine.\nRequired: env vars must supply the missing fields - if any required field\nis missing the signal is blocked (state: missing, RequiredEnvMissing in\nblockedReasons) even when an explicit value or default could fill it.",
+              "enum": [
+                "Disabled",
+                "Optional",
+                "Required"
+              ],
+              "type": "string"
+            },
+            "precedence": {
+              "default": "EnvFirst",
+              "description": "Precedence controls which source wins when both an explicit backend field\nand an env var are present for the same field.\nEnvFirst (default): env vars win; explicit backend fields fill gaps.\nExplicitFirst: explicit backend fields win; env vars fill gaps.\nIn either case, built-in defaults are the last fallback.",
+              "enum": [
+                "ExplicitFirst",
+                "EnvFirst"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "protocol": {
+          "description": "Protocol selects gRPC or HTTP transport for the collector connection.\nDefaults to grpc when omitted.",
+          "enum": [
+            "grpc",
+            "http"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Status is the current status of the Kuma MeshOpenTelemetryBackend resource.",
+      "properties": {
+        "conditions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "message": {
+                "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-flux-schema-type": "MeshOpenTelemetryBackend"
+}

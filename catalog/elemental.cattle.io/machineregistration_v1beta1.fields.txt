@@ -1,0 +1,85 @@
+# schema source: Elemental Operator v1.9.2 https://github.com/rancher/elemental-operator
+apiVersion <string> enum=elemental.cattle.io/v1beta1
+kind <string> enum=MachineRegistration
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.config <object>	# Config the cloud config that will be used to provision the node.
+spec.config.cloud-config <any>
+spec.config.elemental <object>
+spec.config.elemental.install <object>
+spec.config.elemental.install.config-dir <string>
+spec.config.elemental.install.config-urls <[]string>
+spec.config.elemental.install.debug <boolean>
+spec.config.elemental.install.device <string>
+spec.config.elemental.install.device-selector <[]object>
+spec.config.elemental.install.device-selector[].key <string> (required) enum=Name|Size
+spec.config.elemental.install.device-selector[].operator <string> (required) enum=In|NotIn|Gt|Lt
+spec.config.elemental.install.device-selector[].values <[]string>
+spec.config.elemental.install.disable-boot-entry <boolean>
+spec.config.elemental.install.eject-cd <boolean>
+spec.config.elemental.install.firmware <string>
+spec.config.elemental.install.iso <string>
+spec.config.elemental.install.no-format <boolean>
+spec.config.elemental.install.poweroff <boolean>
+spec.config.elemental.install.reboot <boolean>
+spec.config.elemental.install.snapshotter <object> default={"maxSnaps":2,"type":"loopdevice"}
+spec.config.elemental.install.snapshotter.maxSnaps <integer> default=2 min=2	# MaxSnaps sets the maximum amount of snapshots to keep
+spec.config.elemental.install.snapshotter.type <string> default="loopdevice"	# Type sets the snapshotter type for a new installation, available options are 'loopdevice' and 'btrfs'
+spec.config.elemental.install.system-uri <string>
+spec.config.elemental.install.tty <string>
+spec.config.elemental.registration <object>
+spec.config.elemental.registration.auth <string> default="tpm"
+spec.config.elemental.registration.ca-cert <string>
+spec.config.elemental.registration.emulate-tpm <boolean>
+spec.config.elemental.registration.emulated-tpm-seed <integer> format=int64
+spec.config.elemental.registration.labels <map[string]string>
+spec.config.elemental.registration.no-smbios <boolean>
+spec.config.elemental.registration.no-toolkit <boolean>
+spec.config.elemental.registration.url <string>
+spec.config.elemental.reset <object> default={"reboot":true,"reset-oem":true,"reset-persistent":true}
+spec.config.elemental.reset.config-urls <[]string>
+spec.config.elemental.reset.debug <boolean>
+spec.config.elemental.reset.disable-boot-entry <boolean>
+spec.config.elemental.reset.enabled <boolean>
+spec.config.elemental.reset.poweroff <boolean>
+spec.config.elemental.reset.reboot <boolean> default=true
+spec.config.elemental.reset.reset-oem <boolean> default=true
+spec.config.elemental.reset.reset-persistent <boolean> default=true
+spec.config.elemental.reset.system-uri <string>
+spec.config.elemental.system-agent <object>
+spec.config.elemental.system-agent.secret-name <string>
+spec.config.elemental.system-agent.secret-namespace <string>
+spec.config.elemental.system-agent.strictTLSMode <boolean>
+spec.config.elemental.system-agent.token <string>
+spec.config.elemental.system-agent.url <string>
+spec.config.network <object>	# NetworkTemplate contains a map of IPAddressPools and a schemaless network config template.
+spec.config.network.config <any>	# Config contains the network config template (nmc, nmstate, or nmconnections formats)
+spec.config.network.configurator <string> enum=none|nmc|nmstate|nmconnections default="none"	# Configurator
+spec.config.network.ipAddresses <map[string]object>	# IPAddresses contains a map of IPPools references
+spec.config.network.ipAddresses.<key>.apiGroup <string>	# APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.
+spec.config.network.ipAddresses.<key>.kind <string> (required)	# Kind is the type of resource being referenced
+spec.config.network.ipAddresses.<key>.name <string> (required)	# Name is the name of resource being referenced
+spec.labelPrefix <string>	# LabelPrefix is prepended to client-sent label and annotation keys (with a "/" separator). Defaults to "elemental.cattle.io". Set to "-" to disable prefixing.
+spec.machineInventoryAnnotations <map[string]string>	# MachineInventoryAnnotations annotations to be added to the created MachineInventory object.
+spec.machineInventoryLabels <map[string]string>	# MachineInventoryLabels label to be added to the created MachineInventory object.
+spec.machineName <string>
+spec.token <string> pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" max=253	# Token is an optional static token for the registration URL. When set, the registration URL will be deterministic: {server-url}/elemental/registration/{token}. Must be URL-safe: lowercase alphanumeric characters and hyphens only. When empty, a random token is generated (default behavior).
+status <object>
+status.conditions <[]object>	# Conditions describe the state of the machine registration object.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.registrationToken <string>	# RegistrationToken a token for registering a machine.
+status.registrationURL <string>	# RegistrationURL is the URL for registering a new machine.
+status.serviceAccountRef <object>	# ServiceAccountRef a reference to the service account created by the machine registration.
+status.serviceAccountRef.apiVersion <string>	# API version of the referent.
+status.serviceAccountRef.fieldPath <string>	# If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object.
+status.serviceAccountRef.kind <string>	# Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+status.serviceAccountRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+status.serviceAccountRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+status.serviceAccountRef.resourceVersion <string>	# Specific resourceVersion to which this reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+status.serviceAccountRef.uid <string>	# UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids

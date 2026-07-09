@@ -1,0 +1,71 @@
+# schema source: Cluster API Hetzner v1.1.7 https://github.com/syself/cluster-api-provider-hetzner
+apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta1
+kind <string> enum=HetznerBareMetalMachine
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# HetznerBareMetalMachineSpec defines the desired state of HetznerBareMetalMachine.
+spec.hostSelector <object>	# HostSelector specifies matching criteria for labels on HetznerBareMetalHosts. This is used to limit the set of HetznerBareMetalHost objects considered for claiming for a HetznerBareMetalMachine.
+spec.hostSelector.matchExpressions <[]object>	# MatchExpressions defines the label match expressions that must be true on a chosen BareMetalHost.
+spec.hostSelector.matchExpressions[].key <string> (required)	# Key defines the key of the label that should be matched in the host object.
+spec.hostSelector.matchExpressions[].operator <string> (required)	# Operator defines the selection operator.
+spec.hostSelector.matchExpressions[].values <[]string> (required)	# Values define the values whose relation to the label value in the host machine is defined by the selection operator.
+spec.hostSelector.matchLabels <map[string]string>	# MatchLabels defines the key/value pairs of labels that must exist on a chosen BareMetalHost.
+spec.installImage <object> (required)	# InstallImage is the configuration that is used for the autosetup configuration for installing an OS via InstallImage.
+spec.installImage.btrfsDefinitions <[]object>	# BTRFSDefinitions define the btrfs subvolume definitions to be created.
+spec.installImage.btrfsDefinitions[].mount <string> (required)	# Mount defines the mountpath.
+spec.installImage.btrfsDefinitions[].subvolume <string> (required)	# SubVolume defines the subvolume name.
+spec.installImage.btrfsDefinitions[].volume <string> (required)	# Volume defines the btrfs volume name.
+spec.installImage.image <object> (required)	# Image is the image to be provisioned. It defines the image for baremetal machine.
+spec.installImage.image.name <string>	# Name defines the archive name after download. This has to be a valid name for Installimage.
+spec.installImage.image.path <string>	# Path is the local path for a preinstalled image from upstream.
+spec.installImage.image.url <string>	# URL defines the remote URL for downloading a tar, tar.gz, tar.bz, tar.bz2, tar.xz, tgz, tbz, txz image.
+spec.installImage.imageURLCommand <string>	# ImageURLCommand is the basename of a command file below /shared on the controller pod which provisions a machine from Image.URL. CAPH copies that command into the rescue system and executes it there. Docs: https://syself.com/docs/caph/developers/image-url-command ImageURLCommand must be set if the machine should be provisioned from Image.URL without installimage. The command name must start with image-url-command-.
+spec.installImage.logicalVolumeDefinitions <[]object>	# LVMDefinitions defines the logical volume definitions to be created.
+spec.installImage.logicalVolumeDefinitions[].filesystem <string> (required)	# FileSystem defines the filesystem for this logical volume.
+spec.installImage.logicalVolumeDefinitions[].mount <string> (required)	# Mount defines the mountpath.
+spec.installImage.logicalVolumeDefinitions[].name <string> (required)	# Name defines the volume name.
+spec.installImage.logicalVolumeDefinitions[].size <string> (required)	# Size defines the size in M/G/T or MiB/GiB/TiB.
+spec.installImage.logicalVolumeDefinitions[].vg <string> (required)	# VG defines the vg name.
+spec.installImage.partitions <[]object> (required)	# Partitions define the additional Partitions to be created in installimage.
+spec.installImage.partitions[].fileSystem <string> (required)	# FileSystem can be ext2, ext3, ext4, btrfs, reiserfs, xfs, swap or name of the LVM volume group (VG), if this PART is a VG.
+spec.installImage.partitions[].mount <string> (required)	# Mount defines the mount path for this filesystem. Keyword 'lvm' to use this PART as volume group (VG) for LVM. Identifier 'btrfs.X' to use this PART as volume for btrfs subvolumes. X can be replaced with a unique alphanumeric keyword. NOTE: no support for btrfs multi-device volumes.
+spec.installImage.partitions[].size <string> (required)	# Size can use the keyword 'all' to assign all the remaining space of the drive to the last partition. You can use M/G/T for unit specification in MiB/GiB/TiB.
+spec.installImage.postInstallScript <string>	# PostInstallScript (Bash) is used for configuring commands that should be executed after installimage. It is passed along with the installimage command.
+spec.installImage.swraid <integer> enum=0|1 default=0	# Swraid defines the SWRAID in InstallImage. It enables or disables raids. Set 1 to enable.
+spec.installImage.swraidLevel <integer> enum=0|1|5|6|10 default=1	# SwraidLevel defines the SWRAIDLEVEL in InstallImage. Only relevant if the raid is enabled. Pick one of 0,1,5,6,10. Ignored if Swraid=0.
+spec.providerID <string>	# ProviderID is set by the controller to either (new) `hrobot://<server-id>` or (old) `hcloud://bm-NNNN` format. If the HetznerBareMetalMachineSpec has already a ProviderID, then this will never change. If the ProviderID is empty, the controller sets it to the old format by default (hcloud://bm-NNNN), except the Annotation `capi.syself.com/use-hrobot-provider-id-for-baremetal` on the hetznerCluster is set to `"true"`.
+spec.sshSpec <object>	# SSHSpec gives a reference on the secret where SSH details are specified as well as ports for SSH.
+spec.sshSpec.noSSHAfterInstallImage <boolean>	# NoSSHAfterInstallImage disables SSH access to the machine after installimage completed successfully.
+spec.sshSpec.portAfterCloudInit <integer>	# PortAfterCloudInit is deprecated. Since PR Install Cloud-Init-Data via post-install.sh #1407 this field is not functional. Deprecated: This field is not used anymore.
+spec.sshSpec.portAfterInstallImage <integer> default=22	# PortAfterInstallImage specifies the port that has to be used to connect to the machine by reaching the server via SSH after installing the image successfully.
+spec.sshSpec.secretRef <object> (required)	# SecretRef gives reference to the secret where the SSH key is stored.
+spec.sshSpec.secretRef.key <object> (required)	# Key contains details about the keys used in the data of the secret.
+spec.sshSpec.secretRef.key.name <string> (required)	# Name is the key in the secret's data where the SSH key's name is stored.
+spec.sshSpec.secretRef.key.privateKey <string> (required)	# PrivateKey is the key in the secret's data where the SSH key's private key is stored.
+spec.sshSpec.secretRef.key.publicKey <string> (required)	# PublicKey is the key in the secret's data where the SSH key's public key is stored.
+spec.sshSpec.secretRef.name <string> (required)	# Name is the name of the secret.
+status <object>	# HetznerBareMetalMachineStatus defines the observed state of HetznerBareMetalMachine.
+status.addresses <[]object>	# Addresses is a list of addresses assigned to the machine. This field is copied from the infrastructure provider reference.
+status.addresses[].address <string> (required) min=1 max=256	# address is the machine address.
+status.addresses[].type <string> (required) enum=Hostname|ExternalIP|InternalIP|ExternalDNS|InternalDNS	# type is the machine address type, one of Hostname, ExternalIP, InternalIP, ExternalDNS or InternalDNS.
+status.conditions <[]object>	# Conditions define the current service state of the HetznerBareMetalMachine.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> min=1 max=10240	# message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].reason <string> min=1 max=256	# reason is the reason for the condition's last transition in CamelCase. The specific API may choose whether or not this field is considered a guaranteed API. This field may be empty.
+status.conditions[].severity <string> max=32	# severity provides an explicit classification of Reason code, so the users or machines can immediately understand the current situation and act accordingly. The Severity field MUST be set only when Status=False.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) min=1 max=256	# type of condition in CamelCase or in foo.example.com/CamelCase. Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important.
+status.failureMessage <string>	# FailureMessage will be set in the event that there is a terminal problem. Deprecated: This field is deprecated and is going to be removed when support for v1beta1 will be dropped. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.
+status.failureReason <string>	# FailureReason will be set in the event that there is a terminal problem. Deprecated: This field is deprecated and is going to be removed when support for v1beta1 will be dropped. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.
+status.lastRemediatedAt <string> format=date-time	# LastRemediatedAt records when the most recent successful remediation completed. Used to prevent reboot loops across successive MHC incidents.
+status.lastUpdated <string> format=date-time	# LastUpdated identifies when this status was last observed.
+status.phase <string>	# Phase represents the current phase of HetznerBareMetalMachineStatus actuation. E.g. Pending, Running, Terminating, Failed, etc.
+status.ready <boolean>	# Ready is the state of the hetznerbaremetalmachine.
+status.v1beta2 <object>	# v1beta2 groups all the fields that will be added or modified in HetznerBareMetalMachine's status with the V1Beta2 version.
+status.v1beta2.conditions <[]object> max=32	# conditions represents the observations of a HetznerBareMetalMachine's current state. Known condition types are Ready, HCloudTokenAvailable, HostAssociated and HostReady.
+status.v1beta2.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.v1beta2.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.v1beta2.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.v1beta2.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.v1beta2.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.v1beta2.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

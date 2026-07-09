@@ -1,0 +1,37 @@
+# schema source: AWS EventBridge Controller v1.4.1 https://github.com/aws-controllers-k8s/eventbridge-controller
+apiVersion <string> enum=eventbridge.services.k8s.aws/v1alpha1
+kind <string> enum=Endpoint
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# EndpointSpec defines the desired state of Endpoint. A global endpoint used to improve your application's availability by making it regional-fault tolerant. For more information about global endpoints, see Making applications Regional-fault tolerant with global endpoints and event replication (https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-global-endpoints.html) in the Amazon EventBridge User Guide .
+spec.description <string>	# A description of the global endpoint. Regex Pattern: `.*`
+spec.eventBuses <[]object> (required)	# Define the event buses used. The names of the event buses must be identical in each Region.
+spec.eventBuses[].eventBusARN <string>
+spec.name <string> (required) (immutable)	# The name of the global endpoint. For example, "Name":"us-east-2-custom_bus_A-endpoint". Regex Pattern: `^[\.\-_A-Za-z0-9]+$`
+spec.replicationConfig <object>	# Enable or disable event replication. The default state is ENABLED which means you must supply a RoleArn. If you don't have a RoleArn or you don't want event replication enabled, set the state to DISABLED.
+spec.replicationConfig.state <string>
+spec.roleARN <string>	# The ARN of the role used for replication. Regex Pattern: `^arn:aws[a-z-]*:iam::\d{12}:role\/[\w+=,.@/-]+$`
+spec.roleRef <object>	# AWSResourceReferenceWrapper provides a wrapper around *AWSResourceReference type to provide more user friendly syntax for references using 'from' field Ex: APIIDRef: from: name: my-api
+spec.roleRef.from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.roleRef.from.name <string>
+spec.roleRef.from.namespace <string>
+spec.routingConfig <object> (required)	# Configure the routing policy, including the health check and secondary Region..
+spec.routingConfig.failoverConfig <object>	# The failover configuration for an endpoint. This includes what triggers failover and what happens when it's triggered.
+spec.routingConfig.failoverConfig.primary <object>	# The primary Region of the endpoint.
+spec.routingConfig.failoverConfig.primary.healthCheck <string>
+spec.routingConfig.failoverConfig.secondary <object>	# The secondary Region that processes events when failover is triggered or replication is enabled.
+spec.routingConfig.failoverConfig.secondary.route <string>
+status <object>	# EndpointStatus defines the observed state of Endpoint
+status.ackResourceMetadata <object>	# All CRs managed by ACK have a common `Status.ACKResourceMetadata` member that is used to contain resource sync state, account ownership, constructed ARN for the resource
+status.ackResourceMetadata.arn <string>	# ARN is the Amazon Resource Name for the resource. This is a globally-unique identifier and is set only by the ACK service controller once the controller has orchestrated the creation of the resource OR when it has verified that an "adopted" resource (a resource where the ARN annotation was set by the Kubernetes user on the CR) exists and matches the supplied CR's Spec field values. https://github.com/aws/aws-controllers-k8s/issues/270
+status.ackResourceMetadata.ownerAccountID <string> (required)	# OwnerAccountID is the AWS Account ID of the account that owns the backend AWS service API resource.
+status.ackResourceMetadata.partition <string>	# Partition is the AWS partition in which the resource exists or will exist
+status.ackResourceMetadata.region <string> (required)	# Region is the AWS region in which the resource exists or will exist.
+status.conditions <[]object>	# All CRs managed by ACK have a common `Status.Conditions` member that contains a collection of `ackv1alpha1.Condition` objects that describe the various terminal states of the CR and its backend AWS service API resource
+status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# A human readable message indicating details about the transition.
+status.conditions[].reason <string>	# The reason for the condition's last transition.
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# Type is the type of the Condition
+status.state <string>	# The state of the endpoint that was created by this request.
+status.stateReason <string>	# The reason the endpoint you asked for information about is in its current state. Regex Pattern: `.*`
