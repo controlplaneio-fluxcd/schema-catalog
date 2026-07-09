@@ -10,6 +10,7 @@ import {
   CNCF_SHIELDS,
   createBreadcrumb,
   createPage,
+  createProjectLogo,
   createRepoLink,
   createShield,
   formatDate,
@@ -99,7 +100,15 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
     badges.append(createShield(GITHUB_ICON, org, "shield-repo", `https://github.com/${org}`));
   }
 
-  hero.append(title, badges);
+  const logo = createProjectLogo(project);
+  if (logo === null) {
+    hero.append(title, badges);
+  } else {
+    const head = document.createElement("div");
+    head.className = "hero-head";
+    head.append(logo, title);
+    hero.append(head, badges);
+  }
   return hero;
 }
 

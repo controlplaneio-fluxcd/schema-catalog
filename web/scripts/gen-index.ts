@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CATEGORIES, loadConfig, repoOf, repoOfProject } from "../../build/src/config.ts";
@@ -123,6 +123,34 @@ export function generateIndex(config: CatalogConfig, entries: HistoryEntry[]): C
   };
 }
 
+/**
+ * Marks projects that ship a logo under `web/logos/` so the UI can render it
+ * without a runtime probe. A file named `<name>.svg` is a `"plain"` mark;
+ * `<name>.plate.svg` is a dark-on-transparent mark the UI puts on a light plate
+ * (the served path drops the `.plate` infix, see `scripts/build-ui.ts`). Files
+ * matching no project name are warned about (a typo or a removed source) rather
+ * than failing the build.
+ */
+async function stampLogos(index: CatalogIndex, logosDir: string): Promise<void> {
+  let files: string[];
+  try {
+    files = (await readdir(logosDir)).filter((name) => name.endsWith(".svg"));
+  } catch {
+    return; // No logos directory yet: every project renders without a mark.
+  }
+  const byName = new Map(index.projects.map((project) => [project.name, project]));
+  for (const file of files) {
+    const plate = file.endsWith(".plate.svg");
+    const name = file.slice(0, -(plate ? ".plate.svg" : ".svg").length);
+    const project = byName.get(name);
+    if (project === undefined) {
+      console.warn(`warning: logo ${file} matches no project name`);
+      continue;
+    }
+    project.logo = plate ? "plate" : "plain";
+  }
+}
+
 function categoryIndex(category: string, owner: string): number {
   const cat = CATEGORIES.indexOf(category as (typeof CATEGORIES)[number]);
   if (cat === -1) {
@@ -137,6 +165,7 @@ if (import.meta.main) {
     (entry): entry is HistoryEntry => entry !== null,
   );
   const index = generateIndex(config, entries);
+  await stampLogos(index, join(repoRoot, "web/logos"));
   const outputPath = join(repoRoot, "web/dist/assets/index.json");
   const json = JSON.stringify(index);
 

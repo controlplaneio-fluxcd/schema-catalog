@@ -14,6 +14,7 @@ import type { CatalogIndex } from "../src/shared/types.ts";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const webRoot = join(scriptDir, "..");
 const staticDir = join(webRoot, "static");
+const logosDir = join(webRoot, "logos");
 const assetsDir = join(webRoot, "dist/assets");
 
 await mkdir(assetsDir, { recursive: true });
@@ -43,6 +44,27 @@ for (const entry of await readdir(staticDir, { withFileTypes: true })) {
 }
 
 await copyFile(join(webRoot, "src/ui/styles.css"), join(assetsDir, "styles.css"));
+
+// Project logo marks: `logos/<name>[.plate].svg` -> `/logos/<name>.svg`. The
+// `.plate` infix (a dark mark rendered on a light plate) is dropped so the
+// served path is uniform; gen-index records the plate flag from the same infix.
+// Optional dir; gen-index flags which projects have one so the UI never probes a
+// missing file.
+const logosOut = join(assetsDir, "logos");
+try {
+  const logos = (await readdir(logosDir, { withFileTypes: true })).filter(
+    (entry) => entry.isFile() && entry.name.endsWith(".svg"),
+  );
+  if (logos.length > 0) {
+    await mkdir(logosOut, { recursive: true });
+    for (const entry of logos) {
+      const served = entry.name.replace(/\.plate\.svg$/, ".svg");
+      await copyFile(join(logosDir, entry.name), join(logosOut, served));
+    }
+  }
+} catch {
+  // No logos directory: projects render without a mark.
+}
 
 /**
  * Indexable pages prerendered from the app shell with page-specific meta.

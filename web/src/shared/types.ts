@@ -43,6 +43,13 @@ export interface ProjectEntry {
   cncf?: "graduated" | "incubating" | "sandbox";
   /** Landing-page preview order within the category; lower shows first, unpinned follow alphabetically. */
   pin?: number;
+  /**
+   * Set when the project ships a logo mark under `web/logos/`. `"plain"` is a
+   * mark that reads on any background; `"plate"` (dropped as `<name>.plate.svg`)
+   * is dark-on-transparent and the UI puts it on a light plate for the dark
+   * theme. The UI renders the mark in the project and kind heroes.
+   */
+  logo?: "plain" | "plate";
   /** Member sources merged into this project; present only on grouped entries. */
   sources?: ProjectSourceEntry[];
   groups: GroupEntry[];

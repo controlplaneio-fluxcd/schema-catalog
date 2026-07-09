@@ -9,6 +9,7 @@ import {
   clear,
   createBreadcrumb,
   createPage,
+  createProjectLogo,
   createSearchField,
   link,
   notFoundView,
@@ -113,7 +114,15 @@ function createKindHero(
   });
   meta.append(switcher, createHeroActions(project, group, kind, version));
 
-  hero.append(title, gvk, meta);
+  const logo = createProjectLogo(project);
+  if (logo === null) {
+    hero.append(title, gvk, meta);
+  } else {
+    const head = document.createElement("div");
+    head.className = "hero-head";
+    head.append(logo, title);
+    hero.append(head, gvk, meta);
+  }
   return hero;
 }
 

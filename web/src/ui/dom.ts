@@ -555,6 +555,34 @@ export function createRepoLink(repo: string, ref?: string): HTMLAnchorElement {
   return anchor;
 }
 
+/**
+ * Creates the project logo mark for a hero, or null when the project ships no
+ * `web/logos/<name>.svg`. The mark is decorative (the adjacent heading names the
+ * project), so it carries an empty alt and is hidden from assistive tech. A
+ * `"plate"` logo (dropped as `<name>.plate.svg`) is a dark-on-transparent mark;
+ * it renders on a light plate so it keeps contrast on the dark theme.
+ */
+export function createProjectLogo(project: ProjectEntry): HTMLElement | null {
+  if (project.logo === undefined) {
+    return null;
+  }
+  const logo = document.createElement("img");
+  logo.className = "project-logo";
+  logo.src = `/logos/${encodeURIComponent(project.name)}.svg`;
+  logo.alt = "";
+  logo.width = 40;
+  logo.height = 40;
+  logo.loading = "lazy";
+  logo.setAttribute("aria-hidden", "true");
+  if (project.logo !== "plate") {
+    return logo;
+  }
+  const plate = document.createElement("span");
+  plate.className = "project-logo-plate";
+  plate.append(logo);
+  return plate;
+}
+
 /** Resolves a project's category name from its compact category index. */
 export function categoryName(index: CatalogIndex, project: ProjectEntry): string {
   return index.categories[project.cat] ?? "Uncategorized";
