@@ -1,0 +1,508 @@
+# schema source: NVIDIA GPU Operator v26.3.3 https://github.com/NVIDIA/gpu-operator
+apiVersion <string> enum=nvidia.com/v1
+kind <string> enum=ClusterPolicy (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# ClusterPolicySpec defines the desired state of ClusterPolicy
+spec.ccManager <object>	# CCManager component spec
+spec.ccManager.args <[]string>	# Optional: List of arguments
+spec.ccManager.defaultMode <string> enum=on|off|devtools	# Default CC mode setting for compatible GPUs on the node
+spec.ccManager.enabled <boolean>	# Enabled indicates if deployment of CC Manager is enabled
+spec.ccManager.env <[]object>	# Optional: List of environment variables
+spec.ccManager.env[].name <string> (required)	# Name of the environment variable.
+spec.ccManager.env[].value <string>	# Value of the environment variable.
+spec.ccManager.hostNetwork <boolean>	# HostNetwork indicates whether the CC Manager pod uses the host's network namespace.
+spec.ccManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# CC Manager image name
+spec.ccManager.imagePullPolicy <string>	# Image pull policy
+spec.ccManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.ccManager.repository <string>	# CC Manager image repository
+spec.ccManager.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.ccManager.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.ccManager.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.ccManager.version <string>	# CC Manager image tag
+spec.cdi <object>	# CDI configures how the Container Device Interface is used in the cluster
+spec.cdi.default <boolean> default=false	# Deprecated: This field is no longer used. Setting cdi.enabled=true will configure CDI as the default mechanism for making GPUs accessible to containers.
+spec.cdi.enabled <boolean> default=true	# Enabled indicates whether the Container Device Interface (CDI) should be used as the mechanism for making GPUs accessible to containers.
+spec.cdi.nriPluginEnabled <boolean> default=false	# NRIPluginEnabled indicates whether an NRI Plugin should be run as a means of injecting CDI devices to gpu management containers.
+spec.daemonsets <object> (required)	# Daemonset defines common configuration for all Daemonsets
+spec.daemonsets.annotations <map[string]string>	# Optional: Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects.
+spec.daemonsets.labels <map[string]string>	# Optional: Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services.
+spec.daemonsets.podSecurityContext <object>	# Optional: Set pod-level security context for all DaemonSet pods (applies as defaults to all containers)
+spec.daemonsets.podSecurityContext.appArmorProfile <object>	# appArmorProfile is the AppArmor options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.appArmorProfile.localhostProfile <string>	# localhostProfile indicates a profile loaded on the node that should be used. The profile must be preconfigured on the node to work. Must match the loaded name of the profile. Must be set if and only if type is "Localhost".
+spec.daemonsets.podSecurityContext.appArmorProfile.type <string> (required)	# type indicates which kind of AppArmor profile will be applied. Valid options are: Localhost - a profile pre-loaded on the node. RuntimeDefault - the container runtime's default profile. Unconfined - no AppArmor enforcement.
+spec.daemonsets.podSecurityContext.fsGroup <integer> format=int64	# A special supplemental group that applies to all containers in a pod. Some volume types allow the Kubelet to change the ownership of that volume to be owned by the pod: 1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw---- If unset, the Kubelet will not modify the ownership and permissions of any volume. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.fsGroupChangePolicy <string>	# fsGroupChangePolicy defines behavior of changing ownership and permission of the volume before being exposed inside Pod. This field will only apply to volume types which support fsGroup based ownership(and permissions). It will have no effect on ephemeral volume types such as: secret, configmaps and emptydir. Valid values are "OnRootMismatch" and "Always". If not specified, "Always" is used. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.runAsGroup <integer> format=int64	# The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in SecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.runAsNonRoot <boolean>	# Indicates that the container must run as a non-root user. If true, the Kubelet will validate the image at runtime to ensure that it does not run as UID 0 (root) and fail to start the container if it does. If unset or false, no such validation will be performed. May also be set in SecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+spec.daemonsets.podSecurityContext.runAsUser <integer> format=int64	# The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in SecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.seLinuxChangePolicy <string>	# seLinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod. It has no effect on nodes that do not support SELinux or to volumes does not support SELinux. Valid values are "MountOption" and "Recursive". "Recursive" means relabeling of all files on all Pod volumes by the container runtime. This may be slow for large volumes, but allows mixing privileged and unprivileged Pods sharing the same volume on the same node. "MountOption" mounts all eligible Pod volumes with `-o context` mount option. This requires all Pods that share the same volume to use the same SELinux label. It is not possible to share the same volume among privileged and unprivileged Pods. Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their CSIDriver instance. Other volumes are always re-labelled recursively. "MountOption" value is allowed only when SELinuxMount feature gate is enabled. If not specified and SELinuxMount feature gate is enabled, "MountOption" is used. If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes and "Recursive" for all other volumes. This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers. All Pods that use the same volume should use the same seLinuxChangePolicy, otherwise some pods can get stuck in ContainerCreating state. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.seLinuxOptions <object>	# The SELinux context to be applied to all containers. If unspecified, the container runtime will allocate a random SELinux context for each container. May also be set in SecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.seLinuxOptions.level <string>	# Level is SELinux level label that applies to the container.
+spec.daemonsets.podSecurityContext.seLinuxOptions.role <string>	# Role is a SELinux role label that applies to the container.
+spec.daemonsets.podSecurityContext.seLinuxOptions.type <string>	# Type is a SELinux type label that applies to the container.
+spec.daemonsets.podSecurityContext.seLinuxOptions.user <string>	# User is a SELinux user label that applies to the container.
+spec.daemonsets.podSecurityContext.seccompProfile <object>	# The seccomp options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.seccompProfile.localhostProfile <string>	# localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
+spec.daemonsets.podSecurityContext.seccompProfile.type <string> (required)	# type indicates which kind of seccomp profile will be applied. Valid options are: Localhost - a profile defined in a file on the node should be used. RuntimeDefault - the container runtime default profile should be used. Unconfined - no profile should be applied.
+spec.daemonsets.podSecurityContext.supplementalGroups <[]integer>	# A list of groups applied to the first process run in each container, in addition to the container's primary GID and fsGroup (if specified). If the SupplementalGroupsPolicy feature is enabled, the supplementalGroupsPolicy field determines whether these are in addition to or instead of any group memberships defined in the container image. If unspecified, no additional groups are added, though group memberships defined in the container image may still be used, depending on the supplementalGroupsPolicy field. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.supplementalGroupsPolicy <string>	# Defines how supplemental groups of the first container processes are calculated. Valid values are "Merge" and "Strict". If not specified, "Merge" is used. (Alpha) Using the field requires the SupplementalGroupsPolicy feature gate to be enabled and the container runtime must implement support for this feature. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.sysctls <[]object>	# Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported sysctls (by the container runtime) might fail to launch. Note that this field cannot be set when spec.os.name is windows.
+spec.daemonsets.podSecurityContext.sysctls[].name <string> (required)	# Name of a property to set
+spec.daemonsets.podSecurityContext.sysctls[].value <string> (required)	# Value of a property to set
+spec.daemonsets.podSecurityContext.windowsOptions <object>	# The Windows specific settings applied to all containers. If unspecified, the options within a container's SecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is linux.
+spec.daemonsets.podSecurityContext.windowsOptions.gmsaCredentialSpec <string>	# GMSACredentialSpec is where the GMSA admission webhook (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the GMSA credential spec named by the GMSACredentialSpecName field.
+spec.daemonsets.podSecurityContext.windowsOptions.gmsaCredentialSpecName <string>	# GMSACredentialSpecName is the name of the GMSA credential spec to use.
+spec.daemonsets.podSecurityContext.windowsOptions.hostProcess <boolean>	# HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
+spec.daemonsets.podSecurityContext.windowsOptions.runAsUserName <string>	# The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+spec.daemonsets.priorityClassName <string>
+spec.daemonsets.rollingUpdate <object>	# Optional: Configuration for rolling update of all DaemonSet pods
+spec.daemonsets.rollingUpdate.maxUnavailable <string>
+spec.daemonsets.tolerations <[]object>	# Optional: Set tolerations
+spec.daemonsets.tolerations[].effect <string>	# Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+spec.daemonsets.tolerations[].key <string>	# Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+spec.daemonsets.tolerations[].operator <string>	# Operator represents a key's relationship to the value. Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category. Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
+spec.daemonsets.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
+spec.daemonsets.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
+spec.daemonsets.updateStrategy <string> enum=RollingUpdate|OnDelete default="RollingUpdate"
+spec.dcgm <object> (required)	# DCGM component spec
+spec.dcgm.args <[]string>	# Optional: List of arguments
+spec.dcgm.enabled <boolean>	# Enabled indicates if deployment of NVIDIA DCGM Hostengine as a separate pod is enabled.
+spec.dcgm.env <[]object>	# Optional: List of environment variables
+spec.dcgm.env[].name <string> (required)	# Name of the environment variable.
+spec.dcgm.env[].value <string>	# Value of the environment variable.
+spec.dcgm.hostNetwork <boolean>	# HostNetwork indicates whether the DCGM pod uses the host's network namespace.
+spec.dcgm.hostPort <integer> format=int32	# Deprecated: HostPort represents host port that needs to be bound for DCGM engine (Default: 5555)
+spec.dcgm.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA DCGM image name
+spec.dcgm.imagePullPolicy <string>	# Image pull policy
+spec.dcgm.imagePullSecrets <[]string>	# Image pull secrets
+spec.dcgm.repository <string>	# NVIDIA DCGM image repository
+spec.dcgm.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.dcgm.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.dcgm.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.dcgm.version <string>	# NVIDIA DCGM image tag
+spec.dcgmExporter <object> (required)	# DCGMExporter spec
+spec.dcgmExporter.annotations <map[string]string>	# Optional: Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects.
+spec.dcgmExporter.args <[]string>	# Optional: List of arguments
+spec.dcgmExporter.config <object>	# Optional: Custom metrics configuration for NVIDIA DCGM Exporter
+spec.dcgmExporter.config.name <string>	# ConfigMap name with file dcgm-metrics.csv for metrics to be collected by NVIDIA DCGM Exporter
+spec.dcgmExporter.enablePodLabels <boolean>	# Enable Kubernetes pod labels as Prometheus label dimensions in DCGM exporter metrics. (Requires cluster-level read access to pods.)
+spec.dcgmExporter.enablePodUID <boolean>	# Enable Kubernetes pod UID as a Prometheus label dimension in DCGM exporter metrics. (Requires cluster-level read access to pods.)
+spec.dcgmExporter.enabled <boolean>	# Enabled indicates if deployment of NVIDIA DCGM Exporter through operator is enabled
+spec.dcgmExporter.env <[]object>	# Optional: List of environment variables
+spec.dcgmExporter.env[].name <string> (required)	# Name of the environment variable.
+spec.dcgmExporter.env[].value <string>	# Value of the environment variable.
+spec.dcgmExporter.hostNetwork <boolean>	# HostNetwork allows the DCGM-Exporter daemon set to expose metrics port on the host's network namespace.
+spec.dcgmExporter.hostPID <boolean>	# HostPID allows the DCGM-Exporter daemon set to access the host's PID namespace
+spec.dcgmExporter.hpcJobMapping <object>	# Optional: HPC job mapping configuration for NVIDIA DCGM Exporter
+spec.dcgmExporter.hpcJobMapping.directory <string>	# Directory path where HPC job mapping files are created by the workload manager Defaults to /var/lib/dcgm-exporter/job-mapping if not specified
+spec.dcgmExporter.hpcJobMapping.enabled <boolean>	# Enable HPC job mapping for DCGM Exporter
+spec.dcgmExporter.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA DCGM Exporter image name
+spec.dcgmExporter.imagePullPolicy <string>	# Image pull policy
+spec.dcgmExporter.imagePullSecrets <[]string>	# Image pull secrets
+spec.dcgmExporter.podLabelAllowlistRegex <[]string>	# Regex list for filtering which Kubernetes pod labels are included in DCGM exporter metrics. Empty means all pod labels are included.
+spec.dcgmExporter.repository <string>	# NVIDIA DCGM Exporter image repository
+spec.dcgmExporter.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.dcgmExporter.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.dcgmExporter.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.dcgmExporter.service <object>	# Optional: Service configuration for NVIDIA DCGM Exporter
+spec.dcgmExporter.service.internalTrafficPolicy <string>	# InternalTrafficPolicy describes how nodes distribute service traffic they receive on the ClusterIP.
+spec.dcgmExporter.service.type <string>	# Type represents the ServiceType which describes ingress methods for a service
+spec.dcgmExporter.serviceMonitor <object>	# Optional: ServiceMonitor configuration for NVIDIA DCGM Exporter
+spec.dcgmExporter.serviceMonitor.additionalLabels <map[string]string>	# AdditionalLabels to add to ServiceMonitor instance for NVIDIA DCGM Exporter
+spec.dcgmExporter.serviceMonitor.enabled <boolean>	# Enabled indicates if ServiceMonitor is deployed for NVIDIA DCGM Exporter
+spec.dcgmExporter.serviceMonitor.honorLabels <boolean>	# HonorLabels chooses the metric’s labels on collisions with target labels.
+spec.dcgmExporter.serviceMonitor.interval <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# Interval which metrics should be scraped from NVIDIA DCGM Exporter. If not specified Prometheus’ global scrape interval is used. Supported units: y, w, d, h, m, s, ms
+spec.dcgmExporter.serviceMonitor.relabelings <[]object>	# Relabelings allows to rewrite labels on metric sets for NVIDIA DCGM Exporter
+spec.dcgmExporter.serviceMonitor.relabelings[].action <string> enum=replace|Replace|keep|Keep|drop|Drop|hashmod|HashMod|labelmap|LabelMap|labeldrop|LabelDrop|labelkeep|LabelKeep|lowercase|Lowercase|uppercase|Uppercase|keepequal|KeepEqual|dropequal|DropEqual default="replace"	# action to perform based on the regex matching. `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. Default: "Replace"
+spec.dcgmExporter.serviceMonitor.relabelings[].modulus <integer> format=int64	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
+spec.dcgmExporter.serviceMonitor.relabelings[].regex <string>	# regex defines the regular expression against which the extracted value is matched.
+spec.dcgmExporter.serviceMonitor.relabelings[].replacement <string>	# replacement value against which a Replace action is performed if the regular expression matches. Regex capture groups are available.
+spec.dcgmExporter.serviceMonitor.relabelings[].separator <string>	# separator defines the string between concatenated SourceLabels.
+spec.dcgmExporter.serviceMonitor.relabelings[].sourceLabels <[]string>	# sourceLabels defines the source labels select values from existing labels. Their content is concatenated using the configured Separator and matched against the configured regular expression.
+spec.dcgmExporter.serviceMonitor.relabelings[].targetLabel <string>	# targetLabel defines the label to which the resulting string is written in a replacement. It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions. Regex capture groups are available.
+spec.dcgmExporter.version <string>	# NVIDIA DCGM Exporter image tag
+spec.devicePlugin <object> (required)	# DevicePlugin component spec
+spec.devicePlugin.args <[]string>	# Optional: List of arguments
+spec.devicePlugin.config <object>	# Optional: Configuration for the NVIDIA Device Plugin via the ConfigMap
+spec.devicePlugin.config.default <string>	# Default config name within the ConfigMap for the NVIDIA Device Plugin config
+spec.devicePlugin.config.name <string>	# ConfigMap name for NVIDIA Device Plugin config including shared config between plugin and GFD
+spec.devicePlugin.enabled <boolean>	# Enabled indicates if deployment of NVIDIA Device Plugin through operator is enabled
+spec.devicePlugin.env <[]object>	# Optional: List of environment variables
+spec.devicePlugin.env[].name <string> (required)	# Name of the environment variable.
+spec.devicePlugin.env[].value <string>	# Value of the environment variable.
+spec.devicePlugin.hostNetwork <boolean>	# HostNetwork indicates whether the Device Plugin pod uses the host's network namespace.
+spec.devicePlugin.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA Device Plugin image name
+spec.devicePlugin.imagePullPolicy <string>	# Image pull policy
+spec.devicePlugin.imagePullSecrets <[]string>	# Image pull secrets
+spec.devicePlugin.mps <object>	# Optional: MPS related configuration for the NVIDIA Device Plugin
+spec.devicePlugin.mps.root <string> default="/run/nvidia/mps"	# Root defines the MPS root path on the host
+spec.devicePlugin.repository <string>	# NVIDIA Device Plugin image repository
+spec.devicePlugin.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.devicePlugin.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.devicePlugin.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.devicePlugin.version <string>	# NVIDIA Device Plugin image tag
+spec.driver <object> (required)	# Driver component spec
+spec.driver.args <[]string>	# Optional: List of arguments
+spec.driver.certConfig <object>	# Optional: Custom certificates configuration for NVIDIA Driver container
+spec.driver.certConfig.name <string>
+spec.driver.enabled <boolean>	# Enabled indicates if deployment of NVIDIA Driver through operator is enabled
+spec.driver.env <[]object>	# Optional: List of environment variables
+spec.driver.env[].name <string> (required)	# Name of the environment variable.
+spec.driver.env[].value <string>	# Value of the environment variable.
+spec.driver.hostNetwork <boolean>	# HostNetwork indicates whether the Driver pod uses the host's network namespace.
+spec.driver.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA Driver image name
+spec.driver.imagePullPolicy <string>	# Image pull policy
+spec.driver.imagePullSecrets <[]string>	# Image pull secrets
+spec.driver.kernelModuleConfig <object>	# Optional: Kernel module configuration parameters for the NVIDIA Driver
+spec.driver.kernelModuleConfig.name <string>
+spec.driver.kernelModuleType <string> enum=auto|open|proprietary default="auto"	# KernelModuleType represents the type of driver kernel modules to be used when installing the GPU driver. Accepted values are auto, proprietary and open. NOTE: If auto is chosen, it means that the recommended kernel module type is chosen based on the GPU devices on the host and the driver branch used
+spec.driver.licensingConfig <object>	# Optional: Licensing configuration for NVIDIA vGPU licensing
+spec.driver.licensingConfig.configMapName <string>	# Deprecated: ConfigMapName has been deprecated in favour of SecretName. Please use secrets to handle the licensing server configuration more securely
+spec.driver.licensingConfig.nlsEnabled <boolean>	# NLSEnabled indicates if NVIDIA Licensing System is used for licensing.
+spec.driver.licensingConfig.secretName <string>	# SecretName indicates the name of the secret containing the licensing token
+spec.driver.livenessProbe <object>	# NVIDIA Driver container liveness probe settings
+spec.driver.livenessProbe.failureThreshold <integer> format=int32 min=1	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.driver.livenessProbe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.driver.livenessProbe.periodSeconds <integer> format=int32 min=1	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.driver.livenessProbe.successThreshold <integer> format=int32 min=1	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.driver.livenessProbe.timeoutSeconds <integer> format=int32 min=1	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.driver.manager <object>	# Manager represents configuration for NVIDIA Driver Manager initContainer
+spec.driver.manager.env <[]object>	# Optional: List of environment variables
+spec.driver.manager.env[].name <string> (required)	# Name of the environment variable.
+spec.driver.manager.env[].value <string>	# Value of the environment variable.
+spec.driver.manager.image <string> pattern="[a-zA-Z0-9\\-]+"	# Image represents NVIDIA Driver Manager image name
+spec.driver.manager.imagePullPolicy <string>	# Image pull policy
+spec.driver.manager.imagePullSecrets <[]string>	# Image pull secrets
+spec.driver.manager.repository <string>	# Repository represents Driver Managerrepository path
+spec.driver.manager.version <string>	# Version represents NVIDIA Driver Manager image tag(version)
+spec.driver.rdma <object>	# GPUDirectRDMASpec defines the properties for nvidia-peermem deployment
+spec.driver.rdma.enabled <boolean>	# Enabled indicates if GPUDirect RDMA is enabled through GPU operator
+spec.driver.rdma.useHostMofed <boolean>	# UseHostMOFED indicates to use MOFED drivers directly installed on the host to enable GPUDirect RDMA
+spec.driver.readinessProbe <object>	# NVIDIA Driver container readiness probe settings
+spec.driver.readinessProbe.failureThreshold <integer> format=int32 min=1	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.driver.readinessProbe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.driver.readinessProbe.periodSeconds <integer> format=int32 min=1	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.driver.readinessProbe.successThreshold <integer> format=int32 min=1	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.driver.readinessProbe.timeoutSeconds <integer> format=int32 min=1	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.driver.repoConfig <object>	# Optional: Custom repo configuration for NVIDIA Driver container
+spec.driver.repoConfig.configMapName <string>
+spec.driver.repository <string>	# NVIDIA Driver image repository
+spec.driver.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.driver.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.driver.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.driver.secretEnv <string>	# Optional: SecretEnv represents the name of the Kubernetes Secret with secret environment variables for the NVIDIA Driver
+spec.driver.startupProbe <object>	# NVIDIA Driver container startup probe settings
+spec.driver.startupProbe.failureThreshold <integer> format=int32 min=1	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
+spec.driver.startupProbe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.driver.startupProbe.periodSeconds <integer> format=int32 min=1	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+spec.driver.startupProbe.successThreshold <integer> format=int32 min=1	# Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+spec.driver.startupProbe.timeoutSeconds <integer> format=int32 min=1	# Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+spec.driver.upgradePolicy <object>	# Driver auto-upgrade settings
+spec.driver.upgradePolicy.autoUpgrade <boolean> default=false	# AutoUpgrade is a global switch for automatic upgrade feature if set to false all other options are ignored
+spec.driver.upgradePolicy.drain <object>	# DrainSpec describes configuration for node drain during automatic upgrade
+spec.driver.upgradePolicy.drain.deleteEmptyDir <boolean> default=false	# DeleteEmptyDir indicates if should continue even if there are pods using emptyDir (local data that will be deleted when the node is drained)
+spec.driver.upgradePolicy.drain.enable <boolean> default=false	# Enable indicates if node draining is allowed during upgrade
+spec.driver.upgradePolicy.drain.force <boolean> default=false	# Force indicates if force draining is allowed
+spec.driver.upgradePolicy.drain.podSelector <string>	# PodSelector specifies a label selector to filter pods on the node that need to be drained For more details on label selectors, see: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+spec.driver.upgradePolicy.drain.timeoutSeconds <integer> default=300 min=0	# TimeoutSecond specifies the length of time in seconds to wait before giving up drain, zero means infinite
+spec.driver.upgradePolicy.maxParallelUpgrades <integer> default=1 min=0	# MaxParallelUpgrades indicates how many nodes can be upgraded in parallel 0 means no limit, all nodes will be upgraded in parallel
+spec.driver.upgradePolicy.maxUnavailable <int-or-string> default="25%"	# MaxUnavailable is the maximum number of nodes with the driver installed, that can be unavailable during the upgrade. Value can be an absolute number (ex: 5) or a percentage of total nodes at the start of upgrade (ex: 10%). Absolute number is calculated from percentage by rounding up. By default, a fixed value of 25% is used.
+spec.driver.upgradePolicy.podDeletion <object>	# PodDeletionSpec describes configuration for deletion of pods using special resources during automatic upgrade
+spec.driver.upgradePolicy.podDeletion.deleteEmptyDir <boolean> default=false	# DeleteEmptyDir indicates if should continue even if there are pods using emptyDir (local data that will be deleted when the pod is deleted)
+spec.driver.upgradePolicy.podDeletion.force <boolean> default=false	# Force indicates if force deletion is allowed
+spec.driver.upgradePolicy.podDeletion.timeoutSeconds <integer> default=300 min=0	# TimeoutSecond specifies the length of time in seconds to wait before giving up on pod termination, zero means infinite
+spec.driver.upgradePolicy.waitForCompletion <object>	# WaitForCompletionSpec describes the configuration for waiting on job completions
+spec.driver.upgradePolicy.waitForCompletion.podSelector <string>	# PodSelector specifies a label selector for the pods to wait for completion For more details on label selectors, see: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+spec.driver.upgradePolicy.waitForCompletion.timeoutSeconds <integer> default=0 min=0	# TimeoutSecond specifies the length of time in seconds to wait before giving up on pod termination, zero means infinite
+spec.driver.useNvidiaDriverCRD <boolean>	# UseNvidiaDriverCRD indicates if the deployment of NVIDIA Driver is managed by the NVIDIADriver CRD type
+spec.driver.useOpenKernelModules <boolean>	# Deprecated: This field is no longer honored by the gpu-operator. Please use KernelModuleType instead. UseOpenKernelModules indicates if the open GPU kernel modules should be used
+spec.driver.usePrecompiled <boolean>	# UsePrecompiled indicates if deployment of NVIDIA Driver using pre-compiled modules is enabled
+spec.driver.version <string>	# NVIDIA Driver image tag
+spec.driver.virtualTopology <object>	# Optional: Virtual Topology Daemon configuration for NVIDIA vGPU drivers
+spec.driver.virtualTopology.config <string>	# Optional: Config name representing virtual topology daemon configuration file nvidia-topologyd.conf
+spec.gdrcopy <object>	# GDRCopy component spec
+spec.gdrcopy.args <[]string>	# Optional: List of arguments
+spec.gdrcopy.enabled <boolean>	# Enabled indicates if GDRCopy is enabled through GPU Operator
+spec.gdrcopy.env <[]object>	# Optional: List of environment variables
+spec.gdrcopy.env[].name <string> (required)	# Name of the environment variable.
+spec.gdrcopy.env[].value <string>	# Value of the environment variable.
+spec.gdrcopy.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA GDRCopy driver image name
+spec.gdrcopy.imagePullPolicy <string>	# Image pull policy
+spec.gdrcopy.imagePullSecrets <[]string>	# Image pull secrets
+spec.gdrcopy.repository <string>	# NVIDIA GDRCopy driver image repository
+spec.gdrcopy.version <string>	# NVIDIA GDRCopy driver image tag
+spec.gds <object>	# GPUDirectStorage defines the spec for GDS components(Experimental)
+spec.gds.args <[]string>	# Optional: List of arguments
+spec.gds.enabled <boolean>	# Enabled indicates if GPUDirect Storage is enabled through GPU operator
+spec.gds.env <[]object>	# Optional: List of environment variables
+spec.gds.env[].name <string> (required)	# Name of the environment variable.
+spec.gds.env[].value <string>	# Value of the environment variable.
+spec.gds.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA GPUDirect Storage Driver image name
+spec.gds.imagePullPolicy <string>	# Image pull policy
+spec.gds.imagePullSecrets <[]string>	# Image pull secrets
+spec.gds.repository <string>	# NVIDIA GPUDirect Storage Driver image repository
+spec.gds.version <string>	# NVIDIA GPUDirect Storage Driver image tag
+spec.gfd <object> (required)	# GPUFeatureDiscovery spec
+spec.gfd.args <[]string>	# Optional: List of arguments
+spec.gfd.enabled <boolean>	# Enabled indicates if deployment of GPU Feature Discovery Plugin is enabled.
+spec.gfd.env <[]object>	# Optional: List of environment variables
+spec.gfd.env[].name <string> (required)	# Name of the environment variable.
+spec.gfd.env[].value <string>	# Value of the environment variable.
+spec.gfd.hostNetwork <boolean>	# HostNetwork indicates whether the GPU Feature Discovery pod uses the host's network namespace.
+spec.gfd.image <string> pattern="[a-zA-Z0-9\\-]+"	# GFD image name
+spec.gfd.imagePullPolicy <string>	# Image pull policy
+spec.gfd.imagePullSecrets <[]string>	# Image pull secrets
+spec.gfd.repository <string>	# GFD image repository
+spec.gfd.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.gfd.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.gfd.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.gfd.version <string>	# GFD image tag
+spec.hostPaths <object>	# HostPaths defines various paths on the host needed by GPU Operator components
+spec.hostPaths.driverInstallDir <string>	# DriverInstallDir represents the root at which driver files including libraries, config files, and executables can be found.
+spec.hostPaths.rootFS <string>	# RootFS represents the path to the root filesystem of the host. This is used by components that need to interact with the host filesystem and as such this must be a chroot-able filesystem. Examples include the MIG Manager and Toolkit Container which may need to stop, start, or restart systemd services.
+spec.kataManager <object>	# KataManager component spec
+spec.kataManager.args <[]string>	# Optional: List of arguments
+spec.kataManager.config <object>	# Kata Manager config
+spec.kataManager.config.artifactsDir <string> default="/opt/nvidia-gpu-operator/artifacts/runtimeclasses"	# ArtifactsDir is the directory where kata artifacts (e.g. kernel / guest images, configuration, etc.) are placed on the local filesystem.
+spec.kataManager.config.runtimeClasses <[]object>	# RuntimeClasses is a list of kata runtime classes to configure.
+spec.kataManager.config.runtimeClasses[].artifacts <object> (required)	# Artifacts are the kata artifacts associated with the runtime class.
+spec.kataManager.config.runtimeClasses[].artifacts.pullSecret <string>	# PullSecret is the secret used to pull the OCI artifact.
+spec.kataManager.config.runtimeClasses[].artifacts.url <string> (required)	# URL is the path to the OCI artifact (payload) containing all artifacts associated with a kata runtime class.
+spec.kataManager.config.runtimeClasses[].name <string> (required)	# Name is the name of the kata runtime class.
+spec.kataManager.config.runtimeClasses[].nodeSelector <map[string]string>	# NodeSelector specifies the nodeSelector for the RuntimeClass object. This ensures pods running with the RuntimeClass only get scheduled onto nodes which support it.
+spec.kataManager.enabled <boolean>	# Enabled indicates if deployment of Kata Manager is enabled
+spec.kataManager.env <[]object>	# Optional: List of environment variables
+spec.kataManager.env[].name <string> (required)	# Name of the environment variable.
+spec.kataManager.env[].value <string>	# Value of the environment variable.
+spec.kataManager.hostNetwork <boolean>	# HostNetwork indicates whether the Kata Manager pod uses the host's network namespace.
+spec.kataManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# Kata Manager image name
+spec.kataManager.imagePullPolicy <string>	# Image pull policy
+spec.kataManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.kataManager.repository <string>	# Kata Manager image repository
+spec.kataManager.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.kataManager.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.kataManager.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.kataManager.version <string>	# Kata Manager image tag
+spec.kataSandboxDevicePlugin <object>	# KataSandboxDevicePlugin component spec
+spec.kataSandboxDevicePlugin.args <[]string>	# Optional: List of arguments
+spec.kataSandboxDevicePlugin.enabled <boolean>	# Enabled indicates if deployment of NVIDIA component through operator is enabled
+spec.kataSandboxDevicePlugin.env <[]object>	# Optional: List of environment variables
+spec.kataSandboxDevicePlugin.env[].name <string> (required)	# Name of the environment variable.
+spec.kataSandboxDevicePlugin.env[].value <string>	# Value of the environment variable.
+spec.kataSandboxDevicePlugin.hostNetwork <boolean>	# HostNetwork indicates whether the Kata Sandbox Device Plugin pod uses the host's network namespace.
+spec.kataSandboxDevicePlugin.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA component image name
+spec.kataSandboxDevicePlugin.imagePullPolicy <string>	# Image pull policy
+spec.kataSandboxDevicePlugin.imagePullSecrets <[]string>	# Image pull secrets
+spec.kataSandboxDevicePlugin.repository <string>	# NVIDIA component image repository
+spec.kataSandboxDevicePlugin.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.kataSandboxDevicePlugin.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.kataSandboxDevicePlugin.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.kataSandboxDevicePlugin.version <string>	# NVIDIA component image tag
+spec.mig <object>	# MIG spec
+spec.mig.strategy <string> enum=none|single|mixed	# Optional: MIGStrategy to apply for GFD and NVIDIA Device Plugin
+spec.migManager <object>	# MIGManager for configuration to deploy MIG Manager
+spec.migManager.args <[]string>	# Optional: List of arguments
+spec.migManager.config <object>	# Optional: Custom mig-parted configuration for NVIDIA MIG Manager container
+spec.migManager.config.default <string> enum=all-disabled| default="all-disabled"	# Default MIG config to be applied on the node, when there is no config specified with the node label nvidia.com/mig.config
+spec.migManager.config.name <string>	# ConfigMap name. If not specified, MIG configuration will be dynamically generated from hardware.
+spec.migManager.enabled <boolean>	# Enabled indicates if deployment of NVIDIA MIG Manager is enabled
+spec.migManager.env <[]object>	# Optional: List of environment variables
+spec.migManager.env[].name <string> (required)	# Name of the environment variable.
+spec.migManager.env[].value <string>	# Value of the environment variable.
+spec.migManager.gpuClientsConfig <object>	# Optional: Custom gpu-clients configuration for NVIDIA MIG Manager container
+spec.migManager.gpuClientsConfig.name <string>	# ConfigMap name
+spec.migManager.hostNetwork <boolean>	# HostNetwork indicates whether the MIG Manager pod uses the host's network namespace.
+spec.migManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA MIG Manager image name
+spec.migManager.imagePullPolicy <string>	# Image pull policy
+spec.migManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.migManager.repository <string>	# NVIDIA MIG Manager image repository
+spec.migManager.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.migManager.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.migManager.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.migManager.version <string>	# NVIDIA MIG Manager image tag
+spec.nodeStatusExporter <object> (required)	# NodeStatusExporter spec
+spec.nodeStatusExporter.args <[]string>	# Optional: List of arguments
+spec.nodeStatusExporter.enabled <boolean>	# Enabled indicates if deployment of Node Status Exporter is enabled.
+spec.nodeStatusExporter.env <[]object>	# Optional: List of environment variables
+spec.nodeStatusExporter.env[].name <string> (required)	# Name of the environment variable.
+spec.nodeStatusExporter.env[].value <string>	# Value of the environment variable.
+spec.nodeStatusExporter.hostNetwork <boolean>	# HostNetwork indicates whether the Node Status Exporter pod uses the host's network namespace.
+spec.nodeStatusExporter.image <string> pattern="[a-zA-Z0-9\\-]+"	# Node Status Exporter image name
+spec.nodeStatusExporter.imagePullPolicy <string>	# Image pull policy
+spec.nodeStatusExporter.imagePullSecrets <[]string>	# Image pull secrets
+spec.nodeStatusExporter.repository <string>	# Node Status Exporterimage repository
+spec.nodeStatusExporter.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.nodeStatusExporter.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.nodeStatusExporter.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.nodeStatusExporter.version <string>	# Node Status Exporterimage tag
+spec.operator <object> (required)	# Operator component spec
+spec.operator.annotations <map[string]string>	# Optional: Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects.
+spec.operator.defaultRuntime <string>	# Deprecated: DefaultRuntime is no longer used by the gpu-operator. This is instead, detected at runtime.
+spec.operator.initContainer <object>	# Deprecated: InitContainerSpec describes configuration for initContainer image used with all components
+spec.operator.initContainer.image <string> pattern="[a-zA-Z0-9\\-]+"	# Image represents image name
+spec.operator.initContainer.imagePullPolicy <string>	# Image pull policy
+spec.operator.initContainer.imagePullSecrets <[]string>	# Image pull secrets
+spec.operator.initContainer.repository <string>	# Repository represents image repository path
+spec.operator.initContainer.version <string>	# Version represents image tag(version)
+spec.operator.labels <map[string]string>	# Optional: Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services.
+spec.operator.runtimeClass <string> default="nvidia"
+spec.operator.use_ocp_driver_toolkit <boolean>	# UseOpenShiftDriverToolkit indicates if DriverToolkit image should be used on OpenShift to build and install driver modules
+spec.psa <object>	# PSA defines spec for PodSecurityAdmission configuration
+spec.psa.enabled <boolean>	# Enabled indicates if PodSecurityAdmission configuration needs to be enabled for all Pods
+spec.psp <object>	# Deprecated: Pod Security Policies are no longer supported. Please use PodSecurityAdmission instead PSP defines spec for handling PodSecurityPolicies
+spec.psp.enabled <boolean>	# Enabled indicates if PodSecurityPolicies needs to be enabled for all Pods
+spec.sandboxDevicePlugin <object>	# SandboxDevicePlugin component spec
+spec.sandboxDevicePlugin.args <[]string>	# Optional: List of arguments
+spec.sandboxDevicePlugin.enabled <boolean>	# Enabled indicates if deployment of NVIDIA Sandbox Device Plugin through operator is enabled
+spec.sandboxDevicePlugin.env <[]object>	# Optional: List of environment variables
+spec.sandboxDevicePlugin.env[].name <string> (required)	# Name of the environment variable.
+spec.sandboxDevicePlugin.env[].value <string>	# Value of the environment variable.
+spec.sandboxDevicePlugin.hostNetwork <boolean>	# HostNetwork indicates whether the Sandbox Device Plugin pod uses the host's network namespace.
+spec.sandboxDevicePlugin.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA Sandbox Device Plugin image name
+spec.sandboxDevicePlugin.imagePullPolicy <string>	# Image pull policy
+spec.sandboxDevicePlugin.imagePullSecrets <[]string>	# Image pull secrets
+spec.sandboxDevicePlugin.repository <string>	# NVIDIA Sandbox Device Plugin image repository
+spec.sandboxDevicePlugin.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.sandboxDevicePlugin.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.sandboxDevicePlugin.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.sandboxDevicePlugin.version <string>	# NVIDIA Sandbox Device Plugin image tag
+spec.sandboxWorkloads <object>	# SandboxWorkloads defines the spec for handling sandbox workloads (i.e. Virtual Machines)
+spec.sandboxWorkloads.defaultWorkload <string> enum=container|vm-passthrough|vm-vgpu default="container"	# DefaultWorkload indicates the default GPU workload type to configure worker nodes in the cluster for
+spec.sandboxWorkloads.enabled <boolean>	# Enabled indicates if the GPU Operator should manage additional operands required for sandbox workloads (i.e. VFIO Manager, vGPU Manager, and additional device plugins)
+spec.sandboxWorkloads.mode <string> enum=kubevirt|kata default="kubevirt"	# Mode indicates the sandbox mode. Accepted values are "kubevirt" and "kata". The default value is "kubevirt".
+spec.toolkit <object> (required)	# Toolkit component spec
+spec.toolkit.args <[]string>	# Optional: List of arguments
+spec.toolkit.enabled <boolean>	# Enabled indicates if deployment of NVIDIA Container Toolkit through operator is enabled
+spec.toolkit.env <[]object>	# Optional: List of environment variables
+spec.toolkit.env[].name <string> (required)	# Name of the environment variable.
+spec.toolkit.env[].value <string>	# Value of the environment variable.
+spec.toolkit.hostNetwork <boolean>	# HostNetwork indicates whether the Container Toolkit pod uses the host's network namespace.
+spec.toolkit.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA Container Toolkit image name
+spec.toolkit.imagePullPolicy <string>	# Image pull policy
+spec.toolkit.imagePullSecrets <[]string>	# Image pull secrets
+spec.toolkit.installDir <string> default="/usr/local/nvidia"	# Toolkit install directory on the host
+spec.toolkit.repository <string>	# NVIDIA Container Toolkit image repository
+spec.toolkit.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.toolkit.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.toolkit.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.toolkit.version <string>	# NVIDIA Container Toolkit image tag
+spec.validator <object>	# Validator defines the spec for operator-validator daemonset
+spec.validator.args <[]string>	# Optional: List of arguments
+spec.validator.cuda <object>	# CUDA validator spec
+spec.validator.cuda.env <[]object>	# Optional: List of environment variables
+spec.validator.cuda.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.cuda.env[].value <string>	# Value of the environment variable.
+spec.validator.driver <object>	# Toolkit validator spec
+spec.validator.driver.env <[]object>	# Optional: List of environment variables
+spec.validator.driver.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.driver.env[].value <string>	# Value of the environment variable.
+spec.validator.env <[]object>	# Optional: List of environment variables
+spec.validator.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.env[].value <string>	# Value of the environment variable.
+spec.validator.hostNetwork <boolean>	# HostNetwork indicates whether the Validator pod uses the host's network namespace.
+spec.validator.image <string> pattern="[a-zA-Z0-9\\-]+"	# Validator image name
+spec.validator.imagePullPolicy <string>	# Image pull policy
+spec.validator.imagePullSecrets <[]string>	# Image pull secrets
+spec.validator.plugin <object>	# Plugin validator spec
+spec.validator.plugin.env <[]object>	# Optional: List of environment variables
+spec.validator.plugin.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.plugin.env[].value <string>	# Value of the environment variable.
+spec.validator.repository <string>	# Validator image repository
+spec.validator.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.validator.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.validator.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.validator.toolkit <object>	# Toolkit validator spec
+spec.validator.toolkit.env <[]object>	# Optional: List of environment variables
+spec.validator.toolkit.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.toolkit.env[].value <string>	# Value of the environment variable.
+spec.validator.version <string>	# Validator image tag
+spec.validator.vfioPCI <object>	# VfioPCI validator spec
+spec.validator.vfioPCI.env <[]object>	# Optional: List of environment variables
+spec.validator.vfioPCI.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.vfioPCI.env[].value <string>	# Value of the environment variable.
+spec.validator.vgpuDevices <object>	# VGPUDevices validator spec
+spec.validator.vgpuDevices.env <[]object>	# Optional: List of environment variables
+spec.validator.vgpuDevices.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.vgpuDevices.env[].value <string>	# Value of the environment variable.
+spec.validator.vgpuManager <object>	# VGPUManager validator spec
+spec.validator.vgpuManager.env <[]object>	# Optional: List of environment variables
+spec.validator.vgpuManager.env[].name <string> (required)	# Name of the environment variable.
+spec.validator.vgpuManager.env[].value <string>	# Value of the environment variable.
+spec.vfioManager <object>	# VFIOManager for configuration to deploy VFIO-PCI Manager
+spec.vfioManager.args <[]string>	# Optional: List of arguments
+spec.vfioManager.driverManager <object>	# DriverManager represents configuration for NVIDIA Driver Manager
+spec.vfioManager.driverManager.env <[]object>	# Optional: List of environment variables
+spec.vfioManager.driverManager.env[].name <string> (required)	# Name of the environment variable.
+spec.vfioManager.driverManager.env[].value <string>	# Value of the environment variable.
+spec.vfioManager.driverManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# Image represents NVIDIA Driver Manager image name
+spec.vfioManager.driverManager.imagePullPolicy <string>	# Image pull policy
+spec.vfioManager.driverManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.vfioManager.driverManager.repository <string>	# Repository represents Driver Managerrepository path
+spec.vfioManager.driverManager.version <string>	# Version represents NVIDIA Driver Manager image tag(version)
+spec.vfioManager.enabled <boolean>	# Enabled indicates if deployment of VFIO Manager is enabled
+spec.vfioManager.env <[]object>	# Optional: List of environment variables
+spec.vfioManager.env[].name <string> (required)	# Name of the environment variable.
+spec.vfioManager.env[].value <string>	# Value of the environment variable.
+spec.vfioManager.hostNetwork <boolean>	# HostNetwork indicates whether the VFIO Manager pod uses the host's network namespace.
+spec.vfioManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# VFIO Manager image name
+spec.vfioManager.imagePullPolicy <string>	# Image pull policy
+spec.vfioManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.vfioManager.repository <string>	# VFIO Manager image repository
+spec.vfioManager.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.vfioManager.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.vfioManager.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.vfioManager.version <string>	# VFIO Manager image tag
+spec.vgpuDeviceManager <object>	# VGPUDeviceManager spec
+spec.vgpuDeviceManager.args <[]string>	# Optional: List of arguments
+spec.vgpuDeviceManager.config <object>	# NVIDIA vGPU devices configuration for NVIDIA vGPU Device Manager container
+spec.vgpuDeviceManager.config.default <string> default="default"	# Default config name within the ConfigMap
+spec.vgpuDeviceManager.config.name <string>	# ConfigMap name
+spec.vgpuDeviceManager.enabled <boolean>	# Enabled indicates if deployment of NVIDIA vGPU Device Manager is enabled
+spec.vgpuDeviceManager.env <[]object>	# Optional: List of environment variables
+spec.vgpuDeviceManager.env[].name <string> (required)	# Name of the environment variable.
+spec.vgpuDeviceManager.env[].value <string>	# Value of the environment variable.
+spec.vgpuDeviceManager.hostNetwork <boolean>	# HostNetwork indicates whether the vGPU Device Manager pod uses the host's network namespace.
+spec.vgpuDeviceManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA vGPU Device Manager image name
+spec.vgpuDeviceManager.imagePullPolicy <string>	# Image pull policy
+spec.vgpuDeviceManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.vgpuDeviceManager.repository <string>	# NVIDIA vGPU Device Manager image repository
+spec.vgpuDeviceManager.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.vgpuDeviceManager.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.vgpuDeviceManager.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.vgpuDeviceManager.version <string>	# NVIDIA vGPU Device Manager image tag
+spec.vgpuManager <object>	# VGPUManager component spec
+spec.vgpuManager.args <[]string>	# Optional: List of arguments
+spec.vgpuManager.driverManager <object>	# DriverManager represents configuration for NVIDIA Driver Manager initContainer
+spec.vgpuManager.driverManager.env <[]object>	# Optional: List of environment variables
+spec.vgpuManager.driverManager.env[].name <string> (required)	# Name of the environment variable.
+spec.vgpuManager.driverManager.env[].value <string>	# Value of the environment variable.
+spec.vgpuManager.driverManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# Image represents NVIDIA Driver Manager image name
+spec.vgpuManager.driverManager.imagePullPolicy <string>	# Image pull policy
+spec.vgpuManager.driverManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.vgpuManager.driverManager.repository <string>	# Repository represents Driver Managerrepository path
+spec.vgpuManager.driverManager.version <string>	# Version represents NVIDIA Driver Manager image tag(version)
+spec.vgpuManager.enabled <boolean>	# Enabled indicates if deployment of NVIDIA vGPU Manager through operator is enabled
+spec.vgpuManager.env <[]object>	# Optional: List of environment variables
+spec.vgpuManager.env[].name <string> (required)	# Name of the environment variable.
+spec.vgpuManager.env[].value <string>	# Value of the environment variable.
+spec.vgpuManager.hostNetwork <boolean>	# HostNetwork indicates whether the vGPU Manager pod uses the host's network namespace.
+spec.vgpuManager.image <string> pattern="[a-zA-Z0-9\\-]+"	# NVIDIA vGPU Manager image name
+spec.vgpuManager.imagePullPolicy <string>	# Image pull policy
+spec.vgpuManager.imagePullSecrets <[]string>	# Image pull secrets
+spec.vgpuManager.kernelModuleConfig <object>	# Optional: Kernel module configuration parameters for the vGPU manager
+spec.vgpuManager.kernelModuleConfig.name <string>
+spec.vgpuManager.repository <string>	# NVIDIA vGPU Manager image repository
+spec.vgpuManager.resources <object>	# Optional: Define resources requests and limits for each pod
+spec.vgpuManager.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.vgpuManager.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.vgpuManager.version <string>	# NVIDIA vGPU Manager image tag
+status <object>	# ClusterPolicyStatus defines the observed state of ClusterPolicy
+status.conditions <[]object>	# Conditions is a list of conditions representing the ClusterPolicy's current state.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.namespace <string>	# Namespace indicates a namespace in which the operator is installed
+status.state <string> (required) enum=ignored|ready|notReady	# State indicates status of ClusterPolicy

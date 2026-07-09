@@ -1,0 +1,25 @@
+# schema source: Skupper 2.2.1 https://github.com/skupperproject/skupper
+apiVersion <string> enum=skupper.io/v2alpha1
+kind <string> enum=Listener
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.exposePodsByName <boolean>	# If true, expose each pod as an individual service. This allows individual pods to be directly connected across a network. The pod names will be used to create each service.
+spec.host <string> (required)	# The hostname or IP address of the local listener. Clients at this site use the listener host and port to establish connections to the remote service.
+spec.observer <string> enum=auto|none|http1|http2	# The listener observer controls how the listener inspects network traffic for application-level protocol information. When unset or set to `auto`, the listener inspects traffic to detect known application protocols and produces telemetry events for that application traffic. Set to a specific protocol (`http1` or `http2`) to restrict inspection to that protocol only. Set to `none` to disable protocol inspection and reduce overhead from traffic inspection and application-level telemetry.
+spec.port <integer> (required)	# The port of the local listener. Clients at this site use the listener host and port to establish connections to the remote service.
+spec.routingKey <string> (required)	# The identifier to route traffic from listeners to connectors. To enable connecting to a service at a remote site, the local listener and the remote connector must have matching routingKeys.
+spec.settings <map[string]string>	# A map containing additional settings. Each map entry has a string name and a string value. **Note:** In general, we recommend not changing settings from their default values.
+spec.tlsCredentials <string>	# The name of a bundle of TLS certificates used for secure client-to-router communication. The bundle contains the server certificate and key. It optionally includes the trusted client certificate (usually a CA) for mutual TLS. On Kubernetes, the value is the name of a Secret in the current namespace. On Docker, Podman, and Linux, the value is the name of a directory under input/certs/ in the current namespace.
+spec.type <string>	# Currently only supports tcp.
+status <object>
+status.conditions <[]object>	# A set of named conditions describing the current state of the resource. - `Configured`: The listener configuration has been applied to the router. - `Operational`: There is at least one connector corresponding to this listener. - `Ready`: The listener is ready for use. All other conditions are true.
+status.conditions[].lastTransitionTime <string> (required) format=date-time
+status.conditions[].message <string> (required) max=32768
+status.conditions[].observedGeneration <integer> format=int64 min=0
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024
+status.conditions[].status <string> (required) enum=True|False|Unknown
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316
+status.hasMatchingConnector <boolean>	# True if there is at least one connector with a matching routing key (usually in a remote site).
+status.message <string>	# A human-readable status message. Error messages are reported here.
+status.status <string>	# The current state of the resource. - `Pending`: The resource is being processed. - `Error`: There was an error processing the resource. See `message` for more information. - `Ready`: The resource is ready to use.

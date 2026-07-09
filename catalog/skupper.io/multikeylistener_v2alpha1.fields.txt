@@ -1,0 +1,33 @@
+# schema source: Skupper 2.2.1 https://github.com/skupperproject/skupper
+apiVersion <string> enum=skupper.io/v2alpha1
+kind <string> enum=MultiKeyListener
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)
+spec.host <string> (required)	# host is the hostname or IP address of the local listener. Clients at this site use the listener host and port to establish connections to the remote service.
+spec.observer <string> enum=auto|none|http1|http2	# The observer controls how the listener inspects network traffic for application-level protocol information. When unset or set to `auto`, the listener inspects traffic to detect known application protocols and produces telemetry events for that application traffic. Set to a specific protocol (`http1` or `http2`) to restrict inspection to that protocol only. Set to `none` to disable protocol inspection and reduce overhead from traffic inspection and application-level telemetry.
+spec.port <integer> (required)	# port of the local listener. Clients at this site use the listener host and port to establish connections to the remote service.
+spec.requireClientCert <boolean>	# requireClientCert indicates that clients must present valid certificates to the listener to connect.
+spec.settings <map[string]string>	# settings is a map containing additional settings. **Note:** In general, we recommend not changing settings from their default values.
+spec.strategy <object> (required)	# strategy for routing traffic from the local listener endpoint to one or more connector instances by routing key.
+spec.strategy.priority <object>	# PriorityStrategySpec specifies an ordered set of routing keys to route traffic to. With this strategy 100% of traffic will be directed to the first routing key with a reachable connector.
+spec.strategy.priority.routingKeys <[]string> (required) min=1 max=256	# routingKeys to route traffic to in order of highest to lowest priority.
+spec.strategy.weighted <object>	# WeightedStrategySpec defines a mapping of routing keys to weights. The listener distributes traffic among reachable routing keys according to their weights. Routing keys with higher weights receive a larger portion of the traffic. If all keys are assigned the same weight, traffic is split equally between them.
+spec.strategy.weighted.routingKeys <map[string]integer> (required)	# routingKeys to route traffic to according to their weight values
+spec.tlsCredentials <string>	# tlsCredentials for client-to-listener
+status <object>
+status.conditions <[]object>	# conditions describing the current state of the multikeylistener - `Configured`: The multikeylistener configuration has been applied to the router. - `Operational`: There is at least one connector corresponding to the multikeylistener strategy. - `Ready`: The multikeylistener is ready to use. All other conditions are true..
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.hasDestination <boolean>	# hasDestination is set true when there is at least one connector in the network with a routing key matched by the strategy.
+status.message <string>	# A human-readable status message. Error messages are reported here.
+status.status <string>	# The current state of the resource. - `Pending`: The resource is being processed. - `Error`: There was an error processing the resource. See `message` for more information. - `Ready`: The resource is ready to use.
+status.strategy <object>
+status.strategy.priority <object>	# priority status
+status.strategy.priority.routingKeysReachable <[]string> (required)	# routingKeysReachable is a list of routingKeys with at least one reachable connector given in priority order.
+status.strategy.weighted <object>	# weighted status
+status.strategy.weighted.routingKeysReachable <map[string]integer> (required)	# routingKeysReachable is a mapping of routingKeys to weights with at least one reachable connector. The value of each routingKey is the weight in the map.
