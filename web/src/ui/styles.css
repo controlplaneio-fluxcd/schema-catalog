@@ -1617,6 +1617,12 @@ a.version-badge:hover {
   break-inside: avoid;
 }
 
+/* The kind filter hides rows via [hidden]; the flex display above would
+   otherwise beat the UA rule. */
+.kind-row[hidden] {
+  display: none;
+}
+
 .kind-row .kind-link {
   overflow-wrap: anywhere;
 }
@@ -1808,12 +1814,6 @@ a.source-name:hover {
 
 /* ---------- kind page: fields ---------- */
 
-.fields-panel {
-  /* 16px + the toolbar's own 10px padding lands the filter at the same 26px
-     below the hero as the project page tabs. */
-  margin-top: 16px;
-}
-
 .fields-toolbar {
   position: sticky;
   top: 60px;
@@ -1821,7 +1821,8 @@ a.source-name:hover {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 0;
+  /* Symmetric around the pill: hero rule to pill = pill to bottom border. */
+  padding: 16px 0;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
@@ -1849,6 +1850,12 @@ a.source-name:hover {
   position: relative;
   display: flex;
   align-items: center;
+}
+
+/* The kind-page filter hides on the JSON tab; without this the flex display
+   above would beat the UA [hidden] rule. */
+.search-field[hidden] {
+  display: none;
 }
 
 .search-field-icon {
@@ -1882,6 +1889,168 @@ a.source-name:hover {
   color: var(--faint);
   font-size: 0.8rem;
   white-space: nowrap;
+}
+
+/* The viewer tab pair and tree controls share the sticky toolbar. */
+.fields-toolbar .catalog-scope {
+  flex: none;
+}
+
+.catalog-scope-tab:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.viewer-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Raw-schema download link, shown in the count's slot on the JSON tab. */
+.download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.download-link:hover {
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.download-link[hidden] {
+  display: none;
+}
+
+.download-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- JSON schema tree ---------- */
+
+.json-tree {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+}
+
+.json-children {
+  margin-left: 18px;
+  border-left: 1px solid var(--line);
+  padding-left: 4px;
+}
+
+.json-node > summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.json-node > summary::-webkit-details-marker {
+  display: none;
+}
+
+.json-node > summary:hover {
+  background: var(--accent-soft);
+}
+
+.json-node[open] > summary .details-marker {
+  transform: rotate(90deg);
+}
+
+.json-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  /* Lines leaf keys up with branch keys: summary padding + marker + gap. */
+  padding: 3px 6px 3px 26px;
+  border-radius: 6px;
+}
+
+.json-row:hover {
+  background: var(--accent-soft);
+}
+
+.json-key {
+  flex: none;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.json-key::after {
+  content: ":";
+  color: var(--faint);
+  font-weight: 400;
+}
+
+.json-count {
+  color: var(--faint);
+  font-size: 0.76rem;
+}
+
+.json-array {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.json-string {
+  min-width: 0;
+  color: var(--ok-ink);
+  /* Schema descriptions keep their original line breaks. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.json-number {
+  color: var(--warn);
+}
+
+.json-bool,
+.json-null {
+  color: var(--ai-ink);
+}
+
+.json-punct {
+  color: var(--faint);
+}
+
+/* Schema-aware overrides: keyword values in the index's own colors. */
+.json-prose {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+}
+
+/* CEL expressions in x-kubernetes-validations render as code chips. */
+.json-cel {
+  color: var(--ink);
+  background: var(--bg-inset);
+  padding: 1px 6px;
+  border-radius: 5px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.json-type {
+  color: var(--accent-ink);
+}
+
+.json-enum {
+  color: var(--ai-ink);
+}
+
+.json-required {
+  color: var(--required);
 }
 
 .fields-results {
@@ -2397,6 +2566,34 @@ details[open] > .field-summary .details-marker {
 
   .constraint-pair {
     display: none;
+  }
+
+  /* Viewer toolbar: pill and controls on the first row, the filter drops to
+     its own full-width row instead of squeezing the buttons off-screen. */
+  .fields-toolbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .fields-toolbar .search-field,
+  .download-link {
+    order: 10;
+    flex-basis: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .download-link span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Deep schemas need shallower indent guides on narrow screens. */
+  .field-children,
+  .json-children {
+    margin-left: 8px;
   }
 
   .footer-content {

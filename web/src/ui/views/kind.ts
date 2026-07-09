@@ -15,6 +15,7 @@ import {
   notFoundView,
   text,
 } from "../dom.ts";
+import { createJsonTree } from "../json-tree.ts";
 import { catalogRoute, homeRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
 /** Streamable-HTTP MCP endpoint copied by the hero's Copy MCP Server button. */
@@ -64,13 +65,194 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
   content.className = "fields-panel";
   page.append(content);
 
-  if (!hasFields(found.entry, versionIndex)) {
-    content.append(createSchemaOnly(group, kind, version));
-    return page;
-  }
-
-  loadFields(content, group, kind, version);
+  renderSchemaViewer(content, group, kind, version, hasFields(found.entry, versionIndex));
   return page;
+}
+
+/**
+ * The schema viewer: a JSON | Index tab pair over the same schema, sharing
+ * one filter box and expand/collapse-all controls. Index is the greppable
+ * fields explorer; JSON is the raw document rendered as a schema-aware tree
+ * where descriptions keep their original line breaks. Each tab fetches its
+ * document lazily on first activation and the filter re-applies on switch.
+ * Versions without a fields index get the JSON view with Index disabled.
+ */
+function renderSchemaViewer(content: HTMLElement, group: string, kind: string, version: string, withIndex: boolean): void {
+  const toolbar = document.createElement("div");
+  toolbar.className = "fields-toolbar";
+
+  const tabs = document.createElement("div");
+  tabs.className = "catalog-scope";
+  const indexTab = createViewerTab("Index");
+  const jsonTab = createViewerTab("JSON");
+  tabs.append(indexTab, jsonTab);
+
+  const { field: filterWrap, input: filter } = createSearchField({
+    id: "viewer-filter",
+    placeholder: "Filter fields (regex)…",
+    ariaLabel: "Filter fields, regex supported",
+  });
+  const count = text("span", "fields-count", "");
+
+  // On the JSON tab the filter and count trade places with a download link
+  // for the raw document.
+  const download = link(schemaUrl(group, kind, version), "", "download-link");
+  download.innerHTML = DOWNLOAD_ICON;
+  download.append(text("span", "", `${kind}_${version}.json`));
+  download.setAttribute("download", `${kind}_${version}.json`);
+  download.setAttribute("aria-label", "Download JSON schema");
+
+  const actions = document.createElement("div");
+  actions.className = "viewer-actions";
+  const expand = createTreeButton(EXPAND_ICON, "Expand all");
+  const collapse = createTreeButton(COLLAPSE_ICON, "Collapse all");
+  actions.append(expand, collapse);
+  toolbar.append(tabs, filterWrap, count, download, actions);
+
+  const indexBody = document.createElement("div");
+  const jsonBody = document.createElement("div");
+  content.append(toolbar, indexBody, jsonBody);
+
+  // The active tab is linkable: /k/<group>/<kind>/<version>#json.
+  let active: "json" | "index" = withIndex && location.hash !== "#json" ? "index" : "json";
+  let indexView: IndexView | undefined;
+  let jsonStarted = false;
+
+  const activate = (): void => {
+    if (active === "index") {
+      indexView?.render(filter.value.trim());
+    }
+  };
+
+  const select = (tab: "json" | "index"): void => {
+    active = tab;
+    const json = tab === "json";
+    jsonTab.classList.toggle("active", json);
+    indexTab.classList.toggle("active", !json);
+    jsonBody.hidden = !json;
+    indexBody.hidden = json;
+    filterWrap.hidden = json;
+    count.hidden = json;
+    download.hidden = !json;
+    history.replaceState(null, "", location.pathname + (json ? "#json" : ""));
+    if (json && !jsonStarted) {
+      jsonStarted = true;
+      loadSchemaJson(jsonBody, group, kind, version);
+      return;
+    }
+    if (!json && indexView === undefined) {
+      loadFields(count, indexBody, group, kind, version, (view) => {
+        indexView = view;
+        activate();
+      });
+      return;
+    }
+    activate();
+  };
+
+  jsonTab.addEventListener("click", () => {
+    select("json");
+  });
+  indexTab.addEventListener("click", () => {
+    select("index");
+  });
+
+  // Debounced: the largest fields files run to ~8k lines and a synchronous
+  // re-render per keystroke would jank the input.
+  let pending = 0;
+  filter.addEventListener("input", () => {
+    clearTimeout(pending);
+    pending = window.setTimeout(activate, 120);
+  });
+
+  expand.addEventListener("click", () => {
+    expandAll(active === "json" ? jsonBody : indexBody);
+  });
+  collapse.addEventListener("click", () => {
+    collapseAll(active === "json" ? jsonBody : indexBody);
+  });
+
+  if (!withIndex) {
+    indexTab.disabled = true;
+    indexTab.title = "No fields index for this version";
+  }
+  select(active);
+}
+
+/** The fields explorer, re-rendered with the filter query on activation. */
+interface IndexView {
+  render: (query: string) => void;
+}
+
+function createViewerTab(label: string): HTMLButtonElement {
+  const tab = document.createElement("button");
+  tab.type = "button";
+  tab.className = "catalog-scope-tab";
+  tab.textContent = label;
+  return tab;
+}
+
+const EXPAND_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="7 9 12 4 17 9"/><polyline points="7 15 12 20 17 15"/></svg>';
+
+const COLLAPSE_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="7 4 12 9 17 4"/><polyline points="7 20 12 15 17 20"/></svg>';
+
+function createTreeButton(icon: string, label: string): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "icon-button";
+  button.innerHTML = icon;
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  return button;
+}
+
+/** Opens every branch level by level, letting lazy children populate. */
+function expandAll(root: HTMLElement): void {
+  void (async () => {
+    for (;;) {
+      const closed = root.querySelectorAll<HTMLDetailsElement>("details:not([open])");
+      if (closed.length === 0) {
+        return;
+      }
+      for (const node of closed) {
+        node.open = true;
+      }
+      // The toggle event that populates lazy children fires asynchronously.
+      await new Promise((resolve) => setTimeout(resolve));
+    }
+  })();
+}
+
+function collapseAll(root: HTMLElement): void {
+  for (const node of root.querySelectorAll<HTMLDetailsElement>("details[open]")) {
+    node.open = false;
+  }
+}
+
+function loadSchemaJson(content: HTMLElement, group: string, kind: string, version: string): void {
+  const url = schemaUrl(group, kind, version);
+  content.append(text("p", "muted", "Loading schema…"));
+
+  void fetch(url).then(
+    async (response) => {
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`.trim());
+      }
+      const value = (await response.json()) as unknown;
+      clear(content);
+      const results = document.createElement("div");
+      results.className = "fields-results";
+      results.append(createJsonTree(value));
+      content.append(results);
+    },
+    (error: unknown) => {
+      renderFetchError(content, url, error);
+    },
+  ).catch((error: unknown) => {
+    renderFetchError(content, url, error);
+  });
 }
 
 function createKindHero(
@@ -206,28 +388,18 @@ function createHeroActions(project: ProjectEntry, group: string, kind: string, v
     );
   });
 
-  const download = link(schemaUrl(group, kind, version), "", "icon-button");
-  download.innerHTML = DOWNLOAD_ICON;
-  download.setAttribute("download", `${kind}_${version}.json`);
-  download.title = "Download JSON schema";
-  download.setAttribute("aria-label", "Download JSON schema");
-
-  actions.append(mcp, download);
+  actions.append(mcp);
   return actions;
 }
 
-function createSchemaOnly(group: string, kind: string, version: string): HTMLElement {
-  const panel = document.createElement("div");
-  panel.className = "empty-state";
-  panel.append(
-    text("h2", "", "Schema only"),
-    text("p", "", "This kind does not include a fields index. Use the raw JSON schema for validation and inspection."),
-    link(schemaUrl(group, kind, version), "Open raw JSON schema", "button-link primary"),
-  );
-  return panel;
-}
-
-function loadFields(content: HTMLElement, group: string, kind: string, version: string): void {
+function loadFields(
+  count: HTMLElement,
+  content: HTMLElement,
+  group: string,
+  kind: string,
+  version: string,
+  done: (view: IndexView) => void,
+): void {
   const url = fieldsUrl(group, kind, version);
   content.append(text("p", "muted", "Loading fields…"));
 
@@ -237,7 +409,7 @@ function loadFields(content: HTMLElement, group: string, kind: string, version: 
         throw new Error(`${response.status} ${response.statusText}`.trim());
       }
       const lines = parseFieldsFile(await response.text());
-      renderFieldsExplorer(content, lines);
+      done(createIndexView(count, content, lines));
     },
     (error: unknown) => {
       renderFetchError(content, url, error);
@@ -256,52 +428,33 @@ function renderFetchError(content: HTMLElement, url: string, error: unknown): vo
   content.append(panel);
 }
 
-function renderFieldsExplorer(content: HTMLElement, lines: FieldLine[]): void {
+function createIndexView(count: HTMLElement, content: HTMLElement, lines: FieldLine[]): IndexView {
   clear(content);
-  const tree = buildFieldTree(lines);
-  const toolbar = document.createElement("div");
-  toolbar.className = "fields-toolbar";
-
-  const { field: filterWrap, input: filter } = createSearchField({
-    id: "field-filter",
-    placeholder: "Filter fields (regex)…",
-    ariaLabel: "Filter fields, regex supported",
-  });
-
-  const count = text("span", "fields-count", "");
-  toolbar.append(filterWrap, count);
-
+  // Built once so expansion state survives filter round-trips.
+  const tree = renderFieldTree(buildFieldTree(lines));
   const results = document.createElement("div");
   results.className = "fields-results";
-  content.append(toolbar, results);
+  content.append(results);
 
-  const render = (): void => {
-    clear(results);
-    const query = filter.value.trim();
-    if (query === "") {
-      count.textContent = `${lines.length} fields`;
-      results.append(renderFieldTree(tree));
-      return;
-    }
+  return {
+    render: (query: string): void => {
+      clear(results);
+      if (query === "") {
+        count.textContent = `${lines.length} fields`;
+        results.append(tree);
+        return;
+      }
 
-    const filtered = filterFieldLines(lines, { query, limit: FILTER_RENDER_CAP, queryMode: "regex-or-substring" });
-    count.textContent = `${filtered.total} of ${lines.length} fields`;
-    results.append(renderFieldList(filtered.matches));
-    if (filtered.total > filtered.matches.length) {
-      results.append(
-        text("p", "field-list-note", `Showing the first ${filtered.matches.length} matches, narrow the filter for the rest.`),
-      );
-    }
+      const filtered = filterFieldLines(lines, { query, limit: FILTER_RENDER_CAP, queryMode: "regex-or-substring" });
+      count.textContent = `${filtered.total} of ${lines.length} fields`;
+      results.append(renderFieldList(filtered.matches));
+      if (filtered.total > filtered.matches.length) {
+        results.append(
+          text("p", "field-list-note", `Showing the first ${filtered.matches.length} matches, narrow the filter for the rest.`),
+        );
+      }
+    },
   };
-
-  // Debounced: the largest fields files run to ~8k lines and a synchronous
-  // re-render per keystroke would jank the input.
-  let pending = 0;
-  filter.addEventListener("input", () => {
-    clearTimeout(pending);
-    pending = window.setTimeout(render, 120);
-  });
-  render();
 }
 
 const FILTER_RENDER_CAP = 500;
