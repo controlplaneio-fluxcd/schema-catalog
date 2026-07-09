@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { hasFields, kindCount, kindDisplay, latestVersion, schemaCount } from "../../shared/index-query.ts";
+import { hasFields, kindCount, kindDisplay, latestVersion, resourceAliases, schemaCount } from "../../shared/index-query.ts";
 import type { CatalogIndex, KindEntry, ProjectEntry, ProjectSourceEntry } from "../../shared/types.ts";
 import {
   CATEGORY_ICON,
@@ -12,6 +12,7 @@ import {
   createPage,
   createProjectLogo,
   createRepoLink,
+  createSearchField,
   createShield,
   formatDate,
   GITHUB_ICON,
@@ -56,6 +57,9 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
     section.className = "group-section";
     section.append(text("h2", "mono section-title", group.g), createKindGrid(group.g, group.kinds));
     schemasPanel.append(section);
+  }
+  if (kindCount(project) > KIND_FILTER_MIN) {
+    schemasPanel.prepend(createKindFilter(project, schemasPanel));
   }
 
   const sourcesPanel = createSourcesPanel(project);
@@ -232,6 +236,65 @@ function createSourcesPanel(project: ProjectEntry): HTMLElement {
   return section;
 }
 
+/** Kinds with more versions than this collapse behind a "+N more" toggle. */
+const VERSION_PREVIEW = 3;
+
+/** Projects with more kinds than this get the kind filter toolbar. */
+const KIND_FILTER_MIN = 20;
+
+/**
+ * Builds the kind filter toolbar for kind-heavy projects (the upjet providers
+ * run to thousands of kinds): live substring filtering over kind and API group
+ * names that hides non-matching kind cells and emptied group sections. A
+ * matching group name keeps its whole group visible.
+ */
+function createKindFilter(project: ProjectEntry, panel: HTMLElement): HTMLElement {
+  const toolbar = document.createElement("div");
+  toolbar.className = "fields-toolbar";
+
+  const { field, input } = createSearchField({
+    id: "kind-filter",
+    placeholder: "Filter kinds",
+    ariaLabel: "Filter kinds by name or API group",
+  });
+  const count = text("span", "fields-count", "");
+  toolbar.append(field, count);
+
+  const empty = text("p", "results-empty", "");
+  empty.hidden = true;
+  panel.prepend(empty);
+
+  const total = kindCount(project);
+  const apply = (): void => {
+    const needle = input.value.trim().toLowerCase();
+    let shown = 0;
+    for (const section of panel.querySelectorAll<HTMLElement>(".group-section")) {
+      const group = section.querySelector(".section-title")?.textContent ?? "";
+      const groupMatches = needle === "" || group.toLowerCase().includes(needle);
+      let visible = 0;
+      for (const cell of section.querySelectorAll<HTMLElement>(".kind-cell")) {
+        const matches = groupMatches || (cell.dataset["kind"] ?? "").includes(needle);
+        cell.hidden = !matches;
+        visible += matches ? 1 : 0;
+      }
+      section.hidden = visible === 0;
+      shown += visible;
+    }
+    count.textContent = needle === "" ? "" : `${shown} of ${total} kinds`;
+    empty.textContent = `Nothing matches "${input.value.trim()}". Try a kind or API group name.`;
+    empty.hidden = shown !== 0;
+  };
+
+  input.addEventListener("input", apply);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && input.value !== "") {
+      input.value = "";
+      apply();
+    }
+  });
+  return toolbar;
+}
+
 /**
  * Renders a group's kinds as a responsive grid cell per kind: the kind link
  * followed by its version chips, so version columns never zigzag down the page.
@@ -243,20 +306,50 @@ function createKindGrid(group: string, kinds: KindEntry[]): HTMLElement {
     const latest = latestVersion(entry);
     const cell = document.createElement("div");
     cell.className = "kind-cell";
-    cell.append(link(kindRoute(group, entry[0], latest), kindDisplay(entry), "kind-link mono"));
-
-    const versions = document.createElement("span");
-    versions.className = "version-list";
-    entry[1].forEach((version, index) => {
-      const chip = link(kindRoute(group, entry[0], version), version, "chip");
-      if (!hasFields(entry, index)) {
-        chip.classList.add("schema-only");
-        chip.title = "schema only";
-      }
-      versions.append(chip);
-    });
-    cell.append(versions);
+    // Match text for the kind filter: name plus the kubectl-style resource
+    // aliases (plural, singular, short names), already lowercased.
+    cell.dataset["kind"] = resourceAliases(entry).join(" ");
+    cell.append(
+      link(kindRoute(group, entry[0], latest), kindDisplay(entry), "kind-link mono"),
+      createVersionList(group, entry),
+    );
     grid.append(cell);
   }
   return grid;
+}
+
+/**
+ * Renders a kind's version chips. Kinds with more versions than the preview
+ * (Azure Service Operator ships a dozen per kind) show only the preferred
+ * version plus a "+N more" toggle that expands the rest in place; the kind
+ * page keeps the full version switcher either way.
+ */
+function createVersionList(group: string, entry: KindEntry): HTMLElement {
+  const versions = document.createElement("span");
+  versions.className = "version-list";
+  const chipAt = (version: string, index: number): HTMLAnchorElement => {
+    const chip = link(kindRoute(group, entry[0], version), version, "chip");
+    if (!hasFields(entry, index)) {
+      chip.classList.add("schema-only");
+      chip.title = "schema only";
+    }
+    return chip;
+  };
+
+  const shown = entry[1].length > VERSION_PREVIEW ? 1 : entry[1].length;
+  entry[1].slice(0, shown).forEach((version, index) => versions.append(chipAt(version, index)));
+
+  const rest = entry[1].length - shown;
+  if (rest > 0) {
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "flow-toggle";
+    more.textContent = `+${rest} more`;
+    more.setAttribute("aria-label", `Show ${rest} more versions`);
+    more.addEventListener("click", () => {
+      more.replaceWith(...entry[1].slice(shown).map((version, index) => chipAt(version, shown + index)));
+    });
+    versions.append(more);
+  }
+  return versions;
 }
