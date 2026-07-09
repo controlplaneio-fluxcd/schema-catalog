@@ -66,9 +66,16 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
 - `k8s` / `openshift` — self-contained; the CLI fetches the OpenAPI swagger
   itself (`--version 1.36.2` bare, `--ref release-4.20`).
 - `crd` — needs an `input` declaring where the CRD YAML comes from, exactly
-  one of:
-  - `kustomize` — build `<url>/<path>?ref=<version>` with kubectl.
-  - `releaseAsset` — download a GitHub release asset by name or `*` glob.
+  one of the following. `flux-schema extract crd` keeps only
+  `CustomResourceDefinition` documents (descending into `List` items) and
+  discards everything else, so an input may point at a file or directory that
+  also ships RBAC, a Deployment or other manifests — multus's `crdFile`
+  targets its full install daemonset and only the bundled CRD survives. Prefer
+  the input that fetches the least and clones nothing: a CRD-only
+  `releaseAsset`, then `crdDir`/`crdFile`; reach for `kustomize` only as a last
+  resort.
+  - `releaseAsset` — download a GitHub release asset by name or `*` glob; best
+    when the project publishes a CRD-only bundle.
   - `crdDir` — fetch every `*.yaml` under a repo directory at the ref, for
     repos that ship bare per-kind CRD files (cilium's `client/crds`). A
     directory listing 500+ entries falls back to downloading the source
@@ -76,7 +83,13 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
     rate-limited raw fetches (the upjet providers' `package/crds`).
   - `crdFile` — fetch a single committed file that bundles the whole CRD set,
     for when its directory holds unrelated manifests that `crdDir` would
-    over-collect (rook's `deploy/examples/crds.yaml`).
+    over-collect (rook's `deploy/examples/crds.yaml`), or when the CRDs are
+    embedded in a larger install manifest (multus's `deployments/`).
+  - `kustomize` — build `<url>/<path>?ref=<version>` with kubectl. **Last
+    resort:** kubectl clones the whole repo at the ref (slow, and it can hit
+    kubectl's hard-coded 27s git timeout on large repos), so use it only when
+    the CRDs exist solely as a kustomize overlay with no plain files a
+    `crdDir`/`crdFile` could target.
   - `fluxInstance` — the Flux special case: a typed FluxInstance manifest with
     the resolved version is piped through `flux-operator build instance -f -`.
 
@@ -237,8 +250,9 @@ the daily run pick it up.
 
 `category` (required) is the source's CNCF landscape top-level group; allowed
 values are the `CATEGORIES` const in `config.ts`. Pick the `input` by how the
-project ships its CRDs — `releaseAsset` when one exists, else `kustomize`,
-`crdDir`, or `crdFile` (see the extraction model above). A resolved tag is
+project ships its CRDs — a CRD-only `releaseAsset` when one exists, else
+`crdDir`/`crdFile`, and `kustomize` only as a last resort (it clones the whole
+repo; see the extraction model above). A resolved tag is
 used verbatim as the git ref, so bare tags (strimzi's `0.51.0`, no `v`) are
 supported and appear un-prefixed in the table.
 
