@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-97-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C714-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-605%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-108-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C794-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-628%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -140,7 +140,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cluster API k0smotron Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-control-plane` | v2.0.3 | 12 | 2026-07-09 |
 | [Cluster API k0smotron Infrastructure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-infrastructure` | v2.0.3 | 10 | 2026-07-09 |
 | [Cluster API Metal3](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-metal3` | v1.13.1 | 18 | 2026-07-09 |
-| [Cluster API Nutanix](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-nutanix` | v1.10.2 | 8 | 2026-07-09 |
+| [Cluster API Nutanix](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-nutanix` | v1.8.5 | 5 | 2026-07-09 |
 | [Cluster API OpenStack](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-openstack` | v0.14.6 | 7 | 2026-07-09 |
 | [Cluster API Operator](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-operator` | v0.27.0 | 7 | 2026-07-09 |
 | [Cluster API RKE2 Bootstrap](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-bootstrap` | v0.25.0 | 4 | 2026-07-09 |
@@ -174,11 +174,17 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Calico](https://schemas.fluxoperator.dev/p/calico) | `calico` | v3.32.1 | 22 | 2026-07-09 |
 | [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.19.5 | 29 | 2026-07-09 |
 | [Container Object Storage Interface](https://schemas.fluxoperator.dev/p/cosi) | `cosi` | v0.2.2 | 5 | 2026-07-09 |
+| [CSI External Snapshotter](https://schemas.fluxoperator.dev/p/external-snapshotter) | `external-snapshotter` | v8.6.0 | 15 | 2026-07-09 |
 | [Kube-OVN](https://schemas.fluxoperator.dev/p/kube-ovn) | `kube-ovn` | v1.16.2 | 24 | 2026-07-09 |
 | [Longhorn](https://schemas.fluxoperator.dev/p/longhorn) | `longhorn` | v1.12.0 | 23 | 2026-07-09 |
 | [Multi-Cluster Services API](https://schemas.fluxoperator.dev/p/mcs-api) | `mcs-api` | v0.5.0 | 4 | 2026-07-09 |
+| [Multus CNI](https://schemas.fluxoperator.dev/p/multus-cni) | `multus-cni` | v4.3.0 | 1 | 2026-07-09 |
 | [Network Policy API](https://schemas.fluxoperator.dev/p/network-policy-api) | `network-policy-api` | v0.2.0 | 1 | 2026-07-09 |
+| [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.3.3 | 2 | 2026-07-09 |
+| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.1.0 | 4 | 2026-07-09 |
 | [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.20.2 | 21 | 2026-07-09 |
+| [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.1 | 12 | 2026-07-09 |
+| [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.2.2 | 6 | 2026-07-09 |
 | [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.24.0 | 9 | 2026-07-09 |
 | [Submariner Operator](https://schemas.fluxoperator.dev/p/submariner) | `submariner-operator` | v0.24.0 | 3 | 2026-07-09 |
 | [Tailscale](https://schemas.fluxoperator.dev/p/tailscale) | `tailscale` | v1.98.8 | 7 | 2026-07-09 |
@@ -194,6 +200,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Envoy Gateway](https://schemas.fluxoperator.dev/p/envoy-gateway) | `envoy-gateway` | v1.8.2 | 8 | 2026-07-09 |
 | [ExternalDNS](https://schemas.fluxoperator.dev/p/external-dns) | `external-dns` | v0.21.0 | 1 | 2026-07-09 |
 | [Gateway API](https://schemas.fluxoperator.dev/p/gateway-api) | `gateway-api` | v1.6.0 | 21 | 2026-07-09 |
+| [Gateway API Inference Extension](https://schemas.fluxoperator.dev/p/gateway-api-inference-extension) | `gateway-api-inference-extension` | v1.5.0 | 4 | 2026-07-09 |
 | [Istio](https://schemas.fluxoperator.dev/p/istio) | `istio` | 1.30.2 | 33 | 2026-07-09 |
 | [JobSet](https://schemas.fluxoperator.dev/p/jobset) | `jobset` | v0.12.0 | 1 | 2026-07-09 |
 | [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.18.1 | 19 | 2026-07-09 |
@@ -206,6 +213,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [kgateway](https://schemas.fluxoperator.dev/p/kgateway) | `kgateway` | v2.3.5 | 8 | 2026-07-09 |
 | [kjob](https://schemas.fluxoperator.dev/p/kjob) | `kjob` | v0.1.0 | 5 | 2026-07-09 |
 | [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.0 | 18 | 2026-07-09 |
+| [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.6.2 | 7 | 2026-07-09 |
 | [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.18.2 | 22 | 2026-07-09 |
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.0 | 54 | 2026-07-09 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
@@ -223,6 +231,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
 | [Actions Runner Controller](https://schemas.fluxoperator.dev/p/actions-runner-controller) | `actions-runner-controller` | 0.14.2 | 9 | 2026-07-09 |
+| [AIBrix](https://schemas.fluxoperator.dev/p/aibrix) | `aibrix` | v0.7.0 | 8 | 2026-07-09 |
 | [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.4.4 | 3 | 2026-07-09 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.10 | 3 | 2026-07-09 |
 | [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.9.0 | 5 | 2026-07-09 |
@@ -240,12 +249,22 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.22.1 | 12 | 2026-07-09 |
 | [KServe](https://schemas.fluxoperator.dev/p/kserve) | `kserve` | v0.19.0 | 6 | 2026-07-09 |
 | [KServe LLM](https://schemas.fluxoperator.dev/p/kserve) | `kserve-llmisvc` | v0.19.0 | 4 | 2026-07-09 |
+| [Kubeflow Notebooks](https://schemas.fluxoperator.dev/p/kubeflow) | `notebook-controller` | v1.11.0 | 3 | 2026-07-09 |
+| [Kubeflow Pipelines](https://schemas.fluxoperator.dev/p/kubeflow) | `kubeflow-pipelines` | 2.16.1 | 2 | 2026-07-09 |
+| [Kubeflow PodDefaults](https://schemas.fluxoperator.dev/p/kubeflow) | `poddefaults-webhook` | v2.0.0 | 1 | 2026-07-09 |
+| [Kubeflow Profiles](https://schemas.fluxoperator.dev/p/kubeflow) | `profile-controller` | v2.0.0 | 2 | 2026-07-09 |
+| [Kubeflow PVCViewer](https://schemas.fluxoperator.dev/p/kubeflow) | `pvcviewer-controller` | v1.11.0 | 1 | 2026-07-09 |
+| [Kubeflow Tensorboard](https://schemas.fluxoperator.dev/p/kubeflow) | `tensorboard-controller` | v1.11.0 | 1 | 2026-07-09 |
+| [Kubeflow Trainer](https://schemas.fluxoperator.dev/p/kubeflow) | `kubeflow-trainer` | v2.2.1 | 3 | 2026-07-09 |
 | [MariaDB Operator](https://schemas.fluxoperator.dev/p/mariadb-operator) | `mariadb-operator` | 26.6.0 | 12 | 2026-07-09 |
+| [MPI Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `mpi-operator` | v0.8.2 | 1 | 2026-07-09 |
 | [NATS](https://schemas.fluxoperator.dev/p/nats) | `nats` | v0.23.0 | 8 | 2026-07-09 |
 | [OpenFeature Operator](https://schemas.fluxoperator.dev/p/open-feature-operator) | `open-feature-operator` | v0.9.2 | 9 | 2026-07-09 |
 | [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq-cluster-operator) | `rabbitmq-cluster-operator` | v2.22.1 | 1 | 2026-07-09 |
 | [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.25.0 | 4 | 2026-07-09 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.0 | 11 | 2026-07-09 |
+| [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
+| [Spark Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `spark-operator` | v2.5.1 | 3 | 2026-07-09 |
 | [Strimzi](https://schemas.fluxoperator.dev/p/strimzi) | `strimzi` | 0.51.0 | 24 | 2026-07-09 |
 | [Tekton Pipeline](https://schemas.fluxoperator.dev/p/tekton-pipeline) | `tekton-pipeline` | v1.14.0 | 14 | 2026-07-09 |
 | [Vitess Operator](https://schemas.fluxoperator.dev/p/vitess-operator) | `vitess-operator` | v2.17.0 | 8 | 2026-07-09 |

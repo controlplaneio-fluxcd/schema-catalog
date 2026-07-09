@@ -1,0 +1,270 @@
+{
+  "description": "Pipeline is the Schema for the pipelines API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "PipelineSpec defines the desired state of Pipeline",
+      "properties": {
+        "allowCycles": {
+          "description": "Allow cyclic pipeline",
+          "type": "boolean"
+        },
+        "dataflow": {
+          "additionalProperties": false,
+          "description": "Dataflow specs",
+          "properties": {
+            "cleanTopicsOnDelete": {
+              "description": "Flag to indicate whether the kafka input/output topics\nshould be cleaned up when the model is deleted\nDefault false",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "input": {
+          "additionalProperties": false,
+          "description": "External inputs to this pipeline, optional",
+          "properties": {
+            "externalInputs": {
+              "description": "Previous external pipeline steps to receive data from",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "externalTriggers": {
+              "description": "Triggers required to activate inputs",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "joinType": {
+              "default": "inner",
+              "enum": [
+                "inner",
+                "outer",
+                "any"
+              ],
+              "type": "string"
+            },
+            "joinWindowMs": {
+              "description": "msecs to wait for messages from multiple inputs to arrive before joining the inputs",
+              "format": "int32",
+              "type": "integer"
+            },
+            "tensorMap": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Map of tensor name conversions to use e.g. output1 -> input1",
+              "type": "object"
+            },
+            "triggersJoinType": {
+              "default": "inner",
+              "enum": [
+                "inner",
+                "outer",
+                "any"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "maxStepRevisits": {
+          "description": "Maximum number of times a step can be revisited",
+          "format": "int32",
+          "type": "integer"
+        },
+        "output": {
+          "additionalProperties": false,
+          "description": "Synchronous output from this pipeline, optional",
+          "properties": {
+            "joinWindowMs": {
+              "description": "msecs to wait for messages from multiple inputs to arrive before joining the inputs",
+              "format": "int32",
+              "type": "integer"
+            },
+            "steps": {
+              "description": "Previous step to receive data from",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "stepsJoin": {
+              "default": "inner",
+              "enum": [
+                "inner",
+                "outer",
+                "any"
+              ],
+              "type": "string"
+            },
+            "tensorMap": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Map of tensor name conversions to use e.g. output1 -> input1",
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "steps": {
+          "description": "The steps of this inference graph pipeline",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "batch": {
+                "additionalProperties": false,
+                "description": "Batch size of request required before data will be sent to this step",
+                "properties": {
+                  "rolling": {
+                    "type": "boolean"
+                  },
+                  "size": {
+                    "format": "int32",
+                    "type": "integer"
+                  },
+                  "windowMs": {
+                    "format": "int32",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "inputs": {
+                "description": "Previous step to receive data from",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "inputsJoinType": {
+                "default": "inner",
+                "enum": [
+                  "inner",
+                  "outer",
+                  "any"
+                ],
+                "type": "string"
+              },
+              "joinWindowMs": {
+                "description": "msecs to wait for messages from multiple inputs to arrive before joining the inputs",
+                "format": "int32",
+                "type": "integer"
+              },
+              "name": {
+                "description": "Name of the step",
+                "type": "string"
+              },
+              "tensorMap": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Map of tensor name conversions to use e.g. output1 -> input1",
+                "type": "object"
+              },
+              "triggers": {
+                "description": "Triggers required to activate step",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "triggersJoinType": {
+                "enum": [
+                  "inner",
+                  "outer",
+                  "any"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "steps"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "PipelineStatus defines the observed state of Pipeline",
+      "properties": {
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Annotations is additional Status fields for the Resource to save some\nadditional State as well as convey more information to the user. This is\nroughly akin to Annotations on any k8s resource, just the reconciler conveying\nricher information outwards.",
+          "type": "object"
+        },
+        "conditions": {
+          "description": "Conditions the latest available observations of a resource's current state.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition defines a readiness condition for a Knative resource.\nSee: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "LastTransitionTime is the last time the condition transitioned from one status to another.\nWe use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic\ndifferences (all other things held constant).",
+                "type": "string"
+              },
+              "message": {
+                "description": "A human readable message indicating details about the transition.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "The reason for the condition's last transition.",
+                "type": "string"
+              },
+              "severity": {
+                "description": "Severity with which to treat failures of this type of condition.\nWhen this is not specified, it defaults to Error.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of condition.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the 'Generation' of the Service that\nwas last processed by the controller.",
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-flux-schema-type": "Pipeline"
+}

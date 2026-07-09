@@ -1,0 +1,289 @@
+{
+  "description": "InferencePool is the Schema for the InferencePools API.\n",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "Spec defines the desired state of the InferencePool.",
+      "properties": {
+        "appProtocol": {
+          "default": "http",
+          "description": "AppProtocol describes the application protocol for all the target ports.\n\nIf unspecified, the protocol defaults to HTTP/1.1.\n\nSupported values include:\n* \"http\": HTTP/1.1. This is the default.\n* \"kubernetes.io/h2c\": HTTP/2 over cleartext.",
+          "enum": [
+            "http",
+            "kubernetes.io/h2c"
+          ],
+          "type": "string"
+        },
+        "endpointPickerRef": {
+          "additionalProperties": false,
+          "description": "EndpointPickerRef is a reference to the Endpoint Picker extension and its\nassociated configuration.",
+          "properties": {
+            "failureMode": {
+              "default": "FailClose",
+              "description": "FailureMode configures how the parent handles the case when the Endpoint Picker extension\nis non-responsive. When unspecified, defaults to \"FailClose\".",
+              "enum": [
+                "FailOpen",
+                "FailClose"
+              ],
+              "type": "string"
+            },
+            "group": {
+              "default": "",
+              "description": "Group is the group of the referent API object. When unspecified, the default value\nis \"\", representing the Core API group.",
+              "maxLength": 253,
+              "minLength": 0,
+              "pattern": "^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+              "type": "string"
+            },
+            "kind": {
+              "default": "Service",
+              "description": "Kind is the Kubernetes resource kind of the referent.\n\nRequired if the referent is ambiguous, e.g. service with multiple ports.\n\nDefaults to \"Service\" when not specified.\n\nExternalName services can refer to CNAME DNS records that may live\noutside of the cluster and as such are difficult to reason about in\nterms of conformance. They also may not be safe to forward to (see\nCVE-2021-25740 for more information). Implementations MUST NOT\nsupport ExternalName Services.",
+              "maxLength": 63,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$",
+              "type": "string"
+            },
+            "name": {
+              "description": "Name is the name of the referent API object.",
+              "maxLength": 253,
+              "minLength": 1,
+              "type": "string"
+            },
+            "port": {
+              "additionalProperties": false,
+              "description": "Port is the port of the Endpoint Picker extension service.\n\nPort is required when the referent is a Kubernetes Service. In this\ncase, the port number is the service port number, not the target port.\nFor other resources, destination port might be derived from the referent\nresource or this field.",
+              "properties": {
+                "number": {
+                  "description": "Number defines the port number to access the selected model server Pods.\nThe number must be in the range 1 to 65535.",
+                  "format": "int32",
+                  "maximum": 65535,
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "number"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "port is required when kind is 'Service' or unspecified (defaults to 'Service')",
+              "rule": "self.kind != 'Service' || has(self.port)"
+            }
+          ]
+        },
+        "selector": {
+          "additionalProperties": false,
+          "description": "Selector determines which Pods are members of this inference pool.\nIt matches Pods by their labels only within the same namespace; cross-namespace\nselection is not supported.\n\nThe structure of this LabelSelector is intentionally simple to be compatible\nwith Kubernetes Service selectors, as some implementations may translate\nthis configuration into a Service resource.",
+          "properties": {
+            "matchLabels": {
+              "additionalProperties": {
+                "description": "LabelValue is the value of a label. This is used for validation\nof maps. This matches the Kubernetes label validation rules:\n* must be 63 characters or less (can be empty),\n* unless empty, must begin and end with an alphanumeric character ([a-z0-9A-Z]),\n* could contain dashes (-), underscores (_), dots (.), and alphanumerics between.\n\nValid values include:\n\n* MyValue\n* my.name\n* 123-my-value",
+                "maxLength": 63,
+                "minLength": 0,
+                "pattern": "^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$",
+                "type": "string"
+              },
+              "description": "MatchLabels contains a set of required {key,value} pairs.\nAn object must match every label in this map to be selected.\nThe matching logic is an AND operation on all entries.",
+              "maxProperties": 64,
+              "minProperties": 1,
+              "type": "object"
+            }
+          },
+          "required": [
+            "matchLabels"
+          ],
+          "type": "object"
+        },
+        "targetPorts": {
+          "description": "TargetPorts defines a list of ports that are exposed by this InferencePool.\nEvery port will be treated as a distinctive endpoint by EPP,\naddressable as a 'podIP:portNumber' combination.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Port defines the network port that will be exposed by this InferencePool.",
+            "properties": {
+              "number": {
+                "description": "Number defines the port number to access the selected model server Pods.\nThe number must be in the range 1 to 65535.",
+                "format": "int32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "number"
+            ],
+            "type": "object"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "type": "array",
+          "x-kubernetes-list-type": "atomic",
+          "x-kubernetes-validations": [
+            {
+              "message": "port number must be unique",
+              "rule": "self.all(p1, self.exists_one(p2, p1.number==p2.number))"
+            }
+          ]
+        }
+      },
+      "required": [
+        "endpointPickerRef",
+        "selector",
+        "targetPorts"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Status defines the observed state of the InferencePool.",
+      "properties": {
+        "parents": {
+          "description": "Parents is a list of parent resources, typically Gateways, that are associated with\nthe InferencePool, and the status of the InferencePool with respect to each parent.\n\nA controller that manages the InferencePool, must add an entry for each parent it manages\nand remove the parent entry when the controller no longer considers the InferencePool to\nbe associated with that parent.\n\nA maximum of 32 parents will be represented in this list. When the list is empty,\nit indicates that the InferencePool is not associated with any parents.",
+          "items": {
+            "additionalProperties": false,
+            "description": "ParentStatus defines the observed state of InferencePool from a Parent, i.e. Gateway.",
+            "properties": {
+              "conditions": {
+                "description": "Conditions is a list of status conditions that provide information about the observed\nstate of the InferencePool. This field is required to be set by the controller that\nmanages the InferencePool.\n\nSupported condition types are:\n\n* \"Accepted\"\n* \"ResolvedRefs\"",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "Condition contains details for one aspect of the current state of this API Resource.",
+                  "properties": {
+                    "lastTransitionTime": {
+                      "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                      "maxLength": 32768,
+                      "type": "string"
+                    },
+                    "observedGeneration": {
+                      "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                      "format": "int64",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "reason": {
+                      "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                      "maxLength": 1024,
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "status of the condition, one of True, False, Unknown.",
+                      "enum": [
+                        "True",
+                        "False",
+                        "Unknown"
+                      ],
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                      "maxLength": 316,
+                      "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "lastTransitionTime",
+                    "message",
+                    "reason",
+                    "status",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 8,
+                "type": "array",
+                "x-kubernetes-list-map-keys": [
+                  "type"
+                ],
+                "x-kubernetes-list-type": "map"
+              },
+              "controllerName": {
+                "description": "ControllerName is a domain/path string that indicates the name of the controller that\nwrote this status. This corresponds with the GatewayClass controllerName field when the\nparentRef references a Gateway kind.\n\nExample: \"example.net/gateway-controller\".\n\nThe format of this field is DOMAIN \"/\" PATH, where DOMAIN and PATH are valid Kubernetes names:\n\n https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\n\nControllers MAY populate this field when writing status. When populating this field, controllers\nshould ensure that entries to status populated with their ControllerName are cleaned up when they\nare no longer necessary.",
+                "maxLength": 253,
+                "minLength": 1,
+                "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\\/[A-Za-z0-9\\/\\-._~%!$&'()*+,;=:]+$",
+                "type": "string"
+              },
+              "parentRef": {
+                "additionalProperties": false,
+                "description": "ParentRef is used to identify the parent resource that this status\nis associated with. It is used to match the InferencePool with the parent\nresource, such as a Gateway.",
+                "properties": {
+                  "group": {
+                    "default": "gateway.networking.k8s.io",
+                    "description": "Group is the group of the referent API object. When unspecified, the referent is assumed\nto be in the \"gateway.networking.k8s.io\" API group.",
+                    "maxLength": 253,
+                    "minLength": 0,
+                    "pattern": "^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "default": "Gateway",
+                    "description": "Kind is the kind of the referent API object. When unspecified, the referent is assumed\nto be a \"Gateway\" kind.",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "pattern": "^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Name is the name of the referent API object.",
+                    "maxLength": 253,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "description": "Namespace is the namespace of the referenced object. When unspecified, the local\nnamespace is inferred.\n\nNote that when a namespace different than the local namespace is specified,\na ReferenceGrant object is required in the referent namespace to allow that\nnamespace's owner to accept the reference. See the ReferenceGrant\ndocumentation for details: https://gateway-api.sigs.k8s.io/api-types/referencegrant/",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "parentRef"
+            ],
+            "type": "object"
+          },
+          "maxItems": 32,
+          "type": "array",
+          "x-kubernetes-list-type": "atomic"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object",
+  "x-flux-schema-type": "InferencePool"
+}
