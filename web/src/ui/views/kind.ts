@@ -15,7 +15,7 @@ import {
   notFoundView,
   text,
 } from "../dom.ts";
-import { catalogRoute, homeRoute, kindRoute, projectRoute } from "../router.ts";
+import { catalogRoute, homeRoute, kindRoute, navigate, projectRoute } from "../router.ts";
 
 /** Streamable-HTTP MCP endpoint copied by the hero's Copy MCP Server button. */
 const MCP_ENDPOINT = "https://schemas.fluxoperator.dev/mcp";
@@ -101,18 +101,7 @@ function createKindHero(
   const label = release === undefined ? alias : `${alias} ${release}`;
   meta.append(link(projectRoute(project.name), label, "project-badge badge"));
 
-  const switcher = document.createElement("div");
-  switcher.className = "version-switcher";
-  switcher.setAttribute("aria-label", "Versions");
-  entry[1].forEach((candidate) => {
-    const chip = link(kindRoute(group, kind, candidate), candidate, "chip");
-    if (candidate === version) {
-      chip.classList.add("active");
-      chip.setAttribute("aria-current", "page");
-    }
-    switcher.append(chip);
-  });
-  meta.append(switcher, createHeroActions(project, group, kind, version));
+  meta.append(createVersionSwitcher(group, kind, entry[1], version), createHeroActions(project, group, kind, version));
 
   const logo = createProjectLogo(project);
   if (logo === null) {
@@ -124,6 +113,57 @@ function createKindHero(
     hero.append(head, gvk, meta);
   }
   return hero;
+}
+
+/**
+ * Past this many versions the segmented switcher would wrap into rows (ASO
+ * kinds carry up to 16 dated versions), so it collapses into a select.
+ */
+const VERSION_SELECT_MAX = 5;
+
+function createVersionSwitcher(group: string, kind: string, versions: string[], current: string): HTMLElement {
+  if (versions.length > VERSION_SELECT_MAX) {
+    return createVersionSelect(group, kind, versions, current);
+  }
+  const switcher = document.createElement("div");
+  switcher.className = "version-switcher";
+  switcher.setAttribute("aria-label", "Versions");
+  for (const candidate of versions) {
+    const tab = link(kindRoute(group, kind, candidate), candidate, "switcher-tab");
+    if (candidate === current) {
+      tab.classList.add("active");
+      tab.setAttribute("aria-current", "page");
+    }
+    switcher.append(tab);
+  }
+  return switcher;
+}
+
+function createVersionSelect(group: string, kind: string, versions: string[], current: string): HTMLElement {
+  const picker = document.createElement("div");
+  picker.className = "version-picker";
+
+  const wrap = document.createElement("span");
+  wrap.className = "version-select";
+  const select = document.createElement("select");
+  select.setAttribute("aria-label", "Versions");
+  for (const candidate of versions) {
+    const option = document.createElement("option");
+    option.value = candidate;
+    option.textContent = candidate;
+    option.selected = candidate === current;
+    select.append(option);
+  }
+  select.addEventListener("change", () => {
+    navigate(kindRoute(group, kind, select.value));
+  });
+  // A select sizes itself to its longest option; size it to the current value
+  // instead (mono font, so ch is exact). Navigation re-renders the hero.
+  select.style.width = `calc(${current.length}ch + 44px)`;
+  wrap.append(select);
+
+  picker.append(wrap, text("span", "switcher-count", `${versions.length} versions`));
+  return picker;
 }
 
 /** MCP copy and schema download, kept on the version row instead of a bar. */
