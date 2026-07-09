@@ -1,0 +1,279 @@
+{
+  "description": "Metal3MachineTemplate is the Schema for the metal3machinetemplates API.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "spec defines the desired state of Metal3MachineTemplate.",
+      "properties": {
+        "nodeReuse": {
+          "default": false,
+          "description": "nodeReuse is a flag that can be set to True to enable node reuse during upgrade.\nWhen set to True, CAPM3 Machine controller will\npick the same pool of BMHs' that were released during the upgrade operation.",
+          "type": "boolean"
+        },
+        "template": {
+          "additionalProperties": false,
+          "description": "template describes the data needed to create a Metal3Machine from a template",
+          "properties": {
+            "metadata": {
+              "additionalProperties": false,
+              "description": "metadata is the standard object's metadata.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+              "minProperties": 1,
+              "properties": {
+                "annotations": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: http://kubernetes.io/docs/user-guide/annotations",
+                  "type": "object"
+                },
+                "labels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "labels is a map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: http://kubernetes.io/docs/user-guide/labels",
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "spec": {
+              "additionalProperties": false,
+              "description": "spec is the specification of the desired behavior of the machine.",
+              "properties": {
+                "automatedCleaningMode": {
+                  "description": "automatedCleaningMode determines the mode of automated cleaning.\nWhen set to disabled, automated cleaning of host disks will be skipped\nduring provisioning and deprovisioning.",
+                  "enum": [
+                    "metadata",
+                    "disabled"
+                  ],
+                  "type": "string"
+                },
+                "customDeploy": {
+                  "additionalProperties": false,
+                  "description": "customDeploy is a custom deploy procedure.\nEither image or customDeploy is required.",
+                  "properties": {
+                    "method": {
+                      "description": "method is the name of the deploy method.\nThis name is specific to the deploy ramdisk used. If you don't have\na custom deploy ramdisk, you shouldn't use CustomDeploy.",
+                      "maxLength": 512,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "method"
+                  ],
+                  "type": "object"
+                },
+                "dataTemplate": {
+                  "additionalProperties": false,
+                  "description": "dataTemplate is a reference to a Metal3DataTemplate object containing\na template of metadata to be rendered. Metadata keys defined in the\nmetadataTemplate take precedence over keys defined in metadata field.",
+                  "properties": {
+                    "name": {
+                      "description": "name of the resource.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "namespace of the resource.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "failureDomain": {
+                  "description": "failureDomain is the failure domain unique identifier this machine should be attached to, as defined in Cluster API.",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "hostSelector": {
+                  "additionalProperties": false,
+                  "description": "hostSelector specifies matching criteria for labels on BareMetalHosts.\nThis is used to limit the set of BareMetalHost objects considered for\nclaiming for a metal3machine.",
+                  "properties": {
+                    "matchExpressions": {
+                      "description": "matchExpressions specifies match expressions that must be true on a chosen BareMetalHost",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "key": {
+                            "description": "key is the label key that the selector applies to.",
+                            "maxLength": 512,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "operator": {
+                            "description": "operator represents a key's relationship to a set of values.",
+                            "type": "string"
+                          },
+                          "values": {
+                            "description": "values is an array of string of required values.",
+                            "items": {
+                              "maxLength": 512,
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "maxItems": 512,
+                            "type": "array",
+                            "x-kubernetes-list-type": "set"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "operator",
+                          "values"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 512,
+                      "minItems": 1,
+                      "type": "array",
+                      "x-kubernetes-list-map-keys": [
+                        "key"
+                      ],
+                      "x-kubernetes-list-type": "map"
+                    },
+                    "matchLabels": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "matchLabels specifies key/value pairs of labels that must exist on a chosen BareMetalHost",
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "image": {
+                  "additionalProperties": false,
+                  "description": "image is the image to be provisioned.\nEither image or customDeploy is required.",
+                  "properties": {
+                    "checksum": {
+                      "description": "checksum is a md5sum, sha256sum or sha512sum value or a URL to retrieve one.\nWhen diskFormat is live-iso, empty string is also a valid value.",
+                      "maxLength": 512,
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "checksumType": {
+                      "description": "checksumType is the checksum algorithm for the image.\ne.g md5, sha256, sha512",
+                      "enum": [
+                        "md5",
+                        "sha256",
+                        "sha512"
+                      ],
+                      "type": "string"
+                    },
+                    "diskFormat": {
+                      "description": "diskFormat contains the image disk format.",
+                      "enum": [
+                        "raw",
+                        "qcow2",
+                        "vdi",
+                        "vmdk",
+                        "live-iso"
+                      ],
+                      "type": "string"
+                    },
+                    "url": {
+                      "description": "url is a location of an image to deploy.",
+                      "format": "uri",
+                      "maxLength": 512,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "checksum",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "metaData": {
+                  "additionalProperties": false,
+                  "description": "metaData is an object storing the reference to the secret containing the\nmetadata given by the user.",
+                  "properties": {
+                    "name": {
+                      "description": "name is unique within a namespace to reference a secret resource.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "namespace defines the space within which the secret name must be unique.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "networkData": {
+                  "additionalProperties": false,
+                  "description": "networkData is an object storing the reference to the secret containing the\nnetwork data given by the user.",
+                  "properties": {
+                    "name": {
+                      "description": "name is unique within a namespace to reference a secret resource.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "namespace defines the space within which the secret name must be unique.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "providerID": {
+                  "description": "providerID must match the provider ID as seen on the node object corresponding to this machine.\nFor Kubernetes Nodes running on the Metal3 provider, this value is set by the corresponding CPI component\nand it has the format metal3://<namespace>/<bmh-name>/<m3m-name>.\nThe legacy format (metal3://<bmh-uuid>) will be deprecated in CAPM3 v1.13\nand removed in CAPM3 v1.14.",
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "userData": {
+                  "additionalProperties": false,
+                  "description": "userData references the Secret that holds user data needed by the bare metal\noperator. The Namespace is optional; it will default to the metal3machine's\nnamespace if not specified.",
+                  "properties": {
+                    "name": {
+                      "description": "name is unique within a namespace to reference a secret resource.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "namespace defines the space within which the secret name must be unique.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "spec"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "template"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object",
+  "x-flux-schema-type": "Metal3MachineTemplate"
+}

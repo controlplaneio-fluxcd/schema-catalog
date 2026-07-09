@@ -1,0 +1,76 @@
+# schema source: Cluster API AWS v2.11.1 https://github.com/kubernetes-sigs/cluster-api-provider-aws
+apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta1
+kind <string> enum=AWSMachine
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# AWSMachineSpec defines the desired state of an Amazon EC2 instance.
+spec.additionalSecurityGroups <[]object>	# AdditionalSecurityGroups is an array of references to security groups that should be applied to the instance. These security groups would be set in addition to any security groups defined at the cluster level or in the actuator. It is possible to specify either IDs of Filters. Using Filters will cause additional requests to AWS API and if tags change the attached security groups might change too.
+spec.additionalSecurityGroups[].arn <string>	# ARN of resource. Deprecated: This field has no function and is going to be removed in the next release.
+spec.additionalSecurityGroups[].filters <[]object>	# Filters is a set of key/value pairs used to identify a resource They are applied according to the rules defined by the AWS API: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html
+spec.additionalSecurityGroups[].filters[].name <string> (required)	# Name of the filter. Filter names are case-sensitive.
+spec.additionalSecurityGroups[].filters[].values <[]string> (required)	# Values includes one or more filter values. Filter values are case-sensitive.
+spec.additionalSecurityGroups[].id <string>	# ID of resource
+spec.additionalTags <map[string]string>	# AdditionalTags is an optional set of tags to add to an instance, in addition to the ones added by default by the AWS provider. If both the AWSCluster and the AWSMachine specify the same tag name with different values, the AWSMachine's value takes precedence.
+spec.ami <object>	# AMI is the reference to the AMI from which to create the machine instance.
+spec.ami.eksLookupType <string> enum=AmazonLinux|AmazonLinuxGPU	# EKSOptimizedLookupType If specified, will look up an EKS Optimized image in SSM Parameter store
+spec.ami.id <string>	# ID of resource
+spec.cloudInit <object>	# CloudInit defines options related to the bootstrapping systems where CloudInit is used.
+spec.cloudInit.insecureSkipSecretsManager <boolean>	# InsecureSkipSecretsManager, when set to true will not use AWS Secrets Manager or AWS Systems Manager Parameter Store to ensure privacy of userdata. By default, a cloud-init boothook shell script is prepended to download the userdata from Secrets Manager and additionally delete the secret.
+spec.cloudInit.secretCount <integer> format=int32	# SecretCount is the number of secrets used to form the complete secret
+spec.cloudInit.secretPrefix <string>	# SecretPrefix is the prefix for the secret name. This is stored temporarily, and deleted when the machine registers as a node against the workload cluster.
+spec.cloudInit.secureSecretsBackend <string> enum=secrets-manager|ssm-parameter-store	# SecureSecretsBackend, when set to parameter-store will utilize the AWS Systems Manager Parameter Storage to distribute secrets. By default or with the value of secrets-manager, will use AWS Secrets Manager instead.
+spec.failureDomain <string>	# FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API. For this infrastructure provider, the ID is equivalent to an AWS Availability Zone. If multiple subnets are matched for the availability zone, the first one returned is picked.
+spec.iamInstanceProfile <string>	# IAMInstanceProfile is a name of an IAM instance profile to assign to the instance
+spec.ignition <object>	# Ignition defined options related to the bootstrapping systems where Ignition is used.
+spec.ignition.version <string> enum=2.3 default="2.3"	# Version defines which version of Ignition will be used to generate bootstrap data.
+spec.imageLookupBaseOS <string>	# ImageLookupBaseOS is the name of the base operating system to use for image lookup the AMI is not set.
+spec.imageLookupFormat <string>	# ImageLookupFormat is the AMI naming format to look up the image for this machine It will be ignored if an explicit AMI is set. Supports substitutions for {{.BaseOS}} and {{.K8sVersion}} with the base OS and kubernetes version, respectively. The BaseOS will be the value in ImageLookupBaseOS or ubuntu (the default), and the kubernetes version as defined by the packages produced by kubernetes/release without v as a prefix: 1.13.0, 1.12.5-mybuild.1, or 1.17.3. For example, the default image format of capa-ami-{{.BaseOS}}-?{{.K8sVersion}}-* will end up searching for AMIs that match the pattern capa-ami-ubuntu-?1.18.0-* for a Machine that is targeting kubernetes v1.18.0 and the ubuntu base OS. See also: https://golang.org/pkg/text/template/
+spec.imageLookupOrg <string>	# ImageLookupOrg is the AWS Organization ID to use for image lookup if AMI is not set.
+spec.instanceID <string>	# InstanceID is the EC2 instance ID for this machine.
+spec.instanceType <string> (required) min=2	# InstanceType is the type of instance to create. Example: m4.xlarge
+spec.networkInterfaces <[]string> max=2	# NetworkInterfaces is a list of ENIs to associate with the instance. A maximum of 2 may be specified.
+spec.nonRootVolumes <[]object>	# Configuration options for the non root storage volumes.
+spec.nonRootVolumes[].deviceName <string>	# Device name
+spec.nonRootVolumes[].encrypted <boolean>	# Encrypted is whether the volume should be encrypted or not.
+spec.nonRootVolumes[].encryptionKey <string>	# EncryptionKey is the KMS key to use to encrypt the volume. Can be either a KMS key ID or ARN. If Encrypted is set and this is omitted, the default AWS key will be used. The key must already exist and be accessible by the controller.
+spec.nonRootVolumes[].iops <integer> format=int64	# IOPS is the number of IOPS requested for the disk. Not applicable to all types.
+spec.nonRootVolumes[].size <integer> (required) format=int64 min=8	# Size specifies size (in Gi) of the storage device. Must be greater than the image snapshot size or 8 (whichever is greater).
+spec.nonRootVolumes[].throughput <integer> format=int64	# Throughput to provision in MiB/s supported for the volume type. Not applicable to all types.
+spec.nonRootVolumes[].type <string>	# Type is the type of the volume (e.g. gp2, io1, etc...).
+spec.providerID <string>	# ProviderID is the unique identifier as specified by the cloud provider.
+spec.publicIP <boolean>	# PublicIP specifies whether the instance should get a public IP. Precedence for this setting is as follows: 1. This field if set 2. Cluster/flavor setting 3. Subnet default
+spec.rootVolume <object>	# RootVolume encapsulates the configuration options for the root volume
+spec.rootVolume.deviceName <string>	# Device name
+spec.rootVolume.encrypted <boolean>	# Encrypted is whether the volume should be encrypted or not.
+spec.rootVolume.encryptionKey <string>	# EncryptionKey is the KMS key to use to encrypt the volume. Can be either a KMS key ID or ARN. If Encrypted is set and this is omitted, the default AWS key will be used. The key must already exist and be accessible by the controller.
+spec.rootVolume.iops <integer> format=int64	# IOPS is the number of IOPS requested for the disk. Not applicable to all types.
+spec.rootVolume.size <integer> (required) format=int64 min=8	# Size specifies size (in Gi) of the storage device. Must be greater than the image snapshot size or 8 (whichever is greater).
+spec.rootVolume.throughput <integer> format=int64	# Throughput to provision in MiB/s supported for the volume type. Not applicable to all types.
+spec.rootVolume.type <string>	# Type is the type of the volume (e.g. gp2, io1, etc...).
+spec.spotMarketOptions <object>	# SpotMarketOptions allows users to configure instances to be run using AWS Spot instances.
+spec.spotMarketOptions.maxPrice <string>	# MaxPrice defines the maximum price the user is willing to pay for Spot VM instances
+spec.sshKeyName <string>	# SSHKeyName is the name of the ssh key to attach to the instance. Valid values are empty string (do not use SSH keys), a valid SSH key name, or omitted (use the default SSH key name)
+spec.subnet <object>	# Subnet is a reference to the subnet to use for this instance. If not specified, the cluster subnet will be used.
+spec.subnet.arn <string>	# ARN of resource. Deprecated: This field has no function and is going to be removed in the next release.
+spec.subnet.filters <[]object>	# Filters is a set of key/value pairs used to identify a resource They are applied according to the rules defined by the AWS API: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html
+spec.subnet.filters[].name <string> (required)	# Name of the filter. Filter names are case-sensitive.
+spec.subnet.filters[].values <[]string> (required)	# Values includes one or more filter values. Filter values are case-sensitive.
+spec.subnet.id <string>	# ID of resource
+spec.tenancy <string> enum=default|dedicated|host	# Tenancy indicates if instance should run on shared or single-tenant hardware.
+spec.uncompressedUserData <boolean>	# UncompressedUserData specify whether the user data is gzip-compressed before it is sent to ec2 instance. cloud-init has built-in support for gzip-compressed user data user data stored in aws secret manager is always gzip-compressed.
+status <object>	# AWSMachineStatus defines the observed state of AWSMachine.
+status.addresses <[]object>	# Addresses contains the AWS instance associated addresses.
+status.addresses[].address <string> (required) min=1 max=256	# address is the machine address.
+status.addresses[].type <string> (required) enum=Hostname|ExternalIP|InternalIP|ExternalDNS|InternalDNS	# type is the machine address type, one of Hostname, ExternalIP, InternalIP, ExternalDNS or InternalDNS.
+status.conditions <[]object>	# Conditions defines current service state of the AWSMachine.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> min=1 max=10240	# message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].reason <string> min=1 max=256	# reason is the reason for the condition's last transition in CamelCase. The specific API may choose whether or not this field is considered a guaranteed API. This field may be empty.
+status.conditions[].severity <string> max=32	# severity provides an explicit classification of Reason code, so the users or machines can immediately understand the current situation and act accordingly. The Severity field MUST be set only when Status=False.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) min=1 max=256	# type of condition in CamelCase or in foo.example.com/CamelCase. Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important.
+status.failureMessage <string>	# FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption. This field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured. Any transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.
+status.failureReason <string>	# FailureReason will be set in the event that there is a terminal problem reconciling the Machine and will contain a succinct value suitable for machine interpretation. This field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured. Any transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.
+status.instanceState <string>	# InstanceState is the state of the AWS instance for this machine.
+status.interruptible <boolean>	# Interruptible reports that this machine is using spot instances and can therefore be interrupted by CAPI when it receives a notice that the spot instance is to be terminated by AWS. This will be set to true when SpotMarketOptions is not nil (i.e. this machine is using a spot instance).
+status.ready <boolean>	# Ready is true when the provider resource is ready.

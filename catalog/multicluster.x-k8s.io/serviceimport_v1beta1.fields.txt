@@ -1,0 +1,30 @@
+# schema source: Multi-Cluster Services API v0.5.0 https://github.com/kubernetes-sigs/mcs-api
+apiVersion <string> enum=multicluster.x-k8s.io/v1beta1
+kind <string> enum=ServiceImport
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# spec defines the behavior of a ServiceImport.
+spec.internalTrafficPolicy <string>	# InternalTrafficPolicy describes how nodes distribute service traffic they receive on the ClusterIP. If set to "Local", the proxy will assume that pods only want to talk to endpoints of the service on the same node as the pod, dropping the traffic if there are no local endpoints. The default value, "Cluster", uses the standard behavior of routing to all endpoints evenly (possibly modified by topology and other features).
+spec.ipFamilies <[]string> max=2	# IPFamilies identifies all the IPFamilies assigned for this ServiceImport.
+spec.ips <[]string> max=2	# ip will be used as the VIP for this service when type is ClusterSetIP.
+spec.ports <[]object> (required)
+spec.ports[].appProtocol <string>	# The application protocol for this port. This is used as a hint for implementations to offer richer behavior for protocols that they understand. This field follows standard Kubernetes label syntax. Valid values are either: * Un-prefixed protocol names - reserved for IANA standard service names (as per RFC-6335 and https://www.iana.org/assignments/service-names). * Kubernetes-defined prefixed names: * 'kubernetes.io/h2c' - HTTP/2 over cleartext as described in https://www.rfc-editor.org/rfc/rfc7540 * Other protocols should use implementation-defined prefixed names such as mycompany.com/my-custom-protocol. Field can be enabled with ServiceAppProtocol feature gate.
+spec.ports[].name <string>	# The name of this port within the service. This must be a DNS_LABEL. All ports within a ServiceSpec must have unique names. When considering the endpoints for a Service, this must match the 'name' field in the EndpointPort. Optional if only one ServicePort is defined on this service.
+spec.ports[].port <integer> (required) format=int32	# The port that will be exposed by this service.
+spec.ports[].protocol <string>	# The IP protocol for this port. Supports "TCP", "UDP", and "SCTP". Default is TCP.
+spec.sessionAffinity <string>	# Supports "ClientIP" and "None". Used to maintain session affinity. Enable client IP based session affinity. Must be ClientIP or None. Defaults to None. Ignored when type is Headless More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+spec.sessionAffinityConfig <object>	# sessionAffinityConfig contains session affinity configuration.
+spec.sessionAffinityConfig.clientIP <object>	# clientIP contains the configurations of Client IP based session affinity.
+spec.sessionAffinityConfig.clientIP.timeoutSeconds <integer> format=int32	# timeoutSeconds specifies the seconds of ClientIP type session sticky time. The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP". Default value is 10800(for 3 hours).
+spec.trafficDistribution <string>	# TrafficDistribution offers a way to express preferences for how traffic is distributed to Service endpoints. Implementations can use this field as a hint, but are not required to guarantee strict adherence. If the field is not set, the implementation will apply its default routing strategy. If set to "PreferClose", implementations should prioritize endpoints that are in the same zone.
+spec.type <string> (required) enum=ClusterSetIP|Headless	# type defines the type of this service. Must be ClusterSetIP or Headless.
+status <object>	# status contains information about the exported services that form the multi-cluster service referenced by this ServiceImport.
+status.clusters <[]object>	# clusters is the list of exporting clusters from which this service was derived.
+status.clusters[].cluster <string> (required)	# cluster is the name of the exporting cluster. Must be a valid RFC-1123 DNS label.
+status.conditions <[]object>
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

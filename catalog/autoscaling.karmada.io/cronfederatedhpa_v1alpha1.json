@@ -1,0 +1,220 @@
+{
+  "description": "CronFederatedHPA represents a collection of repeating schedule to scale\nreplica number of a specific workload. It can scale any resource implementing\nthe scale subresource as well as FederatedHPA.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "Spec is the specification of the CronFederatedHPA.",
+      "properties": {
+        "rules": {
+          "description": "Rules contains a collection of schedules that declares when and how\nthe referencing target resource should be scaled.",
+          "items": {
+            "additionalProperties": false,
+            "description": "CronFederatedHPARule declares a schedule as well as scale actions.",
+            "properties": {
+              "failedHistoryLimit": {
+                "default": 3,
+                "description": "FailedHistoryLimit represents the count of failed execution items for\neach rule.\nThe value must be a positive integer. It defaults to 3.",
+                "format": "int32",
+                "maximum": 32,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Name of the rule.\nEach rule in a CronFederatedHPA must have a unique name.\n\nNote: the name will be used as an identifier to record its execution\nhistory. Changing the name will be considered as deleting the old rule\nand adding a new rule, that means the original execution history will be\ndiscarded.",
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              "schedule": {
+                "description": "Schedule is the cron expression that represents a periodical time.\nThe syntax follows https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax.",
+                "type": "string"
+              },
+              "successfulHistoryLimit": {
+                "default": 3,
+                "description": "SuccessfulHistoryLimit represents the count of successful execution items\nfor each rule.\nThe value must be a positive integer. It defaults to 3.",
+                "format": "int32",
+                "maximum": 32,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "suspend": {
+                "default": false,
+                "description": "Suspend tells the controller to suspend subsequent executions.\nDefaults to false.",
+                "type": "boolean"
+              },
+              "targetMaxReplicas": {
+                "description": "TargetMaxReplicas is the target MaxReplicas to be set for FederatedHPA.\nOnly needed when referencing resource is FederatedHPA.\nTargetMinReplicas and TargetMaxReplicas can be specified together or\neither one can be specified alone.\nnil means the MaxReplicas(.spec.maxReplicas) of the referencing FederatedHPA\nwill not be updated.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "targetMinReplicas": {
+                "description": "TargetMinReplicas is the target MinReplicas to be set for FederatedHPA.\nOnly needed when referencing resource is FederatedHPA.\nTargetMinReplicas and TargetMaxReplicas can be specified together or\neither one can be specified alone.\nnil means the MinReplicas(.spec.minReplicas) of the referencing FederatedHPA\nwill not be updated.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "targetReplicas": {
+                "description": "TargetReplicas is the target replicas to be scaled for resources\nreferencing by ScaleTargetRef of this CronFederatedHPA.\nOnly needed when referencing resource is not FederatedHPA.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "timeZone": {
+                "description": "TimeZone for the giving schedule.\nIf not specified, this will default to the time zone of the\nkarmada-controller-manager process.\nInvalid TimeZone will be rejected when applying by karmada-webhook.\nsee https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the\nall timezones.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "schedule"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "scaleTargetRef": {
+          "additionalProperties": false,
+          "description": "ScaleTargetRef points to the target resource to scale.\nTarget resource could be any resource that implementing the scale\nsubresource like Deployment, or FederatedHPA.",
+          "properties": {
+            "apiVersion": {
+              "description": "apiVersion is the API version of the referent",
+              "type": "string"
+            },
+            "kind": {
+              "description": "kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+              "type": "string"
+            },
+            "name": {
+              "description": "name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "rules",
+        "scaleTargetRef"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Status is the current status of the CronFederatedHPA.",
+      "properties": {
+        "executionHistories": {
+          "description": "ExecutionHistories record the execution histories of CronFederatedHPARule.",
+          "items": {
+            "additionalProperties": false,
+            "description": "ExecutionHistory records the execution history of specific CronFederatedHPARule.",
+            "properties": {
+              "failedExecutions": {
+                "description": "FailedExecutions records failed executions.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "FailedExecution records a failed execution.",
+                  "properties": {
+                    "executionTime": {
+                      "description": "ExecutionTime is the actual execution time of CronFederatedHPARule.\nTasks may not always be executed at ScheduleTime. ExecutionTime is used\nto evaluate the efficiency of the controller's execution.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "Message is the human-readable message indicating details about the failure.",
+                      "type": "string"
+                    },
+                    "scheduleTime": {
+                      "description": "ScheduleTime is the expected execution time declared in CronFederatedHPARule.",
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "executionTime",
+                    "message",
+                    "scheduleTime"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "nextExecutionTime": {
+                "description": "NextExecutionTime is the next time to execute.\nNil means the rule has been suspended.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "ruleName": {
+                "description": "RuleName is the name of the CronFederatedHPARule.",
+                "type": "string"
+              },
+              "successfulExecutions": {
+                "description": "SuccessfulExecutions records successful executions.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "SuccessfulExecution records a successful execution.",
+                  "properties": {
+                    "appliedMaxReplicas": {
+                      "description": "AppliedMaxReplicas is the MaxReplicas have been applied.\nIt is required if .spec.rules[*].targetMaxReplicas is not empty.",
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "appliedMinReplicas": {
+                      "description": "AppliedMinReplicas is the MinReplicas have been applied.\nIt is required if .spec.rules[*].targetMinReplicas is not empty.",
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "appliedReplicas": {
+                      "description": "AppliedReplicas is the replicas have been applied.\nIt is required if .spec.rules[*].targetReplicas is not empty.",
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "executionTime": {
+                      "description": "ExecutionTime is the actual execution time of CronFederatedHPARule.\nTasks may not always be executed at ScheduleTime. ExecutionTime is used\nto evaluate the efficiency of the controller's execution.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "scheduleTime": {
+                      "description": "ScheduleTime is the expected execution time declared in CronFederatedHPARule.",
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "executionTime",
+                    "scheduleTime"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "ruleName"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object",
+  "x-flux-schema-type": "CronFederatedHPA"
+}

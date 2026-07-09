@@ -1,0 +1,34 @@
+# schema source: Karmada v1.18.1 https://github.com/karmada-io/karmada
+apiVersion <string> enum=autoscaling.karmada.io/v1alpha1
+kind <string> enum=CronFederatedHPA
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Spec is the specification of the CronFederatedHPA.
+spec.rules <[]object> (required)	# Rules contains a collection of schedules that declares when and how the referencing target resource should be scaled.
+spec.rules[].failedHistoryLimit <integer> default=3 format=int32 min=0 max=32	# FailedHistoryLimit represents the count of failed execution items for each rule. The value must be a positive integer. It defaults to 3.
+spec.rules[].name <string> (required) min=1 max=32	# Name of the rule. Each rule in a CronFederatedHPA must have a unique name. Note: the name will be used as an identifier to record its execution history. Changing the name will be considered as deleting the old rule and adding a new rule, that means the original execution history will be discarded.
+spec.rules[].schedule <string> (required)	# Schedule is the cron expression that represents a periodical time. The syntax follows https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax.
+spec.rules[].successfulHistoryLimit <integer> default=3 format=int32 min=1 max=32	# SuccessfulHistoryLimit represents the count of successful execution items for each rule. The value must be a positive integer. It defaults to 3.
+spec.rules[].suspend <boolean> default=false	# Suspend tells the controller to suspend subsequent executions. Defaults to false.
+spec.rules[].targetMaxReplicas <integer> format=int32	# TargetMaxReplicas is the target MaxReplicas to be set for FederatedHPA. Only needed when referencing resource is FederatedHPA. TargetMinReplicas and TargetMaxReplicas can be specified together or either one can be specified alone. nil means the MaxReplicas(.spec.maxReplicas) of the referencing FederatedHPA will not be updated.
+spec.rules[].targetMinReplicas <integer> format=int32	# TargetMinReplicas is the target MinReplicas to be set for FederatedHPA. Only needed when referencing resource is FederatedHPA. TargetMinReplicas and TargetMaxReplicas can be specified together or either one can be specified alone. nil means the MinReplicas(.spec.minReplicas) of the referencing FederatedHPA will not be updated.
+spec.rules[].targetReplicas <integer> format=int32	# TargetReplicas is the target replicas to be scaled for resources referencing by ScaleTargetRef of this CronFederatedHPA. Only needed when referencing resource is not FederatedHPA.
+spec.rules[].timeZone <string>	# TimeZone for the giving schedule. If not specified, this will default to the time zone of the karmada-controller-manager process. Invalid TimeZone will be rejected when applying by karmada-webhook. see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the all timezones.
+spec.scaleTargetRef <object> (required)	# ScaleTargetRef points to the target resource to scale. Target resource could be any resource that implementing the scale subresource like Deployment, or FederatedHPA.
+spec.scaleTargetRef.apiVersion <string>	# apiVersion is the API version of the referent
+spec.scaleTargetRef.kind <string> (required)	# kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+spec.scaleTargetRef.name <string> (required)	# name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+status <object>	# Status is the current status of the CronFederatedHPA.
+status.executionHistories <[]object>	# ExecutionHistories record the execution histories of CronFederatedHPARule.
+status.executionHistories[].failedExecutions <[]object>	# FailedExecutions records failed executions.
+status.executionHistories[].failedExecutions[].executionTime <string> (required) format=date-time	# ExecutionTime is the actual execution time of CronFederatedHPARule. Tasks may not always be executed at ScheduleTime. ExecutionTime is used to evaluate the efficiency of the controller's execution.
+status.executionHistories[].failedExecutions[].message <string> (required)	# Message is the human-readable message indicating details about the failure.
+status.executionHistories[].failedExecutions[].scheduleTime <string> (required) format=date-time	# ScheduleTime is the expected execution time declared in CronFederatedHPARule.
+status.executionHistories[].nextExecutionTime <string> format=date-time	# NextExecutionTime is the next time to execute. Nil means the rule has been suspended.
+status.executionHistories[].ruleName <string> (required)	# RuleName is the name of the CronFederatedHPARule.
+status.executionHistories[].successfulExecutions <[]object>	# SuccessfulExecutions records successful executions.
+status.executionHistories[].successfulExecutions[].appliedMaxReplicas <integer> format=int32	# AppliedMaxReplicas is the MaxReplicas have been applied. It is required if .spec.rules[*].targetMaxReplicas is not empty.
+status.executionHistories[].successfulExecutions[].appliedMinReplicas <integer> format=int32	# AppliedMinReplicas is the MinReplicas have been applied. It is required if .spec.rules[*].targetMinReplicas is not empty.
+status.executionHistories[].successfulExecutions[].appliedReplicas <integer> format=int32	# AppliedReplicas is the replicas have been applied. It is required if .spec.rules[*].targetReplicas is not empty.
+status.executionHistories[].successfulExecutions[].executionTime <string> (required) format=date-time	# ExecutionTime is the actual execution time of CronFederatedHPARule. Tasks may not always be executed at ScheduleTime. ExecutionTime is used to evaluate the efficiency of the controller's execution.
+status.executionHistories[].successfulExecutions[].scheduleTime <string> (required) format=date-time	# ScheduleTime is the expected execution time declared in CronFederatedHPARule.

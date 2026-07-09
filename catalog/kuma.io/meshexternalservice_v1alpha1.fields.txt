@@ -1,0 +1,57 @@
+# schema source: Kuma v2.14.0 https://github.com/kumahq/kuma
+apiVersion <string> enum=kuma.io/v1alpha1
+kind <string> enum=MeshExternalService
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# Spec is the specification of the Kuma MeshExternalService resource.
+spec.endpoints <[]object>	# Endpoints defines a list of destinations to send traffic to.
+spec.endpoints[].address <string> (required) min=1	# Address defines an address to which a user want to send a request. Is possible to provide `domain`, `ip`.
+spec.endpoints[].port <integer> (required) format=int32 min=1 max=65535	# Port of the endpoint
+spec.endpoints[].priority <integer> format=int32 min=0 max=128	# Priority maps to Envoy's priority levels to enable endpoint failover. Lower values have higher priority (0 is the default/primary). When the primary endpoints become unhealthy, traffic fails over to the next priority level.
+spec.extension <object>	# Extension struct for a plugin configuration, in the presence of an extension `endpoints` and `tls` are not required anymore - it's up to the extension to validate them independently.
+spec.extension.config <any>	# Config freeform configuration for the extension.
+spec.extension.type <string> (required)	# Type of the extension.
+spec.match <object> (required)	# Match defines traffic that should be routed through the sidecar.
+spec.match.port <integer> (required) format=int32 min=1 max=65535	# Port defines a port to which a user does request.
+spec.match.protocol <string> enum=tcp|grpc|http|http2 default="tcp"	# Protocol defines a protocol of the communication. Possible values: `tcp`, `grpc`, `http`, `http2`.
+spec.match.type <string> enum=HostnameGenerator default="HostnameGenerator"	# Type of the match, only `HostnameGenerator` is available at the moment.
+spec.tls <object>	# Tls provides a TLS configuration when proxy is resposible for a TLS origination
+spec.tls.allowRenegotiation <boolean> default=false	# AllowRenegotiation defines if TLS sessions will allow renegotiation. Setting this to true is not recommended for security reasons.
+spec.tls.enabled <boolean> default=false	# Enabled defines if proxy should originate TLS.
+spec.tls.verification <object>	# Verification section for providing TLS verification details.
+spec.tls.verification.caCert <object>	# CaCert defines a certificate of CA.
+spec.tls.verification.caCert.inline <string> format=byte	# Data source is inline bytes.
+spec.tls.verification.caCert.inlineString <string>	# Data source is inline string`
+spec.tls.verification.caCert.secret <string>	# Data source is a secret with given Secret key.
+spec.tls.verification.clientCert <object>	# ClientCert defines a certificate of a client.
+spec.tls.verification.clientCert.inline <string> format=byte	# Data source is inline bytes.
+spec.tls.verification.clientCert.inlineString <string>	# Data source is inline string`
+spec.tls.verification.clientCert.secret <string>	# Data source is a secret with given Secret key.
+spec.tls.verification.clientKey <object>	# ClientKey defines a client private key.
+spec.tls.verification.clientKey.inline <string> format=byte	# Data source is inline bytes.
+spec.tls.verification.clientKey.inlineString <string>	# Data source is inline string`
+spec.tls.verification.clientKey.secret <string>	# Data source is a secret with given Secret key.
+spec.tls.verification.mode <string> enum=SkipSAN|SkipCA|Secured|SkipAll default="Secured"	# Mode defines if proxy should skip verification, one of `SkipSAN`, `SkipCA`, `Secured`, `SkipAll`. Default `Secured`.
+spec.tls.verification.serverName <string>	# ServerName overrides the default Server Name Indicator set by Kuma.
+spec.tls.verification.subjectAltNames <[]object>	# SubjectAltNames list of names to verify in the certificate.
+spec.tls.verification.subjectAltNames[].type <string> enum=Exact|Prefix default="Exact"	# Type specifies matching type, one of `Exact`, `Prefix`. Default: `Exact`
+spec.tls.verification.subjectAltNames[].value <string> (required)	# Value to match.
+spec.tls.version <object>	# Version section for providing version specification.
+spec.tls.version.max <string> enum=TLSAuto|TLS10|TLS11|TLS12|TLS13 default="TLSAuto"	# Max defines maximum supported version. One of `TLSAuto`, `TLS10`, `TLS11`, `TLS12`, `TLS13`.
+spec.tls.version.min <string> enum=TLSAuto|TLS10|TLS11|TLS12|TLS13 default="TLSAuto"	# Min defines minimum supported version. One of `TLSAuto`, `TLS10`, `TLS11`, `TLS12`, `TLS13`.
+status <object>	# Status is the current status of the Kuma MeshExternalService resource.
+status.addresses <[]object>	# Addresses section for generated domains
+status.addresses[].hostname <string>
+status.addresses[].hostnameGeneratorRef <object>
+status.addresses[].hostnameGeneratorRef.coreName <string> (required)
+status.addresses[].origin <string>
+status.hostnameGenerators <[]object>
+status.hostnameGenerators[].conditions <[]object>	# Conditions is an array of hostname generator conditions.
+status.hostnameGenerators[].conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.hostnameGenerators[].conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.hostnameGenerators[].conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.hostnameGenerators[].conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.hostnameGenerators[].hostnameGeneratorRef <object> (required)
+status.hostnameGenerators[].hostnameGeneratorRef.coreName <string> (required)
+status.vip <object>	# Vip section for allocated IP
+status.vip.ip <string>	# Value allocated IP for a provided domain with `HostnameGenerator` type in a match section.

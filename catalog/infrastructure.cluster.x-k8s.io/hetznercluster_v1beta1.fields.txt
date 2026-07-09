@@ -1,0 +1,85 @@
+# schema source: Cluster API Hetzner v1.1.7 https://github.com/syself/cluster-api-provider-hetzner
+apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta1
+kind <string> enum=HetznerCluster
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# HetznerClusterSpec defines the desired state of HetznerCluster.
+spec.controlPlaneEndpoint <object>	# ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+spec.controlPlaneEndpoint.host <string> max=512	# host is the hostname on which the API server is serving.
+spec.controlPlaneEndpoint.port <integer> format=int32	# port is the port on which the API server is serving.
+spec.controlPlaneLoadBalancer <object>	# ControlPlaneLoadBalancer is an optional configuration for customizing control plane behavior.
+spec.controlPlaneLoadBalancer.algorithm <string> default="round_robin"	# Algorithm defines the type of load balancer algorithm. It could be round_robin or least_connection. The default value is "round_robin".
+spec.controlPlaneLoadBalancer.enabled <boolean> default=true	# Enabled specifies if a load balancer should be created.
+spec.controlPlaneLoadBalancer.extraServices <[]object>	# ExtraServices defines how traffic will be routed from the load balancer to your target server.
+spec.controlPlaneLoadBalancer.extraServices[].destinationPort <integer> min=1 max=65535	# DestinationPort defines the port on the server. It must be a valid port range (1-65535).
+spec.controlPlaneLoadBalancer.extraServices[].listenPort <integer> min=1 max=65535	# ListenPort, i.e. source port, defines the incoming port open on the load balancer. It must be a valid port range (1-65535).
+spec.controlPlaneLoadBalancer.extraServices[].protocol <string> enum=http|https|tcp	# Protocol specifies the supported load balancer Protocol. It could be one of the https, http, or tcp.
+spec.controlPlaneLoadBalancer.name <string>	# Name defines the name of the load balancer. It can be specified in order to use an existing load balancer.
+spec.controlPlaneLoadBalancer.port <integer> default=6443 min=1 max=65535	# Port defines the API Server port. It must be a valid port range (1-65535). If omitted, the default value is 6443.
+spec.controlPlaneLoadBalancer.region <string> enum=fsn1|hel1|nbg1|ash|hil|sin	# Region contains the name of the HCloud location where the load balancer is running.
+spec.controlPlaneLoadBalancer.type <string> enum=lb11|lb21|lb31 default="lb11"	# Type defines the type of load balancer. It could be one of lb11, lb21, or lb31.
+spec.controlPlaneRegions <[]string> (required)	# ControlPlaneRegion consists of a list of HCloud Regions (fsn, nbg, hel). Because HCloud Networks have a very low latency we could assume in some use cases that a region is behaving like a zone. https://kubernetes.io/docs/reference/labels-annotations-taints/#topologykubernetesiozone
+spec.hcloudNetwork <object>	# HCloudNetwork defines details about the private Network for Hetzner Cloud. If left empty, no private Network is configured.
+spec.hcloudNetwork.cidrBlock <string> default="10.0.0.0/16"	# CIDRBlock defines the cidrBlock of the HCloud Network. If omitted, default "10.0.0.0/16" will be used.
+spec.hcloudNetwork.enabled <boolean> (required)	# Enabled defines whether the network should be enabled or not.
+spec.hcloudNetwork.networkZone <string> enum=eu-central|us-east|us-west|ap-southeast default="eu-central"	# NetworkZone specifies the HCloud network zone of the private network. The zones must be one of eu-central, us-east, or us-west. The default is eu-central.
+spec.hcloudNetwork.subnetCidrBlock <string> default="10.0.0.0/24"	# SubnetCIDRBlock defines the cidrBlock for the subnet of the HCloud Network. Note: A subnet is required.
+spec.hcloudPlacementGroups <[]object>
+spec.hcloudPlacementGroups[].name <string> (required) min=1
+spec.hcloudPlacementGroups[].type <string> enum=spread default="spread"
+spec.hetznerSecretRef <object> (required)	# HetznerSecretRef is a reference to a token to be used when reconciling this cluster. This is generated in the security section under API TOKENS. Read & write is necessary.
+spec.hetznerSecretRef.key <object> (required)	# Key defines the keys that are used in the secret. Need to specify either HCloudToken or both HetznerRobotUser and HetznerRobotPassword.
+spec.hetznerSecretRef.key.hcloudToken <string> (required)	# HCloudToken defines the name of the key where the token for the Hetzner Cloud API is stored. The controller reads the token from the management-cluster secret using this key and writes it to workload-cluster secrets using the same key. Upstream hcloud-ccm expects the key "token", while the legacy Syself ccm fork uses "hcloud". The configured workload-cluster secret remains untouched. CAPH only adds the compatibility key "token" inside the workload-cluster secret named "hcloud", and only if this field is not already "token". If the configured secret name is already "hcloud", the same token value is stored under both keys in that single secret. We recommend to use "token".
+spec.hetznerSecretRef.key.hetznerRobotPassword <string> default="hetzner-robot-password"	# HetznerRobotPassword defines the name of the key where the password for the Hetzner Robot API is stored. It gets used for reading the credential in the mgt-cluster, and it gets used for creating a secret in the wl-cluster. We recommend to use "robot-password", because this is the default of upstream hcloud-ccm.
+spec.hetznerSecretRef.key.hetznerRobotUser <string> default="hetzner-robot-user"	# HetznerRobotUser defines the name of the key where the username for the Hetzner Robot API is stored. It gets used for reading the credential in the mgt-cluster, and it gets used for creating a secret in the wl-cluster. We recommend to use "robot-user", because this is the default of upstream hcloud-ccm.
+spec.hetznerSecretRef.key.sshKey <string> default="hcloud-ssh-key-name"	# SSHKey defines the name of the ssh key. It is only used in the mgt-cluster. It is not synced to the wl-cluster.
+spec.hetznerSecretRef.name <string> (required) default="hetzner"	# Name defines the name of the secret. The controller reads the credential from the management-cluster secret with this name and creates a workload-cluster secret with the same name. The upstream hcloud-ccm helm chart expects the secret name "hcloud", while the Syself ccm fork defaults to "hetzner". To facilitate migrations to the upstream hcloud-ccm, it is ensured that the secret it expects is created in the proper way. This means that CAPH ensures that in the secret called "hcloud" there is the hcloud token stored under the key "token". This might lead to the same value being stored in two different keys of the same secret, depending on the configuration used here. We recommend to use the value "hcloud". Set `spec.skipCreatingHetznerSecretInWorkloadCluster` if you don't want workload-cluster secrets to be created.
+spec.skipCreatingHetznerSecretInWorkloadCluster <boolean>	# SkipCreatingHetznerSecretInWorkloadCluster indicates whether the Hetzner secret should be created in the workload cluster. By default the secret gets created, so that the ccm (running in the wl-cluster) can use that secret. If you prefer to not reveal the secret in the wl-cluster, you can set this to value to false, so that the secret is not created. Be sure to run the ccm outside of the wl-cluster in that case, e.g. in the management cluster.
+spec.sshKeys <object> (required)	# SSHKeys are cluster wide. Valid values are a valid SSH key name.
+spec.sshKeys.hcloud <[]object>	# Hcloud defines the SSH keys used for hcloud.
+spec.sshKeys.hcloud[].fingerprint <string>	# Fingerprint defines the fingerprint of the SSH key - added by the controller.
+spec.sshKeys.hcloud[].name <string> (required) min=1	# Name defines the name of the SSH key.
+spec.sshKeys.robotRescueSecretRef <object>	# RobotRescueSecretRef defines the reference to the secret where the SSH key for the rescue system is stored.
+spec.sshKeys.robotRescueSecretRef.key <object> (required)	# Key contains details about the keys used in the data of the secret.
+spec.sshKeys.robotRescueSecretRef.key.name <string> (required)	# Name is the key in the secret's data where the SSH key's name is stored.
+spec.sshKeys.robotRescueSecretRef.key.privateKey <string> (required)	# PrivateKey is the key in the secret's data where the SSH key's private key is stored.
+spec.sshKeys.robotRescueSecretRef.key.publicKey <string> (required)	# PublicKey is the key in the secret's data where the SSH key's public key is stored.
+spec.sshKeys.robotRescueSecretRef.name <string> (required)	# Name is the name of the secret.
+status <object>	# HetznerClusterStatus defines the observed state of HetznerCluster.
+status.conditions <[]object>	# Conditions provide observations of the operational state of a Cluster API resource.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> min=1 max=10240	# message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].reason <string> min=1 max=256	# reason is the reason for the condition's last transition in CamelCase. The specific API may choose whether or not this field is considered a guaranteed API. This field may be empty.
+status.conditions[].severity <string> max=32	# severity provides an explicit classification of Reason code, so the users or machines can immediately understand the current situation and act accordingly. The Severity field MUST be set only when Status=False.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) min=1 max=256	# type of condition in CamelCase or in foo.example.com/CamelCase. Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important.
+status.controlPlaneLoadBalancer <object>	# LoadBalancerStatus defines the observed state of the control plane load balancer.
+status.controlPlaneLoadBalancer.id <integer> format=int64
+status.controlPlaneLoadBalancer.internalIP <string>
+status.controlPlaneLoadBalancer.ipv4 <string>
+status.controlPlaneLoadBalancer.ipv6 <string>
+status.controlPlaneLoadBalancer.protected <boolean>
+status.controlPlaneLoadBalancer.targets <[]object>
+status.controlPlaneLoadBalancer.targets[].ip <string>
+status.controlPlaneLoadBalancer.targets[].serverID <integer> format=int64
+status.controlPlaneLoadBalancer.targets[].type <string> (required) enum=server|ip	# LoadBalancerTargetType defines the target type.
+status.failureDomains <map[string]object>	# FailureDomains is a slice of FailureDomains.
+status.failureDomains.<key>.attributes <map[string]string>	# attributes is a free form map of attributes an infrastructure provider might use or require.
+status.failureDomains.<key>.controlPlane <boolean>	# controlPlane determines if this failure domain is suitable for use by control plane machines.
+status.hcloudPlacementGroups <[]object>
+status.hcloudPlacementGroups[].id <integer> format=int64
+status.hcloudPlacementGroups[].name <string>
+status.hcloudPlacementGroups[].servers <[]integer>
+status.hcloudPlacementGroups[].type <string>
+status.networkStatus <object>	# NetworkStatus defines the observed state of the HCloud Private Network.
+status.networkStatus.attachedServers <[]integer>
+status.networkStatus.id <integer> format=int64
+status.ready <boolean> (required) default=false
+status.v1beta2 <object>	# v1beta2 groups all the fields that will be added or modified in HetznerCluster's status with the V1Beta2 version.
+status.v1beta2.conditions <[]object> max=32	# conditions represents the observations of a HetznerCluster's current state.
+status.v1beta2.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.v1beta2.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.v1beta2.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.v1beta2.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.v1beta2.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.v1beta2.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

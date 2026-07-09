@@ -1,0 +1,52 @@
+# schema source: Kuma v2.14.0 https://github.com/kumahq/kuma
+apiVersion <string> enum=kuma.io/v1alpha1
+kind <string> enum=MeshMetric
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# Spec is the specification of the Kuma MeshMetric resource.
+spec.default <object>	# MeshMetric configuration.
+spec.default.applications <[]object>	# Applications is a list of applications that Dataplane Proxy will scrape. Ignored on zone-proxy-only Dataplanes (zone ingress/egress exist without a co-located workload).
+spec.default.applications[].address <string>	# Address on which an application listens.
+spec.default.applications[].name <string>	# Name of the application to scrape
+spec.default.applications[].path <string> default="/metrics"	# Path on which an application expose HTTP endpoint with metrics.
+spec.default.applications[].port <integer> (required) format=int32	# Port on which an application expose HTTP endpoint with metrics.
+spec.default.backends <[]object>	# Backends list that will be used to collect metrics.
+spec.default.backends[].openTelemetry <object>	# OpenTelemetry backend configuration
+spec.default.backends[].openTelemetry.backendRef <object>	# BackendRef is a reference to a MeshOpenTelemetryBackend resource that defines the collector endpoint. Mutually exclusive with Endpoint.
+spec.default.backends[].openTelemetry.backendRef.kind <string> (required) enum=MeshOpenTelemetryBackend	# Kind of the backend resource.
+spec.default.backends[].openTelemetry.backendRef.labels <map[string]string>	# Labels to match the referenced resource. When multiple resources match, the oldest by creation time wins.
+spec.default.backends[].openTelemetry.endpoint <string> default=""	# Endpoint for OpenTelemetry collector. Deprecated: use BackendRef instead.
+spec.default.backends[].openTelemetry.refreshInterval <string>	# RefreshInterval defines how frequent metrics should be pushed to collector
+spec.default.backends[].prometheus <object>	# Prometheus backend configuration.
+spec.default.backends[].prometheus.clientId <string>	# ClientId of the Prometheus backend. Needed when using MADS for DP discovery.
+spec.default.backends[].prometheus.path <string> default="/metrics"	# Path on which a dataplane should expose HTTP endpoint with Prometheus metrics.
+spec.default.backends[].prometheus.port <integer> default=5670 format=int32	# Port on which a dataplane should expose HTTP endpoint with Prometheus metrics.
+spec.default.backends[].prometheus.tls <object>	# Configuration of TLS for prometheus listener.
+spec.default.backends[].prometheus.tls.mode <string> enum=Disabled|ProvidedTLS|ActiveMTLSBackend default="Disabled"	# Configuration of TLS for Prometheus listener.
+spec.default.backends[].type <string> (required) enum=Prometheus|OpenTelemetry	# Type of the backend that will be used to collect metrics. At the moment only Prometheus backend is available.
+spec.default.sidecar <object>	# Sidecar metrics collection configuration
+spec.default.sidecar.includeUnused <boolean>	# IncludeUnused if false will scrape only metrics that has been by sidecar (counters incremented at least once, gauges changed at least once, and histograms added to at least once). If true will scrape all metrics (even the ones with zeros). If not specified then the default value is false.
+spec.default.sidecar.profiles <object>	# Profiles allows to customize which metrics are published.
+spec.default.sidecar.profiles.appendProfiles <[]object>	# AppendProfiles allows to combine the metrics from multiple predefined profiles.
+spec.default.sidecar.profiles.appendProfiles[].name <string> (required) enum=All|Basic|None	# Name of the predefined profile, one of: all, basic, none
+spec.default.sidecar.profiles.exclude <[]object>	# Exclude makes it possible to exclude groups of metrics from a resulting profile. Exclude is subordinate to Include.
+spec.default.sidecar.profiles.exclude[].match <string> (required)	# Match is the value used to match using particular Type
+spec.default.sidecar.profiles.exclude[].type <string> (required) enum=Prefix|Regex|Exact|Contains	# Type defined the type of selector, one of: prefix, regex, exact
+spec.default.sidecar.profiles.include <[]object>	# Include makes it possible to include additional metrics in a selected profiles. Include takes precedence over Exclude.
+spec.default.sidecar.profiles.include[].match <string> (required)	# Match is the value used to match using particular Type
+spec.default.sidecar.profiles.include[].type <string> (required) enum=Prefix|Regex|Exact|Contains	# Type defined the type of selector, one of: prefix, regex, exact
+spec.targetRef <object>	# TargetRef is a reference to the resource the policy takes an effect on. The resource could be either a real store object or virtual resource defined in-place.
+spec.targetRef.kind <string> (required) enum=Mesh|MeshSubset|MeshGateway|MeshService|MeshExternalService|MeshMultiZoneService|MeshServiceSubset|MeshHTTPRoute|Dataplane	# Kind of the referenced resource
+spec.targetRef.labels <map[string]string>	# Labels are used to select group of MeshServices that match labels. Either Labels or Name and Namespace can be used.
+spec.targetRef.mesh <string>	# Mesh is reserved for future use to identify cross mesh resources.
+spec.targetRef.name <string>	# Name of the referenced resource. Can only be used with kinds: `MeshService`, `MeshServiceSubset` and `MeshGatewayRoute`
+spec.targetRef.namespace <string>	# Namespace specifies the namespace of target resource. If empty only resources in policy namespace will be targeted.
+spec.targetRef.proxyTypes <[]string>	# ProxyTypes specifies the data plane types that are subject to the policy. When not specified, all data plane types are targeted by the policy.
+spec.targetRef.sectionName <string>	# SectionName is used to target specific section of resource. For example, you can target port from MeshService.ports[] by its name. Only traffic to this port will be affected.
+spec.targetRef.tags <map[string]string>	# Tags used to select a subset of proxies by tags. Can only be used with kinds `MeshSubset` and `MeshServiceSubset`
+status <object>	# Status is the current status of the Kuma MeshMetric resource.
+status.conditions <[]object>
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.

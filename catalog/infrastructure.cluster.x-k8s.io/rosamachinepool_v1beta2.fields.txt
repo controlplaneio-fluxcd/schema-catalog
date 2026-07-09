@@ -1,0 +1,45 @@
+# schema source: Cluster API AWS v2.11.1 https://github.com/kubernetes-sigs/cluster-api-provider-aws
+apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta2
+kind <string> enum=ROSAMachinePool
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# RosaMachinePoolSpec defines the desired state of RosaMachinePool.
+spec.additionalSecurityGroups <[]string>	# AdditionalSecurityGroups is an optional set of security groups to associate with all node instances of the machine pool.
+spec.additionalTags <map[string]string>	# AdditionalTags are user-defined tags to be added on the underlying EC2 instances associated with this machine pool.
+spec.autoRepair <boolean> default=true	# AutoRepair specifies whether health checks should be enabled for machines in the NodePool. The default is true.
+spec.autoscaling <object>	# Autoscaling specifies auto scaling behaviour for this MachinePool. required if Replicas is not configured
+spec.autoscaling.maxReplicas <integer> min=1
+spec.autoscaling.minReplicas <integer> min=0
+spec.availabilityZone <string>	# AvailabilityZone is an optinal field specifying the availability zone where instances of this machine pool should run For Multi-AZ clusters, you can create a machine pool in a Single-AZ of your choice.
+spec.capacityReservationID <string>	# CapacityReservationID specifies the ID of an AWS On-Demand Capacity Reservation and Capacity Blocks for ML. The CapacityReservationID must be pre-created in advance, before creating a NodePool.
+spec.imageType <string> enum=Windows|Default	# ImageType is the AMI (Amazon Machine Image) to use for running the associated NodePool (i.e. Windows or Default/Linux).
+spec.instanceType <string> (required)	# InstanceType specifies the AWS instance type, for example `r5.xlarge`. Instance type ref; https://aws.amazon.com/ec2/instance-types/
+spec.labels <map[string]string>	# Labels specifies labels for the Kubernetes node objects
+spec.nodeDrainGracePeriod <string>	# NodeDrainGracePeriod is grace period for how long Pod Disruption Budget-protected workloads will be respected during upgrades. After this grace period, any workloads protected by Pod Disruption Budgets that have not been successfully drained from a node will be forcibly evicted. Valid values are from 0 to 1 week(10080m|168h) . 0 or empty value means that the MachinePool can be drained without any time limitation.
+spec.nodePoolName <string> (required) pattern="^[a-z]([-a-z0-9]*[a-z0-9])?$" max=15 (immutable)	# NodePoolName specifies the name of the nodepool in Rosa must be a valid DNS-1035 label, so it must consist of lower case alphanumeric and have a max length of 15 characters.
+spec.providerIDList <[]string>	# ProviderIDList contain a ProviderID for each machine instance that's currently managed by this machine pool.
+spec.subnet <string> (immutable)
+spec.taints <[]object>	# Taints specifies the taints to apply to the nodes of the machine pool
+spec.taints[].effect <string> (required) enum=NoSchedule|PreferNoSchedule|NoExecute	# The effect of the taint on pods that do not tolerate the taint. Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
+spec.taints[].key <string> (required)	# The taint key to be applied to a node.
+spec.taints[].value <string> pattern="^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$"	# The taint value corresponding to the taint key.
+spec.tuningConfigs <[]string>	# TuningConfigs specifies the names of the tuning configs to be applied to this MachinePool. Tuning configs must already exist.
+spec.updateConfig <object>	# UpdateConfig specifies update configurations.
+spec.updateConfig.rollingUpdate <object>	# RollingUpdate specifies MaxUnavailable & MaxSurge number of nodes during update.
+spec.updateConfig.rollingUpdate.maxSurge <int-or-string> default=1	# MaxSurge is the maximum number of nodes that can be provisioned above the desired number of nodes. Value can be an absolute number (ex: 5) or a percentage of desired nodes (ex: 10%). Absolute number is calculated from percentage by rounding up. MaxSurge can not be 0 if MaxUnavailable is 0, default is 1. Both MaxSurge & MaxUnavailable must use the same units (absolute value or percentage). Example: when MaxSurge is set to 30%, new nodes can be provisioned immediately when the rolling update starts, such that the total number of old and new nodes do not exceed 130% of desired nodes. Once old nodes have been deleted, new nodes can be provisioned, ensuring that total number of nodes running at any time during the update is at most 130% of desired nodes.
+spec.updateConfig.rollingUpdate.maxUnavailable <int-or-string> default=0	# MaxUnavailable is the maximum number of nodes that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired nodes (ex: 10%). Absolute number is calculated from percentage by rounding down. MaxUnavailable can not be 0 if MaxSurge is 0, default is 0. Both MaxUnavailable & MaxSurge must use the same units (absolute value or percentage). Example: when MaxUnavailable is set to 30%, old nodes can be deleted down to 70% of desired nodes immediately when the rolling update starts. Once new nodes are ready, more old nodes be deleted, followed by provisioning new nodes, ensuring that the total number of nodes available at all times during the update is at least 70% of desired nodes.
+spec.version <string>	# Version specifies the OpenShift version of the nodes associated with this machinepool. ROSAControlPlane version is used if not set.
+spec.volumeSize <integer> min=75 max=16384	# VolumeSize set the disk volume size for the machine pool, in Gib. The default is 300 GiB.
+status <object>	# RosaMachinePoolStatus defines the observed state of RosaMachinePool.
+status.availableUpgrades <[]string>	# Available upgrades for the ROSA MachinePool.
+status.conditions <[]object>	# Conditions defines current service state of the managed machine pool
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> min=1 max=10240	# message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].reason <string> min=1 max=256	# reason is the reason for the condition's last transition in CamelCase. The specific API may choose whether or not this field is considered a guaranteed API. This field may be empty.
+status.conditions[].severity <string> max=32	# severity provides an explicit classification of Reason code, so the users or machines can immediately understand the current situation and act accordingly. The Severity field MUST be set only when Status=False.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) min=1 max=256	# type of condition in CamelCase or in foo.example.com/CamelCase. Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important.
+status.failureMessage <string>	# FailureMessage will be set in the event that there is a terminal problem reconciling the state and will be set to a descriptive error message. This field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the spec or the configuration of the controller, and that manual intervention is required.
+status.id <string>	# ID is the ID given by ROSA.
+status.ready <boolean> (required) default=false	# Ready denotes that the RosaMachinePool nodepool has joined the cluster
+status.replicas <integer> format=int32	# Replicas is the most recently observed number of replicas.
