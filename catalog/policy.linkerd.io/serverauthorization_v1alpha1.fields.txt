@@ -1,0 +1,25 @@
+# schema source: Linkerd 26.6.3 https://github.com/linkerd/linkerd2
+apiVersion <string> enum=policy.linkerd.io/v1alpha1 (deprecated)	# policy.linkerd.io/v1alpha1 ServerAuthorization is deprecated; use policy.linkerd.io/v1beta1 ServerAuthorization
+kind <string> enum=ServerAuthorization
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Authorizes clients to communicate with Linkerd-proxied servers.
+spec.client <object> (required)	# Describes clients authorized to access a server.
+spec.client.meshTLS <object>
+spec.client.meshTLS.identities <[]string>	# Authorizes clients with the provided proxy identity strings (as provided via MTLS) The `*` prefix can be used to match all identities in a domain. An identity string of `*` indicates that all authentication clients are authorized.
+spec.client.meshTLS.serviceAccounts <[]object>	# Authorizes clients with the provided proxy identity service accounts (as provided via MTLS)
+spec.client.meshTLS.serviceAccounts[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"	# The ServiceAccount's name.
+spec.client.meshTLS.serviceAccounts[].namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"	# The ServiceAccount's namespace. If unset, the authorization's namespace is used.
+spec.client.meshTLS.unauthenticatedTLS <boolean>	# Indicates that no client identity is required for communication. This is mostly important for the identity controller, which must terminate TLS connections from clients that do not yet have a certificate.
+spec.client.networks <[]object>	# Limits the client IP addresses to which this authorization applies. If unset, the server chooses a default (typically, all IPs or the cluster's pod network).
+spec.client.networks[].cidr <string> (required)
+spec.client.networks[].except <[]string>
+spec.client.unauthenticated <boolean>	# Authorizes unauthenticated clients to access a server.
+spec.server <object> (required)	# Identifies servers in the same namespace for which this authorization applies. Only one of `name` or `selector` may be specified.
+spec.server.name <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"	# References a `Server` instance by name
+spec.server.selector <object>	# A label query over servers on which this authorization applies.
+spec.server.selector.matchExpressions <[]object>
+spec.server.selector.matchExpressions[].key <string> (required)
+spec.server.selector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.server.selector.matchExpressions[].values <[]string>
+spec.server.selector.matchLabels <object (free-form)>
