@@ -1,0 +1,201 @@
+{
+  "description": "ResourceDistribution is the Schema for the resourcedistributions API.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "ResourceDistributionSpec defines the desired state of ResourceDistribution.",
+      "properties": {
+        "resource": {
+          "description": "Resource must be the complete yaml that users want to distribute.",
+          "type": "object",
+          "x-kubernetes-embedded-resource": true,
+          "x-kubernetes-preserve-unknown-fields": true
+        },
+        "targets": {
+          "additionalProperties": false,
+          "description": "Targets defines the namespaces that users want to distribute to.",
+          "properties": {
+            "allNamespaces": {
+              "description": "If AllNamespaces is true, Resource will be distributed to the all namespaces\n(except some forbidden namespaces, such as \"kube-system\" and \"kube-public\").",
+              "type": "boolean"
+            },
+            "excludedNamespaces": {
+              "additionalProperties": false,
+              "description": "If ExcludedNamespaces is not empty, Resource will never be distributed to the listed namespaces.\nExcludedNamespaces has the highest priority.",
+              "properties": {
+                "list": {
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "ResourceDistributionNamespace contains a namespace name",
+                    "properties": {
+                      "name": {
+                        "description": "Namespace name",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "includedNamespaces": {
+              "additionalProperties": false,
+              "description": "If IncludedNamespaces is not empty, Resource will be distributed to the listed namespaces.",
+              "properties": {
+                "list": {
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "ResourceDistributionNamespace contains a namespace name",
+                    "properties": {
+                      "name": {
+                        "description": "Namespace name",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "namespaceLabelSelector": {
+              "additionalProperties": false,
+              "description": "If NamespaceLabelSelector is not empty, Resource will be distributed to the matched namespaces.",
+              "properties": {
+                "matchExpressions": {
+                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                    "properties": {
+                      "key": {
+                        "description": "key is the label key that the selector applies to.",
+                        "type": "string"
+                      },
+                      "operator": {
+                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                        "type": "string"
+                      },
+                      "values": {
+                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "operator"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                  "type": "object"
+                }
+              },
+              "type": "object",
+              "x-kubernetes-map-type": "atomic"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "resource",
+        "targets"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "ResourceDistributionStatus defines the observed state of ResourceDistribution.\nResourceDistributionStatus is recorded by kruise, users' modification is invalid and meaningless.",
+      "properties": {
+        "conditions": {
+          "description": "Conditions describe the condition when Resource creating, updating and deleting.",
+          "items": {
+            "additionalProperties": false,
+            "description": "ResourceDistributionCondition allows a row to be marked with additional information.",
+            "properties": {
+              "failedNamespace": {
+                "description": "FailedNamespaces describe all failed namespaces when Status is False",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "lastTransitionTime": {
+                "description": "LastTransitionTime is the last time the condition transitioned from one status to another.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "reason": {
+                "description": "Reason describe human readable message indicating details about last transition.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of ResourceDistributionCondition.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "desired": {
+          "description": "Desired represents the number of total target namespaces.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "failed": {
+          "description": "Failed represents the number of failed distributions.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "succeeded": {
+          "description": "Succeeded represents the number of successful distributions.",
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-flux-schema-type": "ResourceDistribution"
+}

@@ -1,0 +1,209 @@
+{
+  "description": "AdvancedCronJob is the Schema for the advancedcronjobs API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "AdvancedCronJobSpec defines the desired state of AdvancedCronJob",
+      "properties": {
+        "concurrencyPolicy": {
+          "description": "Specifies how to treat concurrent executions of a Job.\nValid values are:\n- \"Allow\" (default): allows CronJobs to run concurrently;\n- \"Forbid\": forbids concurrent runs, skipping next run if previous run hasn't finished yet;\n- \"Replace\": cancels currently running job and replaces it with a new one",
+          "enum": [
+            "Allow",
+            "Forbid",
+            "Replace"
+          ],
+          "type": "string"
+        },
+        "failedJobsHistoryLimit": {
+          "description": "The number of failed finished jobs to retain.\nThis is a pointer to distinguish between explicit zero and not specified.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "paused": {
+          "description": "Paused will pause the cron job.",
+          "type": "boolean"
+        },
+        "schedule": {
+          "description": "The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.",
+          "minLength": 0,
+          "type": "string"
+        },
+        "startingDeadlineSeconds": {
+          "description": "Optional deadline in seconds for starting the job if it misses scheduled\ntime for any reason.  Missed jobs executions will be counted as failed ones.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "successfulJobsHistoryLimit": {
+          "description": "The number of successful finished jobs to retain.\nThis is a pointer to distinguish between explicit zero and not specified.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "template": {
+          "additionalProperties": false,
+          "description": "Specifies the job that will be created when executing a CronJob.",
+          "properties": {
+            "broadcastJobTemplate": {
+              "additionalProperties": false,
+              "description": "Specifies the broadcastjob that will be created when executing a BroadcastCronJob.",
+              "properties": {
+                "metadata": {
+                  "description": "Standard object's metadata of the jobs created from this template.",
+                  "type": "object"
+                },
+                "spec": {
+                  "additionalProperties": false,
+                  "description": "Specification of the desired behavior of the broadcastjob.",
+                  "properties": {
+                    "completionPolicy": {
+                      "additionalProperties": false,
+                      "description": "CompletionPolicy indicates the completion policy of the job.\nDefault is Always CompletionPolicyType.",
+                      "properties": {
+                        "activeDeadlineSeconds": {
+                          "description": "ActiveDeadlineSeconds specifies the duration in seconds relative to the startTime that the job may be active\nbefore the system tries to terminate it; value must be positive integer.\nOnly works for Always type.",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "ttlSecondsAfterFinished": {
+                          "description": "ttlSecondsAfterFinished limits the lifetime of a Job that has finished\nexecution (either Complete or Failed). If this field is set,\nttlSecondsAfterFinished after the Job finishes, it is eligible to be\nautomatically deleted. When the Job is being deleted, its lifecycle\nguarantees (e.g. finalizers) will be honored. If this field is unset,\nthe Job won't be automatically deleted. If this field is set to zero,\nthe Job becomes eligible to be deleted immediately after it finishes.\nThis field is alpha-level and is only honored by servers that enable the\nTTLAfterFinished feature.\nOnly works for Always type",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "type": {
+                          "description": "Type indicates the type of the CompletionPolicy.\nDefault is Always.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "failurePolicy": {
+                      "additionalProperties": false,
+                      "description": "FailurePolicy indicates the behavior of the job, when failed pod is found.",
+                      "properties": {
+                        "restartLimit": {
+                          "description": "RestartLimit specifies the number of retries before marking the pod failed.",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "type": {
+                          "description": "Type indicates the type of FailurePolicyType.\nDefault is FailurePolicyTypeFailFast.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "parallelism": {
+                      "description": "Parallelism specifies the maximum desired number of pods the job should\nrun at any given time. The actual number of pods running in steady state will\nbe less than this number when the work left to do is less than max parallelism.\nNot setting this value means no limit.",
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "integer"
+                        }
+                      ]
+                    },
+                    "paused": {
+                      "description": "Paused will pause the job.",
+                      "type": "boolean"
+                    },
+                    "template": {
+                      "description": "Template describes the pod that will be created when executing a job.",
+                      "x-kubernetes-preserve-unknown-fields": true
+                    }
+                  },
+                  "required": [
+                    "template"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "jobTemplate": {
+              "description": "Specifies the job that will be created when executing a CronJob.",
+              "x-kubernetes-preserve-unknown-fields": true
+            }
+          },
+          "type": "object"
+        },
+        "timeZone": {
+          "description": "The time zone name for the given schedule, see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones.\nIf not specified, this will default to the time zone of the kruise-controller-manager process.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schedule",
+        "template"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "AdvancedCronJobStatus defines the observed state of AdvancedCronJob",
+      "properties": {
+        "active": {
+          "description": "A list of pointers to currently running jobs.",
+          "items": {
+            "additionalProperties": false,
+            "description": "ObjectReference contains enough information to let you inspect or modify the referred object.",
+            "properties": {
+              "apiVersion": {
+                "description": "API version of the referent.",
+                "type": "string"
+              },
+              "fieldPath": {
+                "description": "If referring to a piece of an object instead of an entire object, this string\nshould contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].\nFor example, if the object reference is to a container within a pod, this would take on a value like:\n\"spec.containers{name}\" (where \"name\" refers to the name of the container that triggered\nthe event) or if no container name is specified \"spec.containers[2]\" (container with\nindex 2 in this pod). This syntax is chosen only to have some well-defined way of\nreferencing a part of an object.",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind of the referent.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                "type": "string"
+              },
+              "namespace": {
+                "description": "Namespace of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+                "type": "string"
+              },
+              "resourceVersion": {
+                "description": "Specific resourceVersion to which this reference is made, if any.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency",
+                "type": "string"
+              },
+              "uid": {
+                "description": "UID of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids",
+                "type": "string"
+              }
+            },
+            "type": "object",
+            "x-kubernetes-map-type": "atomic"
+          },
+          "type": "array"
+        },
+        "lastScheduleTime": {
+          "description": "Information when was the last time the job was successfully scheduled.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-flux-schema-type": "AdvancedCronJob"
+}

@@ -1,0 +1,32 @@
+# schema source: Linkerd 26.6.3 https://github.com/linkerd/linkerd2
+apiVersion <string> enum=policy.linkerd.io/v1alpha1
+kind <string> enum=HTTPLocalRateLimitPolicy
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)
+spec.identity <object>	# Fairness for individual identities; each separate client, grouped by identity, will have this rate-limit. The requestsPerSecond value should be less than or equal to the total requestsPerSecond (if set).
+spec.identity.requestsPerSecond <integer> (required) format=int64
+spec.overrides <[]object>	# Overrides for traffic from a specific client. The requestsPerSecond value should be less than or equal to the total requestsPerSecond (if set).
+spec.overrides[].clientRefs <[]object> (required)
+spec.overrides[].clientRefs[].group <string> pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group is the group of the referent. When empty, the Kubernetes core API group is inferred.
+spec.overrides[].clientRefs[].kind <string> (required) pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kind is the kind of the referent.
+spec.overrides[].clientRefs[].name <string> (required) min=1 max=253	# Name is the name of the referent.
+spec.overrides[].clientRefs[].namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace is the namespace of the referent. When unspecified (or empty string), this refers to the local namespace of the Policy.
+spec.overrides[].requestsPerSecond <integer> (required) format=int64
+spec.targetRef <object> (required)	# TargetRef references a resource to which the rate limit policy applies. Only Server is allowed.
+spec.targetRef.group <string> pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group is the group of the referent. When empty, the Kubernetes core API group is inferred.
+spec.targetRef.kind <string> (required) pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kind is the kind of the referent.
+spec.targetRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
+spec.total <object>	# Overall rate-limit, which all traffic coming to this target should abide. If unset no overall limit is applied.
+spec.total.requestsPerSecond <integer> (required) format=int64
+status <object>
+status.conditions <[]object>
+status.conditions[].lastTransitionTime <string> format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string> max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].reason <string> pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> enum=True|False|Unknown	# status of the condition (one of True, False, Unknown)
+status.conditions[].type <string> pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of the condition in CamelCase or in foo.example.com/CamelCase.
+status.targetRef <object> (required)
+status.targetRef.group <string> default="policy.linkerd.io" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253
+status.targetRef.kind <string> default="Server" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63
+status.targetRef.name <string> (required) min=1 max=253
