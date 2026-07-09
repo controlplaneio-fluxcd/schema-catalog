@@ -1542,16 +1542,45 @@ a.version-badge:hover {
   font-weight: 500;
 }
 
-.version-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* Adaptive column count: wide pages get two directory columns, and a
+   one-kind group fills a single ~500px column instead of stretching a
+   hairline across the whole page. */
+.kind-directory {
+  columns: 26.5rem;
+  column-gap: 48px;
 }
 
-.kind-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px 32px;
+.kind-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--line);
+  break-inside: avoid;
+}
+
+.kind-row .kind-link {
+  overflow-wrap: anywhere;
+}
+
+.kind-version {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.kind-version.schema-only {
+  color: var(--faint);
+}
+
+.kind-version .version-count {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- project page: [Schemas | Source(s)] tabs and source rows ---------- */
@@ -1611,55 +1640,113 @@ a.version-badge:hover {
 
 .project-sources {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px 32px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.project-sources.single {
-  grid-template-columns: 1fr;
+@media (max-width: 700px) {
+  .project-sources {
+    grid-template-columns: 1fr;
+  }
 }
 
-.project-source-row {
+/* Mirrors the catalog explorer card surface. The whole card links to the
+   repository via the stretched repo anchor; version and commit links sit
+   above the overlay and keep their own targets. */
+.project-source-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
   min-width: 0;
-  padding: 4px 0;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.project-source-name {
-  display: inline-flex;
+.project-source-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: var(--halo);
+  transform: translateY(-2px);
+}
+
+.source-stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.project-source-card .version-badge,
+.project-source-card .source-meta a {
+  position: relative;
+  z-index: 1;
+}
+
+.project-source-card .source-name {
+  font-size: 1.02rem;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  /* A long alias truncates at the version badge instead of wrapping the
+     card head onto a second row. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-source-card .source-repo,
+.project-source-card .source-meta {
+  margin: 0;
+}
+
+/* Text belonging to the stretched card link never shifts color: like the
+   catalog explorer cards, hover feedback is the card effect alone. */
+a.source-name,
+a.source-name:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.source-repo a,
+.source-repo a:hover {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.source-head {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.source-name {
   font-weight: 500;
   overflow-wrap: anywhere;
 }
 
-.project-source-date {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.kind-cell {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  align-items: center;
-  gap: 6px 10px;
-  min-width: 0;
-  padding: 4px 0;
-}
-
-.kind-cell .kind-link {
+.source-repo {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
   overflow-wrap: anywhere;
 }
 
-.kind-cell .version-list {
-  flex: none;
-  /* Chip rows wider than the cell wrap inside it instead of overlapping the
-     neighboring grid column. */
-  max-width: 100%;
+.source-meta {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--faint);
+}
+
+.source-meta a {
+  color: var(--muted);
+}
+
+.source-meta a:hover {
+  color: var(--accent-ink);
 }
 
 /* ---------- kind page: fields ---------- */

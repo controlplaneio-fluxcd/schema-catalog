@@ -11,7 +11,6 @@ import {
   createBreadcrumb,
   createPage,
   createProjectLogo,
-  createRepoLink,
   createSearchField,
   createShield,
   formatDate,
@@ -55,7 +54,7 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
   for (const group of groups) {
     const section = document.createElement("section");
     section.className = "group-section";
-    section.append(text("h2", "mono section-title", group.g), createKindGrid(group.g, group.kinds));
+    section.append(text("h2", "mono section-title", group.g), createKindDirectory(group.g, group.kinds));
     schemasPanel.append(section);
   }
   if (kindCount(project) > KIND_FILTER_MIN) {
@@ -188,9 +187,11 @@ function createReleaseBadge(repo: string, version: string, ref?: string): HTMLEl
 }
 
 /**
- * Renders the Sources tab: one row per source with display alias, resolved
- * version, repository link, and build date. Grouped projects list their
- * members; single-source projects list themselves.
+ * Renders the Sources tab as one card per source: alias with the release
+ * version, the `owner/repo` path, and a `github:<sha> · synced <date>`
+ * provenance line. A single-source project gets the same card without the
+ * alias line (the hero already names it): the repo path moves up next to
+ * the version badge.
  */
 function createSourcesPanel(project: ProjectEntry): HTMLElement {
   const sources: ProjectSourceEntry[] = project.sources ?? [
@@ -207,37 +208,81 @@ function createSourcesPanel(project: ProjectEntry): HTMLElement {
 
   const section = document.createElement("section");
   section.className = "group-section";
-  const grid = document.createElement("div");
-  // A lone source spans the full row instead of one auto-fill grid track.
-  grid.className = sources.length === 1 ? "project-sources single" : "project-sources";
+  const list = document.createElement("div");
+  list.className = "project-sources";
   for (const member of sources) {
-    const row = document.createElement("div");
-    row.className = "project-source-row";
-    const head = document.createElement("span");
-    head.className = "project-source-name";
-    head.append(document.createTextNode(member.alias));
-    if (member.version !== "") {
-      head.append(createReleaseBadge(member.repo, member.version, member.ref));
-    }
-    const ref = member.ref ?? (member.version === "" ? undefined : member.version);
-    const date = text("span", "project-source-date", `updated ${formatDate(member.builtAt)}`);
-    if (member.sha !== undefined) {
-      // 7 chars displayed; the index's 12-char prefix stays in the commit URL.
-      const commit = link(`https://github.com/${member.repo}/commit/${member.sha}`, member.sha.slice(0, 7), "mono");
-      commit.title = member.sha;
-      commit.target = "_blank";
-      commit.rel = "noopener noreferrer";
-      date.append(document.createTextNode(" · "), commit);
-    }
-    row.append(head, createRepoLink(member.repo, ref), date);
-    grid.append(row);
+    list.append(createSourceCard(member, sources.length > 1));
   }
-  section.append(grid);
+  section.append(list);
   return section;
 }
 
-/** Kinds with more versions than this collapse behind a "+N more" toggle. */
-const VERSION_PREVIEW = 3;
+function externalLink(href: string, label: string, className = ""): HTMLAnchorElement {
+  const anchor = link(href, label, className);
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  return anchor;
+}
+
+function createReleaseLink(member: ProjectSourceEntry, className: string): HTMLAnchorElement {
+  return externalLink(
+    `https://github.com/${member.repo}/releases/tag/${encodeURIComponent(member.ref ?? member.version)}`,
+    member.version,
+    className,
+  );
+}
+
+function createCommitLink(member: ProjectSourceEntry, sha: string): HTMLAnchorElement {
+  // 7 chars displayed; the index's 12-char prefix stays in the commit URL.
+  const commit = externalLink(`https://github.com/${member.repo}/commit/${sha}`, `github:${sha.slice(0, 7)}`);
+  commit.title = sha;
+  return commit;
+}
+
+/** Card for one source; `named` leads with the alias for grouped members. */
+function createSourceCard(member: ProjectSourceEntry, named: boolean): HTMLElement {
+  const card = document.createElement("div");
+  card.className = "project-source-card";
+
+  const head = document.createElement("div");
+  head.className = "source-head";
+  if (named) {
+    head.append(text("span", "source-name", member.alias));
+  } else {
+    // The repo path takes the title slot when there is no alias line.
+    // "source-stretch" grows the anchor over the whole card, so anywhere
+    // outside the version and commit links opens the repository.
+    head.append(externalLink(`https://github.com/${member.repo}`, member.repo, "source-name source-stretch mono"));
+  }
+  if (member.version !== "") {
+    head.append(createReleaseLink(member, "badge version-badge"));
+  }
+  card.append(head);
+
+  if (named) {
+    const repo = document.createElement("p");
+    repo.className = "source-repo";
+    repo.append(externalLink(`https://github.com/${member.repo}`, member.repo, "source-stretch mono"));
+    card.append(repo);
+  }
+
+  // Grouped members keep commit and sync date on one line; the lone card
+  // spreads them over two.
+  const synced = `synced ${formatDate(member.builtAt)}`;
+  if (!named && member.sha !== undefined) {
+    const commitLine = text("p", "source-meta", "");
+    commitLine.append(createCommitLink(member, member.sha));
+    card.append(commitLine, text("p", "source-meta", synced));
+  } else {
+    const meta = text("p", "source-meta", "");
+    if (member.sha !== undefined) {
+      meta.append(createCommitLink(member, member.sha), document.createTextNode(" · "));
+    }
+    meta.append(document.createTextNode(synced));
+    card.append(meta);
+  }
+  return card;
+}
 
 /** Projects with more kinds than this get the kind filter toolbar. */
 const KIND_FILTER_MIN = 20;
@@ -272,9 +317,9 @@ function createKindFilter(project: ProjectEntry, panel: HTMLElement): HTMLElemen
       const group = section.querySelector(".section-title")?.textContent ?? "";
       const groupMatches = needle === "" || group.toLowerCase().includes(needle);
       let visible = 0;
-      for (const cell of section.querySelectorAll<HTMLElement>(".kind-cell")) {
-        const matches = groupMatches || (cell.dataset["kind"] ?? "").includes(needle);
-        cell.hidden = !matches;
+      for (const row of section.querySelectorAll<HTMLElement>(".kind-row")) {
+        const matches = groupMatches || (row.dataset["kind"] ?? "").includes(needle);
+        row.hidden = !matches;
         visible += matches ? 1 : 0;
       }
       section.hidden = visible === 0;
@@ -296,60 +341,34 @@ function createKindFilter(project: ProjectEntry, panel: HTMLElement): HTMLElemen
 }
 
 /**
- * Renders a group's kinds as a responsive grid cell per kind: the kind link
- * followed by its version chips, so version columns never zigzag down the page.
+ * Renders a group's kinds as a hairline directory row per kind: the kind link
+ * on the left is the row's only link and opens the preferred version; the
+ * right side names that version as plain text (a link there would duplicate
+ * the kind link's target) with a faint "+N" count when the kind page's
+ * version switcher holds more. Columns adapt to the page width, so a
+ * one-kind group is a single compact row, not a full-width hairline.
  */
-function createKindGrid(group: string, kinds: KindEntry[]): HTMLElement {
-  const grid = document.createElement("div");
-  grid.className = "kind-grid";
+function createKindDirectory(group: string, kinds: KindEntry[]): HTMLElement {
+  const directory = document.createElement("div");
+  directory.className = "kind-directory";
   for (const entry of kinds) {
-    const latest = latestVersion(entry);
-    const cell = document.createElement("div");
-    cell.className = "kind-cell";
+    const row = document.createElement("div");
+    row.className = "kind-row";
     // Match text for the kind filter: name plus the kubectl-style resource
     // aliases (plural, singular, short names), already lowercased.
-    cell.dataset["kind"] = resourceAliases(entry).join(" ");
-    cell.append(
-      link(kindRoute(group, entry[0], latest), kindDisplay(entry), "kind-link mono"),
-      createVersionList(group, entry),
-    );
-    grid.append(cell);
-  }
-  return grid;
-}
+    row.dataset["kind"] = resourceAliases(entry).join(" ");
+    row.append(link(kindRoute(group, entry[0], latestVersion(entry)), kindDisplay(entry), "kind-link mono"));
 
-/**
- * Renders a kind's version chips. Kinds with more versions than the preview
- * (Azure Service Operator ships a dozen per kind) show only the preferred
- * version plus a "+N more" toggle that expands the rest in place; the kind
- * page keeps the full version switcher either way.
- */
-function createVersionList(group: string, entry: KindEntry): HTMLElement {
-  const versions = document.createElement("span");
-  versions.className = "version-list";
-  const chipAt = (version: string, index: number): HTMLAnchorElement => {
-    const chip = link(kindRoute(group, entry[0], version), version, "chip");
-    if (!hasFields(entry, index)) {
-      chip.classList.add("schema-only");
-      chip.title = "schema only";
+    const version = text("span", "kind-version", latestVersion(entry));
+    if (!hasFields(entry, 0)) {
+      version.classList.add("schema-only");
+      version.title = "schema only";
     }
-    return chip;
-  };
-
-  const shown = entry[1].length > VERSION_PREVIEW ? 1 : entry[1].length;
-  entry[1].slice(0, shown).forEach((version, index) => versions.append(chipAt(version, index)));
-
-  const rest = entry[1].length - shown;
-  if (rest > 0) {
-    const more = document.createElement("button");
-    more.type = "button";
-    more.className = "flow-toggle";
-    more.textContent = `+${rest} more`;
-    more.setAttribute("aria-label", `Show ${rest} more versions`);
-    more.addEventListener("click", () => {
-      more.replaceWith(...entry[1].slice(shown).map((version, index) => chipAt(version, shown + index)));
-    });
-    versions.append(more);
+    if (entry[1].length > 1) {
+      version.append(text("span", "version-count", `+${entry[1].length - 1}`));
+    }
+    row.append(version);
+    directory.append(row);
   }
-  return versions;
+  return directory;
 }
