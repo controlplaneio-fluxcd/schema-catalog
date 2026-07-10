@@ -1,4 +1,4 @@
-# schema source: Cluster API AWS v2.11.1 https://github.com/kubernetes-sigs/cluster-api-provider-aws
+# schema source: Cluster API AWS v2.12.1 https://github.com/kubernetes-sigs/cluster-api-provider-aws
 apiVersion <string> enum=controlplane.cluster.x-k8s.io/v1beta2
 kind <string> enum=AWSManagedControlPlaneTemplate
 metadata.name <string> (required)
@@ -36,8 +36,8 @@ spec.template.spec.bastion.enabled <boolean>	# Enabled allows this provider to c
 spec.template.spec.bastion.instanceType <string>	# InstanceType will use the specified instance type for the bastion. If not specified, Cluster API Provider AWS will use t3.micro for all regions except us-east-1, where t2.micro will be the default.
 spec.template.spec.bootstrapSelfManagedAddons <boolean> default=true	# BootstrapSelfManagedAddons is used to set configuration options for bare EKS cluster without EKS default networking addons If you set this value to false when creating a cluster, the default networking add-ons will not be installed
 spec.template.spec.controlPlaneEndpoint <object>	# ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-spec.template.spec.controlPlaneEndpoint.host <string> (required) max=512	# host is the hostname on which the API server is serving.
-spec.template.spec.controlPlaneEndpoint.port <integer> (required) format=int32	# port is the port on which the API server is serving.
+spec.template.spec.controlPlaneEndpoint.host <string> max=512	# host is the hostname on which the API server is serving.
+spec.template.spec.controlPlaneEndpoint.port <integer> format=int32	# port is the port on which the API server is serving.
 spec.template.spec.eksClusterName <string>	# EKSClusterName allows you to specify the name of the EKS cluster in AWS. If you don't specify a name then a default name will be created based on the namespace and name of the managed control plane.
 spec.template.spec.encryptionConfig <object>	# EncryptionConfig specifies the encryption configuration for the cluster
 spec.template.spec.encryptionConfig.provider <string>	# Provider specifies the ARN or alias of the CMK (in AWS KMS)
@@ -164,7 +164,7 @@ spec.template.spec.version <string> pattern="^v?(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*
 spec.template.spec.vpcCni <object>	# VpcCni is used to set configuration options for the VPC CNI plugin
 spec.template.spec.vpcCni.disable <boolean> default=false	# Disable indicates that the Amazon VPC CNI should be disabled. With EKS clusters the Amazon VPC CNI is automatically installed into the cluster. For clusters where you want to use an alternate CNI this option provides a way to specify that the Amazon VPC CNI should be deleted. You cannot set this to true if you are using the Amazon VPC CNI addon.
 spec.template.spec.vpcCni.env <[]object>	# Env defines a list of environment variables to apply to the `aws-node` DaemonSet
-spec.template.spec.vpcCni.env[].name <string> (required)	# Name of the environment variable. Must be a C_IDENTIFIER.
+spec.template.spec.vpcCni.env[].name <string> (required)	# Name of the environment variable. May consist of any printable ASCII characters except '='.
 spec.template.spec.vpcCni.env[].value <string>	# Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".
 spec.template.spec.vpcCni.env[].valueFrom <object>	# Source for the environment variable's value. Cannot be used if value is not empty.
 spec.template.spec.vpcCni.env[].valueFrom.configMapKeyRef <object>	# Selects a key of a ConfigMap.
@@ -174,6 +174,11 @@ spec.template.spec.vpcCni.env[].valueFrom.configMapKeyRef.optional <boolean>	# S
 spec.template.spec.vpcCni.env[].valueFrom.fieldRef <object>	# Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
 spec.template.spec.vpcCni.env[].valueFrom.fieldRef.apiVersion <string>	# Version of the schema the FieldPath is written in terms of, defaults to "v1".
 spec.template.spec.vpcCni.env[].valueFrom.fieldRef.fieldPath <string> (required)	# Path of the field to select in the specified API version.
+spec.template.spec.vpcCni.env[].valueFrom.fileKeyRef <object>	# FileKeyRef selects a key of the env file. Requires the EnvFiles feature gate to be enabled.
+spec.template.spec.vpcCni.env[].valueFrom.fileKeyRef.key <string> (required)	# The key within the env file. An invalid key will prevent the pod from starting. The keys defined within a source may consist of any printable ASCII characters except '='. During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+spec.template.spec.vpcCni.env[].valueFrom.fileKeyRef.optional <boolean> default=false	# Specify whether the file or its key must be defined. If the file or key does not exist, then the env var is not published. If optional is set to true and the specified key does not exist, the environment variable will not be set in the Pod's containers. If optional is set to false and the specified key does not exist, an error will be returned during Pod creation.
+spec.template.spec.vpcCni.env[].valueFrom.fileKeyRef.path <string> (required)	# The path within the volume from which to select the file. Must be relative and may not contain the '..' path or start with '..'.
+spec.template.spec.vpcCni.env[].valueFrom.fileKeyRef.volumeName <string> (required)	# The name of the volume mount containing the env file.
 spec.template.spec.vpcCni.env[].valueFrom.resourceFieldRef <object>	# Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
 spec.template.spec.vpcCni.env[].valueFrom.resourceFieldRef.containerName <string>	# Container name: required for volumes, optional for env vars
 spec.template.spec.vpcCni.env[].valueFrom.resourceFieldRef.divisor <int-or-string>	# Specifies the output format of the exposed resources, defaults to "1"
