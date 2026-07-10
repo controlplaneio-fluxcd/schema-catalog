@@ -69,7 +69,7 @@ web-sync: ## Sync catalog/ and build/history/ to the R2 bucket (needs RCLONE_CON
 .PHONY: web-archive
 web-archive: ## Archive versioned minor snapshots of the allowlisted sources to R2 (needs RCLONE_CONFIG_R2_* env vars).
 	@test -x "$(RCLONE)" || (curl -fsSL https://downloads.rclone.org/$(RCLONE_VERSION)/rclone-$(RCLONE_VERSION)-linux-amd64.zip -o /tmp/rclone.zip && unzip -oq /tmp/rclone.zip -d /tmp)
-	RCLONE=$(RCLONE) bun web/scripts/archive-versions.ts kubernetes openshift
+	RCLONE=$(RCLONE) bun web/scripts/archive-versions.ts kubernetes openshift flux
 
 .PHONY: web-deploy
 web-deploy: ## Deploy the Worker with the commit SHA as CATALOG_VERSION.
