@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "MachineConfigNode describes the health of the Machines on the system Compatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
+  "description": "ClusterAPI provides configuration for the capi-operator.\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -13,7 +13,7 @@
     "metadata": {
       "additionalProperties": false,
       "default": {},
-      "description": "metadata is the standard object metadata.",
+      "description": "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
       "properties": {
         "annotations": {
           "additionalProperties": {
@@ -33,7 +33,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "deletionGracePeriodSeconds": {
@@ -51,7 +51,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "finalizers": {
@@ -119,7 +119,7 @@
                   "object",
                   "null"
                 ],
-                "x-flux-schema-type": "FieldsV1",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.\n\nEach key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.\n\nThe exact format is defined in sigs.k8s.io/structured-merge-diff"
               },
               "manager": {
@@ -150,12 +150,12 @@
                   "string",
                   "null"
                 ],
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               }
             },
             "type": "object",
-            "x-flux-schema-type": "ManagedFieldsEntry",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "ManagedFieldsEntry is a workflow-id, a FieldSet and the group version of the resource that the fieldset applies to."
           },
           "type": [
@@ -227,7 +227,7 @@
               "uid"
             ],
             "type": "object",
-            "x-flux-schema-type": "OwnerReference",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "OwnerReference contains enough information to let you identify an owning object. An owning object must be in the same namespace as the dependent, or be cluster-scoped, so there is no namespace field.",
             "x-kubernetes-map-type": "atomic"
           },
@@ -262,261 +262,211 @@
           ]
         }
       },
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-flux-schema-type": "ObjectMeta",
+      "type": "object",
+      "x-flux-schema-type": "io",
       "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
     "spec": {
       "additionalProperties": false,
-      "default": {},
-      "description": "spec describes the configuration of the machine config node.",
+      "description": "spec is the specification of the desired behavior of the capi-operator.",
       "properties": {
-        "configVersion": {
-          "additionalProperties": false,
-          "default": {},
-          "description": "configVersion holds the desired config version for the node targeted by this machine config node resource. The desired version represents the machine config the node will attempt to update to and gets set before the machine config operator validates the new machine config against the current machine config.",
-          "properties": {
-            "desired": {
-              "default": "",
-              "description": "desired is the name of the machine config that the the node should be upgraded to. This value is set when the machine config pool generates a new version of its rendered configuration. When this value is changed, the machine config daemon starts the node upgrade process. This value gets set in the machine config node spec once the machine config has been targeted for upgrade and before it is validated. Must be a lowercase RFC-1123 subdomain name (https://tools.ietf.org/html/rfc1123) consisting of only lowercase alphanumeric characters, hyphens (-), and periods (.), and must start and end with an alphanumeric character, and be at most 253 characters in length.",
-              "type": "string"
-            }
-          },
-          "required": [
-            "desired"
-          ],
-          "type": "object",
-          "x-flux-schema-type": "MachineConfigNodeSpecMachineConfigVersion",
-          "x-flux-schema-type-description": "MachineConfigNodeSpecMachineConfigVersion holds the desired config version for the current observed machine config node. When Current is not equal to Desired, the MachineConfigOperator is in an upgrade phase and the machine config node will take account of upgrade related events. Otherwise, they will be ignored given that certain operations happen both during the MCO's upgrade mode and the daily operations mode."
-        },
-        "node": {
-          "additionalProperties": false,
-          "default": {},
-          "description": "node contains a reference to the node for this machine config node.",
-          "properties": {
-            "name": {
-              "default": "",
-              "description": "name is the name of the object being referenced. For example, this can represent a machine config pool or node name. Must be a lowercase RFC-1123 subdomain name (https://tools.ietf.org/html/rfc1123) consisting of only lowercase alphanumeric characters, hyphens (-), and periods (.), and must start and end with an alphanumeric character, and be at most 253 characters in length.",
-              "type": "string"
-            }
-          },
-          "required": [
-            "name"
-          ],
-          "type": "object",
-          "x-flux-schema-type": "MCOObjectReference",
-          "x-flux-schema-type-description": "MCOObjectReference holds information about an object the MCO either owns or modifies in some way"
-        },
-        "pool": {
-          "additionalProperties": false,
-          "default": {},
-          "description": "pool contains a reference to the machine config pool that this machine config node's referenced node belongs to.",
-          "properties": {
-            "name": {
-              "default": "",
-              "description": "name is the name of the object being referenced. For example, this can represent a machine config pool or node name. Must be a lowercase RFC-1123 subdomain name (https://tools.ietf.org/html/rfc1123) consisting of only lowercase alphanumeric characters, hyphens (-), and periods (.), and must start and end with an alphanumeric character, and be at most 253 characters in length.",
-              "type": "string"
-            }
-          },
-          "required": [
-            "name"
-          ],
-          "type": "object",
-          "x-flux-schema-type": "MCOObjectReference",
-          "x-flux-schema-type-description": "MCOObjectReference holds information about an object the MCO either owns or modifies in some way"
-        }
-      },
-      "required": [
-        "node",
-        "pool",
-        "configVersion"
-      ],
-      "type": "object",
-      "x-flux-schema-type": "MachineConfigNodeSpec",
-      "x-flux-schema-type-description": "MachineConfigNodeSpec describes the MachineConfigNode we are managing."
-    },
-    "status": {
-      "additionalProperties": false,
-      "default": {},
-      "description": "status describes the last observed state of this machine config node.",
-      "properties": {
-        "conditions": {
-          "description": "conditions represent the observations of a machine config node's current state.",
+        "unmanagedCustomResourceDefinitions": {
+          "description": "unmanagedCustomResourceDefinitions is a list of ClusterResourceDefinition (CRD) names that should not be managed by the capi-operator installer controller. This allows external actors to own specific CRDs while capi-operator manages others.\n\nEach CRD name must be a valid DNS-1123 subdomain consisting of lowercase alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character, with a maximum length of 253 characters. CRD names must contain at least two '.' characters. Example: \"clusters.cluster.x-k8s.io\"\n\nItems cannot be removed from this list once added.\n\nThe maximum number of unmanagedCustomResourceDefinitions is 128.",
           "items": {
-            "additionalProperties": false,
-            "default": {},
-            "description": "Condition contains details for one aspect of the current state of this API Resource.",
-            "properties": {
-              "lastTransitionTime": {
-                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
-                "format": "date-time",
-                "type": "string",
-                "x-flux-schema-type": "Time",
-                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
-              },
-              "message": {
-                "default": "",
-                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
-                "type": "string"
-              },
-              "observedGeneration": {
-                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
-                "format": "int64",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "reason": {
-                "default": "",
-                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
-                "type": "string"
-              },
-              "status": {
-                "default": "",
-                "description": "status of the condition, one of True, False, Unknown.",
-                "type": "string"
-              },
-              "type": {
-                "default": "",
-                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
-                "type": "string"
-              }
-            },
-            "required": [
-              "type",
-              "status",
-              "lastTransitionTime",
-              "reason",
-              "message"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "Condition",
-            "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
+            "default": "",
+            "type": "string"
           },
           "type": [
             "array",
             "null"
           ],
-          "x-kubernetes-list-map-keys": [
-            "type"
-          ],
-          "x-kubernetes-list-type": "map"
+          "x-kubernetes-list-type": "set"
+        }
+      },
+      "type": "object",
+      "x-flux-schema-type": "ClusterAPISpec",
+      "x-flux-schema-type-description": "ClusterAPISpec defines the desired configuration of the capi-operator. The spec is required but we deliberately allow it to be empty."
+    },
+    "status": {
+      "additionalProperties": false,
+      "default": {},
+      "description": "status defines the observed status of the capi-operator.",
+      "properties": {
+        "currentRevision": {
+          "description": "currentRevision is the name of the most recently fully applied revision. It is written by the installer controller. If it is absent, it indicates that no revision has been fully applied yet. If set, currentRevision must correspond to an entry in the revisions list.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
-        "configVersion": {
-          "additionalProperties": false,
-          "default": {},
-          "description": "configVersion describes the current and desired machine config version for this node.",
-          "properties": {
-            "current": {
-              "default": "",
-              "description": "current is the name of the machine config currently in use on the node. This value is updated once the machine config daemon has completed the update of the configuration for the node. This value should match the desired version unless an upgrade is in progress. Must be a lowercase RFC-1123 subdomain name (https://tools.ietf.org/html/rfc1123) consisting of only lowercase alphanumeric characters, hyphens (-), and periods (.), and must start and end with an alphanumeric character, and be at most 253 characters in length.",
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "desired": {
-              "default": "",
-              "description": "desired is the MachineConfig the node wants to upgrade to. This value gets set in the machine config node status once the machine config has been validated against the current machine config. Must be a lowercase RFC-1123 subdomain name (https://tools.ietf.org/html/rfc1123) consisting of only lowercase alphanumeric characters, hyphens (-), and periods (.), and must start and end with an alphanumeric character, and be at most 253 characters in length.",
-              "type": "string"
-            }
-          },
-          "required": [
-            "desired"
-          ],
-          "type": "object",
-          "x-flux-schema-type": "MachineConfigNodeStatusMachineConfigVersion",
-          "x-flux-schema-type-description": "MachineConfigNodeStatusMachineConfigVersion holds the current and desired config versions as last updated in the MCN status. When the current and desired versions do not match, the machine config pool is processing an upgrade and the machine config node will monitor the upgrade process. When the current and desired versions do match, the machine config node will ignore these events given that certain operations happen both during the MCO's upgrade mode and the daily operations mode."
+        "desiredRevision": {
+          "description": "desiredRevision is the name of the desired revision. It is written by the revision controller. It must be set to the name of the entry in the revisions list with the highest revision number.",
+          "type": "string"
         },
-        "observedGeneration": {
-          "description": "observedGeneration represents the generation of the MachineConfigNode object observed by the Machine Config Operator's controller. This field is updated when the controller observes a change to the desiredConfig in the configVersion of the machine config node spec.",
+        "observedRevisionGeneration": {
+          "description": "observedRevisionGeneration is the generation of the ClusterAPI object that was last observed by the revision controller. If specified it must be greater than or equal to 1, and less than 2^53. It may not decrease or be unset once set.",
           "format": "int64",
           "type": [
             "integer",
             "null"
           ]
         },
-        "pinnedImageSets": {
-          "description": "pinnedImageSets describes the current and desired pinned image sets for this node.",
+        "revisions": {
+          "description": "revisions is a list of all currently active revisions. A revision is active until the installer controller updates currentRevision to a later revision. It is written by the revision controller.\n\nThe maximum number of revisions is 16. All revisions must have a unique name. All revisions must have a unique revision number. When adding a revision, the revision number must be greater than the highest revision number in the list. Revisions are immutable, although they can be deleted.",
           "items": {
             "additionalProperties": false,
             "default": {},
-            "description": "MachineConfigNodeStatusPinnedImageSet holds information about the current, desired, and failed pinned image sets for the observed machine config node.",
             "properties": {
-              "currentGeneration": {
-                "description": "currentGeneration is the generation of the pinned image set that has most recently been successfully pulled and pinned on this node.",
-                "format": "int32",
+              "components": {
+                "description": "components is a list of components which will be installed by this revision. Components will be installed in the order they are listed. If omitted no components will be installed.\n\nThe maximum number of components is 32.",
+                "items": {
+                  "additionalProperties": false,
+                  "default": {},
+                  "description": "ClusterAPIInstallerComponent defines a component which will be installed by this revision.",
+                  "properties": {
+                    "image": {
+                      "additionalProperties": false,
+                      "default": {},
+                      "description": "image defines an image source for a component. The image must contain a /capi-operator-installer directory containing the component manifests.",
+                      "properties": {
+                        "profile": {
+                          "description": "profile is the name of a profile to use from the image.\n\nA profile name may be up to 255 characters long. It must consist of alphanumeric characters, '-', or '_'.",
+                          "type": "string"
+                        },
+                        "ref": {
+                          "description": "ref is an image reference to the image containing the component manifests. The reference must be a valid image digest reference in the format host[:port][/namespace]/name@sha256:<digest>. The digest must be 64 characters long, and consist only of lowercase hexadecimal characters, a-f and 0-9. The length of the field must be between 1 to 447 characters.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "ref",
+                        "profile"
+                      ],
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "x-flux-schema-type": "ClusterAPIInstallerComponentImage",
+                      "x-flux-schema-type-description": "ClusterAPIInstallerComponentImage defines an image source for a component."
+                    },
+                    "name": {
+                      "description": "name is the human-readable name of the component. The value has no effect, and will not be set if the component does not define a name in its manifests. If set it must consist of alphanumeric characters, or '-', and may not exceed 255 characters.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "type": {
+                      "description": "type is the source type of the component. The only valid value is Image. When set to Image, the image field must be set and will define an image source for the component.\n\nPossible enum values:\n - `\"Image\"` is an image source for a component.",
+                      "enum": [
+                        "Image"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object",
+                  "x-flux-schema-type": "ClusterAPIInstallerComponent",
+                  "x-flux-schema-type-description": "ClusterAPIInstallerComponent defines a component which will be installed by this revision."
+                },
                 "type": [
-                  "integer",
+                  "array",
                   "null"
-                ]
+                ],
+                "x-kubernetes-list-type": "atomic"
               },
-              "desiredGeneration": {
-                "description": "desiredGeneration is the generation of the pinned image set that is targeted to be pulled and pinned on this node.",
-                "format": "int32",
-                "type": [
-                  "integer",
-                  "null"
-                ]
+              "contentID": {
+                "description": "contentID uniquely identifies the content of this revision. The contentID must be between 1 and 255 characters long.",
+                "type": "string"
               },
-              "lastFailedGeneration": {
-                "description": "lastFailedGeneration is the generation of the most recent pinned image set that failed to be pulled and pinned on this node.",
-                "format": "int32",
+              "manifestSubstitutions": {
+                "description": "manifestSubstitutions is a list of envsubst style substitutions which will be applied to manifests in the revision during rendering. If defined it must not be empty, and may not contain more than 32 items. Each manifest substitution must have a unique key.",
+                "items": {
+                  "additionalProperties": false,
+                  "default": {},
+                  "description": "ClusterAPIInstallerRevisionManifestSubstitution defines an envsubst style substitution which will be applied to manifests in a revision during rendering.",
+                  "properties": {
+                    "key": {
+                      "description": "key is the name of the envsubst variable to substitute. It must be a valid envsubst variable name, consisting of letters, digits, and underscores, and must start with a letter or underscore. The key must not be empty, and must not exceed 255 characters.",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "value is the value to substitute for the envsubst variable. It may be empty, in which case the variable will be substituted with an empty string. The value must not exceed 4096 characters.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ],
+                  "type": "object",
+                  "x-flux-schema-type": "ClusterAPIInstallerRevisionManifestSubstitution",
+                  "x-flux-schema-type-description": "ClusterAPIInstallerRevisionManifestSubstitution defines an envsubst style substitution which will be applied to manifests in a revision during rendering."
+                },
                 "type": [
-                  "integer",
+                  "array",
                   "null"
-                ]
-              },
-              "lastFailedGenerationError": {
-                "description": "lastFailedGenerationError is the error explaining why the desired images failed to be pulled and pinned. The error is an empty string if the image pull and pin is successful.",
-                "type": [
-                  "string",
-                  "null"
-                ]
+                ],
+                "x-kubernetes-list-map-keys": [
+                  "key"
+                ],
+                "x-kubernetes-list-type": "map"
               },
               "name": {
-                "default": "",
-                "description": "name is the name of the pinned image set. Must be a lowercase RFC-1123 subdomain name (https://tools.ietf.org/html/rfc1123) consisting of only lowercase alphanumeric characters, hyphens (-), and periods (.), and must start and end with an alphanumeric character, and be at most 253 characters in length.",
+                "description": "name is the name of a revision.",
                 "type": "string"
+              },
+              "revision": {
+                "description": "revision is a monotonically increasing number that is assigned to a revision.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "unmanagedCustomResourceDefinitions": {
+                "description": "unmanagedCustomResourceDefinitions is a list of the names of ClusterResourceDefinition (CRD) objects which are included in this revision, but which should not be installed or updated. If not set, all CRDs in the revision will be managed by the CAPI operator.",
+                "items": {
+                  "default": "",
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-kubernetes-list-type": "atomic"
               }
             },
             "required": [
-              "name"
+              "name",
+              "revision",
+              "contentID"
             ],
             "type": "object",
-            "x-flux-schema-type": "MachineConfigNodeStatusPinnedImageSet",
-            "x-flux-schema-type-description": "MachineConfigNodeStatusPinnedImageSet holds information about the current, desired, and failed pinned image sets for the observed machine config node."
+            "x-flux-schema-type": "ClusterAPIInstallerRevision",
+            "x-kubernetes-map-type": "atomic"
           },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-map-keys": [
-            "name"
-          ],
-          "x-kubernetes-list-type": "map"
+          "type": "array",
+          "x-kubernetes-list-type": "atomic"
         }
       },
       "required": [
-        "configVersion"
+        "desiredRevision",
+        "revisions"
       ],
       "type": [
         "object",
         "null"
       ],
-      "x-flux-schema-type": "MachineConfigNodeStatus",
-      "x-flux-schema-type-description": "MachineConfigNodeStatus holds the reported information on a particular machine config node."
+      "x-flux-schema-type": "ClusterAPIStatus",
+      "x-flux-schema-type-description": "ClusterAPIStatus describes the current state of the capi-operator."
     }
   },
   "required": [
+    "metadata",
     "spec",
     "apiVersion",
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "MachineConfigNode"
+  "x-flux-schema-type": "ClusterAPI"
 }

@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C853-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-630%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C856-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-630%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -92,7 +92,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
 | [Kubernetes](https://schemas.fluxoperator.dev/p/kubernetes) | `kubernetes` | v1.36.2 | 101 | 2026-07-09 |
-| [OpenShift](https://schemas.fluxoperator.dev/p/openshift) | `openshift` | v4.21 | 135 | 2026-07-10 |
+| [OpenShift](https://schemas.fluxoperator.dev/p/openshift) | `openshift` | v4.22 | 138 | 2026-07-10 |
 
 ### Provisioning
 

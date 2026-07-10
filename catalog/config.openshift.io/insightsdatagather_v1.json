@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "PinnedImageSet describes a set of images that should be pinned by CRI-O and pulled to the nodes which are members of the declared MachineConfigPools.\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
+  "description": "InsightsDataGather provides data gather configuration options for the Insights Operator.\n\n\n\nCompatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -13,7 +13,7 @@
     "metadata": {
       "additionalProperties": false,
       "default": {},
-      "description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create.",
+      "description": "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
       "properties": {
         "annotations": {
           "additionalProperties": {
@@ -33,7 +33,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "deletionGracePeriodSeconds": {
@@ -51,7 +51,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "finalizers": {
@@ -119,7 +119,7 @@
                   "object",
                   "null"
                 ],
-                "x-flux-schema-type": "FieldsV1",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.\n\nEach key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.\n\nThe exact format is defined in sigs.k8s.io/structured-merge-diff"
               },
               "manager": {
@@ -150,12 +150,12 @@
                   "string",
                   "null"
                 ],
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               }
             },
             "type": "object",
-            "x-flux-schema-type": "ManagedFieldsEntry",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "ManagedFieldsEntry is a workflow-id, a FieldSet and the group version of the resource that the fieldset applies to."
           },
           "type": [
@@ -227,7 +227,7 @@
               "uid"
             ],
             "type": "object",
-            "x-flux-schema-type": "OwnerReference",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "OwnerReference contains enough information to let you identify an owning object. An owning object must be in the same namespace as the dependent, or be cluster-scoped, so there is no namespace field.",
             "x-kubernetes-map-type": "atomic"
           },
@@ -266,120 +266,169 @@
         "object",
         "null"
       ],
-      "x-flux-schema-type": "ObjectMeta",
+      "x-flux-schema-type": "io",
       "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
     "spec": {
       "additionalProperties": false,
       "default": {},
-      "description": "spec describes the configuration of this pinned image set.",
+      "description": "spec holds user settable values for configuration",
       "properties": {
-        "pinnedImages": {
-          "description": "pinnedImages is a list of OCI Image referenced by digest that should be pinned and pre-loaded by the nodes of a MachineConfigPool. Translates into a new file inside the /etc/crio/crio.conf.d directory with content similar to this:\n\n     pinned_images = [\n             \"quay.io/openshift-release-dev/ocp-release@sha256:...\",\n             \"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:...\",\n             \"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:...\",\n             ...\n     ]\n\nThese image references should all be by digest, tags aren't allowed.",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "properties": {
-              "name": {
-                "description": "name is an OCI Image referenced by digest. The format of the image pull spec is: host[:port][/namespace]/name@sha256:<digest>, where the digest must be 64 characters long, and consist only of lowercase hexadecimal characters, a-f and 0-9. The length of the whole spec must be between 1 to 447 characters.",
+        "gatherConfig": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "gatherConfig is a required spec attribute that includes all the configuration options related to gathering of the Insights data and its uploading to the ingress.",
+          "properties": {
+            "dataPolicy": {
+              "description": "dataPolicy is an optional list of DataPolicyOptions that allows user to enable additional obfuscation of the Insights archive data. It may not exceed 2 items and must not contain duplicates. Valid values are ObfuscateNetworking and WorkloadNames. When set to ObfuscateNetworking the IP addresses and the cluster domain name are obfuscated. When set to WorkloadNames, the gathered data about cluster resources will not contain the workload names for your deployments. Resources UIDs will be used instead. When omitted no obfuscation is applied.",
+              "items": {
+                "default": "",
                 "type": "string"
-              }
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-kubernetes-list-type": "atomic"
             },
-            "required": [
-              "name"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "PinnedImageRef"
+            "gatherers": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "gatherers is a required field that specifies the configuration of the gatherers.",
+              "properties": {
+                "custom": {
+                  "additionalProperties": false,
+                  "default": {},
+                  "description": "custom provides gathering configuration. It is required when mode is Custom, and forbidden otherwise. Custom configuration allows user to disable only a subset of gatherers. Gatherers that are not explicitly disabled in custom configuration will run.",
+                  "properties": {
+                    "configs": {
+                      "description": "configs is a required list of gatherers configurations that can be used to enable or disable specific gatherers. It may not exceed 100 items and each gatherer can be present only once. It is possible to disable an entire set of gatherers while allowing a specific function within that set. The particular gatherers IDs can be found at https://github.com/openshift/insights-operator/blob/master/docs/gathered-data.md. Run the following command to get the names of last active gatherers: \"oc get insightsoperators.operator.openshift.io cluster -o json | jq '.status.gatherStatus.gatherers[].name'\"",
+                      "items": {
+                        "additionalProperties": false,
+                        "default": {},
+                        "description": "GathererConfig allows to configure specific gatherers",
+                        "properties": {
+                          "name": {
+                            "description": "name is the required name of a specific gatherer. It may not exceed 256 characters. The format for a gatherer name is: {gatherer}/{function} where the function is optional. Gatherer consists of a lowercase letters only that may include underscores (_). Function consists of a lowercase letters only that may include underscores (_) and is separated from the gatherer by a forward slash (/). The particular gatherers can be found at https://github.com/openshift/insights-operator/blob/master/docs/gathered-data.md. Run the following command to get the names of last active gatherers: \"oc get insightsoperators.operator.openshift.io cluster -o json | jq '.status.gatherStatus.gatherers[].name'\"",
+                            "type": "string"
+                          },
+                          "state": {
+                            "description": "state is a required field that allows you to configure specific gatherer. Valid values are \"Enabled\" and \"Disabled\". When set to Enabled the gatherer will run. When set to Disabled the gatherer will not run.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "state"
+                        ],
+                        "type": "object",
+                        "x-flux-schema-type": "GathererConfig",
+                        "x-flux-schema-type-description": "GathererConfig allows to configure specific gatherers"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-map-keys": [
+                        "name"
+                      ],
+                      "x-kubernetes-list-type": "map"
+                    }
+                  },
+                  "required": [
+                    "configs"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "x-flux-schema-type": "Custom",
+                  "x-flux-schema-type-description": "Custom provides the custom configuration of gatherers"
+                },
+                "mode": {
+                  "description": "mode is a required field that specifies the mode for gatherers. Allowed values are All, None, and Custom. When set to All, all gatherers will run and gather data. When set to None, all gatherers will be disabled and no data will be gathered. When set to Custom, the custom configuration from the custom field will be applied.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mode"
+              ],
+              "type": "object",
+              "x-flux-schema-type": "Gatherers",
+              "x-flux-schema-type-description": "Gatherers specifies the configuration of the gatherers"
+            },
+            "storage": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "storage is an optional field that allows user to define persistent storage for gathering jobs to store the Insights data archive. If omitted, the gathering job will use ephemeral storage.",
+              "properties": {
+                "persistentVolume": {
+                  "additionalProperties": false,
+                  "default": {},
+                  "description": "persistentVolume is an optional field that specifies the PersistentVolume that will be used to store the Insights data archive. The PersistentVolume must be created in the openshift-insights namespace.",
+                  "properties": {
+                    "claim": {
+                      "additionalProperties": false,
+                      "default": {},
+                      "description": "claim is a required field that specifies the configuration of the PersistentVolumeClaim that will be used to store the Insights data archive. The PersistentVolumeClaim must be created in the openshift-insights namespace.",
+                      "properties": {
+                        "name": {
+                          "description": "name is the name of the PersistentVolumeClaim that will be used to store the Insights data archive. It is a string that follows the DNS1123 subdomain format. It must be at most 253 characters in length, and must consist only of lower case alphanumeric characters, '-' and '.', and must start and end with an alphanumeric character.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object",
+                      "x-flux-schema-type": "PersistentVolumeClaimReference",
+                      "x-flux-schema-type-description": "PersistentVolumeClaimReference is a reference to a PersistentVolumeClaim."
+                    },
+                    "mountPath": {
+                      "description": "mountPath is an optional field specifying the directory where the PVC will be mounted inside the Insights data gathering Pod. When omitted, this means no opinion and the platform is left to choose a reasonable default, which is subject to change over time. The current default mount path is /var/lib/insights-operator The path may not exceed 1024 characters and must not contain a colon.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "claim"
+                  ],
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "x-flux-schema-type": "PersistentVolumeConfig",
+                  "x-flux-schema-type-description": "PersistentVolumeConfig provides configuration options for PersistentVolume storage."
+                },
+                "type": {
+                  "description": "type is a required field that specifies the type of storage that will be used to store the Insights data archive. Valid values are \"PersistentVolume\" and \"Ephemeral\". When set to Ephemeral, the Insights data archive is stored in the ephemeral storage of the gathering job. When set to PersistentVolume, the Insights data archive is stored in the PersistentVolume that is defined by the persistentVolume field.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "Storage",
+              "x-flux-schema-type-description": "Storage provides persistent storage configuration options for gathering jobs. If the type is set to PersistentVolume, then the PersistentVolume must be defined. If the type is set to Ephemeral, then the PersistentVolume must not be defined."
+            }
           },
-          "type": "array",
-          "x-kubernetes-list-map-keys": [
-            "name"
+          "required": [
+            "gatherers"
           ],
-          "x-kubernetes-list-type": "map"
+          "type": "object",
+          "x-flux-schema-type": "GatherConfig",
+          "x-flux-schema-type-description": "GatherConfig provides data gathering configuration options."
         }
       },
       "required": [
-        "pinnedImages"
+        "gatherConfig"
       ],
       "type": "object",
-      "x-flux-schema-type": "PinnedImageSetSpec",
-      "x-flux-schema-type-description": "PinnedImageSetSpec defines the desired state of a PinnedImageSet."
-    },
-    "status": {
-      "additionalProperties": false,
-      "default": {},
-      "description": "status describes the last observed state of this pinned image set.",
-      "properties": {
-        "conditions": {
-          "description": "conditions represent the observations of a pinned image set's current state.",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "description": "Condition contains details for one aspect of the current state of this API Resource.",
-            "properties": {
-              "lastTransitionTime": {
-                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
-                "format": "date-time",
-                "type": "string",
-                "x-flux-schema-type": "Time",
-                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
-              },
-              "message": {
-                "default": "",
-                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
-                "type": "string"
-              },
-              "observedGeneration": {
-                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
-                "format": "int64",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "reason": {
-                "default": "",
-                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
-                "type": "string"
-              },
-              "status": {
-                "default": "",
-                "description": "status of the condition, one of True, False, Unknown.",
-                "type": "string"
-              },
-              "type": {
-                "default": "",
-                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
-                "type": "string"
-              }
-            },
-            "required": [
-              "type",
-              "status",
-              "lastTransitionTime",
-              "reason",
-              "message"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "Condition",
-            "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
-          },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-map-keys": [
-            "type"
-          ],
-          "x-kubernetes-list-type": "map"
-        }
-      },
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-flux-schema-type": "PinnedImageSetStatus",
-      "x-flux-schema-type-description": "PinnedImageSetStatus describes the current state of a PinnedImageSet."
+      "x-flux-schema-type": "InsightsDataGatherSpec",
+      "x-flux-schema-type-description": "InsightsDataGatherSpec contains the configuration for the data gathering."
     }
   },
   "required": [
@@ -388,5 +437,5 @@
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "PinnedImageSet"
+  "x-flux-schema-type": "InsightsDataGather"
 }
