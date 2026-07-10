@@ -62,9 +62,8 @@ web-run: ## Run the Worker locally on :8787 without CF credentials.
 web-sync: ## Sync catalog/ and build/history/ to the R2 bucket (needs RCLONE_CONFIG_R2_* env vars).
 	@env | sort | grep -o '^RCLONE_CONFIG_R2_[A-Z_]*' || echo "no RCLONE_CONFIG_R2_* vars in env"
 	@test -x "$(RCLONE)" || (curl -fsSL https://downloads.rclone.org/$(RCLONE_VERSION)/rclone-$(RCLONE_VERSION)-linux-amd64.zip -o /tmp/rclone.zip && unzip -oq /tmp/rclone.zip -d /tmp)
-	# The bucket root mirrors catalog/; --exclude shields the history/ prefix
-	# from this sync's deletions so both trees can share the bucket.
-	$(RCLONE) sync catalog r2:schema-catalog --exclude 'history/**' --checksum --fast-list --transfers 32 --stats-one-line -v
+	# Each tree owns its own bucket prefix, so neither sync needs excludes.
+	$(RCLONE) sync catalog r2:schema-catalog/latest --checksum --fast-list --transfers 32 --stats-one-line -v
 	$(RCLONE) sync build/history r2:schema-catalog/history --checksum --fast-list --transfers 32 --stats-one-line -v
 
 .PHONY: web-deploy

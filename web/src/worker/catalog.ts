@@ -70,15 +70,18 @@ export async function serveCatalog(
 
   const url = new URL(req.url);
   let key: string;
+  let catalog: boolean;
   let valid: boolean;
 
   try {
     const path = decodeURIComponent(url.pathname);
-    // Catalog objects drop the /catalog/ prefix (the bucket root is the
-    // catalog tree); history manifests keep theirs, matching the bucket's
-    // history/ prefix the deploy syncs build/history into.
-    key = path.startsWith("/catalog/") ? path.slice("/catalog/".length) : path.slice(1);
-    valid = path.startsWith("/catalog/") ? keyPattern.test(key) : historyKeyPattern.test(key);
+    // Catalog objects drop the /catalog/ prefix and are served from the
+    // bucket's latest/ prefix (getCatalogObject adds it); history manifests
+    // keep theirs, matching the bucket's history/ prefix the deploy syncs
+    // build/history into.
+    catalog = path.startsWith("/catalog/");
+    key = catalog ? path.slice("/catalog/".length) : path.slice(1);
+    valid = catalog ? keyPattern.test(key) : historyKeyPattern.test(key);
   } catch {
     return stripHead(req, notFound());
   }
@@ -94,7 +97,7 @@ export async function serveCatalog(
     return stripHead(req, cached);
   }
 
-  const obj = await getCatalogObject(env, key);
+  const obj = catalog ? await getCatalogObject(env, key) : await getBucketObject(env, key);
 
   if (obj === null) {
     const resp = notFound();
@@ -120,12 +123,21 @@ export async function serveCatalog(
 }
 
 /**
- * Loads a catalog object from R2 in production or from `CATALOG_DEV_ORIGIN` in
- * local development. The dev-origin swap is set by `scripts/dev.ts` so
- * `make web-run` can exercise `/catalog/*` against the repo-local catalog tree
- * without Cloudflare credentials.
+ * Loads a catalog object by its catalog-relative key
+ * (`<group>/<kind>_<version>.json|fields.txt`) from the bucket's `latest/`
+ * prefix, which the deploy syncs the generated `catalog/` tree into.
  */
 export async function getCatalogObject(env: Env, key: string): Promise<CatalogObject | null> {
+  return getBucketObject(env, `latest/${key}`);
+}
+
+/**
+ * Loads a bucket object by its full key from R2 in production or from
+ * `CATALOG_DEV_ORIGIN` in local development. The dev-origin swap is set by
+ * `scripts/dev.ts`, which mirrors the bucket layout onto the repo-local
+ * trees so `make web-run` needs no Cloudflare credentials.
+ */
+async function getBucketObject(env: Env, key: string): Promise<CatalogObject | null> {
   if (env.CATALOG_DEV_ORIGIN) {
     const resp = await fetch(`${env.CATALOG_DEV_ORIGIN.replace(/\/$/, "")}/${key}`);
     if (!resp.ok || resp.body === null) {

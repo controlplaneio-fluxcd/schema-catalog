@@ -3,7 +3,8 @@
 
 /**
  * Runs local development without Cloudflare credentials. A side Bun server
- * exposes the repo's `catalog/` tree, then `wrangler dev` receives
+ * mirrors the bucket layout onto the repo's trees (`latest/` -> `catalog/`,
+ * `history/` -> `build/history/`), then `wrangler dev` receives
  * `CATALOG_DEV_ORIGIN` so `/catalog/*` uses the local dataset instead of R2.
  *
  * `wrangler dev` already hot-reloads the Worker (`src/worker/**`) on save, but
@@ -22,11 +23,15 @@ const server = Bun.serve({
   port,
   async fetch(req) {
     const pathname = decodeURIComponent(new URL(req.url).pathname);
-    // history/* keys map to build/history, mirroring the bucket's history/
-    // prefix; everything else is the catalog tree.
+    // Mirror the bucket layout: latest/* keys map to the catalog tree and
+    // history/* keys to build/history; anything else has no local backing.
+    const latest = pathname.startsWith("/latest/");
     const history = pathname.startsWith("/history/");
+    if (!latest && !history) {
+      return new Response("not found\n", { status: 404 });
+    }
     const root = history ? historyDir : catalogDir;
-    const path = normalize(join(root, history ? pathname.slice("/history".length) : pathname));
+    const path = normalize(join(root, pathname.slice((history ? "/history" : "/latest").length)));
     if (!path.startsWith(root + "/")) {
       return new Response("forbidden\n", { status: 403 });
     }

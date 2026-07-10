@@ -9,9 +9,9 @@ agents.
 ## Architecture
 
 One Worker handles all dynamic traffic. The R2 bucket `schema-catalog` holds the
-generated `catalog/` tree at its root and the per-source provenance manifests
-under a `history/` prefix, both synced by CI with rclone; the Worker serves
-them as `/catalog/*` and `/history/<source>.json`. Static assets are served
+generated `catalog/` tree under a `latest/` prefix and the per-source
+provenance manifests under a `history/` prefix, both synced by CI with rclone;
+the Worker serves them as `/catalog/*` and `/history/<source>.json`. Static assets are served
 from Workers Assets: the dependency-free UI bundle, copied files from
 `static/`, and the generated `index.json`. `wrangler.jsonc` lists the dynamic
 paths in `assets.run_worker_first` (`/catalog/*`, `/history/*`, `/mcp`, `/mcp/server-card`,
@@ -155,7 +155,7 @@ From the repo root:
 make web-build   # install, lint, test, generate index, bundle UI
 make web-run     # local Worker + local catalog/ file server, no CF credentials
 make web-dev     # UI-only dev server, no wrangler; watches src and live-reloads (no /mcp)
-make web-sync    # rclone sync catalog/ to r2:schema-catalog
+make web-sync    # rclone sync catalog/ to r2:schema-catalog/latest
 make web-deploy  # wrangler deploy with CATALOG_VERSION from commit SHA
 ```
 
@@ -197,8 +197,8 @@ Settings > Build > Build variables and secrets:
 `Bun.YAML` (needs >= 1.2.21); the build log's setup phase records the resolved
 version. The R2 API token has Object Read & Write
 permission scoped to the `schema-catalog` bucket only. `make web-sync` uses the
-`RCLONE_CONFIG_R2_*` variables to sync the local `catalog/` tree into that
-bucket.
+`RCLONE_CONFIG_R2_*` variables to sync the local `catalog/` tree into the
+bucket's `latest/` prefix.
 `make web-deploy` sets `CATALOG_VERSION` from `WORKERS_CI_COMMIT_SHA`; local
 runs fall back to `git rev-parse HEAD`. The first deploy provisions the
 `schemas.fluxoperator.dev` custom domain from `wrangler.jsonc` routes.

@@ -5,9 +5,11 @@ import { describe, expect, test } from "bun:test";
 import { serveCatalog } from "../src/worker/catalog.ts";
 import type { Env } from "../src/worker/index.ts";
 
+// Keys mirror the bucket layout: catalog objects under latest/, provenance
+// manifests under history/.
 const objects = new Map<string, string>([
-  ["flagger.app/canary_v1beta1.json", "{\"a\":1}"],
-  ["flagger.app/canary_v1beta1.fields.txt", "spec <object>"],
+  ["latest/flagger.app/canary_v1beta1.json", "{\"a\":1}"],
+  ["latest/flagger.app/canary_v1beta1.fields.txt", "spec <object>"],
   ["history/flagger.json", "{\"name\":\"flagger\"}"],
 ]);
 
