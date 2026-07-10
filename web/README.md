@@ -11,7 +11,25 @@ agents.
 One Worker handles all dynamic traffic. The R2 bucket `schema-catalog` holds the
 generated `catalog/` tree under a `latest/` prefix and the per-source
 provenance manifests under a `history/` prefix, both synced by CI with rclone;
-the Worker serves them as `/catalog/*` and `/history/<source>.json`. Static assets are served
+the Worker serves them as `/catalog/*` and `/history/<source>.json`.
+
+The bucket's third prefix, `versions/`, holds pinnable per-minor snapshots of
+the sources allowlisted in the Makefile's `web-archive` target:
+`versions/<source>/<minor>/` mirrors that source's catalog slice plus a
+`manifest.json` copy of its history manifest, and `versions/<source>/index.json`
+lists the available minors. The Worker serves them as
+`/catalog/versions/<source>/<minor>/<group>/<kind>_<version>.json`, so a pinned
+schema location composes with the latest catalog as a fallback:
+
+```shell
+flux-schema validate ./manifests \
+  --schema-location https://schemas.fluxoperator.dev/catalog/versions/kubernetes/v1.35 \
+  --schema-location https://schemas.fluxoperator.dev/catalog
+```
+
+A pin means "this source at this minor, latest patch": a patch bump or a
+forced rebuild that changes schemas re-syncs the snapshot in place, and the
+snapshot's `manifest.json` records the exact patch and file digests it holds. Static assets are served
 from Workers Assets: the dependency-free UI bundle, copied files from
 `static/`, and the generated `index.json`. `wrangler.jsonc` lists the dynamic
 paths in `assets.run_worker_first` (`/catalog/*`, `/history/*`, `/mcp`, `/mcp/server-card`,
@@ -39,6 +57,7 @@ location.
 |-----------------------------|-----------------------------------------------------------------------------|
 | `scripts/gen-index.ts`      | `build/history` + `sources.yaml` -> `dist/assets/index.json`                |
 | `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/`, prerenders pages, and writes `sitemap.xml` |
+| `scripts/archive-versions.ts` | Archives per-minor snapshots of allowlisted sources to the bucket's `versions/` prefix |
 | `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change |
 | `scripts/serve.ts`          | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload |
 | `src/worker/index.ts`       | Worker router for `/catalog/*`, `/p/*`, `/k/*`, `/mcp`, discovery docs, and Workers Assets |
@@ -157,6 +176,7 @@ make web-run     # local Worker + local catalog/ file server, no CF credentials
 make web-dev     # UI-only dev server, no wrangler; watches src and live-reloads (no /mcp)
 make web-sync    # rclone sync catalog/ to r2:schema-catalog/latest
 make web-deploy  # wrangler deploy with CATALOG_VERSION from commit SHA
+make web-archive # archive versioned minor snapshots of allowlisted sources to R2
 ```
 
 Inside `web/`:
@@ -179,7 +199,11 @@ ambient declarations overlap and conflict if compiled as one project.
 ## Deployment
 
 Cloudflare Workers Builds is git-connected. The build command is
-`make web-build`; the deploy command is `make web-sync web-deploy`.
+`make web-build`; the deploy command is `make web-sync web-deploy web-archive`.
+The archive step runs last so a flaky snapshot upload can never block a worker
+deploy; a failed archive fails the CF build loudly and self-heals on the next
+deploy, because a snapshot whose remote `manifest.json` digest already matches
+is skipped.
 
 The build environment is configured in the Workers Builds settings under
 Settings > Build > Build variables and secrets:

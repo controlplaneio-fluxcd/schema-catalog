@@ -6,11 +6,16 @@ import { serveCatalog } from "../src/worker/catalog.ts";
 import type { Env } from "../src/worker/index.ts";
 
 // Keys mirror the bucket layout: catalog objects under latest/, provenance
-// manifests under history/.
+// manifests under history/, versioned snapshots under versions/.
 const objects = new Map<string, string>([
   ["latest/flagger.app/canary_v1beta1.json", "{\"a\":1}"],
   ["latest/flagger.app/canary_v1beta1.fields.txt", "spec <object>"],
+  ["latest/versionsomething.io/thing_v1.json", "{\"misroute\":\"guard\"}"],
   ["history/flagger.json", "{\"name\":\"flagger\"}"],
+  ["versions/kubernetes/v1.35/apps/deployment_v1.json", "{\"pinned\":true}"],
+  ["versions/kubernetes/v1.35/apps/deployment_v1.fields.txt", "spec <object>"],
+  ["versions/kubernetes/v1.35/manifest.json", "{\"name\":\"kubernetes\"}"],
+  ["versions/kubernetes/index.json", "[{\"minor\":\"v1.35\"}]"],
 ]);
 
 class MemoryCache implements Cache {
@@ -300,5 +305,61 @@ describe("serveCatalog", () => {
     expect(resp.headers.get("Content-Type")).toBe("application/json; charset=utf-8");
     expect(resp.headers.get("ETag")).toBe("\"abc\"");
     expect(await resp.text()).toBe("");
+  });
+
+  test("GET versioned schema is served from the versions/ prefix", async () => {
+    const { env } = createEnv();
+    const { ctx } = createCtx();
+    const resp = await serveCatalog(
+      req("/catalog/versions/kubernetes/v1.35/apps/deployment_v1.json"),
+      env,
+      ctx,
+      new MemoryCache(),
+    );
+
+    expect(resp.status).toBe(200);
+    expect(resp.headers.get("Content-Type")).toBe("application/json; charset=utf-8");
+    expect(await resp.text()).toBe("{\"pinned\":true}");
+  });
+
+  test("GET versioned metadata keys are served", async () => {
+    const { env } = createEnv();
+    for (const path of [
+      "/catalog/versions/kubernetes/v1.35/manifest.json",
+      "/catalog/versions/kubernetes/index.json",
+    ]) {
+      const { ctx } = createCtx();
+      const resp = await serveCatalog(req(path), env, ctx, new MemoryCache());
+      expect(resp.status).toBe(200);
+    }
+  });
+
+  test("GET invalid versioned keys returns 404 without touching R2", async () => {
+    const { env, getCount } = createEnv();
+    for (const path of [
+      "/catalog/versions/kubernetes/v1.35/manifest.txt",
+      "/catalog/versions/kubernetes/v1.35/UPPER/kind_v1.json",
+      "/catalog/versions/kubernetes/index.yaml",
+      "/catalog/versions/index.json",
+    ]) {
+      const { ctx } = createCtx();
+      const resp = await serveCatalog(req(path), env, ctx, new MemoryCache());
+      expect(resp.status).toBe(404);
+    }
+    expect(getCount()).toBe(0);
+  });
+
+  test("a group starting with 'versions' is not misrouted to versions/", async () => {
+    const { env } = createEnv();
+    const { ctx } = createCtx();
+    const resp = await serveCatalog(
+      req("/catalog/versionsomething.io/thing_v1.json"),
+      env,
+      ctx,
+      new MemoryCache(),
+    );
+
+    expect(resp.status).toBe(200);
+    expect(await resp.text()).toBe("{\"misroute\":\"guard\"}");
   });
 });

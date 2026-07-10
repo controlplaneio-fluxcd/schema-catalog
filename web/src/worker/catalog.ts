@@ -15,6 +15,16 @@ const keyPattern = /^[a-z0-9.-]+\/[a-z0-9.-]+_[a-z0-9]+\.(json|fields\.txt)$/;
 /** Provenance manifests under the bucket's `history/` prefix: `history/<source>.json`. */
 const historyKeyPattern = /^history\/[a-z0-9-]+\.json$/;
 
+/**
+ * Versioned snapshot keys under the bucket's `versions/` prefix, written by
+ * `scripts/archive-versions.ts`: a catalog object inside a
+ * `versions/<source>/<minor>/` snapshot, the snapshot's `manifest.json`, or
+ * the source's `index.json` minors list. The `<minor>` segment allows dots
+ * and dashes (`v1.36`, `gha-runner-scale-set-0.14`).
+ */
+const versionedKeyPattern =
+  /^versions\/[a-z0-9-]+\/([a-z0-9.-]+\/([a-z0-9.-]+\/[a-z0-9.-]+_[a-z0-9]+\.(json|fields\.txt)|manifest\.json)|index\.json)$/;
+
 function corsHeaders(): HeadersInit {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -76,12 +86,18 @@ export async function serveCatalog(
   try {
     const path = decodeURIComponent(url.pathname);
     // Catalog objects drop the /catalog/ prefix and are served from the
-    // bucket's latest/ prefix (getCatalogObject adds it); history manifests
-    // keep theirs, matching the bucket's history/ prefix the deploy syncs
-    // build/history into.
-    catalog = path.startsWith("/catalog/");
-    key = catalog ? path.slice("/catalog/".length) : path.slice(1);
-    valid = catalog ? keyPattern.test(key) : historyKeyPattern.test(key);
+    // bucket's latest/ prefix (getCatalogObject adds it). Versioned snapshots
+    // (/catalog/versions/*, anchored including the trailing slash so a
+    // hypothetical versionsomething.io group cannot be misrouted) and history
+    // manifests are read by their full bucket key.
+    const versioned = path.startsWith("/catalog/versions/");
+    catalog = !versioned && path.startsWith("/catalog/");
+    key = versioned || catalog ? path.slice("/catalog/".length) : path.slice(1);
+    valid = versioned
+      ? versionedKeyPattern.test(key)
+      : catalog
+        ? keyPattern.test(key)
+        : historyKeyPattern.test(key);
   } catch {
     return stripHead(req, notFound());
   }
