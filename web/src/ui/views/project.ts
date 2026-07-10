@@ -267,6 +267,12 @@ interface VersionIndexEntry {
 }
 
 /**
+ * The source card itself is the sixth minor, so with this many panels the
+ * tab shows the six most recent minor releases the CLI page promises.
+ */
+const MAX_VERSION_PANELS = 5;
+
+/**
  * Fetches each source's versioned-snapshot index and inserts one panel per
  * archived minor after that source's card, newest first. The current minor
  * is skipped: its provenance is the source card itself. Only sources
@@ -293,6 +299,7 @@ async function loadSourceVersions(panel: HTMLElement): Promise<void> {
           ...entries
             .filter((entry) => entry.minor !== currentMinor)
             .reverse()
+            .slice(0, MAX_VERSION_PANELS)
             .map((entry) => createVersionCard(repo, entry)),
         );
       } catch {
@@ -311,7 +318,7 @@ async function loadSourceVersions(panel: HTMLElement): Promise<void> {
  */
 function createVersionCard(repo: string, entry: VersionIndexEntry): HTMLElement {
   const card = document.createElement("div");
-  card.className = "project-source-card";
+  card.className = "project-source-card version-card";
 
   const head = document.createElement("div");
   head.className = "source-head";
