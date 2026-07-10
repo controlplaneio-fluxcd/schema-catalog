@@ -40,12 +40,10 @@ validate:
   schemaLocation:
     - ecosystem`;
 
-const K8S_PIN_COMMAND = `flux schema validate ./manifests \\
+const PIN_COMMAND = `flux schema validate ./manifests \\
   -s https://schemas.fluxoperator.dev/catalog/versions/kubernetes/v1.35 \\
-  -s ecosystem`;
-
-const OPENSHIFT_PIN_COMMAND = `flux schema validate ./manifests \\
   -s https://schemas.fluxoperator.dev/catalog/versions/openshift/v4.20 \\
+  -s https://schemas.fluxoperator.dev/catalog/versions/flux/v2.8 \\
   -s ecosystem`;
 
 const CI_WORKFLOW = `name: flux-schema
@@ -177,28 +175,24 @@ function createVersionsSection(): HTMLElement {
       "A pin addresses a minor and always serves its latest patch. The available minors are listed on the ",
     ),
     link(`${projectRoute("kubernetes")}#sources`, "Kubernetes"),
-    document.createTextNode(" and "),
+    document.createTextNode(", "),
     link(`${projectRoute("openshift")}#sources`, "OpenShift"),
+    document.createTextNode(" and "),
+    link(`${projectRoute("flux")}#sources`, "Flux"),
     document.createTextNode(" sources tabs."),
   );
   section.append(
     text(
       "p",
       "mcp-lead",
-      "The catalog keeps versioned schema snapshots for the six most recent minor releases of Kubernetes and OpenShift. Pin the minor your clusters run instead of validating against the latest APIs.",
+      "The catalog keeps versioned schema snapshots for the six most recent minor releases of Kubernetes, OpenShift and Flux.",
     ),
     text(
       "p",
       "mcp-lead",
-      "Schema locations resolve in order, so put the pinned platform first and the ecosystem catalog after it as the fallback for everything else:",
+      "Schema locations resolve in order, so put the pinned minors first and the ecosystem catalog last as the fallback for everything else:",
     ),
-    createCodeBlock(K8S_PIN_COMMAND),
-    text(
-      "p",
-      "mcp-lead",
-      "The same works for OpenShift manifests, pinned to the cluster's release:",
-    ),
-    createCodeBlock(OPENSHIFT_PIN_COMMAND),
+    createCodeBlock(PIN_COMMAND),
     minors,
   );
   return section;
