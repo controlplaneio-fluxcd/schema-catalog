@@ -271,6 +271,60 @@
       "default": {},
       "description": "spec is the specification of the desired behavior of the Machine Config Operator",
       "properties": {
+        "bootImageSkewEnforcement": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "bootImageSkewEnforcement allows an admin to configure how boot image version skew is enforced on the cluster. When omitted, this will default to Automatic for clusters that support automatic boot image updates. For clusters that do not support automatic boot image updates, cluster upgrades will be disabled until a skew enforcement mode has been specified. When version skew is being enforced, cluster upgrades will be disabled until the version skew is deemed acceptable for the current release payload.",
+          "properties": {
+            "manual": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "manual describes the current boot image of the cluster. This should be set to the oldest boot image used amongst all machine resources in the cluster. This must include either the RHCOS version of the boot image or the OCP release version which shipped with that RHCOS boot image. Required when mode is set to \"Manual\" and forbidden otherwise.",
+              "properties": {
+                "mode": {
+                  "description": "mode is used to configure which boot image field is defined in Manual mode. Valid values are OCPVersion and RHCOSVersion. OCPVersion means that the cluster admin is expected to set the OCP version associated with the last boot image update in the OCPVersion field. RHCOSVersion means that the cluster admin is expected to set the RHCOS version associated with the last boot image update in the RHCOSVersion field. This field is required.",
+                  "type": "string"
+                },
+                "ocpVersion": {
+                  "description": "ocpVersion provides a string which represents the OCP version of the boot image. This field must match the OCP semver compatible format of x.y.z. This field must be between 5 and 10 characters long. Required when mode is set to \"OCPVersion\" and forbidden otherwise.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rhcosVersion": {
+                  "description": "rhcosVersion provides a string which represents the RHCOS version of the boot image This field must match rhcosVersion formatting of [major].[minor].[datestamp(YYYYMMDD)]-[buildnumber] or the legacy format of [major].[minor].[timestamp(YYYYMMDDHHmm)]-[buildnumber]. This field must be between 14 and 21 characters long. Required when mode is set to \"RHCOSVersion\" and forbidden otherwise.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "mode"
+              ],
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "ClusterBootImageManual",
+              "x-flux-schema-type-description": "ClusterBootImageManual is used to describe the cluster boot image in Manual mode."
+            },
+            "mode": {
+              "description": "mode determines the underlying behavior of skew enforcement mechanism. Valid values are Manual and None. Manual means that the cluster admin is expected to perform manual boot image updates and store the OCP & RHCOS version associated with the last boot image update in the manual field. In Manual mode, the MCO will prevent upgrades when the boot image skew exceeds the skew limit described by the release image. None means that the MCO will no longer monitor the boot image skew. This may affect the cluster's ability to scale. This field is required.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "BootImageSkewEnforcementConfig",
+          "x-flux-schema-type-description": "BootImageSkewEnforcementConfig is used to configure how boot image version skew is enforced on the cluster."
+        },
         "failedRevisionLimit": {
           "description": "failedRevisionLimit is the number of failed static pod installer revisions to keep on disk and in the api -1 = unlimited, 0 or unset = 5 (default)",
           "format": "int32",
@@ -335,7 +389,7 @@
                   },
                   "resource": {
                     "default": "",
-                    "description": "resource is the machine management resource's type. The only current valid value is machinesets. machinesets means that the machine manager will only register resources of the kind MachineSet.",
+                    "description": "resource is the machine management resource's type. Valid values are machinesets and controlplanemachinesets. machinesets means that the machine manager will only register resources of the kind MachineSet. controlplanemachinesets means that the machine manager will only register resources of the kind ControlPlaneMachineSet.",
                     "type": "string"
                   },
                   "selection": {
@@ -345,7 +399,7 @@
                     "properties": {
                       "mode": {
                         "default": "",
-                        "description": "mode determines how machine managers will be selected for updates. Valid values are All and Partial. All means that every resource matched by the machine manager will be updated. Partial requires specified selector(s) and allows customisation of which resources matched by the machine manager will be updated. None means that every resource matched by the machine manager will not be updated.",
+                        "description": "mode determines how machine managers will be selected for updates. Valid values are All, Partial and None. All means that every resource matched by the machine manager will be updated. Partial requires specified selector(s) and allows customisation of which resources matched by the machine manager will be updated. Partial is not permitted for the controlplanemachinesets resource type as they are a singleton within the cluster. None means that every resource matched by the machine manager will not be updated.",
                         "type": "string"
                       },
                       "partial": {
@@ -785,6 +839,87 @@
       "default": {},
       "description": "status is the most recently observed status of the Machine Config Operator",
       "properties": {
+        "bootImageSkewEnforcementStatus": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "bootImageSkewEnforcementStatus reflects what the latest cluster-validated boot image skew enforcement configuration is and will be used by Machine Config Controller while performing boot image skew enforcement. When omitted, the MCO has no knowledge of how to enforce boot image skew. When the MCO does not know how boot image skew should be enforced, cluster upgrades will be blocked until it can either automatically determine skew enforcement or there is an explicit skew enforcement configuration provided in the spec.bootImageSkewEnforcement field.",
+          "properties": {
+            "automatic": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "automatic describes the current boot image of the cluster. This will be populated by the MCO when performing boot image updates. This value will be compared against the cluster's skew limit to determine skew compliance. Required when mode is set to \"Automatic\" and forbidden otherwise.",
+              "properties": {
+                "ocpVersion": {
+                  "description": "ocpVersion provides a string which represents the OCP version of the boot image. This field must match the OCP semver compatible format of x.y.z. This field must be between 5 and 10 characters long.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rhcosVersion": {
+                  "description": "rhcosVersion provides a string which represents the RHCOS version of the boot image This field must match rhcosVersion formatting of [major].[minor].[datestamp(YYYYMMDD)]-[buildnumber] or the legacy format of [major].[minor].[timestamp(YYYYMMDDHHmm)]-[buildnumber]. This field must be between 14 and 21 characters long.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "ClusterBootImageAutomatic",
+              "x-flux-schema-type-description": "ClusterBootImageAutomatic is used to describe the cluster boot image in Automatic mode. It stores the RHCOS version of the boot image and the OCP release version which shipped with that RHCOS boot image. At least one of these values are required. If ocpVersion and rhcosVersion are defined, both values will be used for checking skew compliance. If only ocpVersion is defined, only that value will be used for checking skew compliance. If only rhcosVersion is defined, only that value will be used for checking skew compliance."
+            },
+            "manual": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "manual describes the current boot image of the cluster. This will be populated by the MCO using the values provided in the spec.bootImageSkewEnforcement.manual field. This value will be compared against the cluster's skew limit to determine skew compliance. Required when mode is set to \"Manual\" and forbidden otherwise.",
+              "properties": {
+                "mode": {
+                  "description": "mode is used to configure which boot image field is defined in Manual mode. Valid values are OCPVersion and RHCOSVersion. OCPVersion means that the cluster admin is expected to set the OCP version associated with the last boot image update in the OCPVersion field. RHCOSVersion means that the cluster admin is expected to set the RHCOS version associated with the last boot image update in the RHCOSVersion field. This field is required.",
+                  "type": "string"
+                },
+                "ocpVersion": {
+                  "description": "ocpVersion provides a string which represents the OCP version of the boot image. This field must match the OCP semver compatible format of x.y.z. This field must be between 5 and 10 characters long. Required when mode is set to \"OCPVersion\" and forbidden otherwise.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rhcosVersion": {
+                  "description": "rhcosVersion provides a string which represents the RHCOS version of the boot image This field must match rhcosVersion formatting of [major].[minor].[datestamp(YYYYMMDD)]-[buildnumber] or the legacy format of [major].[minor].[timestamp(YYYYMMDDHHmm)]-[buildnumber]. This field must be between 14 and 21 characters long. Required when mode is set to \"RHCOSVersion\" and forbidden otherwise.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "mode"
+              ],
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "ClusterBootImageManual",
+              "x-flux-schema-type-description": "ClusterBootImageManual is used to describe the cluster boot image in Manual mode."
+            },
+            "mode": {
+              "description": "mode determines the underlying behavior of skew enforcement mechanism. Valid values are Automatic, Manual and None. Automatic means that the MCO will perform boot image updates and store the OCP & RHCOS version associated with the last boot image update in the automatic field. Manual means that the cluster admin is expected to perform manual boot image updates and store the OCP & RHCOS version associated with the last boot image update in the manual field. In Automatic and Manual mode, the MCO will prevent upgrades when the boot image skew exceeds the skew limit described by the release image. None means that the MCO will no longer monitor the boot image skew. This may affect the cluster's ability to scale. This field is required.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "BootImageSkewEnforcementStatus",
+          "x-flux-schema-type-description": "BootImageSkewEnforcementStatus is the type for the status object. It represents the cluster defaults when the boot image skew enforcement configuration is undefined and reflects the actual configuration when it is defined."
+        },
         "conditions": {
           "description": "conditions is a list of conditions and their status",
           "items": {
@@ -867,7 +1002,7 @@
                   },
                   "resource": {
                     "default": "",
-                    "description": "resource is the machine management resource's type. The only current valid value is machinesets. machinesets means that the machine manager will only register resources of the kind MachineSet.",
+                    "description": "resource is the machine management resource's type. Valid values are machinesets and controlplanemachinesets. machinesets means that the machine manager will only register resources of the kind MachineSet. controlplanemachinesets means that the machine manager will only register resources of the kind ControlPlaneMachineSet.",
                     "type": "string"
                   },
                   "selection": {
@@ -877,7 +1012,7 @@
                     "properties": {
                       "mode": {
                         "default": "",
-                        "description": "mode determines how machine managers will be selected for updates. Valid values are All and Partial. All means that every resource matched by the machine manager will be updated. Partial requires specified selector(s) and allows customisation of which resources matched by the machine manager will be updated. None means that every resource matched by the machine manager will not be updated.",
+                        "description": "mode determines how machine managers will be selected for updates. Valid values are All, Partial and None. All means that every resource matched by the machine manager will be updated. Partial requires specified selector(s) and allows customisation of which resources matched by the machine manager will be updated. Partial is not permitted for the controlplanemachinesets resource type as they are a singleton within the cluster. None means that every resource matched by the machine manager will not be updated.",
                         "type": "string"
                       },
                       "partial": {

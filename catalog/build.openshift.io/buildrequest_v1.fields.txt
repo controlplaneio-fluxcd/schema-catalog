@@ -1,4 +1,4 @@
-# schema source: OpenShift v4.20 https://github.com/openshift/api
+# schema source: OpenShift v4.21 https://github.com/openshift/api
 apiVersion <string> enum=build.openshift.io/v1
 kind <string> enum=BuildRequest
 metadata.name <string> (required)
@@ -7,7 +7,7 @@ binary <object>	# binary indicates a request to build from a binary provided to 
 binary.asFile <string>	# asFile indicates that the provided binary input should be considered a single file within the build input. For example, specifying "webapp.war" would place the provided binary as `/webapp.war` for the builder. If left empty, the Docker and Source build strategies assume this file is a zip, tar, or tar.gz file and extract it as the source. The custom strategy receives this binary as standard input. This filename may not contain slashes or be '..' or '.'.
 dockerStrategyOptions <object>	# dockerStrategyOptions contains additional docker-strategy specific options for the build
 dockerStrategyOptions.buildArgs <[]object>	# Args contains any build arguments that are to be passed to Docker. See https://docs.docker.com/engine/reference/builder/#/arg for more details
-dockerStrategyOptions.buildArgs[].name <string> (required) default=""	# Name of the environment variable. Must be a C_IDENTIFIER.
+dockerStrategyOptions.buildArgs[].name <string> (required) default=""	# Name of the environment variable. May consist of any printable ASCII characters except '='.
 dockerStrategyOptions.buildArgs[].value <string>	# Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".
 dockerStrategyOptions.buildArgs[].valueFrom <object>	# Source for the environment variable's value. Cannot be used if value is not empty.
 dockerStrategyOptions.buildArgs[].valueFrom.configMapKeyRef <object>	# Selects a key of a ConfigMap.
@@ -17,6 +17,11 @@ dockerStrategyOptions.buildArgs[].valueFrom.configMapKeyRef.optional <boolean>	#
 dockerStrategyOptions.buildArgs[].valueFrom.fieldRef <object>	# Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
 dockerStrategyOptions.buildArgs[].valueFrom.fieldRef.apiVersion <string>	# Version of the schema the FieldPath is written in terms of, defaults to "v1".
 dockerStrategyOptions.buildArgs[].valueFrom.fieldRef.fieldPath <string> (required) default=""	# Path of the field to select in the specified API version.
+dockerStrategyOptions.buildArgs[].valueFrom.fileKeyRef <object>	# FileKeyRef selects a key of the env file. Requires the EnvFiles feature gate to be enabled.
+dockerStrategyOptions.buildArgs[].valueFrom.fileKeyRef.key <string> (required) default=""	# The key within the env file. An invalid key will prevent the pod from starting. The keys defined within a source may consist of any printable ASCII characters except '='. During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+dockerStrategyOptions.buildArgs[].valueFrom.fileKeyRef.optional <boolean> default=false	# Specify whether the file or its key must be defined. If the file or key does not exist, then the env var is not published. If optional is set to true and the specified key does not exist, the environment variable will not be set in the Pod's containers. If optional is set to false and the specified key does not exist, an error will be returned during Pod creation.
+dockerStrategyOptions.buildArgs[].valueFrom.fileKeyRef.path <string> (required) default=""	# The path within the volume from which to select the file. Must be relative and may not contain the '..' path or start with '..'.
+dockerStrategyOptions.buildArgs[].valueFrom.fileKeyRef.volumeName <string> (required) default=""	# The name of the volume mount containing the env file.
 dockerStrategyOptions.buildArgs[].valueFrom.resourceFieldRef <object>	# Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
 dockerStrategyOptions.buildArgs[].valueFrom.resourceFieldRef.containerName <string>	# Container name: required for volumes, optional for env vars
 dockerStrategyOptions.buildArgs[].valueFrom.resourceFieldRef.divisor <string>	# Specifies the output format of the exposed resources, defaults to "1"
@@ -27,7 +32,7 @@ dockerStrategyOptions.buildArgs[].valueFrom.secretKeyRef.name <string> default="
 dockerStrategyOptions.buildArgs[].valueFrom.secretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
 dockerStrategyOptions.noCache <boolean>	# noCache overrides the docker-strategy noCache option in the build config
 env <[]object>	# env contains additional environment variables you want to pass into a builder container.
-env[].name <string> (required) default=""	# Name of the environment variable. Must be a C_IDENTIFIER.
+env[].name <string> (required) default=""	# Name of the environment variable. May consist of any printable ASCII characters except '='.
 env[].value <string>	# Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".
 env[].valueFrom <object>	# Source for the environment variable's value. Cannot be used if value is not empty.
 env[].valueFrom.configMapKeyRef <object>	# Selects a key of a ConfigMap.
@@ -37,6 +42,11 @@ env[].valueFrom.configMapKeyRef.optional <boolean>	# Specify whether the ConfigM
 env[].valueFrom.fieldRef <object>	# Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
 env[].valueFrom.fieldRef.apiVersion <string>	# Version of the schema the FieldPath is written in terms of, defaults to "v1".
 env[].valueFrom.fieldRef.fieldPath <string> (required) default=""	# Path of the field to select in the specified API version.
+env[].valueFrom.fileKeyRef <object>	# FileKeyRef selects a key of the env file. Requires the EnvFiles feature gate to be enabled.
+env[].valueFrom.fileKeyRef.key <string> (required) default=""	# The key within the env file. An invalid key will prevent the pod from starting. The keys defined within a source may consist of any printable ASCII characters except '='. During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+env[].valueFrom.fileKeyRef.optional <boolean> default=false	# Specify whether the file or its key must be defined. If the file or key does not exist, then the env var is not published. If optional is set to true and the specified key does not exist, the environment variable will not be set in the Pod's containers. If optional is set to false and the specified key does not exist, an error will be returned during Pod creation.
+env[].valueFrom.fileKeyRef.path <string> (required) default=""	# The path within the volume from which to select the file. Must be relative and may not contain the '..' path or start with '..'.
+env[].valueFrom.fileKeyRef.volumeName <string> (required) default=""	# The name of the volume mount containing the env file.
 env[].valueFrom.resourceFieldRef <object>	# Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
 env[].valueFrom.resourceFieldRef.containerName <string>	# Container name: required for volumes, optional for env vars
 env[].valueFrom.resourceFieldRef.divisor <string>	# Specifies the output format of the exposed resources, defaults to "1"
