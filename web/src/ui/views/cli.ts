@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 import { CLI_URL, createBreadcrumb, createCodeBlock, createInlineCopy, createPage, createSection, link, text } from "../dom.ts";
-import { agentsRoute, homeRoute } from "../router.ts";
+import { agentsRoute, homeRoute, projectRoute } from "../router.ts";
 
 const INSTALL_COMMAND = "flux plugin install schema";
 
@@ -170,6 +170,17 @@ function createCatalogSection(): HTMLElement {
 
 function createVersionsSection(): HTMLElement {
   const section = createSection("Kubernetes versioning", "versions");
+  const minors = document.createElement("p");
+  minors.className = "mcp-lead";
+  minors.append(
+    document.createTextNode(
+      "A pin addresses a minor and always serves its latest patch. The available minors are listed on the ",
+    ),
+    link(`${projectRoute("kubernetes")}#sources`, "Kubernetes"),
+    document.createTextNode(" and "),
+    link(`${projectRoute("openshift")}#sources`, "OpenShift"),
+    document.createTextNode(" sources tabs."),
+  );
   section.append(
     text(
       "p",
@@ -188,11 +199,7 @@ function createVersionsSection(): HTMLElement {
       "The same works for OpenShift manifests, pinned to the cluster's release:",
     ),
     createCodeBlock(OPENSHIFT_PIN_COMMAND),
-    text(
-      "p",
-      "mcp-lead",
-      "A pin addresses a minor and always serves its latest patch. The available minors are listed per platform at /catalog/versions/kubernetes/index.json and /catalog/versions/openshift/index.json.",
-    ),
+    minors,
   );
   return section;
 }
