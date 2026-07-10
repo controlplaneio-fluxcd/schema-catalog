@@ -21,6 +21,11 @@ flux schema validate ./manifests -s ecosystem
 The `ecosystem` schema location expands to
 `https://schemas.fluxoperator.dev/catalog`.
 
+The catalog also keeps versioned snapshots for the six most recent minor
+releases of Kubernetes, OpenShift and Flux, so validation can be pinned to
+the minors your clusters run; see
+[Kubernetes versioning](https://schemas.fluxoperator.dev/cli#versions).
+
 See the [CLI guide](https://schemas.fluxoperator.dev/cli) for installation,
 CI usage and configuration.
 

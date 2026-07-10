@@ -51,7 +51,7 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
 | `main.ts`     | CLI (`build`/`regen`), per-source orchestration, failure isolation, CI signal |
 | `types.ts`    | `Source` discriminated union, `CrdInput`, `HistoryEntry` — the config contract |
 | `config.ts`   | sources.yaml parsing (sources + project groups) with strict validation (unknown keys rejected) |
-| `resolve.ts`  | version resolution + normalization (`v` prefix, OpenShift refs, bare k8s)     |
+| `resolve.ts`  | version resolution + normalization; OpenShift GA discovery via the Red Hat Cincinnati graph |
 | `github.ts`   | GitHub REST via fetch: latest release, asset lookup/download, retry/timeout   |
 | `extract.ts`  | runs flux-schema/kubectl/flux-operator via `Bun.$` into the staging dir       |
 | `history.ts`  | provenance manifests, staging listing, catalog sync, GC                       |
@@ -64,7 +64,10 @@ and a `changed=true|false` line appended to `$GITHUB_OUTPUT` for CI.
 `extract` in sources.yaml maps 1:1 to `flux-schema extract` subcommands:
 
 - `k8s` / `openshift` — self-contained; the CLI fetches the OpenAPI swagger
-  itself (`--version 1.36.2` bare, `--ref release-4.20`).
+  itself (`--version 1.36.2` bare, `--ref release-4.20`). The OpenShift
+  version resolves to the newest GA minor found by probing the Red Hat
+  Cincinnati graph's `stable-4.N` channels upward (a pre-GA channel answers
+  with no matching release nodes).
 - `crd` — needs an `input` declaring where the CRD YAML comes from, exactly
   one of the following. `flux-schema extract crd` keeps only
   `CustomResourceDefinition` documents (descending into `List` items) and
@@ -230,9 +233,9 @@ bun src/main.ts regen --concurrent=2 2>&1 | tee /tmp/regen.log
 ## Testing boundaries
 
 `bun test` covers pure logic only: config validation, version helpers, the
-endoflife.date picker, GC diffing, renderers, asset-glob matching, and the
-FluxInstance manifest shape. Nothing shells out or touches the network, which
-is what lets `test.yaml` in CI need only Bun. Extraction correctness is
+OpenShift GA picker (Cincinnati graph nodes), GC diffing, renderers,
+asset-glob matching, and the FluxInstance manifest shape. Nothing shells out
+or touches the network, which is what lets `test.yaml` in CI need only Bun. Extraction correctness is
 verified by the build's own guards and by the update workflow's smoke test
 (validating `fluxcd/flux2-kustomize-helm-example` against the fresh catalog).
 Keep it that way: new pure logic gets unit tests; new side effects get guards

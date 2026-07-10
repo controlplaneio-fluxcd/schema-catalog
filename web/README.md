@@ -29,12 +29,22 @@ flux-schema validate ./manifests \
 
 A pin means "this source at this minor, latest patch": a patch bump or a
 forced rebuild that changes schemas re-syncs the snapshot in place, and the
-snapshot's `manifest.json` records the exact patch and file digests it holds. Static assets are served
-from Workers Assets: the dependency-free UI bundle, copied files from
-`static/`, and the generated `index.json`. `wrangler.jsonc` lists the dynamic
-paths in `assets.run_worker_first` (`/catalog/*`, `/history/*`, `/mcp`, `/mcp/server-card`,
-`/.well-known/mcp/*`), so those requests enter the Worker while UI assets stay
-on the static path.
+snapshot's `manifest.json` records the exact patch and file digests it holds.
+
+Static assets are served from Workers Assets: the dependency-free UI bundle,
+copied files from `static/`, and the generated `index.json`. `wrangler.jsonc`
+lists the dynamic paths in `assets.run_worker_first` (`/catalog/*`,
+`/history/*`, `/mcp`, `/mcp/server-card`, `/.well-known/mcp/*`), so those
+requests enter the Worker while UI assets stay on the static path.
+
+The `/`, `/catalog`, `/agents`, and `/cli` pages are prerendered at build time
+with page-specific meta/OG tags, and `scripts/build-ui.ts` generates
+`sitemap.xml` listing those four pages plus the project pages. Project pages
+(`/p/<project>`) and kind pages (`/k/<group>/<kind>/<version>`) enter the
+Worker first, which rewrites the app shell with route-specific title,
+description, canonical URL, and OG tags from the generated index before
+caching the HTML at the edge. Other UI paths fall back to the app shell via
+the assets `not_found_handling` single-page-application mode.
 
 For agent discovery (MCP SEP-2127), the Worker serves a static Server Card at
 `/mcp/server-card` (the spec-reserved location) and
@@ -53,26 +63,27 @@ location.
 
 ## Module map
 
-| Path                        | Responsibility                                                              |
-|-----------------------------|-----------------------------------------------------------------------------|
-| `scripts/gen-index.ts`      | `build/history` + `sources.yaml` -> `dist/assets/index.json`                |
-| `scripts/build-ui.ts`       | Bundles `src/ui/main.ts`, copies `static/`, prerenders pages, and writes `sitemap.xml` |
-| `scripts/archive-versions.ts` | Archives per-minor snapshots of allowlisted sources to the bucket's `versions/` prefix |
-| `scripts/dev.ts`            | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change |
-| `scripts/serve.ts`          | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload |
-| `src/worker/index.ts`       | Worker router for `/catalog/*`, `/p/*`, `/k/*`, `/mcp`, discovery docs, and Workers Assets |
-| `src/worker/catalog.ts`     | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling |
-| `src/worker/pages.ts`       | Dynamic social/SEO metadata rewrite for history-routed project and kind pages |
-| `src/worker/mcp.ts`         | Streamable HTTP MCP server and tool registration                            |
-| `src/worker/server-card.ts` | MCP Server Card and Catalog discovery documents (SEP-2127)                  |
-| `src/worker/mcp-core.ts`    | Pure catalog/MCP result formatting and schema/fields lookup helpers         |
-| `src/worker/index-data.ts`  | Loads and memoizes the generated index asset per `CATALOG_VERSION`          |
-| `src/shared/types.ts`       | Compact generated index types shared by Worker, UI, tests, and generator    |
-| `src/shared/index-query.ts` | Version ordering, exact kind lookup, and ranked catalog search              |
-| `src/shared/fields.ts`      | `.fields.txt` parser, filter, and tree builder                              |
-| `src/ui/**`                 | Dependency-free vanilla TypeScript SPA with history routing                 |
-| `static/`                   | Files copied verbatim into `dist/assets`                                    |
-| `test/`                     | Bun tests for pure shared logic, Worker catalog behavior, MCP helpers       |
+| Path                          | Responsibility                                                                             |
+|-------------------------------|--------------------------------------------------------------------------------------------|
+| `scripts/gen-index.ts`        | `build/history` + `sources.yaml` -> `dist/assets/index.json`                               |
+| `scripts/build-ui.ts`         | Bundles `src/ui/main.ts`, copies `static/`, prerenders pages, and writes `sitemap.xml`     |
+| `scripts/archive-versions.ts` | Archives per-minor snapshots of allowlisted sources to the bucket's `versions/` prefix     |
+| `scripts/dev.ts`              | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change              |
+| `scripts/serve.ts`            | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload            |
+| `scripts/dev-versions.ts`     | Dev stand-in for the bucket's `versions/` prefix, synthesized from `build/history`         |
+| `src/worker/index.ts`         | Worker router for `/catalog/*`, `/p/*`, `/k/*`, `/mcp`, discovery docs, and Workers Assets |
+| `src/worker/catalog.ts`       | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling                |
+| `src/worker/pages.ts`         | Dynamic social/SEO metadata rewrite for history-routed project and kind pages              |
+| `src/worker/mcp.ts`           | Streamable HTTP MCP server and tool registration                                           |
+| `src/worker/server-card.ts`   | MCP Server Card and Catalog discovery documents (SEP-2127)                                 |
+| `src/worker/mcp-core.ts`      | Pure catalog/MCP result formatting and schema/fields lookup helpers                        |
+| `src/worker/index-data.ts`    | Loads and memoizes the generated index asset per `CATALOG_VERSION`                         |
+| `src/shared/types.ts`         | Compact generated index types shared by Worker, UI, tests, and generator                   |
+| `src/shared/index-query.ts`   | Version ordering, exact kind lookup, and ranked catalog search                             |
+| `src/shared/fields.ts`        | `.fields.txt` parser, filter, and tree builder                                             |
+| `src/ui/**`                   | Dependency-free vanilla TypeScript SPA with history routing                                |
+| `static/`                     | Files copied verbatim into `dist/assets`                                                   |
+| `test/`                       | Bun tests for pure shared logic, Worker catalog behavior, MCP helpers                      |
 
 `scripts/dev.ts` is credential-free: it serves the repo-local `catalog/` tree on
 a side port and passes `CATALOG_DEV_ORIGIN` into local Wrangler, so R2 is not
@@ -140,15 +151,7 @@ Kubernetes-ecosystem API definitions for generating, editing, and validating
 manifests, not as a `flux-schema` backend. The human-facing overview page is
 at <https://schemas.fluxoperator.dev/agents> (SPA route
 `src/ui/views/mcp.ts`; `/mcp-server` and legacy `#/...` hash URLs are
-aliases). The `/`, `/catalog`, `/agents`, and `/cli` pages are prerendered at
-build time with page-specific meta/OG tags. `scripts/build-ui.ts` generates
-`sitemap.xml` from the index, listing those four pages plus project pages under
-`/p/<project>`. Project pages and kind pages under
-`/k/<group>/<kind>/<version>` enter the Worker first, which rewrites the app
-shell with route-specific title, description, canonical URL, and OG URL tags
-from the generated index before caching the HTML at the edge. Other UI paths
-fall back to the app shell via the assets `not_found_handling`
-single-page-application mode.
+aliases).
 
 | Tool             | Description                                                                   |
 |------------------|-------------------------------------------------------------------------------|
@@ -226,6 +229,44 @@ bucket's `latest/` prefix.
 `make web-deploy` sets `CATALOG_VERSION` from `WORKERS_CI_COMMIT_SHA`; local
 runs fall back to `git rev-parse HEAD`. The first deploy provisions the
 `schemas.fluxoperator.dev` custom domain from `wrangler.jsonc` routes.
+
+## Versioning a new source
+
+Adding a source to the versioned-snapshot system is two independent steps:
+enabling forward archiving in CI, and a one-time local backfill of the older
+minors. Snapshots under `versions/` are not attested, so locally built
+backfills are acceptable there; `latest/` and `history/` remain CI-only.
+
+**Forward archiving** is one edit: add the source name to the Makefile's
+`web-archive` allowlist. From then on every deploy snapshots the source's
+current minor and rewrites its `index.json`; nothing else ships a version.
+
+**Backfill** runs from a scratch worktree so the main checkout, its
+`catalog/` tree and `build/history/` manifests are never touched. For each
+older minor, from newest to oldest:
+
+1. Pin the source in the worktree's `build/config/sources.yaml` to the
+   minor's latest patch (`version: vX.Y.Z` on the source entry). Old versions
+   may need input adjustments in the worktree config too, e.g. Flux < 2.7.0
+   rejects the `source-watcher` component.
+2. Build it: `cd <worktree>/build && bun src/main.ts build --source <name>
+   --force`, with `FLUX_SCHEMA_BIN` pointing at a released binary. A failed
+   extraction means the pinned version needs step 1 adjustments; iterate
+   until the build completes.
+3. Archive it from the worktree root with the `RCLONE_CONFIG_R2_*` variables
+   exported (locally they live in the git-ignored `web/.env`):
+   `bun web/scripts/archive-versions.ts <name>`. The script snapshots
+   whatever `build/history/<name>.json` currently records and rewrites
+   `versions/<name>/index.json` from the minors present in the bucket.
+
+Then remove the worktree and verify each backfilled pin both directions
+against the live URL: a valid manifest passes, and a manifest using a kind or
+field introduced in a later minor fails against the older pin.
+
+The UI needs no changes: the project page's Sources tab fetches
+`versions/<source>/index.json` for every source card and panels appear once
+the index exists, capped at the five most recent archived minors plus the
+source card itself.
 
 ## Verification
 

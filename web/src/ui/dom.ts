@@ -151,10 +151,19 @@ export function createSiteFooter(): HTMLElement {
   logo.width = 22;
   logo.height = 22;
   logoLink.append(logo, text("span", "", "Flux Schema Catalog"));
+  const attribution = text("p", "footer-attribution", "");
+  const controlPlane = link("https://control-plane.io/enterprise-for-flux-cd/", "ControlPlane");
+  controlPlane.target = "_blank";
+  controlPlane.rel = "noopener noreferrer";
+  attribution.append(
+    document.createTextNode("Operated by the Flux Operator team at "),
+    controlPlane,
+    document.createTextNode("."),
+  );
   brand.append(
     logoLink,
     text("p", "footer-tagline", "Kubernetes API schemas for AI agents and CI pipelines."),
-    text("p", "footer-attribution", "Operated by the Flux Operator team at ControlPlane."),
+    attribution,
   );
 
   content.append(
@@ -168,8 +177,8 @@ export function createSiteFooter(): HTMLElement {
     createFooterColumn("Flux Operator", [
       { label: "Get started guide", href: "https://fluxoperator.dev/get-started/" },
       { label: "Documentation", href: "https://fluxoperator.dev/docs/" },
-      { label: "Flux Web UI", href: "https://fluxoperator.dev/web-ui/" },
-      { label: "Flux MCP Server", href: "https://fluxoperator.dev/mcp-server/" },
+      { label: "Enterprise Distribution", href: "https://fluxoperator.dev/enterprise/" },
+      { label: "Enterprise Pricing", href: "https://fluxcd.control-plane.io/pricing/" },
     ]),
   );
 

@@ -65,7 +65,9 @@ make build   # full catalog build; FORCE_BUILD=1 and BUILD_SUMMARY=<path> opt in
 ```
 
 The underlying `bun src/main.ts build|regen` flags and env vars are documented
-in [build/README.md](build/README.md#cli).
+in [build/README.md](build/README.md#cli); the `make web-*` targets (build,
+run, dev, sync, deploy, archive) are listed in
+[web/README.md](web/README.md#commands).
 
 ## Verification
 
@@ -77,6 +79,8 @@ in [build/README.md](build/README.md#cli).
   (`git checkout -- build/history`).
 - Catalog-wide claims (e.g. "validation still works"): run `flux-schema
   validate <manifests> --schema-location ./catalog` against a real example.
+- Web changes: `bun run lint && bun test` inside `web/`, plus the smoke
+  matrix in [web/README.md](web/README.md#verification) for serving changes.
 
 ## CI
 
