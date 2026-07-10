@@ -40,6 +40,14 @@ validate:
   schemaLocation:
     - ecosystem`;
 
+const K8S_PIN_COMMAND = `flux schema validate ./manifests \\
+  -s https://schemas.fluxoperator.dev/catalog/versions/kubernetes/v1.35 \\
+  -s ecosystem`;
+
+const OPENSHIFT_PIN_COMMAND = `flux schema validate ./manifests \\
+  -s https://schemas.fluxoperator.dev/catalog/versions/openshift/v4.20 \\
+  -s ecosystem`;
+
 const CI_WORKFLOW = `name: flux-schema
 
 on:
@@ -98,6 +106,7 @@ export function renderCli(): HTMLElement {
     createHero(),
     createCatalogSection(),
     createChecksSection(),
+    createVersionsSection(),
     createCiSection(),
     createExplainSection(),
     createAgentsPointer(),
@@ -143,7 +152,6 @@ function createCatalogSection(): HTMLElement {
       "The ecosystem schema location points the CLI at this catalog, a superset of the plugin's built-in one:",
     ),
     createCodeBlock(EXAMPLE_OUTPUT, "console"),
-    text("h3", "", "Validate what Flux sees"),
     text(
       "p",
       "mcp-lead",
@@ -156,6 +164,35 @@ function createCatalogSection(): HTMLElement {
       "Do the same with Helm charts: render the templates and validate every generated document before the release reaches a cluster.",
     ),
     createCodeBlock(HELM_COMMAND),
+  );
+  return section;
+}
+
+function createVersionsSection(): HTMLElement {
+  const section = createSection("Kubernetes versioning", "versions");
+  section.append(
+    text(
+      "p",
+      "mcp-lead",
+      "The catalog keeps versioned schema snapshots for the six most recent minor releases of Kubernetes and OpenShift. Pin the minor your clusters run instead of validating against the latest APIs.",
+    ),
+    text(
+      "p",
+      "mcp-lead",
+      "Schema locations resolve in order, so put the pinned platform first and the ecosystem catalog after it as the fallback for everything else:",
+    ),
+    createCodeBlock(K8S_PIN_COMMAND),
+    text(
+      "p",
+      "mcp-lead",
+      "The same works for OpenShift manifests, pinned to the cluster's release:",
+    ),
+    createCodeBlock(OPENSHIFT_PIN_COMMAND),
+    text(
+      "p",
+      "mcp-lead",
+      "A pin addresses a minor and always serves its latest patch. The available minors are listed per platform at /catalog/versions/kubernetes/index.json and /catalog/versions/openshift/index.json.",
+    ),
   );
   return section;
 }
@@ -202,7 +239,6 @@ function createCiSection(): HTMLElement {
       "On GitHub, two composite actions cover the whole pipeline. The first installs the CLI and the second renders kustomize overlays and Helm charts, then validates every document.",
     ),
     createCodeBlock(CI_WORKFLOW, "yaml"),
-    text("h3", "", "Point CI at this catalog"),
     text(
       "p",
       "mcp-lead",
