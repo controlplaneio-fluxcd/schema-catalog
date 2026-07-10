@@ -64,7 +64,18 @@ export function renderProject(index: CatalogIndex, projectName: string): HTMLEle
   const sourcesPanel = createSourcesPanel(project);
   sourcesPanel.hidden = true;
 
-  page.append(createViewTabs(project, schemasPanel, sourcesPanel), schemasPanel, sourcesPanel);
+  // Versioned snapshots load lazily on the first switch to the Sources tab:
+  // one index.json fetch per source, and sources without snapshots (the
+  // common case) 404 quietly.
+  let versionsLoaded = false;
+  const onShowSources = (): void => {
+    if (!versionsLoaded) {
+      versionsLoaded = true;
+      void loadSourceVersions(sourcesPanel);
+    }
+  };
+
+  page.append(createViewTabs(project, schemasPanel, sourcesPanel, onShowSources), schemasPanel, sourcesPanel);
   return page;
 }
 
@@ -122,7 +133,12 @@ function createProjectHero(index: CatalogIndex, project: ProjectEntry): HTMLElem
  * the bar. The active tab is mirrored in the URL hash (`#sources`) so a tab
  * is linkable; Schemas is the default and carries no hash.
  */
-function createViewTabs(project: ProjectEntry, schemasPanel: HTMLElement, sourcesPanel: HTMLElement): HTMLElement {
+function createViewTabs(
+  project: ProjectEntry,
+  schemasPanel: HTMLElement,
+  sourcesPanel: HTMLElement,
+  onShowSources: () => void,
+): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "project-tabs";
   wrap.setAttribute("role", "group");
@@ -142,6 +158,9 @@ function createViewTabs(project: ProjectEntry, schemasPanel: HTMLElement, source
       button.classList.toggle("active", i === active);
       button.setAttribute("aria-pressed", String(i === active));
     });
+    if (active === 1) {
+      onShowSources();
+    }
   };
   const writeTabUrl = (active: number): void => {
     const target = active === 1 ? `${location.pathname}#sources` : location.pathname;
@@ -232,17 +251,91 @@ function createReleaseLink(member: ProjectSourceEntry, className: string): HTMLA
   );
 }
 
-function createCommitLink(member: ProjectSourceEntry, sha: string): HTMLAnchorElement {
+function createCommitLink(repo: string, sha: string): HTMLAnchorElement {
   // 7 chars displayed; the index's 12-char prefix stays in the commit URL.
-  const commit = externalLink(`https://github.com/${member.repo}/commit/${sha}`, `github:${sha.slice(0, 7)}`);
+  const commit = externalLink(`https://github.com/${repo}/commit/${sha}`, `github:${sha.slice(0, 7)}`);
   commit.title = sha;
   return commit;
+}
+
+/** One minor snapshot from a source's `versions/<name>/index.json`. */
+interface VersionIndexEntry {
+  minor: string;
+  version: string;
+  commit: string;
+  builtAt: string;
+}
+
+/**
+ * Fetches each source's versioned-snapshot index and inserts one panel per
+ * archived minor after that source's card, newest first. The current minor
+ * is skipped: its provenance is the source card itself. Only sources
+ * archived to the bucket's `versions/` prefix have an index; for the rest
+ * the fetch 404s and the tab stays as it is.
+ */
+async function loadSourceVersions(panel: HTMLElement): Promise<void> {
+  const cards = [...panel.querySelectorAll<HTMLElement>(".project-source-card[data-source]")];
+  await Promise.all(
+    cards.map(async (card) => {
+      const name = card.dataset.source ?? "";
+      const repo = card.dataset.repo ?? "";
+      const currentMinor = (card.dataset.version ?? "").match(/^(.*?\d+\.\d+)/)?.[1];
+      try {
+        const resp = await fetch(`/catalog/versions/${encodeURIComponent(name)}/index.json`);
+        if (!resp.ok) {
+          return;
+        }
+        const entries = (await resp.json()) as VersionIndexEntry[];
+        if (!Array.isArray(entries)) {
+          return;
+        }
+        card.after(
+          ...entries
+            .filter((entry) => entry.minor !== currentMinor)
+            .reverse()
+            .map((entry) => createVersionCard(repo, entry)),
+        );
+      } catch {
+        // Snapshots are an optional extra on this tab; a failed or invalid
+        // fetch must not break the provenance it already shows.
+      }
+    }),
+  );
+}
+
+/**
+ * Panel for one archived minor, laid out exactly like the lone source card:
+ * the repo path takes the title slot and stretches over the panel as a link
+ * to the snapshot's pinned commit, the badge names the exact patch the minor
+ * currently serves, and commit and sync date each get a provenance line.
+ */
+function createVersionCard(repo: string, entry: VersionIndexEntry): HTMLElement {
+  const card = document.createElement("div");
+  card.className = "project-source-card";
+
+  const head = document.createElement("div");
+  head.className = "source-head";
+  const title = externalLink(
+    `https://github.com/${repo}/commit/${entry.commit}`,
+    repo,
+    "source-name source-stretch mono",
+  );
+  title.title = entry.commit;
+  head.append(title, text("span", "badge version-badge", entry.version));
+
+  const commitLine = text("p", "source-meta", "");
+  commitLine.append(createCommitLink(repo, entry.commit));
+  card.append(head, commitLine, text("p", "source-meta", `synced ${formatDate(entry.builtAt)}`));
+  return card;
 }
 
 /** Card for one source; `named` leads with the alias for grouped members. */
 function createSourceCard(member: ProjectSourceEntry, named: boolean): HTMLElement {
   const card = document.createElement("div");
   card.className = "project-source-card";
+  card.dataset.source = member.name;
+  card.dataset.repo = member.repo;
+  card.dataset.version = member.version;
 
   const head = document.createElement("div");
   head.className = "source-head";
@@ -271,12 +364,12 @@ function createSourceCard(member: ProjectSourceEntry, named: boolean): HTMLEleme
   const synced = `synced ${formatDate(member.builtAt)}`;
   if (!named && member.sha !== undefined) {
     const commitLine = text("p", "source-meta", "");
-    commitLine.append(createCommitLink(member, member.sha));
+    commitLine.append(createCommitLink(member.repo, member.sha));
     card.append(commitLine, text("p", "source-meta", synced));
   } else {
     const meta = text("p", "source-meta", "");
     if (member.sha !== undefined) {
-      meta.append(createCommitLink(member, member.sha), document.createTextNode(" · "));
+      meta.append(createCommitLink(member.repo, member.sha), document.createTextNode(" · "));
     }
     meta.append(document.createTextNode(synced));
     card.append(meta);

@@ -28,6 +28,7 @@ const FLAGS = ["--s3-no-check-bucket", "--fast-list", "--checksum"];
 interface HistoryEntry {
   name: string;
   version: string;
+  commit: string;
   builtAt: string;
   filesDigest: string;
   files: string[];
@@ -110,13 +111,18 @@ async function writeIndex(name: string): Promise<void> {
     .map((line) => line.replace(/\/$/, ""))
     .filter((line) => line.length > 0);
 
-  const entries: { minor: string; version: string; builtAt: string }[] = [];
+  const entries: { minor: string; version: string; commit: string; builtAt: string }[] = [];
   for (const minor of minors) {
     // A prefix without a manifest is a crashed upload; leave it out until a
     // re-archive completes it.
     const manifest = await remoteManifest(name, minor);
     if (manifest !== null) {
-      entries.push({ minor, version: manifest.version, builtAt: manifest.builtAt });
+      entries.push({
+        minor,
+        version: manifest.version,
+        commit: manifest.commit,
+        builtAt: manifest.builtAt,
+      });
     }
   }
   entries.sort((a, b) => a.minor.localeCompare(b.minor, "en", { numeric: true }));
@@ -139,9 +145,11 @@ if (import.meta.main) {
   let archived = 0;
   for (const name of sources) {
     if (await archiveSource(name)) {
-      await writeIndex(name);
       archived += 1;
     }
+    // The index is rewritten even for skipped snapshots, so a format change
+    // (or a crashed index upload) heals on the next deploy.
+    await writeIndex(name);
   }
   console.log(`archive: ${archived} snapshot(s) uploaded, ${sources.length - archived} up to date`);
 }

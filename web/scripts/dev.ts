@@ -13,6 +13,7 @@
  * change under `src/` is reflected without restarting the dev server.
  */
 import { join, normalize } from "node:path";
+import { devVersionsResponse } from "./dev-versions.ts";
 import { watchUi } from "./watch-ui.ts";
 
 const catalogDir = normalize(join(import.meta.dir, "..", "..", "catalog"));
@@ -23,8 +24,13 @@ const server = Bun.serve({
   port,
   async fetch(req) {
     const pathname = decodeURIComponent(new URL(req.url).pathname);
-    // Mirror the bucket layout: latest/* keys map to the catalog tree and
-    // history/* keys to build/history; anything else has no local backing.
+    // Mirror the bucket layout: latest/* keys map to the catalog tree,
+    // history/* keys to build/history, and versions/* metadata is synthesized
+    // from the history manifests; anything else has no local backing.
+    if (pathname.startsWith("/versions/")) {
+      const versions = await devVersionsResponse(pathname.slice(1), historyDir);
+      return versions ?? new Response("not found\n", { status: 404 });
+    }
     const latest = pathname.startsWith("/latest/");
     const history = pathname.startsWith("/history/");
     if (!latest && !history) {

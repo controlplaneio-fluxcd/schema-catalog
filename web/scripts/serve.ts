@@ -9,11 +9,13 @@
  * `make web-run` (wrangler) when you need to exercise the MCP endpoint.
  */
 import { join, normalize } from "node:path";
+import { devVersionsResponse } from "./dev-versions.ts";
 import { watchUi } from "./watch-ui.ts";
 
 const webRoot = join(import.meta.dir, "..");
 const assetsDir = normalize(join(webRoot, "dist", "assets"));
 const catalogDir = normalize(join(webRoot, "..", "catalog"));
+const historyDir = normalize(join(webRoot, "..", "build", "history"));
 const port = Number(process.env.PORT) || 8787;
 
 const encoder = new TextEncoder();
@@ -33,6 +35,12 @@ const server = Bun.serve({
 
     if (pathname === "/__livereload") {
       return liveReloadResponse();
+    }
+    // `/catalog/versions/*` metadata is synthesized from the history
+    // manifests, mirroring the Worker's versioned-snapshot serving.
+    if (pathname.startsWith("/catalog/versions/")) {
+      const versions = await devVersionsResponse(pathname.slice("/catalog/".length), historyDir);
+      return versions ?? new Response("not found\n", { status: 404 });
     }
     // `/catalog/<group>/<file>` streams the local catalog tree; the bare
     // `/catalog` path is the explorer page and resolves to `catalog.html`.
