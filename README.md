@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-112-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C850-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-629%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C851-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-629%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -147,17 +147,18 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cluster API RKE2 Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-control-plane` | v0.25.0 | 4 | 2026-07-09 |
 | [Cluster API vSphere](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-vsphere` | v1.16.1 | 16 | 2026-07-09 |
 | [Crossplane](https://schemas.fluxoperator.dev/p/crossplane) | `crossplane` | v2.3.3 | 25 | 2026-07-09 |
-| [Elemental Operator](https://schemas.fluxoperator.dev/p/elemental-operator) | `elemental-operator` | v1.9.2 | 9 | 2026-07-09 |
 | [External Secrets](https://schemas.fluxoperator.dev/p/external-secrets) | `external-secrets` | v2.7.0 | 28 | 2026-07-09 |
 | [Falco Operator](https://schemas.fluxoperator.dev/p/falco-operator) | `falco-operator` | v0.4.1 | 5 | 2026-07-09 |
 | [GCP Config Connector](https://schemas.fluxoperator.dev/p/config-connector) | `config-connector` | v1.153.0 | 578 | 2026-07-09 |
+| [Image Scanner Operator](https://schemas.fluxoperator.dev/p/image-scanner-operator) | `image-scanner-operator` | v0.16.20 | 1 | 2026-07-10 |
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.9.2 | 2 | 2026-07-09 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.40.2 | 5 | 2026-07-09 |
 | [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.36.0 | 8 | 2026-07-09 |
 | [Kyverno](https://schemas.fluxoperator.dev/p/kyverno) | `kyverno` | v1.18.2 | 47 | 2026-07-10 |
 | [OPA Gatekeeper](https://schemas.fluxoperator.dev/p/gatekeeper) | `gatekeeper` | v3.23.0 | 27 | 2026-07-09 |
 | [OpenReports](https://schemas.fluxoperator.dev/p/openreports) | `openreports` | v0.2.1 | 2 | 2026-07-09 |
-| [Rancher Turtles](https://schemas.fluxoperator.dev/p/turtles) | `turtles` | v0.26.3 | 2 | 2026-07-09 |
+| [Rancher Elemental Operator](https://schemas.fluxoperator.dev/p/rancher-elemental-operator) | `rancher-elemental-operator` | v1.9.2 | 9 | 2026-07-10 |
+| [Rancher Turtles](https://schemas.fluxoperator.dev/p/rancher-turtles) | `rancher-turtles` | v0.26.3 | 2 | 2026-07-10 |
 | [Sealed Secrets](https://schemas.fluxoperator.dev/p/sealed-secrets) | `sealed-secrets` | v0.38.4 | 1 | 2026-07-09 |
 | [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.0 | 4 | 2026-07-09 |
 | [Sigstore Policy Controller](https://schemas.fluxoperator.dev/p/sigstore-policy-controller) | `sigstore-policy-controller` | v0.15.1 | 3 | 2026-07-09 |
@@ -223,7 +224,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [MetalLB](https://schemas.fluxoperator.dev/p/metallb) | `metallb` | v0.16.0 | 10 | 2026-07-09 |
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.18.3 | 2 | 2026-07-09 |
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.18.3 | 3 | 2026-07-09 |
-| [System Upgrade Controller](https://schemas.fluxoperator.dev/p/system-upgrade-controller) | `system-upgrade-controller` | v0.19.2 | 1 | 2026-07-09 |
+| [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.19.2 | 1 | 2026-07-10 |
 | [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.7 | 10 | 2026-07-09 |
 | [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.7.0 | 4 | 2026-07-09 |
 | [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.15.0 | 9 | 2026-07-09 |
@@ -243,7 +244,6 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Crunchy Postgres Operator](https://schemas.fluxoperator.dev/p/crunchy-postgres-operator) | `crunchy-postgres-operator` | v6.0.2 | 4 | 2026-07-09 |
 | [Dapr](https://schemas.fluxoperator.dev/p/dapr) | `dapr` | v1.18.1 | 8 | 2026-07-09 |
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.43.0 | 3 | 2026-07-09 |
-| [Fleet](https://schemas.fluxoperator.dev/p/fleet) | `fleet` | v0.15.4 | 14 | 2026-07-09 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.1 | 15 | 2026-07-09 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.54.1 | 4 | 2026-07-09 |
 | [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.3 | 2 | 2026-07-09 |
@@ -265,6 +265,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [OpenFeature Operator](https://schemas.fluxoperator.dev/p/open-feature-operator) | `open-feature-operator` | v0.9.2 | 9 | 2026-07-09 |
 | [OpenKruise](https://schemas.fluxoperator.dev/p/openkruise) | `openkruise` | v1.9.1 | 26 | 2026-07-09 |
 | [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq-cluster-operator) | `rabbitmq-cluster-operator` | v2.22.1 | 1 | 2026-07-09 |
+| [Rancher Fleet](https://schemas.fluxoperator.dev/p/rancher-fleet) | `rancher-fleet` | v0.15.4 | 14 | 2026-07-10 |
 | [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.25.0 | 4 | 2026-07-09 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.0 | 11 | 2026-07-09 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
