@@ -132,7 +132,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cert Manager](https://schemas.fluxoperator.dev/p/cert-manager) | `cert-manager` | v1.21.0 | 6 | 2026-07-09 |
 | [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.13.3 | 36 | 2026-07-09 |
 | [Cluster API Add-on Provider Helm](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-addon-provider-helm` | v0.6.4 | 2 | 2026-07-09 |
-| [Cluster API AWS](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-aws` | v2.11.1 | 36 | 2026-07-09 |
+| [Cluster API AWS](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-aws` | v2.12.1 | 36 | 2026-07-10 |
 | [Cluster API Azure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-azure` | v1.26.0 | 25 | 2026-07-09 |
 | [Cluster API GCP](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-gcp` | v1.12.0 | 13 | 2026-07-09 |
 | [Cluster API Hetzner](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-hetzner` | v1.1.7 | 11 | 2026-07-09 |
@@ -154,7 +154,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.9.2 | 2 | 2026-07-09 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.40.2 | 5 | 2026-07-09 |
 | [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.36.0 | 8 | 2026-07-09 |
-| [Kyverno](https://schemas.fluxoperator.dev/p/kyverno) | `kyverno` | v1.18.1 | 47 | 2026-07-09 |
+| [Kyverno](https://schemas.fluxoperator.dev/p/kyverno) | `kyverno` | v1.18.2 | 47 | 2026-07-10 |
 | [OPA Gatekeeper](https://schemas.fluxoperator.dev/p/gatekeeper) | `gatekeeper` | v3.23.0 | 27 | 2026-07-09 |
 | [OpenReports](https://schemas.fluxoperator.dev/p/openreports) | `openreports` | v0.2.1 | 2 | 2026-07-09 |
 | [Rancher Turtles](https://schemas.fluxoperator.dev/p/turtles) | `turtles` | v0.26.3 | 2 | 2026-07-09 |
@@ -235,7 +235,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | --- | --- | --- | --- | --- |
 | [Actions Runner Controller](https://schemas.fluxoperator.dev/p/actions-runner-controller) | `actions-runner-controller` | 0.14.2 | 9 | 2026-07-09 |
 | [AIBrix](https://schemas.fluxoperator.dev/p/aibrix) | `aibrix` | v0.7.0 | 8 | 2026-07-09 |
-| [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.4.4 | 3 | 2026-07-09 |
+| [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.4.5 | 3 | 2026-07-10 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.10 | 3 | 2026-07-09 |
 | [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.9.0 | 5 | 2026-07-09 |
 | [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.0.7 | 8 | 2026-07-09 |
@@ -253,7 +253,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [KServe](https://schemas.fluxoperator.dev/p/kserve) | `kserve` | v0.19.0 | 6 | 2026-07-09 |
 | [KServe LLM](https://schemas.fluxoperator.dev/p/kserve) | `kserve-llmisvc` | v0.19.0 | 4 | 2026-07-09 |
 | [Kubeflow Notebooks](https://schemas.fluxoperator.dev/p/kubeflow) | `notebook-controller` | v1.11.0 | 3 | 2026-07-09 |
-| [Kubeflow Pipelines](https://schemas.fluxoperator.dev/p/kubeflow) | `kubeflow-pipelines` | 2.17.0-1 | 2 | 2026-07-09 |
+| [Kubeflow Pipelines](https://schemas.fluxoperator.dev/p/kubeflow) | `kubeflow-pipelines` | 2.17.0 | 2 | 2026-07-10 |
 | [Kubeflow PodDefaults](https://schemas.fluxoperator.dev/p/kubeflow) | `poddefaults-webhook` | v2.0.0 | 1 | 2026-07-09 |
 | [Kubeflow Profiles](https://schemas.fluxoperator.dev/p/kubeflow) | `profile-controller` | v2.0.0 | 2 | 2026-07-09 |
 | [Kubeflow PVCViewer](https://schemas.fluxoperator.dev/p/kubeflow) | `pvcviewer-controller` | v1.11.0 | 1 | 2026-07-09 |
