@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "ImagePolicy holds namespace-wide configuration for image signature verification\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
+  "description": "PKI configures cryptographic parameters for certificates generated internally by OpenShift components.\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -33,7 +33,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "deletionGracePeriodSeconds": {
@@ -51,7 +51,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "finalizers": {
@@ -119,7 +119,7 @@
                   "object",
                   "null"
                 ],
-                "x-flux-schema-type": "FieldsV1",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.\n\nEach key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.\n\nThe exact format is defined in sigs.k8s.io/structured-merge-diff"
               },
               "manager": {
@@ -150,12 +150,12 @@
                   "string",
                   "null"
                 ],
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               }
             },
             "type": "object",
-            "x-flux-schema-type": "ManagedFieldsEntry",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "ManagedFieldsEntry is a workflow-id, a FieldSet and the group version of the resource that the fieldset applies to."
           },
           "type": [
@@ -227,7 +227,7 @@
               "uid"
             ],
             "type": "object",
-            "x-flux-schema-type": "OwnerReference",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "OwnerReference contains enough information to let you identify an owning object. An owning object must be in the same namespace as the dependent, or be cluster-scoped, so there is no namespace field.",
             "x-kubernetes-map-type": "atomic"
           },
@@ -266,7 +266,7 @@
         "object",
         "null"
       ],
-      "x-flux-schema-type": "ObjectMeta",
+      "x-flux-schema-type": "io",
       "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
     "spec": {
@@ -274,326 +274,339 @@
       "default": {},
       "description": "spec holds user settable values for configuration",
       "properties": {
-        "policy": {
+        "certificateManagement": {
           "additionalProperties": false,
           "default": {},
-          "description": "policy contains configuration to allow scopes to be verified, and defines how images not matching the verification policy will be treated.",
+          "description": "certificateManagement specifies how PKI configuration is managed for internally-generated certificates. This controls the certificate generation approach for all OpenShift components that create certificates internally, including certificate authorities, serving certificates, and client certificates.",
           "properties": {
-            "rootOfTrust": {
+            "custom": {
               "additionalProperties": false,
               "default": {},
-              "description": "rootOfTrust specifies the root of trust for the policy.",
+              "description": "custom contains administrator-specified cryptographic configuration. Use the defaults and category override fields to specify certificate generation parameters. Required when mode is Custom, and forbidden otherwise.",
               "properties": {
-                "fulcioCAWithRekor": {
+                "clientCertificates": {
                   "additionalProperties": false,
-                  "description": "fulcioCAWithRekor defines the root of trust based on the Fulcio certificate and the Rekor public key. For more information about Fulcio and Rekor, please refer to the document at: https://github.com/sigstore/fulcio and https://github.com/sigstore/rekor",
+                  "default": {},
+                  "description": "clientCertificates optionally overrides certificate parameters for client authentication certificates used to authenticate to servers. When set, these parameters take precedence over defaults for all client certificates. When omitted, the defaults are used for client certificates.",
                   "properties": {
-                    "fulcioCAData": {
-                      "description": "fulcioCAData contains inline base64-encoded data for the PEM format fulcio CA. fulcioCAData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "fulcioSubject": {
+                    "key": {
                       "additionalProperties": false,
                       "default": {},
-                      "description": "fulcioSubject specifies OIDC issuer and the email of the Fulcio authentication configuration.",
+                      "description": "key specifies the cryptographic parameters for the certificate's key pair. Currently this is the only configurable parameter. When omitted in an overrides entry, the key configuration from defaults is used.",
                       "properties": {
-                        "oidcIssuer": {
-                          "default": "",
-                          "description": "oidcIssuer contains the expected OIDC issuer. It will be verified that the Fulcio-issued certificate contains a (Fulcio-defined) certificate extension pointing at this OIDC issuer URL. When Fulcio issues certificates, it includes a value based on an URL inside the client-provided ID token. Example: \"https://expected.OIDC.issuer/\"",
+                        "algorithm": {
+                          "description": "algorithm specifies the key generation algorithm. Valid values are \"RSA\" and \"ECDSA\".\n\nWhen set to RSA, the rsa field must be specified and the generated key will be an RSA key with the configured key size.\n\nWhen set to ECDSA, the ecdsa field must be specified and the generated key will be an ECDSA key using the configured elliptic curve.",
                           "type": "string"
                         },
-                        "signedEmail": {
-                          "default": "",
-                          "description": "signedEmail holds the email address the the Fulcio certificate is issued for. Example: \"expected-signing-user@example.com\"",
-                          "type": "string"
+                        "ecdsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "ecdsa specifies ECDSA key parameters. Required when algorithm is ECDSA, and forbidden otherwise.",
+                          "properties": {
+                            "curve": {
+                              "description": "curve specifies the NIST elliptic curve for ECDSA keys. Valid values are \"P256\", \"P384\", and \"P521\".\n\nWhen set to P256, the NIST P-256 curve (also known as secp256r1) is used, providing 128-bit security.\n\nWhen set to P384, the NIST P-384 curve (also known as secp384r1) is used, providing 192-bit security.\n\nWhen set to P521, the NIST P-521 curve (also known as secp521r1) is used, providing 256-bit security.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "curve"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "ECDSAKeyConfig",
+                          "x-flux-schema-type-description": "ECDSAKeyConfig specifies parameters for ECDSA key generation."
+                        },
+                        "rsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "rsa specifies RSA key parameters. Required when algorithm is RSA, and forbidden otherwise.",
+                          "properties": {
+                            "keySize": {
+                              "description": "keySize specifies the size of RSA keys in bits. Valid values are multiples of 1024 from 2048 to 8192.",
+                              "format": "int32",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "keySize"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "RSAKeyConfig",
+                          "x-flux-schema-type-description": "RSAKeyConfig specifies parameters for RSA key generation."
                         }
                       },
                       "required": [
-                        "oidcIssuer",
-                        "signedEmail"
+                        "algorithm"
                       ],
-                      "type": "object",
-                      "x-flux-schema-type": "PolicyFulcioSubject",
-                      "x-flux-schema-type-description": "PolicyFulcioSubject defines the OIDC issuer and the email of the Fulcio authentication configuration."
-                    },
-                    "rekorKeyData": {
-                      "description": "rekorKeyData contains inline base64-encoded data for the PEM format from the Rekor public key. rekorKeyData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "x-flux-schema-type": "KeyConfig",
+                      "x-flux-schema-type-description": "KeyConfig specifies cryptographic parameters for key generation."
                     }
                   },
-                  "required": [
-                    "fulcioCAData",
-                    "rekorKeyData",
-                    "fulcioSubject"
-                  ],
                   "type": [
                     "object",
                     "null"
                   ],
-                  "x-flux-schema-type": "FulcioCAWithRekor",
-                  "x-flux-schema-type-description": "FulcioCAWithRekor defines the root of trust based on the Fulcio certificate and the Rekor public key."
+                  "x-flux-schema-type": "CertificateConfig",
+                  "x-flux-schema-type-description": "CertificateConfig specifies configuration parameters for certificates. At least one property must be specified."
                 },
-                "pki": {
+                "defaults": {
                   "additionalProperties": false,
-                  "description": "pki defines the root of trust based on Bring Your Own Public Key Infrastructure (BYOPKI) Root CA(s) and corresponding intermediate certificates.",
+                  "default": {},
+                  "description": "defaults specifies the default certificate configuration that applies to all certificates unless overridden by a category override.",
                   "properties": {
-                    "caIntermediatesData": {
-                      "description": "caIntermediatesData contains base64-encoded data of a certificate bundle PEM file, which contains one or more intermediate certificates in the PEM format. The total length of the data must not exceed 8192 characters. caIntermediatesData requires caRootsData to be set.",
-                      "format": "byte",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "caRootsData": {
-                      "description": "caRootsData contains base64-encoded data of a certificate bundle PEM file, which contains one or more CA roots in the PEM format. The total length of the data must not exceed 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "pkiCertificateSubject": {
+                    "key": {
                       "additionalProperties": false,
                       "default": {},
-                      "description": "pkiCertificateSubject defines the requirements imposed on the subject to which the certificate was issued.",
+                      "description": "key specifies the cryptographic parameters for the certificate's key pair. This field is required in defaults to ensure all certificates have a well-defined key configuration.",
                       "properties": {
-                        "email": {
-                          "description": "email specifies the expected email address imposed on the subject to which the certificate was issued, and must match the email address listed in the Subject Alternative Name (SAN) field of the certificate. The email should be a valid email address and at most 320 characters in length.",
-                          "type": [
-                            "string",
-                            "null"
-                          ]
+                        "algorithm": {
+                          "description": "algorithm specifies the key generation algorithm. Valid values are \"RSA\" and \"ECDSA\".\n\nWhen set to RSA, the rsa field must be specified and the generated key will be an RSA key with the configured key size.\n\nWhen set to ECDSA, the ecdsa field must be specified and the generated key will be an ECDSA key using the configured elliptic curve.",
+                          "type": "string"
                         },
-                        "hostname": {
-                          "description": "hostname specifies the expected hostname imposed on the subject to which the certificate was issued, and it must match the hostname listed in the Subject Alternative Name (SAN) DNS field of the certificate. The hostname should be a valid dns 1123 subdomain name, optionally prefixed by '*.', and at most 253 characters in length. It should consist only of lowercase alphanumeric characters, hyphens, periods and the optional preceding asterisk.",
+                        "ecdsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "ecdsa specifies ECDSA key parameters. Required when algorithm is ECDSA, and forbidden otherwise.",
+                          "properties": {
+                            "curve": {
+                              "description": "curve specifies the NIST elliptic curve for ECDSA keys. Valid values are \"P256\", \"P384\", and \"P521\".\n\nWhen set to P256, the NIST P-256 curve (also known as secp256r1) is used, providing 128-bit security.\n\nWhen set to P384, the NIST P-384 curve (also known as secp384r1) is used, providing 192-bit security.\n\nWhen set to P521, the NIST P-521 curve (also known as secp521r1) is used, providing 256-bit security.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "curve"
+                          ],
                           "type": [
-                            "string",
+                            "object",
                             "null"
-                          ]
+                          ],
+                          "x-flux-schema-type": "ECDSAKeyConfig",
+                          "x-flux-schema-type-description": "ECDSAKeyConfig specifies parameters for ECDSA key generation."
+                        },
+                        "rsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "rsa specifies RSA key parameters. Required when algorithm is RSA, and forbidden otherwise.",
+                          "properties": {
+                            "keySize": {
+                              "description": "keySize specifies the size of RSA keys in bits. Valid values are multiples of 1024 from 2048 to 8192.",
+                              "format": "int32",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "keySize"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "RSAKeyConfig",
+                          "x-flux-schema-type-description": "RSAKeyConfig specifies parameters for RSA key generation."
                         }
                       },
+                      "required": [
+                        "algorithm"
+                      ],
                       "type": "object",
-                      "x-flux-schema-type": "PKICertificateSubject",
-                      "x-flux-schema-type-description": "PKICertificateSubject defines the requirements imposed on the subject to which the certificate was issued."
+                      "x-flux-schema-type": "KeyConfig",
+                      "x-flux-schema-type-description": "KeyConfig specifies cryptographic parameters for key generation."
                     }
                   },
                   "required": [
-                    "caRootsData",
-                    "pkiCertificateSubject"
+                    "key"
                   ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "PKI",
-                  "x-flux-schema-type-description": "PKI defines the root of trust based on Root CA(s) and corresponding intermediate certificates."
+                  "type": "object",
+                  "x-flux-schema-type": "DefaultCertificateConfig",
+                  "x-flux-schema-type-description": "DefaultCertificateConfig specifies the default certificate configuration parameters. All fields are required to ensure that defaults are fully specified for all certificates."
                 },
-                "policyType": {
-                  "default": "",
-                  "description": "policyType serves as the union's discriminator. Users are required to assign a value to this field, choosing one of the policy types that define the root of trust. \"PublicKey\" indicates that the policy relies on a sigstore publicKey and may optionally use a Rekor verification. \"FulcioCAWithRekor\" indicates that the policy is based on the Fulcio certification and incorporates a Rekor verification. \"PKI\" indicates that the policy is based on the certificates from Bring Your Own Public Key Infrastructure (BYOPKI). This value is enabled by turning on the SigstoreImageVerificationPKI feature gate.",
-                  "type": "string"
-                },
-                "publicKey": {
+                "servingCertificates": {
                   "additionalProperties": false,
-                  "description": "publicKey defines the root of trust based on a sigstore public key.",
+                  "default": {},
+                  "description": "servingCertificates optionally overrides certificate parameters for TLS server certificates used to serve HTTPS endpoints. When set, these parameters take precedence over defaults for all serving certificates. When omitted, the defaults are used for serving certificates.",
                   "properties": {
-                    "keyData": {
-                      "description": "keyData contains inline base64-encoded data for the PEM format public key. KeyData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "rekorKeyData": {
-                      "description": "rekorKeyData contains inline base64-encoded data for the PEM format from the Rekor public key. rekorKeyData must be at most 8192 characters.",
-                      "format": "byte",
+                    "key": {
+                      "additionalProperties": false,
+                      "default": {},
+                      "description": "key specifies the cryptographic parameters for the certificate's key pair. Currently this is the only configurable parameter. When omitted in an overrides entry, the key configuration from defaults is used.",
+                      "properties": {
+                        "algorithm": {
+                          "description": "algorithm specifies the key generation algorithm. Valid values are \"RSA\" and \"ECDSA\".\n\nWhen set to RSA, the rsa field must be specified and the generated key will be an RSA key with the configured key size.\n\nWhen set to ECDSA, the ecdsa field must be specified and the generated key will be an ECDSA key using the configured elliptic curve.",
+                          "type": "string"
+                        },
+                        "ecdsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "ecdsa specifies ECDSA key parameters. Required when algorithm is ECDSA, and forbidden otherwise.",
+                          "properties": {
+                            "curve": {
+                              "description": "curve specifies the NIST elliptic curve for ECDSA keys. Valid values are \"P256\", \"P384\", and \"P521\".\n\nWhen set to P256, the NIST P-256 curve (also known as secp256r1) is used, providing 128-bit security.\n\nWhen set to P384, the NIST P-384 curve (also known as secp384r1) is used, providing 192-bit security.\n\nWhen set to P521, the NIST P-521 curve (also known as secp521r1) is used, providing 256-bit security.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "curve"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "ECDSAKeyConfig",
+                          "x-flux-schema-type-description": "ECDSAKeyConfig specifies parameters for ECDSA key generation."
+                        },
+                        "rsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "rsa specifies RSA key parameters. Required when algorithm is RSA, and forbidden otherwise.",
+                          "properties": {
+                            "keySize": {
+                              "description": "keySize specifies the size of RSA keys in bits. Valid values are multiples of 1024 from 2048 to 8192.",
+                              "format": "int32",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "keySize"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "RSAKeyConfig",
+                          "x-flux-schema-type-description": "RSAKeyConfig specifies parameters for RSA key generation."
+                        }
+                      },
+                      "required": [
+                        "algorithm"
+                      ],
                       "type": [
-                        "string",
+                        "object",
                         "null"
-                      ]
+                      ],
+                      "x-flux-schema-type": "KeyConfig",
+                      "x-flux-schema-type-description": "KeyConfig specifies cryptographic parameters for key generation."
                     }
                   },
-                  "required": [
-                    "keyData"
-                  ],
                   "type": [
                     "object",
                     "null"
                   ],
-                  "x-flux-schema-type": "PublicKey",
-                  "x-flux-schema-type-description": "PublicKey defines the root of trust based on a sigstore public key."
+                  "x-flux-schema-type": "CertificateConfig",
+                  "x-flux-schema-type-description": "CertificateConfig specifies configuration parameters for certificates. At least one property must be specified."
+                },
+                "signerCertificates": {
+                  "additionalProperties": false,
+                  "default": {},
+                  "description": "signerCertificates optionally overrides certificate parameters for certificate authority (CA) certificates that sign other certificates. When set, these parameters take precedence over defaults for all signer certificates. When omitted, the defaults are used for signer certificates.",
+                  "properties": {
+                    "key": {
+                      "additionalProperties": false,
+                      "default": {},
+                      "description": "key specifies the cryptographic parameters for the certificate's key pair. Currently this is the only configurable parameter. When omitted in an overrides entry, the key configuration from defaults is used.",
+                      "properties": {
+                        "algorithm": {
+                          "description": "algorithm specifies the key generation algorithm. Valid values are \"RSA\" and \"ECDSA\".\n\nWhen set to RSA, the rsa field must be specified and the generated key will be an RSA key with the configured key size.\n\nWhen set to ECDSA, the ecdsa field must be specified and the generated key will be an ECDSA key using the configured elliptic curve.",
+                          "type": "string"
+                        },
+                        "ecdsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "ecdsa specifies ECDSA key parameters. Required when algorithm is ECDSA, and forbidden otherwise.",
+                          "properties": {
+                            "curve": {
+                              "description": "curve specifies the NIST elliptic curve for ECDSA keys. Valid values are \"P256\", \"P384\", and \"P521\".\n\nWhen set to P256, the NIST P-256 curve (also known as secp256r1) is used, providing 128-bit security.\n\nWhen set to P384, the NIST P-384 curve (also known as secp384r1) is used, providing 192-bit security.\n\nWhen set to P521, the NIST P-521 curve (also known as secp521r1) is used, providing 256-bit security.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "curve"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "ECDSAKeyConfig",
+                          "x-flux-schema-type-description": "ECDSAKeyConfig specifies parameters for ECDSA key generation."
+                        },
+                        "rsa": {
+                          "additionalProperties": false,
+                          "default": {},
+                          "description": "rsa specifies RSA key parameters. Required when algorithm is RSA, and forbidden otherwise.",
+                          "properties": {
+                            "keySize": {
+                              "description": "keySize specifies the size of RSA keys in bits. Valid values are multiples of 1024 from 2048 to 8192.",
+                              "format": "int32",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "keySize"
+                          ],
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "x-flux-schema-type": "RSAKeyConfig",
+                          "x-flux-schema-type-description": "RSAKeyConfig specifies parameters for RSA key generation."
+                        }
+                      },
+                      "required": [
+                        "algorithm"
+                      ],
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "x-flux-schema-type": "KeyConfig",
+                      "x-flux-schema-type-description": "KeyConfig specifies cryptographic parameters for key generation."
+                    }
+                  },
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "x-flux-schema-type": "CertificateConfig",
+                  "x-flux-schema-type-description": "CertificateConfig specifies configuration parameters for certificates. At least one property must be specified."
                 }
               },
               "required": [
-                "policyType"
-              ],
-              "type": "object",
-              "x-flux-schema-type": "PolicyRootOfTrust",
-              "x-flux-schema-type-description": "PolicyRootOfTrust defines the root of trust based on the selected policyType."
-            },
-            "signedIdentity": {
-              "additionalProperties": false,
-              "default": {},
-              "description": "signedIdentity specifies what image identity the signature claims about the image. The required matchPolicy field specifies the approach used in the verification process to verify the identity in the signature and the actual image identity, the default matchPolicy is \"MatchRepoDigestOrExact\".",
-              "properties": {
-                "exactRepository": {
-                  "additionalProperties": false,
-                  "description": "exactRepository is required if matchPolicy is set to \"ExactRepository\".",
-                  "properties": {
-                    "repository": {
-                      "default": "",
-                      "description": "repository is the reference of the image identity to be matched. The value should be a repository name (by omitting the tag or digest) in a registry implementing the \"Docker Registry HTTP API V2\". For example, docker.io/library/busybox",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "repository"
-                  ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "PolicyMatchExactRepository"
-                },
-                "matchPolicy": {
-                  "default": "",
-                  "description": "matchPolicy sets the type of matching to be used. Valid values are \"MatchRepoDigestOrExact\", \"MatchRepository\", \"ExactRepository\", \"RemapIdentity\". When omitted, the default value is \"MatchRepoDigestOrExact\". If set matchPolicy to ExactRepository, then the exactRepository must be specified. If set matchPolicy to RemapIdentity, then the remapIdentity must be specified. \"MatchRepoDigestOrExact\" means that the identity in the signature must be in the same repository as the image identity if the image identity is referenced by a digest. Otherwise, the identity in the signature must be the same as the image identity. \"MatchRepository\" means that the identity in the signature must be in the same repository as the image identity. \"ExactRepository\" means that the identity in the signature must be in the same repository as a specific identity specified by \"repository\". \"RemapIdentity\" means that the signature must be in the same as the remapped image identity. Remapped image identity is obtained by replacing the \"prefix\" with the specified “signedPrefix” if the the image identity matches the specified remapPrefix.",
-                  "type": "string"
-                },
-                "remapIdentity": {
-                  "additionalProperties": false,
-                  "description": "remapIdentity is required if matchPolicy is set to \"RemapIdentity\".",
-                  "properties": {
-                    "prefix": {
-                      "default": "",
-                      "description": "prefix is the prefix of the image identity to be matched. If the image identity matches the specified prefix, that prefix is replaced by the specified “signedPrefix” (otherwise it is used as unchanged and no remapping takes place). This useful when verifying signatures for a mirror of some other repository namespace that preserves the vendor’s repository structure. The prefix and signedPrefix values can be either host[:port] values (matching exactly the same host[:port], string), repository namespaces, or repositories (i.e. they must not contain tags/digests), and match as prefixes of the fully expanded form. For example, docker.io/library/busybox (not busybox) to specify that single repository, or docker.io/library (not an empty string) to specify the parent namespace of docker.io/library/busybox.",
-                      "type": "string"
-                    },
-                    "signedPrefix": {
-                      "default": "",
-                      "description": "signedPrefix is the prefix of the image identity to be matched in the signature. The format is the same as \"prefix\". The values can be either host[:port] values (matching exactly the same host[:port], string), repository namespaces, or repositories (i.e. they must not contain tags/digests), and match as prefixes of the fully expanded form. For example, docker.io/library/busybox (not busybox) to specify that single repository, or docker.io/library (not an empty string) to specify the parent namespace of docker.io/library/busybox.",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "prefix",
-                    "signedPrefix"
-                  ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "PolicyMatchRemapIdentity"
-                }
-              },
-              "required": [
-                "matchPolicy"
+                "defaults"
               ],
               "type": [
                 "object",
                 "null"
               ],
-              "x-flux-schema-type": "PolicyIdentity",
-              "x-flux-schema-type-description": "PolicyIdentity defines image identity the signature claims about the image. When omitted, the default matchPolicy is \"MatchRepoDigestOrExact\"."
+              "x-flux-schema-type": "CustomPKIPolicy",
+              "x-flux-schema-type-description": "CustomPKIPolicy contains administrator-specified cryptographic configuration. Administrators must specify defaults for all certificates and may optionally override specific categories of certificates."
+            },
+            "mode": {
+              "description": "mode determines how PKI configuration is managed. Valid values are \"Unmanaged\", \"Default\", and \"Custom\".\n\nWhen set to Unmanaged, components use their existing hardcoded certificate generation behavior, exactly as if this feature did not exist. Each component generates certificates using whatever parameters it was using before this feature. While most components use RSA 2048, some may use different parameters. Use of this mode might prevent upgrading to the next major OpenShift release.\n\nWhen set to Default, OpenShift-recommended best practices for certificate generation are applied. The specific parameters may evolve across OpenShift releases to adopt improved cryptographic standards. In the initial release, this matches Unmanaged behavior for each component. In future releases, this may adopt ECDSA or larger RSA keys based on industry best practices. Recommended for most customers who want to benefit from security improvements automatically.\n\nWhen set to Custom, the certificate management parameters can be set explicitly. Use the custom field to specify certificate generation parameters.",
+              "type": "string"
             }
           },
           "required": [
-            "rootOfTrust"
+            "mode"
           ],
           "type": "object",
-          "x-flux-schema-type": "Policy",
-          "x-flux-schema-type-description": "Policy defines the verification policy for the items in the scopes list."
-        },
-        "scopes": {
-          "description": "scopes defines the list of image identities assigned to a policy. Each item refers to a scope in a registry implementing the \"Docker Registry HTTP API V2\". Scopes matching individual images are named Docker references in the fully expanded form, either using a tag or digest. For example, docker.io/library/busybox:latest (not busybox:latest). More general scopes are prefixes of individual-image scopes, and specify a repository (by omitting the tag or digest), a repository namespace, or a registry host (by only specifying the host name and possibly a port number) or a wildcard expression starting with `*.`, for matching all subdomains (not including a port number). Wildcards are only supported for subdomain matching, and may not be used in the middle of the host, i.e.  *.example.com is a valid case, but example*.*.com is not. If multiple scopes match a given image, only the policy requirements for the most specific scope apply. The policy requirements for more general scopes are ignored. In addition to setting a policy appropriate for your own deployed applications, make sure that a policy on the OpenShift image repositories quay.io/openshift-release-dev/ocp-release, quay.io/openshift-release-dev/ocp-v4.0-art-dev (or on a more general scope) allows deployment of the OpenShift images required for cluster operation. If a scope is configured in both the ClusterImagePolicy and the ImagePolicy, or if the scope in ImagePolicy is nested under one of the scopes from the ClusterImagePolicy, only the policy from the ClusterImagePolicy will be applied. For additional details about the format, please refer to the document explaining the docker transport field, which can be found at: https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md#docker",
-          "items": {
-            "default": "",
-            "type": "string"
-          },
-          "type": "array",
-          "x-kubernetes-list-type": "set"
+          "x-flux-schema-type": "PKICertificateManagement",
+          "x-flux-schema-type-description": "PKICertificateManagement determines whether components use hardcoded defaults (Unmanaged), follow OpenShift best practices (Default), or use administrator-specified cryptographic parameters (Custom). This provides flexibility for organizations with specific compliance requirements or security policies while maintaining backwards compatibility for existing clusters."
         }
       },
       "required": [
-        "scopes",
-        "policy"
+        "certificateManagement"
       ],
       "type": "object",
-      "x-flux-schema-type": "ImagePolicySpec",
-      "x-flux-schema-type-description": "ImagePolicySpec is the specification of the ImagePolicy CRD."
-    },
-    "status": {
-      "additionalProperties": false,
-      "default": {},
-      "description": "status contains the observed state of the resource.",
-      "properties": {
-        "conditions": {
-          "description": "conditions provide details on the status of this API Resource.",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "description": "Condition contains details for one aspect of the current state of this API Resource.",
-            "properties": {
-              "lastTransitionTime": {
-                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
-                "format": "date-time",
-                "type": "string",
-                "x-flux-schema-type": "Time",
-                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
-              },
-              "message": {
-                "default": "",
-                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
-                "type": "string"
-              },
-              "observedGeneration": {
-                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
-                "format": "int64",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "reason": {
-                "default": "",
-                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
-                "type": "string"
-              },
-              "status": {
-                "default": "",
-                "description": "status of the condition, one of True, False, Unknown.",
-                "type": "string"
-              },
-              "type": {
-                "default": "",
-                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
-                "type": "string"
-              }
-            },
-            "required": [
-              "type",
-              "status",
-              "lastTransitionTime",
-              "reason",
-              "message"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "Condition",
-            "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
-          },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-map-keys": [
-            "type"
-          ],
-          "x-kubernetes-list-type": "map"
-        }
-      },
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-flux-schema-type": "ImagePolicyStatus"
+      "x-flux-schema-type": "PKISpec",
+      "x-flux-schema-type-description": "PKISpec holds the specification for PKI configuration."
     }
   },
   "required": [
@@ -602,5 +615,5 @@
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "ImagePolicy"
+  "x-flux-schema-type": "PKI"
 }

@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "ClusterImagePolicy holds cluster-wide configuration for image signature verification\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
+  "description": "CompatibilityRequirement expresses a set of requirements on a target CRD. It is used to ensure compatibility between different actors using the same CRD.\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -33,7 +33,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "deletionGracePeriodSeconds": {
@@ -51,7 +51,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "finalizers": {
@@ -119,7 +119,7 @@
                   "object",
                   "null"
                 ],
-                "x-flux-schema-type": "FieldsV1",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.\n\nEach key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.\n\nThe exact format is defined in sigs.k8s.io/structured-merge-diff"
               },
               "manager": {
@@ -150,12 +150,12 @@
                   "string",
                   "null"
                 ],
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               }
             },
             "type": "object",
-            "x-flux-schema-type": "ManagedFieldsEntry",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "ManagedFieldsEntry is a workflow-id, a FieldSet and the group version of the resource that the fieldset applies to."
           },
           "type": [
@@ -227,7 +227,7 @@
               "uid"
             ],
             "type": "object",
-            "x-flux-schema-type": "OwnerReference",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "OwnerReference contains enough information to let you identify an owning object. An owning object must be in the same namespace as the dependent, or be cluster-scoped, so there is no namespace field.",
             "x-kubernetes-map-type": "atomic"
           },
@@ -262,271 +262,351 @@
           ]
         }
       },
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-flux-schema-type": "ObjectMeta",
+      "type": "object",
+      "x-flux-schema-type": "io",
       "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
     "spec": {
       "additionalProperties": false,
       "default": {},
-      "description": "spec contains the configuration for the cluster image policy.",
+      "description": "spec is the specification of the desired behavior of the Compatibility Requirement.",
       "properties": {
-        "policy": {
+        "compatibilitySchema": {
           "additionalProperties": false,
           "default": {},
-          "description": "policy contains configuration to allow scopes to be verified, and defines how images not matching the verification policy will be treated.",
+          "description": "compatibilitySchema defines the schema used by customResourceDefinitionSchemaValidation and objectSchemaValidation. This field is required.",
           "properties": {
-            "rootOfTrust": {
+            "customResourceDefinition": {
               "additionalProperties": false,
               "default": {},
-              "description": "rootOfTrust specifies the root of trust for the policy.",
+              "description": "customResourceDefinition contains the complete definition of the CRD for schema and object validation purposes. This field is required.",
               "properties": {
-                "fulcioCAWithRekor": {
-                  "additionalProperties": false,
-                  "description": "fulcioCAWithRekor defines the root of trust based on the Fulcio certificate and the Rekor public key. For more information about Fulcio and Rekor, please refer to the document at: https://github.com/sigstore/fulcio and https://github.com/sigstore/rekor",
-                  "properties": {
-                    "fulcioCAData": {
-                      "description": "fulcioCAData contains inline base64-encoded data for the PEM format fulcio CA. fulcioCAData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "fulcioSubject": {
-                      "additionalProperties": false,
-                      "default": {},
-                      "description": "fulcioSubject specifies OIDC issuer and the email of the Fulcio authentication configuration.",
-                      "properties": {
-                        "oidcIssuer": {
-                          "default": "",
-                          "description": "oidcIssuer contains the expected OIDC issuer. It will be verified that the Fulcio-issued certificate contains a (Fulcio-defined) certificate extension pointing at this OIDC issuer URL. When Fulcio issues certificates, it includes a value based on an URL inside the client-provided ID token. Example: \"https://expected.OIDC.issuer/\"",
-                          "type": "string"
-                        },
-                        "signedEmail": {
-                          "default": "",
-                          "description": "signedEmail holds the email address the the Fulcio certificate is issued for. Example: \"expected-signing-user@example.com\"",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "oidcIssuer",
-                        "signedEmail"
-                      ],
-                      "type": "object",
-                      "x-flux-schema-type": "PolicyFulcioSubject",
-                      "x-flux-schema-type-description": "PolicyFulcioSubject defines the OIDC issuer and the email of the Fulcio authentication configuration."
-                    },
-                    "rekorKeyData": {
-                      "description": "rekorKeyData contains inline base64-encoded data for the PEM format from the Rekor public key. rekorKeyData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "fulcioCAData",
-                    "rekorKeyData",
-                    "fulcioSubject"
-                  ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "FulcioCAWithRekor",
-                  "x-flux-schema-type-description": "FulcioCAWithRekor defines the root of trust based on the Fulcio certificate and the Rekor public key."
-                },
-                "pki": {
-                  "additionalProperties": false,
-                  "description": "pki defines the root of trust based on Bring Your Own Public Key Infrastructure (BYOPKI) Root CA(s) and corresponding intermediate certificates.",
-                  "properties": {
-                    "caIntermediatesData": {
-                      "description": "caIntermediatesData contains base64-encoded data of a certificate bundle PEM file, which contains one or more intermediate certificates in the PEM format. The total length of the data must not exceed 8192 characters. caIntermediatesData requires caRootsData to be set.",
-                      "format": "byte",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "caRootsData": {
-                      "description": "caRootsData contains base64-encoded data of a certificate bundle PEM file, which contains one or more CA roots in the PEM format. The total length of the data must not exceed 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "pkiCertificateSubject": {
-                      "additionalProperties": false,
-                      "default": {},
-                      "description": "pkiCertificateSubject defines the requirements imposed on the subject to which the certificate was issued.",
-                      "properties": {
-                        "email": {
-                          "description": "email specifies the expected email address imposed on the subject to which the certificate was issued, and must match the email address listed in the Subject Alternative Name (SAN) field of the certificate. The email should be a valid email address and at most 320 characters in length.",
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "hostname": {
-                          "description": "hostname specifies the expected hostname imposed on the subject to which the certificate was issued, and it must match the hostname listed in the Subject Alternative Name (SAN) DNS field of the certificate. The hostname should be a valid dns 1123 subdomain name, optionally prefixed by '*.', and at most 253 characters in length. It should consist only of lowercase alphanumeric characters, hyphens, periods and the optional preceding asterisk.",
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        }
-                      },
-                      "type": "object",
-                      "x-flux-schema-type": "PKICertificateSubject",
-                      "x-flux-schema-type-description": "PKICertificateSubject defines the requirements imposed on the subject to which the certificate was issued."
-                    }
-                  },
-                  "required": [
-                    "caRootsData",
-                    "pkiCertificateSubject"
-                  ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "PKI",
-                  "x-flux-schema-type-description": "PKI defines the root of trust based on Root CA(s) and corresponding intermediate certificates."
-                },
-                "policyType": {
-                  "default": "",
-                  "description": "policyType serves as the union's discriminator. Users are required to assign a value to this field, choosing one of the policy types that define the root of trust. \"PublicKey\" indicates that the policy relies on a sigstore publicKey and may optionally use a Rekor verification. \"FulcioCAWithRekor\" indicates that the policy is based on the Fulcio certification and incorporates a Rekor verification. \"PKI\" indicates that the policy is based on the certificates from Bring Your Own Public Key Infrastructure (BYOPKI). This value is enabled by turning on the SigstoreImageVerificationPKI feature gate.",
+                "data": {
+                  "description": "data contains the complete definition of the CRD. This field must be in the format specified by the type field. It may not be longer than 1572864 characters. This field is required.",
                   "type": "string"
                 },
-                "publicKey": {
-                  "additionalProperties": false,
-                  "description": "publicKey defines the root of trust based on a sigstore public key.",
-                  "properties": {
-                    "keyData": {
-                      "description": "keyData contains inline base64-encoded data for the PEM format public key. KeyData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "rekorKeyData": {
-                      "description": "rekorKeyData contains inline base64-encoded data for the PEM format from the Rekor public key. rekorKeyData must be at most 8192 characters.",
-                      "format": "byte",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "keyData"
-                  ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "PublicKey",
-                  "x-flux-schema-type-description": "PublicKey defines the root of trust based on a sigstore public key."
+                "type": {
+                  "description": "type indicates the type of the CRD data. The only supported type is \"YAML\". This field is required.",
+                  "type": "string"
                 }
               },
               "required": [
-                "policyType"
+                "type",
+                "data"
               ],
               "type": "object",
-              "x-flux-schema-type": "PolicyRootOfTrust",
-              "x-flux-schema-type-description": "PolicyRootOfTrust defines the root of trust based on the selected policyType."
+              "x-flux-schema-type": "CRDData",
+              "x-flux-schema-type-description": "CRDData contains the complete definition of a CRD."
             },
-            "signedIdentity": {
-              "additionalProperties": false,
-              "default": {},
-              "description": "signedIdentity specifies what image identity the signature claims about the image. The required matchPolicy field specifies the approach used in the verification process to verify the identity in the signature and the actual image identity, the default matchPolicy is \"MatchRepoDigestOrExact\".",
-              "properties": {
-                "exactRepository": {
-                  "additionalProperties": false,
-                  "description": "exactRepository is required if matchPolicy is set to \"ExactRepository\".",
-                  "properties": {
-                    "repository": {
-                      "default": "",
-                      "description": "repository is the reference of the image identity to be matched. The value should be a repository name (by omitting the tag or digest) in a registry implementing the \"Docker Registry HTTP API V2\". For example, docker.io/library/busybox",
-                      "type": "string"
-                    }
+            "excludedFields": {
+              "description": "excludedFields is a set of fields in the schema which will not be validated by crdSchemaValidation or objectSchemaValidation. The list may contain at most 64 fields. Each path in the list must be unique. When not specified, all fields in the schema will be validated.",
+              "items": {
+                "additionalProperties": false,
+                "default": {},
+                "description": "APIExcludedField describes a field in the schema which will not be validated by crdSchemaValidation or objectSchemaValidation.",
+                "properties": {
+                  "path": {
+                    "description": "path is the path to the field in the schema. Paths are dot-separated field names (e.g., \"fieldA.fieldB.fieldC\") representing nested object fields. If part of the path is a slice (e.g., \"status.conditions\") the remaining path is applied to all items in the slice (e.g., \"status.conditions.lastTransitionTimestamp\"). Each field name must be a valid Kubernetes CRD field name: start with a letter, contain only letters, digits, and underscores, and be between 1 and 63 characters in length. A path may contain at most 16 fields.",
+                    "type": "string"
                   },
-                  "required": [
-                    "repository"
-                  ],
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "x-flux-schema-type": "PolicyMatchExactRepository"
-                },
-                "matchPolicy": {
-                  "default": "",
-                  "description": "matchPolicy sets the type of matching to be used. Valid values are \"MatchRepoDigestOrExact\", \"MatchRepository\", \"ExactRepository\", \"RemapIdentity\". When omitted, the default value is \"MatchRepoDigestOrExact\". If set matchPolicy to ExactRepository, then the exactRepository must be specified. If set matchPolicy to RemapIdentity, then the remapIdentity must be specified. \"MatchRepoDigestOrExact\" means that the identity in the signature must be in the same repository as the image identity if the image identity is referenced by a digest. Otherwise, the identity in the signature must be the same as the image identity. \"MatchRepository\" means that the identity in the signature must be in the same repository as the image identity. \"ExactRepository\" means that the identity in the signature must be in the same repository as a specific identity specified by \"repository\". \"RemapIdentity\" means that the signature must be in the same as the remapped image identity. Remapped image identity is obtained by replacing the \"prefix\" with the specified “signedPrefix” if the the image identity matches the specified remapPrefix.",
-                  "type": "string"
-                },
-                "remapIdentity": {
-                  "additionalProperties": false,
-                  "description": "remapIdentity is required if matchPolicy is set to \"RemapIdentity\".",
-                  "properties": {
-                    "prefix": {
+                  "versions": {
+                    "description": "versions are the API versions the field is excluded from. When not specified, the field is excluded from all versions.\n\nEach item must be at most 63 characters in length, and must must consist of only lowercase alphanumeric characters and hyphens, and must start with an alphabetic character and end with an alphanumeric character. At most 32 versions may be specified.",
+                    "items": {
                       "default": "",
-                      "description": "prefix is the prefix of the image identity to be matched. If the image identity matches the specified prefix, that prefix is replaced by the specified “signedPrefix” (otherwise it is used as unchanged and no remapping takes place). This useful when verifying signatures for a mirror of some other repository namespace that preserves the vendor’s repository structure. The prefix and signedPrefix values can be either host[:port] values (matching exactly the same host[:port], string), repository namespaces, or repositories (i.e. they must not contain tags/digests), and match as prefixes of the fully expanded form. For example, docker.io/library/busybox (not busybox) to specify that single repository, or docker.io/library (not an empty string) to specify the parent namespace of docker.io/library/busybox.",
                       "type": "string"
                     },
-                    "signedPrefix": {
-                      "default": "",
-                      "description": "signedPrefix is the prefix of the image identity to be matched in the signature. The format is the same as \"prefix\". The values can be either host[:port] values (matching exactly the same host[:port], string), repository namespaces, or repositories (i.e. they must not contain tags/digests), and match as prefixes of the fully expanded form. For example, docker.io/library/busybox (not busybox) to specify that single repository, or docker.io/library (not an empty string) to specify the parent namespace of docker.io/library/busybox.",
-                      "type": "string"
-                    }
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
+                  }
+                },
+                "required": [
+                  "path",
+                  "versions"
+                ],
+                "type": "object",
+                "x-flux-schema-type": "APIExcludedField",
+                "x-flux-schema-type-description": "APIExcludedField describes a field in the schema which will not be validated by crdSchemaValidation or objectSchemaValidation."
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-kubernetes-list-type": "atomic"
+            },
+            "requiredVersions": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "requiredVersions specifies a subset of the CRD's API versions which will be asserted for compatibility. This field is required.",
+              "properties": {
+                "additionalVersions": {
+                  "description": "additionalVersions specifies a set api versions to require in addition to the default selection. It is explicitly permitted to specify a version in additionalVersions which was also selected by the default selection. The selections will be merged and deduplicated.\n\nEach item must be at most 63 characters in length, and must must consist of only lowercase alphanumeric characters and hyphens, and must start with an alphabetic character and end with an alphanumeric character.// with an alphabetic character and end with an alphanumeric character. At most 32 additional versions may be specified.",
+                  "items": {
+                    "default": "",
+                    "type": "string"
                   },
-                  "required": [
-                    "prefix",
-                    "signedPrefix"
-                  ],
                   "type": [
-                    "object",
+                    "array",
                     "null"
                   ],
-                  "x-flux-schema-type": "PolicyMatchRemapIdentity"
+                  "x-kubernetes-list-type": "set"
+                },
+                "defaultSelection": {
+                  "description": "defaultSelection specifies a method for automatically selecting a set of versions to require.\n\nValid options are StorageOnly and AllServed. When set to StorageOnly, only the storage version is selected for compatibility assessment. When set to AllServed, all served versions are selected for compatibility assessment.\n\nThis field is required.",
+                  "type": "string"
                 }
               },
               "required": [
-                "matchPolicy"
+                "defaultSelection"
               ],
+              "type": "object",
+              "x-flux-schema-type": "APIVersions",
+              "x-flux-schema-type-description": "APIVersions specifies a set of API versions of a CRD."
+            }
+          },
+          "required": [
+            "customResourceDefinition",
+            "requiredVersions"
+          ],
+          "type": "object",
+          "x-flux-schema-type": "CompatibilitySchema",
+          "x-flux-schema-type-description": "CompatibilitySchema defines the schema used by crdSchemaValidation and objectSchemaValidation."
+        },
+        "customResourceDefinitionSchemaValidation": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "customResourceDefinitionSchemaValidation ensures that updates to the installed CRD are compatible with this compatibility requirement. If not specified, admission of the target CRD will not be validated. This field is optional.",
+          "properties": {
+            "action": {
+              "description": "action determines whether violations are rejected (Deny) or admitted with an API warning (Warn). Valid options are Deny and Warn. When set to Deny, incompatible CRDs will be rejected and not admitted to the cluster. When set to Warn, incompatible CRDs will be allowed but a warning will be generated in the API response. This field is required.\n\nPossible enum values:\n - `\"Deny\"` means that incompatible CRDs will be rejected.\n - `\"Warn\"` means that incompatible CRDs will be allowed but a warning will be generated.",
+              "enum": [
+                "Deny",
+                "Warn"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "CustomResourceDefinitionSchemaValidation",
+          "x-flux-schema-type-description": "CustomResourceDefinitionSchemaValidation ensures that updates to the installed CRD are compatible with this compatibility requirement."
+        },
+        "objectSchemaValidation": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "objectSchemaValidation ensures that matching resources conform to compatibilitySchema. If not specified, admission of matching resources will not be validated. This field is optional.",
+          "properties": {
+            "action": {
+              "description": "action determines whether violations are rejected (Deny) or admitted with an API warning (Warn). Valid options are Deny and Warn. When set to Deny, incompatible Objects will be rejected and not admitted to the cluster. When set to Warn, incompatible Objects will be allowed but a warning will be generated in the API response. This field is required.\n\nPossible enum values:\n - `\"Deny\"` means that incompatible CRDs will be rejected.\n - `\"Warn\"` means that incompatible CRDs will be allowed but a warning will be generated.",
+              "enum": [
+                "Deny",
+                "Warn"
+              ],
+              "type": "string"
+            },
+            "matchConditions": {
+              "description": "matchConditions defines the matchConditions field of the resulting ValidatingWebhookConfiguration. When present, must contain between 1 and 64 match conditions. When not specified, the webhook will match all requests according to its other selectors.",
+              "items": {
+                "additionalProperties": false,
+                "default": {},
+                "description": "MatchCondition represents a condition which must by fulfilled for a request to be sent to a webhook.",
+                "properties": {
+                  "expression": {
+                    "default": "",
+                    "description": "Expression represents the expression which will be evaluated by CEL. Must evaluate to bool. CEL expressions have access to the contents of the AdmissionRequest and Authorizer, organized into CEL variables:\n\n'object' - The object from the incoming request. The value is null for DELETE requests. 'oldObject' - The existing object. The value is null for CREATE requests. 'request' - Attributes of the admission request(/pkg/apis/admission/types.go#AdmissionRequest). 'authorizer' - A CEL Authorizer. May be used to perform authorization checks for the principal (user or service account) of the request.\n  See https://pkg.go.dev/k8s.io/apiserver/pkg/cel/library#Authz\n'authorizer.requestResource' - A CEL ResourceCheck constructed from the 'authorizer' and configured with the\n  request resource.\nDocumentation on CEL: https://kubernetes.io/docs/reference/using-api/cel/\n\nRequired.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "default": "",
+                    "description": "Name is an identifier for this match condition, used for strategic merging of MatchConditions, as well as providing an identifier for logging purposes. A good name should be descriptive of the associated expression. Name must be a qualified name consisting of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]') with an optional DNS subdomain prefix and '/' (e.g. 'example.com/MyName')\n\nRequired.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "expression"
+                ],
+                "type": "object",
+                "x-flux-schema-type": "io",
+                "x-flux-schema-type-description": "MatchCondition represents a condition which must by fulfilled for a request to be sent to a webhook."
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-kubernetes-list-map-keys": [
+                "name"
+              ],
+              "x-kubernetes-list-type": "map"
+            },
+            "namespaceSelector": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "namespaceSelector defines a label selector for namespaces. If defined, only objects in a namespace with matching labels will be subject to validation. When not specified, objects for validation will not be filtered by namespace.",
+              "properties": {
+                "matchExpressions": {
+                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                  "items": {
+                    "additionalProperties": false,
+                    "default": {},
+                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+                    "properties": {
+                      "key": {
+                        "default": "",
+                        "description": "key is the label key that the selector applies to.",
+                        "type": "string"
+                      },
+                      "operator": {
+                        "default": "",
+                        "description": "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+                        "type": "string"
+                      },
+                      "values": {
+                        "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+                        "items": {
+                          "default": "",
+                          "type": "string"
+                        },
+                        "type": [
+                          "array",
+                          "null"
+                        ],
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "operator"
+                    ],
+                    "type": "object",
+                    "x-flux-schema-type": "io",
+                    "x-flux-schema-type-description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values."
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "x-kubernetes-list-type": "atomic"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "default": "",
+                    "type": "string"
+                  },
+                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                }
+              },
               "type": [
                 "object",
                 "null"
               ],
-              "x-flux-schema-type": "PolicyIdentity",
-              "x-flux-schema-type-description": "PolicyIdentity defines image identity the signature claims about the image. When omitted, the default matchPolicy is \"MatchRepoDigestOrExact\"."
+              "x-flux-schema-type": "io",
+              "x-flux-schema-type-description": "A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.",
+              "x-kubernetes-map-type": "atomic"
+            },
+            "objectSelector": {
+              "additionalProperties": false,
+              "default": {},
+              "description": "objectSelector defines a label selector for objects. If defined, only objects with matching labels will be subject to validation. When not specified, objects for validation will not be filtered by label.",
+              "properties": {
+                "matchExpressions": {
+                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                  "items": {
+                    "additionalProperties": false,
+                    "default": {},
+                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+                    "properties": {
+                      "key": {
+                        "default": "",
+                        "description": "key is the label key that the selector applies to.",
+                        "type": "string"
+                      },
+                      "operator": {
+                        "default": "",
+                        "description": "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+                        "type": "string"
+                      },
+                      "values": {
+                        "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+                        "items": {
+                          "default": "",
+                          "type": "string"
+                        },
+                        "type": [
+                          "array",
+                          "null"
+                        ],
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "operator"
+                    ],
+                    "type": "object",
+                    "x-flux-schema-type": "io",
+                    "x-flux-schema-type-description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values."
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "x-kubernetes-list-type": "atomic"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "default": "",
+                    "type": "string"
+                  },
+                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                }
+              },
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "io",
+              "x-flux-schema-type-description": "A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.",
+              "x-kubernetes-map-type": "atomic"
             }
           },
           "required": [
-            "rootOfTrust"
+            "action"
           ],
-          "type": "object",
-          "x-flux-schema-type": "Policy",
-          "x-flux-schema-type-description": "Policy defines the verification policy for the items in the scopes list."
-        },
-        "scopes": {
-          "description": "scopes defines the list of image identities assigned to a policy. Each item refers to a scope in a registry implementing the \"Docker Registry HTTP API V2\". Scopes matching individual images are named Docker references in the fully expanded form, either using a tag or digest. For example, docker.io/library/busybox:latest (not busybox:latest). More general scopes are prefixes of individual-image scopes, and specify a repository (by omitting the tag or digest), a repository namespace, or a registry host (by only specifying the host name and possibly a port number) or a wildcard expression starting with `*.`, for matching all subdomains (not including a port number). Wildcards are only supported for subdomain matching, and may not be used in the middle of the host, i.e.  *.example.com is a valid case, but example*.*.com is not. If multiple scopes match a given image, only the policy requirements for the most specific scope apply. The policy requirements for more general scopes are ignored. In addition to setting a policy appropriate for your own deployed applications, make sure that a policy on the OpenShift image repositories quay.io/openshift-release-dev/ocp-release, quay.io/openshift-release-dev/ocp-v4.0-art-dev (or on a more general scope) allows deployment of the OpenShift images required for cluster operation. If a scope is configured in both the ClusterImagePolicy and the ImagePolicy, or if the scope in ImagePolicy is nested under one of the scopes from the ClusterImagePolicy, only the policy from the ClusterImagePolicy will be applied. For additional details about the format, please refer to the document explaining the docker transport field, which can be found at: https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md#docker",
-          "items": {
-            "default": "",
-            "type": "string"
-          },
-          "type": "array",
-          "x-kubernetes-list-type": "set"
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "ObjectSchemaValidation",
+          "x-flux-schema-type-description": "ObjectSchemaValidation ensures that matching objects conform to the compatibilitySchema."
         }
       },
       "required": [
-        "scopes",
-        "policy"
+        "compatibilitySchema"
       ],
       "type": "object",
-      "x-flux-schema-type": "ClusterImagePolicySpec",
-      "x-flux-schema-type-description": "CLusterImagePolicySpec is the specification of the ClusterImagePolicy custom resource."
+      "x-flux-schema-type": "CompatibilityRequirementSpec",
+      "x-flux-schema-type-description": "CompatibilityRequirementSpec is the specification of the desired behavior of the Compatibility Requirement."
     },
     "status": {
       "additionalProperties": false,
       "default": {},
-      "description": "status contains the observed state of the resource.",
+      "description": "status is the most recently observed status of the Compatibility Requirement.",
       "properties": {
         "conditions": {
-          "description": "conditions provide details on the status of this API Resource.",
+          "description": "conditions is a list of conditions and their status. Known condition types are Progressing, Admitted, and Compatible.\n\nThe Progressing condition indicates if reconciliation of a CompatibilityRequirement is still progressing or has finished.\n\nThe Admitted condition indicates if the validating webhook has been configured.\n\nThe Compatible condition indicates if the observed CRD is compatible with the requirement.",
           "items": {
             "additionalProperties": false,
             "default": {},
@@ -536,7 +616,7 @@
                 "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
                 "format": "date-time",
                 "type": "string",
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               },
               "message": {
@@ -576,7 +656,7 @@
               "message"
             ],
             "type": "object",
-            "x-flux-schema-type": "Condition",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
           },
           "type": [
@@ -587,20 +667,55 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "crdName": {
+          "description": "crdName is the name of the target CRD. The target CRD is not required to exist, as we may legitimately place requirements on it before it is created.  The observed CRD is given in status.observedCRD, which will be empty if no CRD is observed. When present, must be between 1 and 253 characters and conform to RFC 1123 subdomain format: lowercase alphanumeric characters, '-' or '.', starting and ending with alphanumeric characters. When not specified, the requirement applies to any CRD name discovered from the compatibility schema. This field is optional. Once set, the value cannot be changed and must always remain set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "observedCRD": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "observedCRD documents the uid and generation of the CRD object when the current status was written. This field will be omitted if the target CRD does not exist or could not be retrieved.",
+          "properties": {
+            "generation": {
+              "description": "generation is the observed generation of the CRD. Must be a positive integer (minimum value of 1).",
+              "format": "int64",
+              "type": "integer"
+            },
+            "uid": {
+              "description": "uid is the uid of the observed CRD. Must be a valid UUID consisting of lowercase hexadecimal digits in 5 hyphenated blocks (8-4-4-4-12 format). Length must be between 1 and 36 characters.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "uid",
+            "generation"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "ObservedCRD",
+          "x-flux-schema-type-description": "ObservedCRD contains information about the observed target CRD."
         }
       },
       "type": [
         "object",
         "null"
       ],
-      "x-flux-schema-type": "ClusterImagePolicyStatus"
+      "x-flux-schema-type": "CompatibilityRequirementStatus",
+      "x-flux-schema-type-description": "CompatibilityRequirementStatus defines the observed status of the Compatibility Requirement."
     }
   },
   "required": [
+    "metadata",
     "spec",
     "apiVersion",
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "ClusterImagePolicy"
+  "x-flux-schema-type": "CompatibilityRequirement"
 }

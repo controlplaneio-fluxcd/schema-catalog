@@ -33,7 +33,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "deletionGracePeriodSeconds": {
@@ -51,7 +51,7 @@
             "string",
             "null"
           ],
-          "x-flux-schema-type": "Time",
+          "x-flux-schema-type": "io",
           "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
         },
         "finalizers": {
@@ -119,7 +119,7 @@
                   "object",
                   "null"
                 ],
-                "x-flux-schema-type": "FieldsV1",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.\n\nEach key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.\n\nThe exact format is defined in sigs.k8s.io/structured-merge-diff"
               },
               "manager": {
@@ -150,12 +150,12 @@
                   "string",
                   "null"
                 ],
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               }
             },
             "type": "object",
-            "x-flux-schema-type": "ManagedFieldsEntry",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "ManagedFieldsEntry is a workflow-id, a FieldSet and the group version of the resource that the fieldset applies to."
           },
           "type": [
@@ -227,7 +227,7 @@
               "uid"
             ],
             "type": "object",
-            "x-flux-schema-type": "OwnerReference",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "OwnerReference contains enough information to let you identify an owning object. An owning object must be in the same namespace as the dependent, or be cluster-scoped, so there is no namespace field.",
             "x-kubernetes-map-type": "atomic"
           },
@@ -266,7 +266,7 @@
         "object",
         "null"
       ],
-      "x-flux-schema-type": "ObjectMeta",
+      "x-flux-schema-type": "io",
       "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
     "spec": {
@@ -332,8 +332,8 @@
                     "object",
                     "null"
                   ],
-                  "x-flux-schema-type": "FulcioCAWithRekor",
-                  "x-flux-schema-type-description": "FulcioCAWithRekor defines the root of trust based on the Fulcio certificate and the Rekor public key."
+                  "x-flux-schema-type": "ImagePolicyFulcioCAWithRekorRootOfTrust",
+                  "x-flux-schema-type-description": "ImagePolicyFulcioCAWithRekorRootOfTrust defines the root of trust based on the Fulcio certificate and the Rekor public key."
                 },
                 "pki": {
                   "additionalProperties": false,
@@ -385,8 +385,8 @@
                     "object",
                     "null"
                   ],
-                  "x-flux-schema-type": "PKI",
-                  "x-flux-schema-type-description": "PKI defines the root of trust based on Root CA(s) and corresponding intermediate certificates."
+                  "x-flux-schema-type": "ImagePolicyPKIRootOfTrust",
+                  "x-flux-schema-type-description": "ImagePolicyPKIRootOfTrust defines the root of trust based on Root CA(s) and corresponding intermediate certificates."
                 },
                 "policyType": {
                   "default": "",
@@ -418,8 +418,8 @@
                     "object",
                     "null"
                   ],
-                  "x-flux-schema-type": "PublicKey",
-                  "x-flux-schema-type-description": "PublicKey defines the root of trust based on a sigstore public key."
+                  "x-flux-schema-type": "ImagePolicyPublicKeyRootOfTrust",
+                  "x-flux-schema-type-description": "ImagePolicyPublicKeyRootOfTrust defines the root of trust based on a sigstore public key."
                 }
               },
               "required": [
@@ -498,8 +498,8 @@
             "rootOfTrust"
           ],
           "type": "object",
-          "x-flux-schema-type": "Policy",
-          "x-flux-schema-type-description": "Policy defines the verification policy for the items in the scopes list."
+          "x-flux-schema-type": "ImageSigstoreVerificationPolicy",
+          "x-flux-schema-type-description": "ImageSigstoreVerificationPolicy defines the verification policy for the items in the scopes list."
         },
         "scopes": {
           "description": "scopes is a required field that defines the list of image identities assigned to a policy. Each item refers to a scope in a registry implementing the \"Docker Registry HTTP API V2\". Scopes matching individual images are named Docker references in the fully expanded form, either using a tag or digest. For example, docker.io/library/busybox:latest (not busybox:latest). More general scopes are prefixes of individual-image scopes, and specify a repository (by omitting the tag or digest), a repository namespace, or a registry host (by only specifying the host name and possibly a port number) or a wildcard expression starting with `*.`, for matching all subdomains (not including a port number). Wildcards are only supported for subdomain matching, and may not be used in the middle of the host, i.e.  *.example.com is a valid case, but example*.*.com is not. This support no more than 256 scopes in one object. If multiple scopes match a given image, only the policy requirements for the most specific scope apply. The policy requirements for more general scopes are ignored. In addition to setting a policy appropriate for your own deployed applications, make sure that a policy on the OpenShift image repositories quay.io/openshift-release-dev/ocp-release, quay.io/openshift-release-dev/ocp-v4.0-art-dev (or on a more general scope) allows deployment of the OpenShift images required for cluster operation. If a scope is configured in both the ClusterImagePolicy and the ImagePolicy, or if the scope in ImagePolicy is nested under one of the scopes from the ClusterImagePolicy, only the policy from the ClusterImagePolicy will be applied. For additional details about the format, please refer to the document explaining the docker transport field, which can be found at: https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md#docker",
@@ -535,7 +535,7 @@
                 "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
                 "format": "date-time",
                 "type": "string",
-                "x-flux-schema-type": "Time",
+                "x-flux-schema-type": "io",
                 "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
               },
               "message": {
@@ -575,7 +575,7 @@
               "message"
             ],
             "type": "object",
-            "x-flux-schema-type": "Condition",
+            "x-flux-schema-type": "io",
             "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
           },
           "type": [
