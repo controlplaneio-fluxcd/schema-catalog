@@ -15,7 +15,7 @@ import {
   displayVersion,
   normalizeVersion,
   openshiftRef,
-  pickLatestOpenShift,
+  hasStableRelease,
   pickLatestRelease,
   sourceRef,
 } from "./resolve.ts";
@@ -171,30 +171,28 @@ describe("version helpers", () => {
   });
 });
 
-describe("pickLatestOpenShift", () => {
-  test("picks the highest non-EOL release regardless of API order", () => {
+describe("hasStableRelease", () => {
+  test("finds a release of the minor among upgrade-source nodes", () => {
     const doc = {
-      result: {
-        releases: [
-          { name: "4.18", isEol: false },
-          { name: "4.9", isEol: false },
-          { name: "4.20", isEol: true },
-          { name: "4.19", isEol: false },
-        ],
-      },
+      nodes: [{ version: "4.21.14" }, { version: "4.21.15" }, { version: "4.22.1" }],
     };
-    expect(pickLatestOpenShift(doc)).toBe("4.19");
+    expect(hasStableRelease(doc, "4.22")).toBe(true);
   });
 
-  test("strips patch components from release names", () => {
-    const doc = { result: { releases: [{ name: "4.20.3", isEol: false }] } };
-    expect(pickLatestOpenShift(doc)).toBe("4.20");
+  test("ignores nodes of other minors", () => {
+    const doc = { nodes: [{ version: "4.21.14" }, { version: "4.21.15" }] };
+    expect(hasStableRelease(doc, "4.22")).toBe(false);
   });
 
-  test("throws when no non-EOL release exists", () => {
-    expect(() => pickLatestOpenShift({ result: { releases: [] } })).toThrow(
-      "could not resolve the latest OpenShift release",
-    );
+  test("does not match on a minor prefix alone", () => {
+    const doc = { nodes: [{ version: "4.22.1" }] };
+    expect(hasStableRelease(doc, "4.2")).toBe(false);
+  });
+
+  test("is false for empty or malformed documents", () => {
+    expect(hasStableRelease({ nodes: [] }, "4.22")).toBe(false);
+    expect(hasStableRelease({}, "4.22")).toBe(false);
+    expect(hasStableRelease({ nodes: [{}] }, "4.22")).toBe(false);
   });
 });
 

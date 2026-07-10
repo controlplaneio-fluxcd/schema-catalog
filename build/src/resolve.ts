@@ -5,12 +5,20 @@ import { fetchRetry, latestReleaseTag, listReleases, matchAsset, type Release } 
 import { repoOf } from "./config.ts";
 import type { Source } from "./types.ts";
 
-const ENDOFLIFE_URL = "https://endoflife.date/api/v1/products/red-hat-openshift/";
+const CINCINNATI_URL = "https://api.openshift.com/api/upgrades_info/v1/graph";
+
+/**
+ * The minor the OpenShift GA probe starts from. Only a floor, not a pin: the
+ * probe walks stable channels upward from here, so it merely needs to stay at
+ * or below the oldest minor the catalog could ever resolve.
+ */
+const OPENSHIFT_PROBE_FLOOR = 20;
 
 /**
  * Resolves the version a source should be built at: the explicit pin when
- * set, otherwise the latest OpenShift release from endoflife.date for
- * extract: openshift, otherwise the latest GitHub release of the source repo.
+ * set, otherwise the latest GA OpenShift release from the Cincinnati upgrade
+ * graph for extract: openshift, otherwise the latest GitHub release of the
+ * source repo.
  *
  * A pin and the OpenShift release are normalized to a 'v' prefix (vX.Y.Z;
  * OpenShift: vX.Y). A resolved GitHub tag is returned verbatim: for crd
@@ -22,11 +30,7 @@ export async function resolveVersion(source: Source): Promise<string> {
     return normalizeVersion(source.version);
   }
   if (source.extract === "openshift") {
-    const res = await fetchRetry(ENDOFLIFE_URL);
-    if (!res.ok) {
-      throw new Error(`GET ${ENDOFLIFE_URL}: ${res.status} ${res.statusText}`);
-    }
-    return `v${pickLatestOpenShift(await res.json())}`;
+    return `v${await latestOpenShiftGA()}`;
   }
   const repo = repoOf(source);
   const releaseTag = source.extract === "crd" ? source.input.releaseTag : undefined;
@@ -88,25 +92,44 @@ export function normalizeVersion(version: string): string {
 }
 
 /**
- * Picks the highest non-EOL X.Y release from an endoflife.date product
- * document; does not rely on the API's ordering.
+ * The highest GA OpenShift X.Y release per the Cincinnati upgrade graph (the
+ * data OpenShift clusters themselves upgrade from): stable channels are
+ * probed upward from the floor, and a minor is GA once its stable channel
+ * contains a release of that minor. Pre-GA and unknown channels answer 200
+ * with an empty node list, which ends the walk.
  */
-export function pickLatestOpenShift(doc: unknown): string {
-  const releases = (doc as { result?: { releases?: unknown[] } }).result?.releases ?? [];
-  const versions = releases
-    .filter((r): r is { name: string; isEol: boolean } => {
-      const rec = r as Record<string, unknown>;
-      return typeof rec.name === "string" && rec.isEol === false;
-    })
-    .map((r) => r.name.match(/^(\d+)\.(\d+)/))
-    .filter((m): m is RegExpMatchArray => m !== null)
-    .map((m) => ({ major: Number(m[1]), minor: Number(m[2]) }));
-  if (versions.length === 0) {
-    throw new Error("could not resolve the latest OpenShift release from endoflife.date");
+async function latestOpenShiftGA(): Promise<string> {
+  let latest: string | null = null;
+  for (let minor = OPENSHIFT_PROBE_FLOOR; ; minor++) {
+    const url = `${CINCINNATI_URL}?channel=stable-4.${minor}`;
+    const res = await fetchRetry(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) {
+      throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+    }
+    if (!hasStableRelease(await res.json(), `4.${minor}`)) {
+      break;
+    }
+    latest = `4.${minor}`;
   }
-  versions.sort((a, b) => a.major - b.major || a.minor - b.minor);
-  const latest = versions.at(-1)!;
-  return `${latest.major}.${latest.minor}`;
+  if (latest === null) {
+    throw new Error(
+      `could not resolve the latest OpenShift release: stable-4.${OPENSHIFT_PROBE_FLOOR} has no GA release`,
+    );
+  }
+  return latest;
+}
+
+/**
+ * Whether a Cincinnati graph document carries a release of the given X.Y
+ * minor. Stable channels also list previous-minor releases as upgrade
+ * sources, so the node versions must be matched against the minor itself.
+ */
+export function hasStableRelease(doc: unknown, minor: string): boolean {
+  const nodes = (doc as { nodes?: unknown[] }).nodes ?? [];
+  return nodes.some((node) => {
+    const version = (node as Record<string, unknown>).version;
+    return typeof version === "string" && version.startsWith(`${minor}.`);
+  });
 }
 
 /**
