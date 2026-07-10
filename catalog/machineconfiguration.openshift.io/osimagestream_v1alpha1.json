@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "KubeAPIServer provides information to configure an operator to manage kube-apiserver.\n\nCompatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).",
+  "description": "OSImageStream describes a set of streams and associated images available for the MachineConfigPools to be used as base OS images.\n\nThe resource is a singleton named \"cluster\".\n\nCompatibility level 4: No compatibility is provided, the API can change at any point for any reason. These capabilities should not be used by applications needing long term support.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -262,397 +262,79 @@
           ]
         }
       },
-      "type": "object",
-      "x-flux-schema-type": "ObjectMeta",
-      "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
-    },
-    "spec": {
-      "additionalProperties": false,
-      "default": {},
-      "description": "spec is the specification of the desired behavior of the Kubernetes API Server",
-      "properties": {
-        "eventTTLMinutes": {
-          "description": "eventTTLMinutes specifies the amount of time that the events are stored before being deleted. The TTL is allowed between 5 minutes minimum up to a maximum of 180 minutes (3 hours).\n\nLowering this value will reduce the storage required in etcd. Note that this setting will only apply to new events being created and will not update existing events.\n\nWhen omitted this means no opinion, and the platform is left to choose a reasonable default, which is subject to change over time. The current default value is 3h (180 minutes).",
-          "format": "int32",
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "failedRevisionLimit": {
-          "description": "failedRevisionLimit is the number of failed static pod installer revisions to keep on disk and in the api -1 = unlimited, 0 or unset = 5 (default)",
-          "format": "int32",
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "forceRedeploymentReason": {
-          "default": "",
-          "description": "forceRedeploymentReason can be used to force the redeployment of the operand by providing a unique string. This provides a mechanism to kick a previously failed deployment and provide a reason why you think it will work this time instead of failing again on the same config.",
-          "type": "string"
-        },
-        "logLevel": {
-          "description": "logLevel is an intent based logging for an overall component.  It does not give fine grained control, but it is a simple way to manage coarse grained logging choices that operators have to interpret for their operands.\n\nValid values are: \"Normal\", \"Debug\", \"Trace\", \"TraceAll\". Defaults to \"Normal\".",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "managementState": {
-          "default": "",
-          "description": "managementState indicates whether and how the operator should manage the component",
-          "type": "string"
-        },
-        "observedConfig": {
-          "description": "observedConfig holds a sparse config that controller has observed from the cluster state.  It exists in spec because it is an input to the level for the operator",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-flux-schema-type": "RawExtension",
-          "x-flux-schema-type-description": "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.Object `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// External package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// On the wire, the JSON will look something like this:\n\n\t{\n\t\t\"kind\":\"MyAPIObject\",\n\t\t\"apiVersion\":\"v1\",\n\t\t\"myPlugin\": {\n\t\t\t\"kind\":\"PluginA\",\n\t\t\t\"aOption\":\"foo\",\n\t\t},\n\t}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)"
-        },
-        "operatorLogLevel": {
-          "description": "operatorLogLevel is an intent based logging for the operator itself.  It does not give fine grained control, but it is a simple way to manage coarse grained logging choices that operators have to interpret for themselves.\n\nValid values are: \"Normal\", \"Debug\", \"Trace\", \"TraceAll\". Defaults to \"Normal\".",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "succeededRevisionLimit": {
-          "description": "succeededRevisionLimit is the number of successful static pod installer revisions to keep on disk and in the api -1 = unlimited, 0 or unset = 5 (default)",
-          "format": "int32",
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "unsupportedConfigOverrides": {
-          "description": "unsupportedConfigOverrides overrides the final configuration that was computed by the operator. Red Hat does not support the use of this field. Misuse of this field could lead to unexpected behavior or conflict with other configuration options. Seek guidance from the Red Hat support before using this field. Use of this property blocks cluster upgrades, it must be removed before upgrading your cluster.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-flux-schema-type": "RawExtension",
-          "x-flux-schema-type-description": "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.Object `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// External package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// On the wire, the JSON will look something like this:\n\n\t{\n\t\t\"kind\":\"MyAPIObject\",\n\t\t\"apiVersion\":\"v1\",\n\t\t\"myPlugin\": {\n\t\t\t\"kind\":\"PluginA\",\n\t\t\t\"aOption\":\"foo\",\n\t\t},\n\t}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)"
-        }
-      },
-      "required": [
-        "managementState",
-        "forceRedeploymentReason"
-      ],
-      "type": "object",
-      "x-flux-schema-type": "KubeAPIServerSpec"
-    },
-    "status": {
-      "additionalProperties": false,
-      "default": {},
-      "description": "status is the most recently observed status of the Kubernetes API Server",
-      "properties": {
-        "conditions": {
-          "description": "conditions is a list of conditions and their status",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "description": "OperatorCondition is just the standard condition fields.",
-            "properties": {
-              "lastTransitionTime": {
-                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
-                "format": "date-time",
-                "type": "string",
-                "x-flux-schema-type": "Time",
-                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
-              },
-              "message": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "reason": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "status": {
-                "default": "",
-                "description": "status of the condition, one of True, False, Unknown.",
-                "type": "string"
-              },
-              "type": {
-                "default": "",
-                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
-                "type": "string"
-              }
-            },
-            "required": [
-              "type",
-              "status",
-              "lastTransitionTime"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "OperatorCondition",
-            "x-flux-schema-type-description": "OperatorCondition is just the standard condition fields."
-          },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-map-keys": [
-            "type"
-          ],
-          "x-kubernetes-list-type": "map"
-        },
-        "generations": {
-          "description": "generations are used to determine when an item needs to be reconciled or has changed in a way that needs a reaction.",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "description": "GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made.",
-            "properties": {
-              "group": {
-                "default": "",
-                "description": "group is the group of the thing you're tracking",
-                "type": "string"
-              },
-              "hash": {
-                "default": "",
-                "description": "hash is an optional field set for resources without generation that are content sensitive like secrets and configmaps",
-                "type": "string"
-              },
-              "lastGeneration": {
-                "default": 0,
-                "description": "lastGeneration is the last generation of the workload controller involved",
-                "format": "int64",
-                "type": "integer"
-              },
-              "name": {
-                "default": "",
-                "description": "name is the name of the thing you're tracking",
-                "type": "string"
-              },
-              "namespace": {
-                "default": "",
-                "description": "namespace is where the thing you're tracking is",
-                "type": "string"
-              },
-              "resource": {
-                "default": "",
-                "description": "resource is the resource type of the thing you're tracking",
-                "type": "string"
-              }
-            },
-            "required": [
-              "group",
-              "resource",
-              "namespace",
-              "name",
-              "lastGeneration",
-              "hash"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "GenerationStatus",
-            "x-flux-schema-type-description": "GenerationStatus keeps track of the generation for a given resource so that decisions about forced updates can be made."
-          },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-map-keys": [
-            "group",
-            "resource",
-            "namespace",
-            "name"
-          ],
-          "x-kubernetes-list-type": "map"
-        },
-        "latestAvailableRevision": {
-          "description": "latestAvailableRevision is the deploymentID of the most recent deployment",
-          "format": "int32",
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "latestAvailableRevisionReason": {
-          "description": "latestAvailableRevisionReason describe the detailed reason for the most recent deployment",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "nodeStatuses": {
-          "description": "nodeStatuses track the deployment values and errors across individual nodes",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "description": "NodeStatus provides information about the current state of a particular node managed by this operator.",
-            "properties": {
-              "currentRevision": {
-                "description": "currentRevision is the generation of the most recently successful deployment. Can not be set on creation of a nodeStatus. Updates must only increase the value.",
-                "format": "int32",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "lastFailedCount": {
-                "description": "lastFailedCount is how often the installer pod of the last failed revision failed.",
-                "format": "int32",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "lastFailedReason": {
-                "description": "lastFailedReason is a machine readable failure reason string.",
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "lastFailedRevision": {
-                "description": "lastFailedRevision is the generation of the deployment we tried and failed to deploy.",
-                "format": "int32",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "lastFailedRevisionErrors": {
-                "description": "lastFailedRevisionErrors is a list of human readable errors during the failed deployment referenced in lastFailedRevision.",
-                "items": {
-                  "default": "",
-                  "type": "string"
-                },
-                "type": [
-                  "array",
-                  "null"
-                ],
-                "x-kubernetes-list-type": "atomic"
-              },
-              "lastFailedTime": {
-                "description": "lastFailedTime is the time the last failed revision failed the last time.",
-                "format": "date-time",
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "x-flux-schema-type": "Time",
-                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
-              },
-              "lastFallbackCount": {
-                "description": "lastFallbackCount is how often a fallback to a previous revision happened.",
-                "format": "int32",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "nodeName": {
-                "default": "",
-                "description": "nodeName is the name of the node",
-                "type": "string"
-              },
-              "targetRevision": {
-                "description": "targetRevision is the generation of the deployment we're trying to apply. Can not be set on creation of a nodeStatus.",
-                "format": "int32",
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              }
-            },
-            "required": [
-              "nodeName"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "NodeStatus",
-            "x-flux-schema-type-description": "NodeStatus provides information about the current state of a particular node managed by this operator."
-          },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-map-keys": [
-            "nodeName"
-          ],
-          "x-kubernetes-list-type": "map"
-        },
-        "observedGeneration": {
-          "description": "observedGeneration is the last generation change you've dealt with",
-          "format": "int64",
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "readyReplicas": {
-          "default": 0,
-          "description": "readyReplicas indicates how many replicas are ready and at the desired state",
-          "format": "int32",
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "serviceAccountIssuers": {
-          "description": "serviceAccountIssuers tracks history of used service account issuers. The item without expiration time represents the currently used service account issuer. The other items represents service account issuers that were used previously and are still being trusted. The default expiration for the items is set by the platform and it defaults to 24h. see: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection",
-          "items": {
-            "additionalProperties": false,
-            "default": {},
-            "properties": {
-              "expirationTime": {
-                "description": "expirationTime is the time after which this service account issuer will be pruned and removed from the trusted list of service account issuers.",
-                "format": "date-time",
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "x-flux-schema-type": "Time",
-                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
-              },
-              "name": {
-                "default": "",
-                "description": "name is the name of the service account issuer",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name"
-            ],
-            "type": "object",
-            "x-flux-schema-type": "ServiceAccountIssuerStatus"
-          },
-          "type": [
-            "array",
-            "null"
-          ],
-          "x-kubernetes-list-type": "atomic"
-        },
-        "version": {
-          "description": "version is the level this availability applies to",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
       "type": [
         "object",
         "null"
       ],
-      "x-flux-schema-type": "KubeAPIServerStatus"
+      "x-flux-schema-type": "ObjectMeta",
+      "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
+    },
+    "spec": {
+      "description": "spec contains the desired OSImageStream config configuration.",
+      "type": "object",
+      "x-flux-schema-type": "OSImageStreamSpec",
+      "x-flux-schema-type-description": "OSImageStreamSpec defines the desired state of a OSImageStream."
+    },
+    "status": {
+      "additionalProperties": false,
+      "default": {},
+      "description": "status describes the last observed state of this OSImageStream. Populated by the MachineConfigOperator after reading release metadata. When not present, the controller has not yet reconciled this resource.",
+      "properties": {
+        "availableStreams": {
+          "description": "availableStreams is a list of the available OS Image Streams that can be used as the base image for MachineConfigPools. availableStreams is required, must have at least one item, must not exceed 100 items, and must have unique entries keyed on the name field.",
+          "items": {
+            "additionalProperties": false,
+            "default": {},
+            "properties": {
+              "name": {
+                "description": "name is the required identifier of the stream.\n\nname is determined by the operator based on the OCI label of the discovered OS or Extension Image.\n\nMust be a valid RFC 1123 subdomain between 1 and 253 characters in length, consisting of lowercase alphanumeric characters, hyphens ('-'), and periods ('.').",
+                "type": "string"
+              },
+              "osExtensionsImage": {
+                "description": "osExtensionsImage is a required OS Extensions Image referenced by digest.\n\nosExtensionsImage bundles the extra repositories used to enable extensions, augmenting the base operating system without modifying the underlying immutable osImage.\n\nThe format of the image pull spec is: host[:port][/namespace]/name@sha256:<digest>, where the digest must be 64 characters long, and consist only of lowercase hexadecimal characters, a-f and 0-9. The length of the whole spec must be between 1 to 447 characters.",
+                "type": "string"
+              },
+              "osImage": {
+                "description": "osImage is a required OS Image referenced by digest.\n\nosImage contains the immutable, fundamental operating system components, including the kernel and base utilities, that define the core environment for the node's host operating system.\n\nThe format of the image pull spec is: host[:port][/namespace]/name@sha256:<digest>, where the digest must be 64 characters long, and consist only of lowercase hexadecimal characters, a-f and 0-9. The length of the whole spec must be between 1 to 447 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "osImage",
+              "osExtensionsImage"
+            ],
+            "type": "object",
+            "x-flux-schema-type": "OSImageStreamSet"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "defaultStream": {
+          "description": "defaultStream is the name of the stream that should be used as the default when no specific stream is requested by a MachineConfigPool.\n\nIt must be a valid RFC 1123 subdomain between 1 and 253 characters in length, consisting of lowercase alphanumeric characters, hyphens ('-'), and periods ('.'), and must reference the name of one of the streams in availableStreams.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "availableStreams",
+        "defaultStream"
+      ],
+      "type": [
+        "object",
+        "null"
+      ],
+      "x-flux-schema-type": "OSImageStreamStatus",
+      "x-flux-schema-type-description": "OSImageStreamStatus describes the current state of a OSImageStream"
     }
   },
   "required": [
-    "metadata",
     "spec",
     "apiVersion",
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "KubeAPIServer"
+  "x-flux-schema-type": "OSImageStream"
 }

@@ -459,7 +459,7 @@
               "description": "ibmcloud contains settings specific to the IBMCloud infrastructure provider.",
               "properties": {
                 "serviceEndpoints": {
-                  "description": "serviceEndpoints is a list of custom endpoints which will override the default service endpoints of an IBM service. These endpoints are used by components within the cluster when trying to reach the IBM Cloud Services that have been overriden. The CCCMO reads in the IBMCloudPlatformSpec and validates each endpoint is resolvable. Once validated, the cloud config and IBMCloudPlatformStatus are updated to reflect the same custom endpoints. A maximum of 13 service endpoints overrides are supported.",
+                  "description": "serviceEndpoints is a list of custom endpoints which will override the default service endpoints of an IBM service. These endpoints are used by components within the cluster when trying to reach the IBM Cloud Services that have been overridden. The CCCMO reads in the IBMCloudPlatformSpec and validates each endpoint is resolvable. Once validated, the cloud config and IBMCloudPlatformStatus are updated to reflect the same custom endpoints. A maximum of 13 service endpoints overrides are supported.",
                   "items": {
                     "additionalProperties": false,
                     "default": {},
@@ -1418,6 +1418,14 @@
                   "x-flux-schema-type": "CloudLoadBalancerConfig",
                   "x-flux-schema-type-description": "CloudLoadBalancerConfig contains an union discriminator indicating the type of DNS solution in use within the cluster. When the DNSType is `ClusterHosted`, the cloud's Load Balancer configuration needs to be provided so that the DNS solution hosted within the cluster can be configured with those values."
                 },
+                "ipFamily": {
+                  "default": "IPv4",
+                  "description": "ipFamily specifies the IP protocol family that should be used for AWS network resources. This controls whether AWS resources are created with IPv4-only, or dual-stack networking with IPv4 or IPv6 as the primary protocol family.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
                 "region": {
                   "default": "",
                   "description": "region holds the default AWS region for new AWS resources created by the cluster.",
@@ -1587,6 +1595,14 @@
                     "null"
                   ]
                 },
+                "ipFamily": {
+                  "default": "IPv4",
+                  "description": "ipFamily specifies the IP protocol family that should be used for Azure network resources. This controls whether Azure resources are created with IPv4-only, or dual-stack networking with IPv4 or IPv6 as the primary protocol family.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
                 "networkResourceGroupName": {
                   "description": "networkResourceGroupName is the Resource Group for network resources like the Virtual Network and Subnets used by the cluster. If empty, the value is same as ResourceGroupName.",
                   "type": [
@@ -1661,6 +1677,17 @@
                   },
                   "type": "array",
                   "x-kubernetes-list-type": "atomic"
+                },
+                "dnsRecordsType": {
+                  "description": "dnsRecordsType determines whether records for api, api-int, and ingress are provided by the internal DNS service or externally. Allowed values are `Internal`, `External`, and omitted. When set to `Internal`, records are provided by the internal infrastructure and no additional user configuration is required for the cluster to function. When set to `External`, records are not provided by the internal infrastructure and must be configured by the user on a DNS server outside the cluster. Cluster nodes must use this external server for their upstream DNS requests. This value may only be set when loadBalancer.type is set to UserManaged. When omitted, this means the user has no opinion and the platform is left to choose reasonable defaults. These defaults are subject to change over time. The current default is `Internal`.\n\nPossible enum values:\n - `\"External\"`\n - `\"Internal\"`",
+                  "enum": [
+                    "External",
+                    "Internal"
+                  ],
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "ingressIP": {
                   "description": "ingressIP is an external IP which routes to the default ingress controller. The IP is a suitable target of a wildcard DNS record used to resolve default route host names.\n\nDeprecated: Use IngressIPs instead.",
@@ -1951,41 +1978,6 @@
                     "key"
                   ],
                   "x-kubernetes-list-type": "map"
-                },
-                "serviceEndpoints": {
-                  "description": "serviceEndpoints specifies endpoints that override the default endpoints used when creating clients to interact with GCP services. When not specified, the default endpoint for the GCP region will be used. Only 1 endpoint override is permitted for each GCP service. The maximum number of endpoint overrides allowed is 11.",
-                  "items": {
-                    "additionalProperties": false,
-                    "default": {},
-                    "description": "GCPServiceEndpoint store the configuration of a custom url to override existing defaults of GCP Services.",
-                    "properties": {
-                      "name": {
-                        "default": "",
-                        "description": "name is the name of the GCP service whose endpoint is being overridden. This must be provided and cannot be empty.\n\nAllowed values are Compute, Container, CloudResourceManager, DNS, File, IAM, ServiceUsage, Storage, and TagManager.\n\nAs an example, when setting the name to Compute all requests made by the caller to the GCP Compute Service will be directed to the endpoint specified in the url field.",
-                        "type": "string"
-                      },
-                      "url": {
-                        "default": "",
-                        "description": "url is a fully qualified URI that overrides the default endpoint for a client using the GCP service specified in the name field. url is required, must use the scheme https, must not be more than 253 characters in length, and must be a valid URL according to Go's net/url package (https://pkg.go.dev/net/url#URL)\n\nAn example of a valid endpoint that overrides the Compute Service: \"https://compute-myendpoint1.p.googleapis.com\"",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "name",
-                      "url"
-                    ],
-                    "type": "object",
-                    "x-flux-schema-type": "GCPServiceEndpoint",
-                    "x-flux-schema-type-description": "GCPServiceEndpoint store the configuration of a custom url to override existing defaults of GCP Services."
-                  },
-                  "type": [
-                    "array",
-                    "null"
-                  ],
-                  "x-kubernetes-list-map-keys": [
-                    "name"
-                  ],
-                  "x-kubernetes-list-type": "map"
                 }
               },
               "required": [
@@ -2039,7 +2031,7 @@
                   ]
                 },
                 "serviceEndpoints": {
-                  "description": "serviceEndpoints is a list of custom endpoints which will override the default service endpoints of an IBM service. These endpoints are used by components within the cluster when trying to reach the IBM Cloud Services that have been overriden. The CCCMO reads in the IBMCloudPlatformSpec and validates each endpoint is resolvable. Once validated, the cloud config and IBMCloudPlatformStatus are updated to reflect the same custom endpoints.",
+                  "description": "serviceEndpoints is a list of custom endpoints which will override the default service endpoints of an IBM service. These endpoints are used by components within the cluster when trying to reach the IBM Cloud Services that have been overridden. The CCCMO reads in the IBMCloudPlatformSpec and validates each endpoint is resolvable. Once validated, the cloud config and IBMCloudPlatformStatus are updated to reflect the same custom endpoints.",
                   "items": {
                     "additionalProperties": false,
                     "default": {},
@@ -2127,6 +2119,17 @@
                   "type": "array",
                   "x-kubernetes-list-type": "set"
                 },
+                "dnsRecordsType": {
+                  "description": "dnsRecordsType determines whether records for api, api-int, and ingress are provided by the internal DNS service or externally. Allowed values are `Internal`, `External`, and omitted. When set to `Internal`, records are provided by the internal infrastructure and no additional user configuration is required for the cluster to function. When set to `External`, records are not provided by the internal infrastructure and must be configured by the user on a DNS server outside the cluster. Cluster nodes must use this external server for their upstream DNS requests. This value may only be set when loadBalancer.type is set to UserManaged. When omitted, this means the user has no opinion and the platform is left to choose reasonable defaults. These defaults are subject to change over time. The current default is `Internal`.\n\nPossible enum values:\n - `\"External\"`\n - `\"Internal\"`",
+                  "enum": [
+                    "External",
+                    "Internal"
+                  ],
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
                 "ingressIP": {
                   "description": "ingressIP is an external IP which routes to the default ingress controller. The IP is a suitable target of a wildcard DNS record used to resolve default route host names.\n\nDeprecated: Use IngressIPs instead.",
                   "type": [
@@ -2200,6 +2203,17 @@
                 },
                 "cloudName": {
                   "description": "cloudName is the name of the desired OpenStack cloud in the client configuration file (`clouds.yaml`).",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "dnsRecordsType": {
+                  "description": "dnsRecordsType determines whether records for api, api-int, and ingress are provided by the internal DNS service or externally. Allowed values are `Internal`, `External`, and omitted. When set to `Internal`, records are provided by the internal infrastructure and no additional user configuration is required for the cluster to function. When set to `External`, records are not provided by the internal infrastructure and must be configured by the user on a DNS server outside the cluster. Cluster nodes must use this external server for their upstream DNS requests. This value may only be set when loadBalancer.type is set to UserManaged. When omitted, this means the user has no opinion and the platform is left to choose reasonable defaults. These defaults are subject to change over time. The current default is `Internal`.\n\nPossible enum values:\n - `\"External\"`\n - `\"Internal\"`",
+                  "enum": [
+                    "External",
+                    "Internal"
+                  ],
                   "type": [
                     "string",
                     "null"
@@ -2294,6 +2308,17 @@
                   },
                   "type": "array",
                   "x-kubernetes-list-type": "set"
+                },
+                "dnsRecordsType": {
+                  "description": "dnsRecordsType determines whether records for api, api-int, and ingress are provided by the internal DNS service or externally. Allowed values are `Internal`, `External`, and omitted. When set to `Internal`, records are provided by the internal infrastructure and no additional user configuration is required for the cluster to function. When set to `External`, records are not provided by the internal infrastructure and must be configured by the user on a DNS server outside the cluster. Cluster nodes must use this external server for their upstream DNS requests. This value may only be set when loadBalancer.type is set to UserManaged. When omitted, this means the user has no opinion and the platform is left to choose reasonable defaults. These defaults are subject to change over time. The current default is `Internal`.\n\nPossible enum values:\n - `\"External\"`\n - `\"Internal\"`",
+                  "enum": [
+                    "External",
+                    "Internal"
+                  ],
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "ingressIP": {
                   "description": "ingressIP is an external IP which routes to the default ingress controller. The IP is a suitable target of a wildcard DNS record used to resolve default route host names.\n\nDeprecated: Use IngressIPs instead.",
@@ -2460,6 +2485,17 @@
                   },
                   "type": "array",
                   "x-kubernetes-list-type": "atomic"
+                },
+                "dnsRecordsType": {
+                  "description": "dnsRecordsType determines whether records for api, api-int, and ingress are provided by the internal DNS service or externally. Allowed values are `Internal`, `External`, and omitted. When set to `Internal`, records are provided by the internal infrastructure and no additional user configuration is required for the cluster to function. When set to `External`, records are not provided by the internal infrastructure and must be configured by the user on a DNS server outside the cluster. Cluster nodes must use this external server for their upstream DNS requests. This value may only be set when loadBalancer.type is set to UserManaged. When omitted, this means the user has no opinion and the platform is left to choose reasonable defaults. These defaults are subject to change over time. The current default is `Internal`.\n\nPossible enum values:\n - `\"External\"`\n - `\"Internal\"`",
+                  "enum": [
+                    "External",
+                    "Internal"
+                  ],
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "ingressIP": {
                   "description": "ingressIP is an external IP which routes to the default ingress controller. The IP is a suitable target of a wildcard DNS record used to resolve default route host names.\n\nDeprecated: Use IngressIPs instead.",
