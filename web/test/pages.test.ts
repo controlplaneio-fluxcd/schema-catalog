@@ -9,6 +9,7 @@ import {
   buildPageMeta,
   buildProjectPageMeta,
   parsePagePath,
+  redirectToCanonicalSlash,
   rewritePageTags,
   servePage,
 } from "../src/worker/pages.ts";
@@ -161,6 +162,19 @@ describe("parsePagePath", () => {
     expect(parsePagePath("/k/karpenter.sh/nodepool/v1/extra")).toBeUndefined();
     expect(parsePagePath("/p/%E0%A4%A")).toBeUndefined();
   });
+
+  test("accepts the canonical trailing-slash forms", () => {
+    expect(parsePagePath("/p/karpenter/")).toEqual({ type: "project", project: "karpenter" });
+    expect(parsePagePath("/k/karpenter.sh/nodepool/v1/")).toEqual({
+      type: "kind",
+      group: "karpenter.sh",
+      kind: "nodepool",
+      version: "v1",
+    });
+
+    expect(parsePagePath("/p/")).toBeUndefined();
+    expect(parsePagePath("/")).toBeUndefined();
+  });
 });
 
 describe("page meta builders", () => {
@@ -182,14 +196,14 @@ describe("page meta builders", () => {
       title: "NodePool (karpenter.sh/v1) | Flux Schema Catalog",
       description:
         "JSON Schema with LLM-optimized field index for NodePool, extracted from Karpenter v1.10.1 and rebuilt daily.",
-      url: "https://schemas.fluxoperator.dev/k/karpenter.sh/nodepool/v1",
+      url: "https://schemas.fluxoperator.dev/k/karpenter.sh/nodepool/v1/",
     });
 
     expect(buildPageMeta(index, { type: "kind", group: "acme.example.io", kind: "bucket", version: "v1" })).toEqual({
       title: "Bucket (acme.example.io/v1) | Flux Schema Catalog",
       description:
         "JSON Schema with LLM-optimized field index for Bucket, extracted from ACME Storage Controller v1.0.0 and rebuilt daily.",
-      url: "https://schemas.fluxoperator.dev/k/acme.example.io/bucket/v1",
+      url: "https://schemas.fluxoperator.dev/k/acme.example.io/bucket/v1/",
     });
 
     expect(buildPageMeta(index, { type: "kind", group: "solo.example.io", kind: "thing", version: "v1" })?.description).toBe(
@@ -202,10 +216,10 @@ describe("page meta builders", () => {
     expect(buildPageMeta(index, { type: "kind", group: "karpenter.sh", kind: "nodepool", version: "v2" })).toBeUndefined();
   });
 
-  test("buildCanonicalPath encodes route segments", () => {
-    expect(buildCanonicalPath({ type: "project", project: "a/b & c" })).toBe("/p/a%2Fb%20%26%20c");
+  test("buildCanonicalPath encodes route segments and ends with a slash", () => {
+    expect(buildCanonicalPath({ type: "project", project: "a/b & c" })).toBe("/p/a%2Fb%20%26%20c/");
     expect(buildCanonicalPath({ type: "kind", group: "example.io", kind: "fancy kind", version: "v1 beta" })).toBe(
-      "/k/example.io/fancy%20kind/v1%20beta",
+      "/k/example.io/fancy%20kind/v1%20beta/",
     );
   });
 });
@@ -232,7 +246,7 @@ describe("servePage", () => {
     const { env, assetUrls } = createEnv("pages-cache-v1");
     const cache = new MemoryCache();
     const firstCtx = createCtx();
-    const first = await servePage(req("/p/karpenter"), env, firstCtx.ctx, cache);
+    const first = await servePage(req("/p/karpenter/"), env, firstCtx.ctx, cache);
 
     expect(first.status).toBe(200);
     expect(first.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
@@ -243,7 +257,7 @@ describe("servePage", () => {
     await firstCtx.waitAll();
 
     const headCtx = createCtx();
-    const head = await servePage(req("/p/karpenter", { method: "HEAD" }), env, headCtx.ctx, cache);
+    const head = await servePage(req("/p/karpenter/", { method: "HEAD" }), env, headCtx.ctx, cache);
 
     expect(head.status).toBe(200);
     expect(head.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
@@ -254,9 +268,30 @@ describe("servePage", () => {
   test("falls through to Workers Assets unchanged on lookup misses", async () => {
     const { env } = createEnv("pages-miss-v1");
     const { ctx } = createCtx();
-    const resp = await servePage(req("/p/missing"), env, ctx, new MemoryCache());
+    const resp = await servePage(req("/p/missing/"), env, ctx, new MemoryCache());
 
-    expect(resp.headers.get("X-Fallback-Path")).toBe("/p/missing");
-    expect(await resp.text()).toBe("fallback:/p/missing");
+    expect(resp.headers.get("X-Fallback-Path")).toBe("/p/missing/");
+    expect(await resp.text()).toBe("fallback:/p/missing/");
+  });
+});
+
+describe("redirectToCanonicalSlash", () => {
+  test("301s bare and multi-slash page paths to the trailing-slash form, keeping the query", () => {
+    for (const [path, canonical] of [
+      ["/p/karpenter", "/p/karpenter/"],
+      ["/p/karpenter//", "/p/karpenter/"],
+      ["/k/karpenter.sh/nodepool/v1", "/k/karpenter.sh/nodepool/v1/"],
+      ["/p/karpenter?x=1", "/p/karpenter/?x=1"],
+    ] as const) {
+      const resp = redirectToCanonicalSlash(req(path));
+      expect(resp?.status).toBe(301);
+      expect(resp?.headers.get("Location")).toBe(`https://schemas.fluxoperator.dev${canonical}`);
+    }
+  });
+
+  test("redirects HEAD but leaves canonical paths and other methods alone", () => {
+    expect(redirectToCanonicalSlash(req("/p/karpenter", { method: "HEAD" }))?.status).toBe(301);
+    expect(redirectToCanonicalSlash(req("/p/karpenter/"))).toBeUndefined();
+    expect(redirectToCanonicalSlash(req("/p/karpenter", { method: "POST" }))).toBeUndefined();
   });
 });

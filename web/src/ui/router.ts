@@ -62,11 +62,14 @@ export function installRouter(render: (route: Route) => void): () => void {
  * stack and renders its route; the renderer scrolls to the anchor target.
  */
 export function navigate(path: string): void {
-  if (path !== location.pathname + location.hash) {
-    history.pushState(null, "", path);
-  }
   const hashIndex = path.indexOf("#");
-  dispatch?.(parseRoute(hashIndex < 0 ? path : path.slice(0, hashIndex)));
+  const pathname = hashIndex < 0 ? path : path.slice(0, hashIndex);
+  const hash = hashIndex < 0 ? "" : path.slice(hashIndex);
+  const target = `${pathname.replace(/\/+$/, "")}/${hash}`;
+  if (target !== location.pathname + location.hash) {
+    history.pushState(null, "", target);
+  }
+  dispatch?.(parseRoute(pathname));
 }
 
 /** Returns the URL path for the catalog overview. */
@@ -76,7 +79,7 @@ export function homeRoute(): string {
 
 /** Returns the URL path for the catalog explorer. */
 export function catalogRoute(): string {
-  return "/catalog";
+  return "/catalog/";
 }
 
 /** URL-safe slug for a category name, e.g. "Orchestration & Management" -> "orchestration-management". */
@@ -91,22 +94,22 @@ export function catalogCategoryRoute(category: string): string {
 
 /** Returns the URL path for the AI agents (MCP server) page. */
 export function agentsRoute(): string {
-  return "/agents";
+  return "/agents/";
 }
 
 /** Returns the URL path for the flux-schema CLI page. */
 export function cliRoute(): string {
-  return "/cli";
+  return "/cli/";
 }
 
 /** Returns the URL path for a project source name, URL-encoding the segment. */
 export function projectRoute(project: string): string {
-  return `/p/${encodeSegment(project)}`;
+  return `/p/${encodeSegment(project)}/`;
 }
 
 /** Returns the URL path for a concrete group/kind/version tuple. */
 export function kindRoute(group: string, kind: string, version: string): string {
-  return `/k/${encodeSegment(group)}/${encodeSegment(kind)}/${encodeSegment(version)}`;
+  return `/k/${encodeSegment(group)}/${encodeSegment(kind)}/${encodeSegment(version)}/`;
 }
 
 /**
@@ -116,11 +119,12 @@ export function kindRoute(group: string, kind: string, version: string): string 
  */
 export function parseRoute(value: string): Route {
   const path = value.startsWith("#") ? value.slice(1) : value;
-  if (path === "" || path === "/") {
+  const trimmed = path.replace(/\/+$/, "");
+  if (trimmed === "") {
     return { name: "home" };
   }
 
-  const rawParts = path.replace(/^\/+/, "").split("/");
+  const rawParts = trimmed.replace(/^\/+/, "").split("/");
   let parts: string[];
   try {
     parts = rawParts.map((part) => decodeURIComponent(part));

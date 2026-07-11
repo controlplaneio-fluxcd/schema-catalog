@@ -43,7 +43,10 @@ const server = Bun.serve({
       return versions ?? new Response("not found\n", { status: 404 });
     }
     // `/catalog/<group>/<file>` streams the local catalog tree; the bare
-    // `/catalog` path is the explorer page and resolves to `catalog.html`.
+    // `/catalog/` path is the explorer page and resolves to `catalog.html`.
+    if (pathname === "/catalog/") {
+      return serveAsset("/catalog");
+    }
     if (pathname.startsWith("/catalog/")) {
       return serveFile(catalogDir, pathname.slice("/catalog/".length));
     }

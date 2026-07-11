@@ -68,28 +68,29 @@ try {
 
 /**
  * Indexable pages prerendered from the app shell with page-specific meta.
- * Workers Assets serves `/agents` from `agents.html`, and the SPA takes over
- * on load; every other path falls back to `index.html` (see wrangler.jsonc
- * `not_found_handling`).
+ * Workers Assets serves `/agents/` from `agents.html` (and 301s the bare
+ * `/agents` there via `html_handling: force-trailing-slash`), and the SPA
+ * takes over on load; every other path falls back to `index.html` (see
+ * wrangler.jsonc `not_found_handling`).
  */
 const PAGES: Array<{ file: string; path: string; title: string; description: string }> = [
   {
     file: "catalog.html",
-    path: "/catalog",
+    path: "/catalog/",
     title: "Flux Schema Catalog: Kubernetes and CNCF schemas",
     description:
       "JSON Schemas and field indexes for Kubernetes core, OpenShift, the Flux ecosystem, and CNCF projects. Filter by name, API group, or kind and open a project for its versions.",
   },
   {
     file: "agents.html",
-    path: "/agents",
+    path: "/agents/",
     title: "Flux Schema MCP Server: an LLM-friendly kubectl explain",
     description:
       "Connect any MCP client to the Flux Schema Catalog: your agent greps exact Kubernetes fields, types, and constraints for the whole CNCF ecosystem, no cluster required.",
   },
   {
     file: "cli.html",
-    path: "/cli",
+    path: "/cli/",
     title: "Flux Schema CLI: validate Kubernetes manifests in CI",
     description:
       "Static validation for GitOps workflows with Kubernetes API server semantics. Catch invalid manifests in pull requests, before Flux reconciles them on clusters.",
@@ -115,10 +116,10 @@ for (const page of PAGES) {
 const index = (await Bun.file(join(assetsDir, "index.json")).json()) as CatalogIndex;
 const urls = [
   "https://schemas.fluxoperator.dev/",
-  "https://schemas.fluxoperator.dev/catalog",
-  "https://schemas.fluxoperator.dev/agents",
-  "https://schemas.fluxoperator.dev/cli",
-  ...index.projects.map((project) => `https://schemas.fluxoperator.dev/p/${encodeURIComponent(project.name)}`),
+  "https://schemas.fluxoperator.dev/catalog/",
+  "https://schemas.fluxoperator.dev/agents/",
+  "https://schemas.fluxoperator.dev/cli/",
+  ...index.projects.map((project) => `https://schemas.fluxoperator.dev/p/${encodeURIComponent(project.name)}/`),
 ];
 
 await Bun.write(

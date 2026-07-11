@@ -20,10 +20,12 @@ export interface PageMeta {
 
 /**
  * Parses only the history-routed UI pages that need server-side social metadata:
- * `/p/<project>` and `/k/<group>/<kind>/<version>`.
+ * `/p/<project>/` and `/k/<group>/<kind>/<version>/`. The canonical form has a
+ * trailing slash, but the bare form is accepted too (the router 301s it before
+ * this runs; direct callers stay tolerant).
  */
 export function parsePagePath(pathname: string): PageRoute | undefined {
-  const rawSegments = pathname.split("/");
+  const rawSegments = pathname.replace(/\/+$/, "").split("/");
   if (rawSegments[0] !== "") {
     return undefined;
   }
@@ -51,11 +53,31 @@ export function parsePagePath(pathname: string): PageRoute | undefined {
   return undefined;
 }
 
+/**
+ * 301s a non-canonical page path (bare or multi-slash) to the trailing-slash
+ * form, keeping the query string; returns undefined when the path is already
+ * canonical or the method is not GET/HEAD. The Location carries no fragment,
+ * so browsers re-attach the original one and `/p/kubernetes#sources` still
+ * lands on the sources tab.
+ */
+export function redirectToCanonicalSlash(req: Request): Response | undefined {
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    return undefined;
+  }
+  const url = new URL(req.url);
+  const canonical = `${url.pathname.replace(/\/+$/, "")}/`;
+  if (url.pathname === canonical) {
+    return undefined;
+  }
+  url.pathname = canonical;
+  return Response.redirect(url.href, 301);
+}
+
 export function buildCanonicalPath(route: PageRoute): string {
   if (route.type === "project") {
-    return `/p/${encodeURIComponent(route.project)}`;
+    return `/p/${encodeURIComponent(route.project)}/`;
   }
-  return `/k/${encodeURIComponent(route.group)}/${encodeURIComponent(route.kind)}/${encodeURIComponent(route.version)}`;
+  return `/k/${encodeURIComponent(route.group)}/${encodeURIComponent(route.kind)}/${encodeURIComponent(route.version)}/`;
 }
 
 export function buildProjectPageMeta(project: ProjectEntry): Omit<PageMeta, "url"> {
