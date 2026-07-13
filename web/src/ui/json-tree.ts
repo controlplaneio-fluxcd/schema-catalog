@@ -3,6 +3,85 @@
 
 import { text } from "./dom.ts";
 
+/** A parsed prose fragment rendered inside schema descriptions and validation messages. */
+export type ProseToken =
+  | { kind: "text"; text: string; href?: undefined }
+  | { kind: "code"; text: string; href?: undefined }
+  | { kind: "link"; text: string; href: string };
+
+// Markdown-link URLs allow one level of nested parens (Wikipedia-style
+// /Foo_(bar) paths); bare URLs stop at whitespace and markup delimiters so an
+// adjacent backtick span or markdown link is never swallowed into the href.
+const prosePattern = /`([^`]*)`|\[([^\]]+)\]\((https?:\/\/(?:[^\s()]|\([^\s()]*\))+)\)|(https?:\/\/[^\s<>[\]`]+)/g;
+
+/**
+ * Splits lightweight schema prose into plain text, inline code, and safe links.
+ */
+export function parseProse(value: string): ProseToken[] {
+  const tokens: ProseToken[] = [];
+  const appendText = (textValue: string): void => {
+    if (textValue === "") {
+      return;
+    }
+    const last = tokens[tokens.length - 1];
+    if (last?.kind === "text") {
+      last.text += textValue;
+      return;
+    }
+    tokens.push({ kind: "text", text: textValue });
+  };
+
+  prosePattern.lastIndex = 0;
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = prosePattern.exec(value)) !== null) {
+    appendText(value.slice(cursor, match.index));
+    if (match[1] !== undefined) {
+      tokens.push({ kind: "code", text: match[1] });
+    } else if (match[2] !== undefined && match[3] !== undefined) {
+      tokens.push({ kind: "link", text: match[2], href: match[3] });
+    } else if (match[4] !== undefined) {
+      const rawUrl = match[4];
+      const trimmedUrl = trimBareUrl(rawUrl);
+      tokens.push({ kind: "link", text: trimmedUrl, href: trimmedUrl });
+      appendText(rawUrl.slice(trimmedUrl.length));
+    }
+    cursor = prosePattern.lastIndex;
+  }
+  appendText(value.slice(cursor));
+  return tokens.length === 0 ? [{ kind: "text", text: value }] : tokens;
+}
+
+/**
+ * Trims sentence punctuation off the end of a bare URL. A trailing `)` is
+ * kept while it closes a `(` inside the URL (Wikipedia-style /Foo_(bar)
+ * paths) and trimmed only when unbalanced, i.e. the URL sits in parentheses.
+ */
+function trimBareUrl(url: string): string {
+  for (;;) {
+    const last = url[url.length - 1];
+    if (last !== undefined && ".,;:!?'\"".includes(last)) {
+      url = url.slice(0, -1);
+      continue;
+    }
+    if (last === ")" && countChar(url, "(") < countChar(url, ")")) {
+      url = url.slice(0, -1);
+      continue;
+    }
+    return url;
+  }
+}
+
+function countChar(value: string, char: string): number {
+  let count = 0;
+  for (const candidate of value) {
+    if (candidate === char) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
 /**
  * Renders a JSON Schema document as a collapsible, schema-aware tree.
  * Property names listed in their parent schema's `required` array carry the
@@ -185,6 +264,9 @@ function valueClass(key: string | null, validation = false): string | undefined 
 function createPrimitive(value: unknown, override?: string): HTMLElement {
   const withOverride = (base: string): string => (override === undefined ? base : `${base} ${override}`);
   if (typeof value === "string") {
+    if (override === "json-prose") {
+      return createProse(value, withOverride("json-string"));
+    }
     return text("span", withOverride("json-string"), value === "" ? '""' : value);
   }
   if (typeof value === "number") {
@@ -194,6 +276,25 @@ function createPrimitive(value: unknown, override?: string): HTMLElement {
     return text("span", withOverride("json-bool"), String(value));
   }
   return text("span", withOverride("json-null"), "null");
+}
+
+function createProse(value: string, className: string): HTMLElement {
+  const span = document.createElement("span");
+  span.className = className;
+  for (const token of parseProse(value)) {
+    if (token.kind === "text") {
+      span.append(document.createTextNode(token.text));
+    } else if (token.kind === "code") {
+      span.append(text("code", "json-code", token.text));
+    } else {
+      const anchor = text("a", "json-link", token.text);
+      anchor.href = token.href;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      span.append(anchor);
+    }
+  }
+  return span;
 }
 
 function stringSet(value: unknown): Set<string> | undefined {
