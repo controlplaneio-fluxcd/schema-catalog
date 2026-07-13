@@ -16,9 +16,8 @@ export interface FieldLine {
 }
 
 /**
- * Node in a dotted field-path tree. Array segments keep their `[]` suffix as
- * part of the segment name so `spec.versions[].name` remains reversible to the
- * source field path.
+ * Node in a dotted field-path tree. Array item suffixes are normalized away from
+ * segment names so an array field and its item fields share the same node.
  */
 export interface FieldNode {
   segment: string;
@@ -101,10 +100,11 @@ export function buildFieldTree(lines: FieldLine[]): FieldNode {
   for (const line of lines) {
     let node = root;
     for (const segment of line.path.split(".")) {
-      let child = node.children.get(segment);
+      const childSegment = segment.replace(/\[\]$/, "");
+      let child = node.children.get(childSegment);
       if (child === undefined) {
-        child = { segment, children: new Map() };
-        node.children.set(segment, child);
+        child = { segment: childSegment, children: new Map() };
+        node.children.set(childSegment, child);
       }
       node = child;
     }

@@ -10,6 +10,7 @@ kind <string> enum=CustomResourceDefinition (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)\t# spec describes how the user wants the resources to appear
 spec.conversion.webhook.clientConfig.caBundle <string> format=byte\t# caBundle is a PEM encoded CA bundle...
+spec.versions <[]object>\t# versions are API versions
 spec.versions[].name <string> (required)\t# name is the version name, e.g. v1
 spec.template.spec.containers[].image <string>\t# Container Image
 spec.template.spec.containers[].resources.limits.cpu <string>\t# CPU limit
@@ -19,7 +20,7 @@ describe("parseFieldsFile", () => {
   test("skips comments and splits fields lines", () => {
     const lines = parseFieldsFile(sample);
 
-    expect(lines).toHaveLength(8);
+    expect(lines).toHaveLength(9);
     expect(lines[0]).toMatchObject({
       path: "apiVersion",
       type: "<string>",
@@ -69,8 +70,9 @@ describe("filterFieldLines", () => {
     const lines = parseFieldsFile(sample);
     const fallback = filterFieldLines(lines, { query: "[", queryMode: "regex-or-substring" });
 
-    expect(fallback.total).toBe(3);
+    expect(fallback.total).toBe(4);
     expect(fallback.matches.map((line) => line.path)).toEqual([
+      "spec.versions",
       "spec.versions[].name",
       "spec.template.spec.containers[].image",
       "spec.template.spec.containers[].resources.limits.cpu",
@@ -93,8 +95,17 @@ describe("filterFieldLines", () => {
 describe("buildFieldTree", () => {
   test("nests array path segments as plain names", () => {
     const tree = buildFieldTree(parseFieldsFile(sample));
-    const name = tree.children.get("spec")?.children.get("versions[]")?.children.get("name");
+    const name = tree.children.get("spec")?.children.get("versions")?.children.get("name");
 
     expect(name?.line?.path).toBe("spec.versions[].name");
+  });
+
+  test("merges array field and item field segments", () => {
+    const tree = buildFieldTree(parseFieldsFile(sample));
+    const versions = tree.children.get("spec")?.children.get("versions");
+
+    expect(versions?.line?.path).toBe("spec.versions");
+    expect(versions?.line?.type).toBe("<[]object>");
+    expect(versions?.children.get("name")?.line?.path).toBe("spec.versions[].name");
   });
 });
