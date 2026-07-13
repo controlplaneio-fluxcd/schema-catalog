@@ -91,9 +91,10 @@ export function renderKind(index: CatalogIndex, group: string, kind: string, ver
 }
 
 /**
- * The schema viewer: a JSON | Index tab pair over the same schema, sharing
- * one filter box and expand/collapse-all controls. Index is the greppable
- * fields explorer; JSON is the raw document rendered as a schema-aware tree
+ * The schema viewer: a JSON Schema | Explain tab pair over the same schema,
+ * sharing one filter box and expand/collapse-all controls. Explain is the
+ * greppable fields explorer; JSON is the raw document rendered as a
+ * schema-aware tree
  * where descriptions keep their original line breaks. Each tab fetches its
  * document lazily on first activation and the filter re-applies on switch.
  * Versions without a fields index get the JSON view with Index disabled.
@@ -104,8 +105,8 @@ function renderSchemaViewer(content: HTMLElement, group: string, kind: string, v
 
   const tabs = document.createElement("div");
   tabs.className = "catalog-scope";
-  const indexTab = createViewerTab("Index");
-  const jsonTab = createViewerTab("JSON");
+  const indexTab = createViewerTab("Explain");
+  const jsonTab = createViewerTab("JSON Schema");
   tabs.append(indexTab, jsonTab);
 
   const { field: filterWrap, input: filter } = createSearchField({
