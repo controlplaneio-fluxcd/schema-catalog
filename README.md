@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C860-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-630%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C860-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-631%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -135,7 +135,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Azure Service Operator](https://schemas.fluxoperator.dev/p/azure-service-operator) | `azure-service-operator` | v2.20.0 | 1324 | 2026-07-09 |
 | [Capsule](https://schemas.fluxoperator.dev/p/capsule) | `capsule` | v0.13.9 | 12 | 2026-07-09 |
 | [Cert Manager](https://schemas.fluxoperator.dev/p/cert-manager) | `cert-manager` | v1.21.0 | 6 | 2026-07-09 |
-| [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.13.3 | 36 | 2026-07-09 |
+| [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.13.4 | 36 | 2026-07-16 |
 | [Cluster API Add-on Provider Helm](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-addon-provider-helm` | v0.6.4 | 2 | 2026-07-09 |
 | [Cluster API AWS](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-aws` | v2.12.1 | 36 | 2026-07-10 |
 | [Cluster API Azure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-azure` | v1.26.0 | 25 | 2026-07-09 |
@@ -219,10 +219,10 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [KEDA](https://schemas.fluxoperator.dev/p/keda) | `keda` | v2.20.1 | 6 | 2026-07-09 |
 | [kgateway](https://schemas.fluxoperator.dev/p/kgateway) | `kgateway` | v2.3.6 | 8 | 2026-07-14 |
 | [kjob](https://schemas.fluxoperator.dev/p/kjob) | `kjob` | v0.1.0 | 5 | 2026-07-09 |
-| [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.0 | 18 | 2026-07-09 |
+| [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.1 | 18 | 2026-07-16 |
 | [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.6.2 | 7 | 2026-07-09 |
 | [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.18.3 | 22 | 2026-07-11 |
-| [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.0 | 54 | 2026-07-09 |
+| [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.1 | 54 | 2026-07-16 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v0.9.0 | 2 | 2026-07-09 |
 | [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.6.3 | 19 | 2026-07-09 |
@@ -230,7 +230,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.19.0 | 2 | 2026-07-11 |
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.19.0 | 3 | 2026-07-11 |
 | [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.19.2 | 1 | 2026-07-10 |
-| [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.7 | 10 | 2026-07-09 |
+| [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.8 | 10 | 2026-07-16 |
 | [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.7.0 | 4 | 2026-07-09 |
 | [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.15.0 | 9 | 2026-07-09 |
 | [Volcano JobFlow](https://schemas.fluxoperator.dev/p/volcano) | `volcano-jobflow` | v1.15.0 | 2 | 2026-07-09 |
@@ -251,7 +251,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.43.0 | 3 | 2026-07-09 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.2 | 15 | 2026-07-14 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.55.0 | 4 | 2026-07-14 |
-| [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.3 | 2 | 2026-07-09 |
+| [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.4 | 2 | 2026-07-16 |
 | [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.10.9 | 9 | 2026-07-15 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.22.2 | 20 | 2026-07-09 |
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.22.1 | 12 | 2026-07-09 |
@@ -271,7 +271,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [OpenKruise](https://schemas.fluxoperator.dev/p/openkruise) | `openkruise` | v1.9.1 | 26 | 2026-07-09 |
 | [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq-cluster-operator) | `rabbitmq-cluster-operator` | v2.22.2 | 1 | 2026-07-15 |
 | [Rancher Fleet](https://schemas.fluxoperator.dev/p/rancher-fleet) | `rancher-fleet` | v0.15.4 | 14 | 2026-07-10 |
-| [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.25.0 | 4 | 2026-07-09 |
+| [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.26.0 | 4 | 2026-07-16 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.0 | 11 | 2026-07-09 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
 | [Spark Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `spark-operator` | v2.5.1 | 3 | 2026-07-09 |
@@ -288,7 +288,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Fluent Operator](https://schemas.fluxoperator.dev/p/fluent-operator) | `fluent-operator` | v3.9.0 | 22 | 2026-07-09 |
 | [Grafana Operator](https://schemas.fluxoperator.dev/p/grafana-operator) | `grafana-operator` | v5.24.0 | 13 | 2026-07-09 |
 | [Jaeger Operator](https://schemas.fluxoperator.dev/p/jaeger-operator) | `jaeger-operator` | v1.65.0 | 1 | 2026-07-09 |
-| [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.30.0 | 3 | 2026-07-09 |
+| [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.31.0 | 3 | 2026-07-16 |
 | [Logging Operator](https://schemas.fluxoperator.dev/p/logging-operator) | `logging-operator` | 6.7.0 | 21 | 2026-07-09 |
 | [Loki Operator](https://schemas.fluxoperator.dev/p/loki-operator) | `loki-operator` | v0.10.2 | 9 | 2026-07-09 |
 | [OpenSearch Operator](https://schemas.fluxoperator.dev/p/opensearch-operator) | `opensearch-operator` | 3.0.2 | 20 | 2026-07-09 |
