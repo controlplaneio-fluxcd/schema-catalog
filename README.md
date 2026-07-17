@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C860-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-631%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-113-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C861-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-631%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -111,7 +111,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS CloudWatch Logs Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudwatchlogs` | v1.3.2 | 1 | 2026-07-09 |
 | [AWS DynamoDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-dynamodb` | v1.9.2 | 3 | 2026-07-09 |
 | [AWS EC2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ec2` | v1.18.2 | 20 | 2026-07-09 |
-| [AWS ECR Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ecr` | v1.6.3 | 3 | 2026-07-09 |
+| [AWS ECR Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ecr` | v1.7.0 | 3 | 2026-07-17 |
 | [AWS EFS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-efs` | v1.4.1 | 3 | 2026-07-09 |
 | [AWS EKS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eks` | v1.16.2 | 8 | 2026-07-09 |
 | [AWS Elastic Load Balancing v2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elbv2` | v1.5.2 | 4 | 2026-07-09 |
@@ -179,7 +179,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | --- | --- | --- | --- | --- |
 | [Antrea](https://schemas.fluxoperator.dev/p/antrea) | `antrea` | v2.6.2 | 20 | 2026-07-09 |
 | [Calico](https://schemas.fluxoperator.dev/p/calico) | `calico` | v3.32.1 | 22 | 2026-07-09 |
-| [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.19.5 | 29 | 2026-07-09 |
+| [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.19.6 | 29 | 2026-07-17 |
 | [Container Object Storage Interface](https://schemas.fluxoperator.dev/p/cosi) | `cosi` | v0.2.2 | 5 | 2026-07-09 |
 | [CSI External Snapshotter](https://schemas.fluxoperator.dev/p/external-snapshotter) | `external-snapshotter` | v8.6.0 | 15 | 2026-07-09 |
 | [Kube-OVN](https://schemas.fluxoperator.dev/p/kube-ovn) | `kube-ovn` | v1.16.2 | 24 | 2026-07-09 |
@@ -188,7 +188,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Multus CNI](https://schemas.fluxoperator.dev/p/multus-cni) | `multus-cni` | v4.3.0 | 1 | 2026-07-09 |
 | [Network Policy API](https://schemas.fluxoperator.dev/p/network-policy-api) | `network-policy-api` | v0.2.0 | 1 | 2026-07-09 |
 | [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.3.3 | 2 | 2026-07-09 |
-| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.1.0 | 4 | 2026-07-09 |
+| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.4.1 | 5 | 2026-07-17 |
 | [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.20.2 | 21 | 2026-07-09 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.1 | 12 | 2026-07-09 |
 | [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.2.2 | 6 | 2026-07-09 |
@@ -206,13 +206,13 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cluster Inventory API](https://schemas.fluxoperator.dev/p/cluster-inventory-api) | `cluster-inventory-api` | v0.1.3 | 2 | 2026-07-09 |
 | [Envoy Gateway](https://schemas.fluxoperator.dev/p/envoy-gateway) | `envoy-gateway` | v1.8.2 | 8 | 2026-07-09 |
 | [ExternalDNS](https://schemas.fluxoperator.dev/p/external-dns) | `external-dns` | v0.21.0 | 1 | 2026-07-09 |
-| [Gateway API](https://schemas.fluxoperator.dev/p/gateway-api) | `gateway-api` | v1.6.0 | 21 | 2026-07-09 |
+| [Gateway API](https://schemas.fluxoperator.dev/p/gateway-api) | `gateway-api` | v1.6.1 | 21 | 2026-07-17 |
 | [Gateway API Inference Extension](https://schemas.fluxoperator.dev/p/gateway-api-inference-extension) | `gateway-api-inference-extension` | v1.5.0 | 4 | 2026-07-09 |
-| [Istio](https://schemas.fluxoperator.dev/p/istio) | `istio` | 1.30.2 | 33 | 2026-07-09 |
+| [Istio](https://schemas.fluxoperator.dev/p/istio) | `istio` | 1.30.3 | 33 | 2026-07-17 |
 | [JobSet](https://schemas.fluxoperator.dev/p/jobset) | `jobset` | v0.12.0 | 1 | 2026-07-09 |
 | [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.18.1 | 19 | 2026-07-09 |
 | [Karpenter](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter` | v1.14.0 | 4 | 2026-07-11 |
-| [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.14.0 | 1 | 2026-07-14 |
+| [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.2.8 | 1 | 2026-07-17 |
 | [Karpenter Azure](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-azure` | v1.13.1 | 2 | 2026-07-09 |
 | [Karpenter Cluster API](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-cluster-api` | v0.2.0 | 1 | 2026-07-09 |
 | [Karpenter IBM Cloud](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-ibm-cloud` | v1.0.5 | 1 | 2026-07-14 |
@@ -251,7 +251,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.43.0 | 3 | 2026-07-09 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.2 | 15 | 2026-07-14 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.55.0 | 4 | 2026-07-14 |
-| [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.4 | 2 | 2026-07-16 |
+| [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.5 | 2 | 2026-07-17 |
 | [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.10.9 | 9 | 2026-07-15 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.22.2 | 20 | 2026-07-09 |
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.22.1 | 12 | 2026-07-09 |
