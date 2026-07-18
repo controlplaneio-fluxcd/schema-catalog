@@ -1,0 +1,19 @@
+# schema source: External Secrets v2.8.0 https://github.com/external-secrets/external-secrets
+apiVersion <string> enum=generators.external-secrets.io/v1alpha1
+kind <string> enum=GitlabDeployToken
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# GitlabDeployTokenSpec defines the desired state to generate a GitLab deploy token.
+spec.auth <object> (required)	# Auth configures how ESO authenticates with the GitLab API.
+spec.auth.token <object> (required)	# Token references a secret containing a GitLab access token (personal, group, or project) with the api scope and at least the Maintainer role on the target.
+spec.auth.token.secretRef <object> (required)	# SecretKeySelector is a reference to a specific 'key' within a Secret resource. In some instances, `key` is a required field.
+spec.auth.token.secretRef.key <string> pattern="^[-._a-zA-Z0-9]+$" min=1 max=253	# A key in the referenced Secret. Some instances of this field may be defaulted, in others it may be required.
+spec.auth.token.secretRef.name <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# The name of the Secret resource being referred to.
+spec.auth.token.secretRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# The namespace of the Secret resource being referred to. Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+spec.expiresAt <string> format=date-time	# ExpiresAt is an optional expiry for the deploy token. If omitted the token does not expire on the GitLab side and is revoked only when the generator state is cleaned up (on regeneration or when the consuming ExternalSecret is deleted).
+spec.groupID <string> min=1	# GroupID is the numeric ID or unescaped path (e.g. parent/group) of the group to create the deploy token in. The generator URL-escapes paths before calling the GitLab API, so do not pre-encode. Mutually exclusive with projectID.
+spec.name <string> (required) min=1	# Name of the deploy token.
+spec.projectID <string> min=1	# ProjectID is the numeric ID or unescaped path (e.g. group/project) of the project to create the deploy token in. The generator URL-escapes paths before calling the GitLab API, so do not pre-encode. Mutually exclusive with groupID.
+spec.scopes <[]string> (required) min=1	# Scopes granted to the deploy token. At least one scope is required.
+spec.url <string>	# URL configures the GitLab instance URL. Defaults to https://gitlab.com.
+spec.username <string>	# Username is an optional username for the deploy token. GitLab defaults it to gitlab+deploy-token-{n} when omitted.
