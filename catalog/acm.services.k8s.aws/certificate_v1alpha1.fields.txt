@@ -1,4 +1,4 @@
-# schema source: AWS ACM Controller v1.4.3 https://github.com/aws-controllers-k8s/acm-controller
+# schema source: AWS ACM Controller v1.5.0 https://github.com/aws-controllers-k8s/acm-controller
 apiVersion <string> enum=acm.services.k8s.aws/v1alpha1
 kind <string> enum=Certificate
 metadata.name <string> (required)
@@ -26,9 +26,11 @@ spec.exportTo <object> (immutable)	# SecretKeyReference combines a k8s corev1.Se
 spec.exportTo.key <string> (required)	# Key is the key within the secret
 spec.exportTo.name <string>	# name is unique within a namespace to reference a secret resource.
 spec.exportTo.namespace <string>	# namespace defines the space within which the secret name must be unique.
-spec.keyAlgorithm <string> (immutable)	# Specifies the algorithm of the public and private key pair that your certificate uses to encrypt data. RSA is the default key algorithm for ACM certificates. Elliptic Curve Digital Signature Algorithm (ECDSA) keys are smaller, offering security comparable to RSA keys but with greater computing efficiency. However, ECDSA is not supported by all network clients. Some Amazon Web Services services may require RSA keys, or only support ECDSA keys of a particular size, while others allow the use of either RSA and ECDSA keys to ensure that compatibility is not broken. Check the requirements for the Amazon Web Services service where you plan to deploy your certificate. For more information about selecting an algorithm, see Key algorithms (https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms). Algorithms supported for an ACM certificate request include: * RSA_2048 * EC_prime256v1 * EC_secp384r1 Other listed algorithms are for imported certificates only. When you request a private PKI certificate signed by a CA from Amazon Web Services Private CA, the specified signing algorithm family (RSA or ECDSA) must match the algorithm family of the CA's secret key. Default: RSA_2048
-spec.options <object>	# Currently, you can use this parameter to specify whether to add the certificate to a certificate transparency log. Certificate transparency makes it possible to detect SSL/TLS certificates that have been mistakenly or maliciously issued. Certificates that have not been logged typically produce an error message in a browser. For more information, see Opting Out of Certificate Transparency Logging (https://docs.aws.amazon.com/acm/latest/userguide/acm-bestpractices.html#best-practices-transparency).
+spec.keyAlgorithm <string> (immutable)	# Specifies the algorithm of the public and private key pair that your certificate uses to encrypt data. RSA is the default key algorithm for ACM certificates. Elliptic Curve Digital Signature Algorithm (ECDSA) keys are smaller, offering security comparable to RSA keys but with greater computing efficiency. However, ECDSA is not supported by all network clients. Some Amazon Web Services services may require RSA keys, or only support ECDSA keys of a particular size, while others allow the use of either RSA and ECDSA keys to ensure that compatibility is not broken. Check the requirements for the Amazon Web Services service where you plan to deploy your certificate. For more information about selecting an algorithm, see Key algorithms (https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate-characteristics.html#algorithms-term). Algorithms supported for an ACM certificate request include: * RSA_2048 * EC_prime256v1 * EC_secp384r1 Other listed algorithms are for imported certificates only. When you request a private PKI certificate signed by a CA from Amazon Web Services Private CA, the specified signing algorithm family (RSA or ECDSA) must match the algorithm family of the CA's secret key. Default: RSA_2048
+spec.managedBy <string> (immutable)	# Identifies the Amazon Web Services service that manages the certificate issued by ACM.
+spec.options <object>	# You can use this parameter to specify whether to export your certificate. Certificate transparency logging opt-out is no longer available. All public certificates are recorded in a certificate transparency log. For more information, see Certificate Transparency Logging (https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency). You can export public ACM certificates to use with Amazon Web Services services as well as outside the Amazon Web Services Cloud. For more information, see Certificate Manager exportable public certificate (https://docs.aws.amazon.com/acm/latest/userguide/acm-exportable-certificates.html).
 spec.options.certificateTransparencyLoggingPreference <string>
+spec.options.export <string>
 spec.privateKey <object> (immutable)	# The private key that matches the public key in the certificate. This field is only valid when importing an existing certificate into ACM.
 spec.privateKey.key <string> (required)	# Key is the key within the secret
 spec.privateKey.name <string>	# name is unique within a namespace to reference a secret resource.
@@ -52,6 +54,9 @@ status.conditions[].type <string> (required)	# Type is the type of the Condition
 status.createdAt <string> format=date-time	# The time at which the certificate was requested.
 status.domainValidations <[]object>	# Contains information about the initial validation of each domain name that occurs as a result of the RequestCertificate request. This field exists only when the certificate type is AMAZON_ISSUED.
 status.domainValidations[].domainName <string>
+status.domainValidations[].httpRedirect <object>	# Contains information for HTTP-based domain validation of certificates requested through Amazon CloudFront and issued by ACM. This field exists only when the certificate type is AMAZON_ISSUED and the validation method is HTTP.
+status.domainValidations[].httpRedirect.redirectFrom <string>
+status.domainValidations[].httpRedirect.redirectTo <string>
 status.domainValidations[].resourceRecord <object>	# Contains a DNS record value that you can use to validate ownership or control of a domain. This is used by the DescribeCertificate action.
 status.domainValidations[].resourceRecord.name <string>
 status.domainValidations[].resourceRecord.type_ <string>
@@ -76,6 +81,9 @@ status.renewalEligibility <string>	# Specifies whether the certificate is eligib
 status.renewalSummary <object>	# Contains information about the status of ACM's managed renewal (https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for the certificate. This field exists only when the certificate type is AMAZON_ISSUED.
 status.renewalSummary.domainValidationOptions <[]object>
 status.renewalSummary.domainValidationOptions[].domainName <string>
+status.renewalSummary.domainValidationOptions[].httpRedirect <object>	# Contains information for HTTP-based domain validation of certificates requested through Amazon CloudFront and issued by ACM. This field exists only when the certificate type is AMAZON_ISSUED and the validation method is HTTP.
+status.renewalSummary.domainValidationOptions[].httpRedirect.redirectFrom <string>
+status.renewalSummary.domainValidationOptions[].httpRedirect.redirectTo <string>
 status.renewalSummary.domainValidationOptions[].resourceRecord <object>	# Contains a DNS record value that you can use to validate ownership or control of a domain. This is used by the DescribeCertificate action.
 status.renewalSummary.domainValidationOptions[].resourceRecord.name <string>
 status.renewalSummary.domainValidationOptions[].resourceRecord.type_ <string>
