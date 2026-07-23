@@ -1,4 +1,4 @@
-# schema source: Capsule v0.13.9 https://github.com/projectcapsule/capsule
+# schema source: Capsule v0.13.10 https://github.com/projectcapsule/capsule
 apiVersion <string> enum=capsule.clastix.io/v1beta2
 kind <string> enum=Tenant (cluster-scoped)
 metadata.name <string> (required)
@@ -7,7 +7,7 @@ spec.additionalRoleBindings <[]object>	# Specifies additional RoleBindings assig
 spec.additionalRoleBindings[].annotations <map[string]string>	# Additional Annotations for the synchronized rolebindings
 spec.additionalRoleBindings[].clusterRoleName <string> (required)
 spec.additionalRoleBindings[].labels <map[string]string>	# Additional Labels for the synchronized rolebindings
-spec.additionalRoleBindings[].subjects <[]object> (required)	# kubebuilder:validation:Minimum=1
+spec.additionalRoleBindings[].subjects <[]object> (required) min=1
 spec.additionalRoleBindings[].subjects[].apiGroup <string>	# APIGroup holds the API group of the referenced subject. Defaults to "" for ServiceAccount subjects. Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
 spec.additionalRoleBindings[].subjects[].kind <string> (required)	# Kind of object being referenced. Values defined by this API group are "User", "Group", and "ServiceAccount". If the Authorizer does not recognized the kind value, the Authorizer should report an error.
 spec.additionalRoleBindings[].subjects[].name <string> (required)	# Name of the object being referenced.
@@ -179,10 +179,21 @@ spec.resourceQuotas.items[].scopeSelector.matchExpressions[].values <[]string>	#
 spec.resourceQuotas.items[].scopes <[]string>	# A collection of filters that must match each object tracked by a quota. If not specified, the quota matches all objects.
 spec.resourceQuotas.scope <string> enum=Tenant|Namespace default="Tenant"	# Define if the Resource Budget should compute resource across all Namespaces in the Tenant or individually per cluster. Default is Tenant
 spec.rules <[]object>	# Specify enforcement specifications for the scope of the Tenant. We are moving all configuration enforcement. per namespace into a rule construct. It's currently not final. Read More: https://projectcapsule.dev/docs/tenants/rules/
+spec.rules[].audience <[]object>	# Audience limits this rule to matching request subjects. An empty audience matches every request.
+spec.rules[].audience[].kind <string> (required) enum=User|Group|ServiceAccount|Custom
+spec.rules[].audience[].name <string> (required)
 spec.rules[].enforce <object>	# Enforcement for given rule
 spec.rules[].enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+spec.rules[].enforce.ingress <object>	# Enforcement for Ingress and Gateway API resource hostnames.
+spec.rules[].enforce.ingress.hostnames <[]object> min=1	# Hostnames defines allowed, denied, or audited hostname expressions. A resource targeted by an allow or deny rule must declare non-empty values in all hostname fields. Audit-only rules record missing hostnames without denying them.
+spec.rules[].enforce.ingress.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec.rules[].enforce.ingress.hostnames[].exp <string> min=1	# Exp matches regular expression.
+spec.rules[].enforce.ingress.hostnames[].negate <boolean> default=false	# Negate regular Expression
+spec.rules[].enforce.ingress.types <[]string> min=1	# Types defines the resource kinds to which hostname enforcement applies.
 spec.rules[].enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
 spec.rules[].enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+spec.rules[].enforce.metadata[].annotations.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+spec.rules[].enforce.metadata[].annotations.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 spec.rules[].enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 spec.rules[].enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 spec.rules[].enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -191,6 +202,8 @@ spec.rules[].enforce.metadata[].annotations.<key>.values[].negate <boolean> defa
 spec.rules[].enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
 spec.rules[].enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
 spec.rules[].enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+spec.rules[].enforce.metadata[].labels.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+spec.rules[].enforce.metadata[].labels.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 spec.rules[].enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 spec.rules[].enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 spec.rules[].enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -228,6 +241,15 @@ spec.rules[].namespaceSelector.matchExpressions[].operator <string> (required)	#
 spec.rules[].namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.rules[].namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.rules[].permissions <object>	# Permissions for given rule
+spec.rules[].permissions.bindings <[]object>	# Bindings defines additional RoleBindings for namespaces selected by this rule.
+spec.rules[].permissions.bindings[].annotations <map[string]string>	# Additional Annotations for the synchronized rolebindings
+spec.rules[].permissions.bindings[].clusterRoleName <string> (required)
+spec.rules[].permissions.bindings[].labels <map[string]string>	# Additional Labels for the synchronized rolebindings
+spec.rules[].permissions.bindings[].subjects <[]object> (required) min=1
+spec.rules[].permissions.bindings[].subjects[].apiGroup <string>	# APIGroup holds the API group of the referenced subject. Defaults to "" for ServiceAccount subjects. Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
+spec.rules[].permissions.bindings[].subjects[].kind <string> (required)	# Kind of object being referenced. Values defined by this API group are "User", "Group", and "ServiceAccount". If the Authorizer does not recognized the kind value, the Authorizer should report an error.
+spec.rules[].permissions.bindings[].subjects[].name <string> (required)	# Name of the object being referenced.
+spec.rules[].permissions.bindings[].subjects[].namespace <string>	# Namespace of the referenced object. If the object kind is non-namespace, such as "User" or "Group", and this value is not empty the Authorizer should report an error.
 spec.rules[].permissions.promotions <[]object>	# Define Promotion Rules which distributed additional ClusterRoles across the Tenant for promoted ServiceAccounts.
 spec.rules[].permissions.promotions[].clusterRoles <[]string>	# ClusterRoles granted to the promoted ServiceAccounts across the Tenant kubebuilder:validation:Minimum=1
 spec.rules[].permissions.promotions[].selector <object>	# Match ServiceAccounts which are promoted which are granted these additional ClusterRoles across the Tenant

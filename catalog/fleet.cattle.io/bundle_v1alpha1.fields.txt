@@ -1,4 +1,4 @@
-# schema source: Rancher Fleet v0.15.4 https://github.com/rancher/fleet
+# schema source: Rancher Fleet v0.16.0 https://github.com/rancher/fleet
 apiVersion <string> enum=fleet.cattle.io/v1alpha1
 kind <string> enum=Bundle
 metadata.name <string> (required)
@@ -70,6 +70,7 @@ spec.helm.valuesFrom[].secretKeyRef.namespace <string>
 spec.helm.version <string>	# Version of the chart to download
 spec.helm.waitForJobs <boolean>	# WaitForJobs if set and timeoutSeconds provided, will wait until all Jobs have been completed before marking the GitRepo as ready. It will wait for as long as timeoutSeconds
 spec.helmOpOptions <object>	# HelmOpOptions stores the options relative to HelmOp resources Non-nil HelmOpOptions indicate that the source of resources is a Helm chart, not a git repository.
+spec.helmOpOptions.helmOpCABundle <string> format=byte	# CABundle is a PEM encoded CA bundle used to validate TLS connections to the Helm registry. It is resolved by the controller (which has access to Rancher's cattle-system CA secrets, if any) and stored here so the agent can use it without requiring access to those secrets.
 spec.helmOpOptions.helmOpInsecureSkipTLSVerify <boolean>	# InsecureSkipTLSverify will use insecure HTTPS to clone the helm app resource.
 spec.helmOpOptions.helmOpSecretName <string>	# SecretName stores the secret name for storing credentials when accessing a remote helm repository defined in a HelmOp resource
 spec.ignore <object>	# IgnoreOptions can be used to ignore fields when monitoring the bundle.
@@ -92,6 +93,7 @@ spec.resources[].name <string>	# Name of the resource, can include the bundle's 
 spec.rolloutStrategy <object>	# RolloutStrategy controls the rollout of bundles, by defining partitions, canaries and percentages for cluster availability.
 spec.rolloutStrategy.autoPartitionSize <int-or-string>	# A number or percentage of how to automatically partition clusters if no specific partitioning strategy is configured. default: 25%
 spec.rolloutStrategy.autoPartitionThreshold <integer>	# AutoPartitionThreshold is the minimum number of clusters that need to be present before auto-partitioning is enabled. If the number of target clusters is less than this value, all clusters will be placed in a single partition. default: 200
+spec.rolloutStrategy.maxNew <integer>	# MaxNew is the maximum number of new BundleDeployments that can be created in a single reconciliation. This limits the rate at which new deployments are staged when a bundle is first applied to many clusters. default: 50
 spec.rolloutStrategy.maxUnavailable <int-or-string>	# A number or percentage of clusters that can be unavailable during an update of a bundle. This follows the same basic approach as a deployment rollout strategy. Once the number of clusters meets unavailable state update will be paused. Default value is 100% which doesn't take effect on update. default: 100%
 spec.rolloutStrategy.maxUnavailablePartitions <int-or-string>	# A number or percentage of cluster partitions that can be unavailable during an update of a bundle. default: 0
 spec.rolloutStrategy.partitions <[]object>	# A list of definitions of partitions. If any target clusters do not match the configuration they are added to partitions at the end following the autoPartitionSize.
@@ -112,6 +114,7 @@ spec.rolloutStrategy.partitions[].clusterSelector.matchLabels <map[string]string
 spec.rolloutStrategy.partitions[].maxUnavailable <int-or-string>	# A number or percentage of clusters that can be unavailable in this partition before this partition is treated as done. default: 10%
 spec.rolloutStrategy.partitions[].name <string>	# A user-friendly name given to the partition used for Display (optional).
 spec.serviceAccount <string>	# ServiceAccount which will be used to perform this deployment.
+spec.targetCustomizationMode <string> enum=FirstMatch|AllMatches default="FirstMatch"	# TargetCustomizationMode controls how targetCustomizations from fleet.yaml are evaluated. "FirstMatch" (default) stops at the first matching entry. "AllMatches" applies all matching entries in order, merging them.
 spec.targetRestrictions <[]object>	# TargetRestrictions is an allow list, which controls if a bundledeployment is created for a target.
 spec.targetRestrictions[].clusterGroup <string>
 spec.targetRestrictions[].clusterGroupSelector <object>	# A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
@@ -229,7 +232,6 @@ status.conditions[].type <string> (required)	# Type of cluster condition.
 status.display <object>	# Display contains the number of ready, desiredready clusters and a summary state for the bundle's resources.
 status.display.readyClusters <string>	# ReadyClusters is a string in the form "%d/%d", that describes the number of clusters that are ready vs. the number of clusters desired to be ready.
 status.display.state <string>	# State is a summary state for the bundle, calculated over the non-ready resources.
-status.maxNew <integer>	# MaxNew is always 50. A bundle change can only stage 50 bundledeployments at a time.
 status.maxUnavailable <integer>	# MaxUnavailable is the maximum number of unavailable deployments. See rollout configuration.
 status.maxUnavailablePartitions <integer>	# MaxUnavailablePartitions is the maximum number of unavailable partitions. The rollout configuration defines a maximum number or percentage of unavailable partitions.
 status.newlyCreated <integer>	# NewlyCreated is the number of bundle deployments that have been created, not updated.

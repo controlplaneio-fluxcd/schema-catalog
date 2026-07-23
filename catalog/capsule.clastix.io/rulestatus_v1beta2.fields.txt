@@ -1,13 +1,24 @@
-# schema source: Capsule v0.13.9 https://github.com/projectcapsule/capsule
+# schema source: Capsule v0.13.10 https://github.com/projectcapsule/capsule
 apiVersion <string> enum=capsule.clastix.io/v1beta2
 kind <string> enum=RuleStatus
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <[]object>
+spec[].audience <[]object>	# Audience limits this rule to matching request subjects. An empty audience matches every request.
+spec[].audience[].kind <string> (required) enum=User|Group|ServiceAccount|Custom
+spec[].audience[].name <string> (required)
 spec[].enforce <object>	# Enforcement for given rule
 spec[].enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+spec[].enforce.ingress <object>	# Enforcement for Ingress and Gateway API resource hostnames.
+spec[].enforce.ingress.hostnames <[]object> min=1	# Hostnames defines allowed, denied, or audited hostname expressions. A resource targeted by an allow or deny rule must declare non-empty values in all hostname fields. Audit-only rules record missing hostnames without denying them.
+spec[].enforce.ingress.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+spec[].enforce.ingress.hostnames[].exp <string> min=1	# Exp matches regular expression.
+spec[].enforce.ingress.hostnames[].negate <boolean> default=false	# Negate regular Expression
+spec[].enforce.ingress.types <[]string> min=1	# Types defines the resource kinds to which hostname enforcement applies.
 spec[].enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
 spec[].enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+spec[].enforce.metadata[].annotations.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+spec[].enforce.metadata[].annotations.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 spec[].enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 spec[].enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 spec[].enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -16,6 +27,8 @@ spec[].enforce.metadata[].annotations.<key>.values[].negate <boolean> default=fa
 spec[].enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
 spec[].enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
 spec[].enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+spec[].enforce.metadata[].labels.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+spec[].enforce.metadata[].labels.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 spec[].enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 spec[].enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 spec[].enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -56,10 +69,21 @@ status.conditions[].status <string> (required) enum=True|False|Unknown	# status 
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation the controller has observed.
 status.rule <object>	# Deprecated: use Rules. Rule contains a legacy flattened view and cannot fully represent action-aware rules.
+status.rule.audience <[]object>	# Audience limits this rule to matching request subjects. An empty audience matches every request.
+status.rule.audience[].kind <string> (required) enum=User|Group|ServiceAccount|Custom
+status.rule.audience[].name <string> (required)
 status.rule.enforce <object>	# Enforcement for given rule
 status.rule.enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+status.rule.enforce.ingress <object>	# Enforcement for Ingress and Gateway API resource hostnames.
+status.rule.enforce.ingress.hostnames <[]object> min=1	# Hostnames defines allowed, denied, or audited hostname expressions. A resource targeted by an allow or deny rule must declare non-empty values in all hostname fields. Audit-only rules record missing hostnames without denying them.
+status.rule.enforce.ingress.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rule.enforce.ingress.hostnames[].exp <string> min=1	# Exp matches regular expression.
+status.rule.enforce.ingress.hostnames[].negate <boolean> default=false	# Negate regular Expression
+status.rule.enforce.ingress.types <[]string> min=1	# Types defines the resource kinds to which hostname enforcement applies.
 status.rule.enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
 status.rule.enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+status.rule.enforce.metadata[].annotations.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+status.rule.enforce.metadata[].annotations.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 status.rule.enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 status.rule.enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 status.rule.enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -68,6 +92,8 @@ status.rule.enforce.metadata[].annotations.<key>.values[].negate <boolean> defau
 status.rule.enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
 status.rule.enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
 status.rule.enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+status.rule.enforce.metadata[].labels.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+status.rule.enforce.metadata[].labels.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 status.rule.enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 status.rule.enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 status.rule.enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -99,10 +125,21 @@ status.rule.enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regu
 status.rule.enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
 status.rule.enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.
 status.rules <[]object>	# Rules contains the effective namespace rules after tenant rule selection. Order is preserved from the originating Tenant rules.
+status.rules[].audience <[]object>	# Audience limits this rule to matching request subjects. An empty audience matches every request.
+status.rules[].audience[].kind <string> (required) enum=User|Group|ServiceAccount|Custom
+status.rules[].audience[].name <string> (required)
 status.rules[].enforce <object>	# Enforcement for given rule
 status.rules[].enforce.action <string> enum=allow|deny|audit default="deny"	# Declare the action being performed on the enforcement rule: deny: On match, deny admission request allow: On match, allowed admission request audit: On match, audit (post event) of admission request
+status.rules[].enforce.ingress <object>	# Enforcement for Ingress and Gateway API resource hostnames.
+status.rules[].enforce.ingress.hostnames <[]object> min=1	# Hostnames defines allowed, denied, or audited hostname expressions. A resource targeted by an allow or deny rule must declare non-empty values in all hostname fields. Audit-only rules record missing hostnames without denying them.
+status.rules[].enforce.ingress.hostnames[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
+status.rules[].enforce.ingress.hostnames[].exp <string> min=1	# Exp matches regular expression.
+status.rules[].enforce.ingress.hostnames[].negate <boolean> default=false	# Negate regular Expression
+status.rules[].enforce.ingress.types <[]string> min=1	# Types defines the resource kinds to which hostname enforcement applies.
 status.rules[].enforce.metadata <[]object>	# Enforcement for object metadata on namespaced resources.
 status.rules[].enforce.metadata[].annotations <map[string]object>	# Annotations defines metadata policies by annotation key.
+status.rules[].enforce.metadata[].annotations.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+status.rules[].enforce.metadata[].annotations.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 status.rules[].enforce.metadata[].annotations.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 status.rules[].enforce.metadata[].annotations.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 status.rules[].enforce.metadata[].annotations.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
@@ -111,6 +148,8 @@ status.rules[].enforce.metadata[].annotations.<key>.values[].negate <boolean> de
 status.rules[].enforce.metadata[].apiGroups <[]string>	# API groups or API group/version selectors of the referents. Empty or omitted APIGroups means the core Kubernetes API version "v1". Use "*" to match all API groups and versions. Examples: - [] or [""] means core "v1". - ["v1"] means core "v1". - ["apps"] means any version in the "apps" API group. - ["apps/v1"] means only "apps/v1". - ["apps", "batch/v1"] means any "apps" version and "batch/v1". - ["*"] means all API groups and versions.
 status.rules[].enforce.metadata[].kinds <[]string> (required) min=1	# Kinds of the referents. Use "*" to match all kinds.
 status.rules[].enforce.metadata[].labels <map[string]object>	# Labels defines metadata policies by label key.
+status.rules[].enforce.metadata[].labels.<key>.default <string>	# Default is applied by admission mutation when the concrete metadata key is absent. It is not reconciled after admission.
+status.rules[].enforce.metadata[].labels.<key>.managed <string>	# Managed is enforced by admission mutation and reconciled by the RuleStatus controller using server-side apply when the rule configuration changes.
 status.rules[].enforce.metadata[].labels.<key>.required <boolean> default=false	# Required enforces that the metadata key must be present. This is mainly meaningful with action=allow. Deny and audit rules remain value matchers and do not require missing metadata to exist.
 status.rules[].enforce.metadata[].labels.<key>.values <[]object>	# Values defines allowed, denied, or audited values for the metadata key. If Required=true and Values is empty, only presence is enforced.
 status.rules[].enforce.metadata[].labels.<key>.values[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
