@@ -1,4 +1,4 @@
-# schema source: Kueue v0.18.3 https://github.com/kubernetes-sigs/kueue
+# schema source: Kueue v0.19.0 https://github.com/kubernetes-sigs/kueue
 apiVersion <string> enum=kueue.x-k8s.io/v1beta2
 kind <string> enum=Workload
 metadata.name <string> (required)
@@ -6,7 +6,7 @@ metadata.namespace <string> (required)
 spec <object>	# spec is the specification of the Workload.
 spec.active <boolean> default=true	# active determines if a workload can be admitted into a queue. Changing active from true to false will evict any running workloads. Possible values are: - false: indicates that a workload should never be admitted and evicts running workloads - true: indicates that a workload can be evaluated for admission into it's respective queue. Defaults to true
 spec.maximumExecutionTimeSeconds <integer> format=int32 min=1	# maximumExecutionTimeSeconds if provided, determines the maximum time, in seconds, the workload can be admitted before it's automatically deactivated. If unspecified, no execution time limit is enforced on the Workload.
-spec.podSets <[]object> min=1 max=10	# podSets is a list of sets of homogeneous pods, each described by a Pod spec and a count. There must be at least one element and at most 10. podSets cannot be changed.
+spec.podSets <[]object> min=1 max=18	# podSets is a list of sets of homogeneous pods, each described by a Pod spec and a count. There must be at least one element and at most 18. podSets cannot be changed.
 spec.podSets[].count <integer> default=1 format=int32 min=0	# count is the number of pods for the spec.
 spec.podSets[].minCount <integer> format=int32 min=1	# minCount is the minimum number of pods for the spec acceptable if the workload supports partial admission. If not provided, partial admission for the current PodSet is not enabled. Only one podSet within the workload can use this. This is an alpha field and requires enabling PartialAdmission feature gate.
 spec.podSets[].name <string> default="main" pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# name is the PodSet name.
@@ -1117,7 +1117,7 @@ status <object>	# status is the status of the Workload.
 status.accumulatedPastExecutionTimeSeconds <integer> format=int32	# accumulatedPastExecutionTimeSeconds holds the total time, in seconds, the workload spent in Admitted state, in the previous `Admit` - `Evict` cycles.
 status.admission <object>	# admission holds the parameters of the admission of the workload by a ClusterQueue. admission can be set back to null, but its fields cannot be changed once set.
 status.admission.clusterQueue <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# clusterQueue is the name of the ClusterQueue that admitted this workload.
-status.admission.podSetAssignments <[]object> max=10	# podSetAssignments hold the admission results for each of the .spec.podSets entries.
+status.admission.podSetAssignments <[]object> max=18	# podSetAssignments hold the admission results for each of the .spec.podSets entries.
 status.admission.podSetAssignments[].count <integer> format=int32 min=0	# count is the number of pods taken into account at admission time. This field will not change in case of quota reclaim. Value could be missing for Workloads created before this field was added, in that case spec.podSets[*].count value will be used.
 status.admission.podSetAssignments[].delayedTopologyRequest <string> enum=Pending|Ready max=7	# delayedTopologyRequest indicates the topology assignment is delayed. Topology assignment might be delayed in case there is ProvisioningRequest AdmissionCheck used. Kueue schedules the second pass of scheduling for each workload with at least one PodSet which has delayedTopologyRequest=true and without topologyAssignment.
 status.admission.podSetAssignments[].flavors <map[string]string>	# flavors are the flavors assigned to the workload for each resource.
@@ -1140,7 +1140,7 @@ status.admissionChecks <[]object> max=8	# admissionChecks list all the admission
 status.admissionChecks[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
 status.admissionChecks[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
 status.admissionChecks[].name <string> (required) min=1 max=316	# name identifies the admission check.
-status.admissionChecks[].podSetUpdates <[]object> max=10	# podSetUpdates contains a list of pod set modifications suggested by AdmissionChecks.
+status.admissionChecks[].podSetUpdates <[]object> max=18	# podSetUpdates contains a list of pod set modifications suggested by AdmissionChecks.
 status.admissionChecks[].podSetUpdates[].annotations <map[string]string>	# annotations of the PodSet to modify.
 status.admissionChecks[].podSetUpdates[].labels <map[string]string>	# labels of the PodSet to modify.
 status.admissionChecks[].podSetUpdates[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# name of the PodSet to modify. Should match to one of the Workload's PodSets.
@@ -1167,13 +1167,13 @@ status.preemptionGates <[]object> max=8	# preemptionGates is a list of states of
 status.preemptionGates[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the gate transitioned from one status to another.
 status.preemptionGates[].name <string> (required) min=1 max=63	# name identifies the preemption gate.
 status.preemptionGates[].position <string> (required) enum=Closed|Open	# position of the preemption gate. One of
-status.reclaimablePods <[]object> max=10	# reclaimablePods keeps track of the number pods within a podset for which the resource reservation is no longer needed.
+status.reclaimablePods <[]object> max=18	# reclaimablePods keeps track of the number pods within a podset for which the resource reservation is no longer needed.
 status.reclaimablePods[].count <integer> (required) format=int32 min=0	# count is the number of pods for which the requested resources are no longer needed.
 status.reclaimablePods[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# name is the PodSet name.
 status.requeueState <object>	# requeueState holds the re-queue state when a workload meets Eviction with PodsReadyTimeout reason.
 status.requeueState.count <integer> format=int32 min=0	# count records the number of times a workload has been re-queued When a deactivated (`.spec.activate`=`false`) workload is reactivated (`.spec.activate`=`true`), this count would be reset to null.
 status.requeueState.requeueAt <string> format=date-time	# requeueAt records the time when a workload will be re-queued. When a deactivated (`.spec.activate`=`false`) workload is reactivated (`.spec.activate`=`true`), this time would be reset to null.
-status.resourceRequests <[]object> max=10	# resourceRequests provides a detailed view of the resources that were requested by a non-admitted workload when it was considered for admission. If admission is non-null, resourceRequests will be empty because admission.resourceUsage contains the detailed information.
+status.resourceRequests <[]object> max=18	# resourceRequests provides a detailed view of the resources that were requested by a non-admitted workload when it was considered for admission. If admission is non-null, resourceRequests will be empty because admission.resourceUsage contains the detailed information.
 status.resourceRequests[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# name is the name of the podSet. It should match one of the names in .spec.podSets.
 status.resourceRequests[].resources <object (free-form)>	# resources is the total resources all the pods in the podset need to run. Beside what is provided in podSet's specs, this value also takes into account the LimitRange defaults and RuntimeClass overheads at the moment of consideration and the application of resource.excludeResourcePrefixes and resource.transformations.
 status.schedulingStats <object>	# schedulingStats tracks scheduling statistics
