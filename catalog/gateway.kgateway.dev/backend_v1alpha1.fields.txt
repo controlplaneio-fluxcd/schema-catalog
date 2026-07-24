@@ -1,16 +1,27 @@
-# schema source: kgateway v2.3.6 https://github.com/kgateway-dev/kgateway
+# schema source: kgateway v2.4.0 https://github.com/kgateway-dev/kgateway
 apiVersion <string> enum=gateway.kgateway.dev/v1alpha1
 kind <string> enum=Backend
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# BackendSpec defines the desired state of Backend.
 spec.aws <object>	# Aws is the AWS backend configuration.
-spec.aws.accountId <string> (required) pattern="^[0-9]{12}$" min=1 max=12	# AccountId is the AWS account ID to use for the backend.
+spec.aws.accountId <string> pattern="^[0-9]{12}$" min=1 max=12	# AccountId is the AWS account ID to use for the backend. Deprecated: Set accountId on spec.aws.lambda instead. This field is kept for backward compatibility. When both fields are set, spec.aws.lambda.accountId takes precedence.
 spec.aws.auth <object>	# Auth specifies an explicit AWS authentication method for the backend. When omitted, the following credential providers are tried in order, stopping when one of them returns an access key ID and a secret access key (the session token is optional): 1. Environment variables: when the environment variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN are set. 2. AssumeRoleWithWebIdentity API call: when the environment variables AWS_WEB_IDENTITY_TOKEN_FILE and AWS_ROLE_ARN are set. 3. EKS Pod Identity: when the environment variable AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE is set. See the Envoy docs for more info: https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/aws_request_signing_filter#credentials
-spec.aws.auth.secretRef <object>	# SecretRef references a Kubernetes Secret containing the AWS credentials. The Secret must have keys "accessKey", "secretKey", and optionally "sessionToken".
+spec.aws.auth.assumeRole <object>	# AssumeRole configures STS role chaining. The backend's ambient credentials (the gateway ServiceAccount's IRSA identity for Lambda request signing, or the controller's identity for EC2 discovery; more generally any credential resolved by the default provider chain) are used to assume the target role. The resulting temporary credentials are then used to sign requests to the backend (Lambda) or to list instances (EC2). This enables per-backend, least-privilege roles without granting the gateway/controller role direct access to every target. Required when type is 'AssumeRole'.
+spec.aws.auth.assumeRole.roleArn <string> (required) pattern="^arn:aws[a-z-]*:iam::[0-9]{12}:role/.+$" min=1 max=2048	# RoleArn is the ARN of the IAM role to assume, e.g. "arn:aws:iam::123456789012:role/my-invoke-role".
+spec.aws.auth.secretRef <object>	# SecretRef references a Kubernetes Secret containing the AWS credentials. The Secret must have keys "accessKey", "secretKey", and optionally "sessionToken". Required when type is 'Secret'.
 spec.aws.auth.secretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.aws.auth.type <string> (required) enum=Secret	# Type specifies the authentication method to use for the backend.
-spec.aws.lambda <object> (required)	# Lambda configures the AWS lambda service.
+spec.aws.auth.type <string> (required) enum=Secret|AssumeRole	# Type specifies the authentication method to use for the backend.
+spec.aws.ec2 <object>	# Ec2 configures dynamic discovery of AWS EC2 instances.
+spec.aws.ec2.addressType <string> enum=PrivateIP|PublicIP default="PrivateIP"	# AddressType selects whether to route to the instance private or public IP. Defaults to PrivateIP.
+spec.aws.ec2.filters <[]object> max=16	# Filters select which instances should be associated with this backend. When multiple filters are provided, an instance must match all of them. If this list is omitted or empty, all running instances in the configured region are selected. Be careful: an accidentally empty filter list broadens the backend to the whole regional fleet rather than matching nothing.
+spec.aws.ec2.filters[].key <string> min=1 max=128	# Key matches instances that contain the given tag key, regardless of value.
+spec.aws.ec2.filters[].keyValue <object>	# KeyValue matches instances that contain the given tag key/value pair.
+spec.aws.ec2.filters[].keyValue.key <string> (required) min=1 max=128	# Key is the tag key to match.
+spec.aws.ec2.filters[].keyValue.value <string> (required) min=1 max=256	# Value is the tag value to match.
+spec.aws.ec2.port <integer> default=80 format=int32	# Port is the port to use for discovered instances. Defaults to 80.
+spec.aws.lambda <object>	# Lambda configures the AWS Lambda service.
+spec.aws.lambda.accountId <string> pattern="^[0-9]{12}$" min=1 max=12	# AccountId is the AWS account ID to use for the backend. This is the preferred location for Lambda backends.
 spec.aws.lambda.endpointURL <string> pattern="^https?://[-a-zA-Z0-9@:%.+~#?&/=]+$" max=2048	# EndpointURL is the URL or domain for the Lambda service. This is primarily useful for testing and development purposes. When omitted, the default lambda hostname will be used.
 spec.aws.lambda.functionName <string> (required) pattern="^[A-Za-z0-9-_]{1,140}$"	# FunctionName is the name of the Lambda function to invoke.
 spec.aws.lambda.invocationMode <string> enum=Sync|Async default="Sync"	# InvocationMode defines how to invoke the Lambda function. Defaults to Sync.
@@ -22,12 +33,15 @@ spec.dynamicForwardProxy.enableTls <boolean>	# EnableTls enables TLS. When true,
 spec.gcp <object>	# Gcp is the GCP backend configuration.
 spec.gcp.audience <string> min=1	# Audience is the GCP service account audience URL. When omitted, defaults to "https://{host}". This is used by the GCP authn filter to request the appropriate token.
 spec.gcp.host <string> (required) min=1	# Host is the hostname of the GCP service to connect to. This will be used for SNI and as the target address.
+spec.priorityGroups <[]object> min=1 max=16	# PriorityGroups is an ordered list of backend groups used for failover. Traffic is sent to the backends of the first group; each subsequent group is only used when the backends of all preceding groups are unhealthy. The health check can be configured via the BackendConfigPolicy that targets this Backend Note: This field is part of an experimental API and subject to breaking changes in future releases.
+spec.priorityGroups[].backendRefs <[]object> (required) min=1 max=16	# BackendRefs references the Backends that make up this priority group. Referenced Backends must be in the same namespace and must not be priority groups backends themselves.
+spec.priorityGroups[].backendRefs[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.static <object>	# Static is the static backend configuration.
 spec.static.appProtocol <string> enum=http2|grpc|grpc-web|kubernetes.io/h2c|kubernetes.io/ws	# AppProtocol is the application protocol to use when communicating with the backend.
 spec.static.hosts <[]object> (required) min=1	# Hosts is a list of hosts to use for the backend.
 spec.static.hosts[].host <string> (required) min=1	# Host is the host name to use for the backend.
 spec.static.hosts[].port <integer> (required) format=int32	# Port is the port to use for the backend.
-spec.type <string> enum=AWS|Static|DynamicForwardProxy|GCP	# Type indicates the type of the backend to be used. Deprecated: The Type field is deprecated and will be removed in a future release. The backend type is inferred from the configuration.
+spec.type <string> enum=AWS|Static|DynamicForwardProxy|GCP|PriorityGroups	# Type indicates the type of the backend to be used. Deprecated: The Type field is deprecated and will be removed in a future release. The backend type is inferred from the configuration.
 status <object>	# BackendStatus defines the observed state of Backend.
 status.conditions <[]object> max=8	# Conditions is the list of conditions for the backend.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
