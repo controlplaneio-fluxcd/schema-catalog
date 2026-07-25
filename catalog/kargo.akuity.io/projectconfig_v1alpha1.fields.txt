@@ -1,11 +1,19 @@
-# schema source: Kargo v1.10.9 https://github.com/akuity/kargo
+# schema source: Kargo v1.11.0 https://github.com/akuity/kargo
 apiVersion <string> enum=kargo.akuity.io/v1alpha1
 kind <string> enum=ProjectConfig
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# Spec describes the configuration of a Project.
+spec.freightLinks <[]object>	# FreightLinks defines deep links shown when viewing Freight resources within this project. These are shown in addition to any cluster-level FreightLinks defined in ClusterConfig.
+spec.freightLinks[].description <string>	# Description is an optional human-readable summary shown alongside the link.
+spec.freightLinks[].if <string>	# If is an optional expression condition. When set, the link is only shown when the expression evaluates to true.
+spec.freightLinks[].title <string> (required) min=1	# Title is the display label for the link.
+spec.freightLinks[].url <string> (required) min=1	# URL is an expression that resolves to the link's href.
 spec.promotionPolicies <[]object>	# PromotionPolicies defines policies governing the promotion of Freight to specific Stages within the Project.
 spec.promotionPolicies[].autoPromotionEnabled <boolean>	# AutoPromotionEnabled indicates whether new Freight can automatically be promoted into the Stage referenced by the Stage field. Note: There are may be other conditions also required for an auto-promotion to occur. This field defaults to false, but is commonly set to true for Stages that subscribe to Warehouses instead of other, upstream Stages. This allows users to define Stages that are automatically updated as soon as new artifacts are detected.
+spec.promotionPolicies[].autoRollback <object>	# AutoRollback describes the conditions under which this Stage should automatically roll back to the last known-good (verified) Freight. When nil, auto-rollback is disabled. Kargo Enterprise only: This field is ignored in Kargo OSS.
+spec.promotionPolicies[].autoRollback.onPromotion <[]string> max=2	# OnPromotion is the list of terminal Promotion phases that should trigger an automated rollback. Only Failed and Errored are accepted. Note that unsuccessful promotions (as opposed to unsuccessful verifications) may not necessarily indicate a problem with the Freight, since promotions might fail due to transient issues with the deployment itself (network, credential expirations, etc...). Defaults to [].
+spec.promotionPolicies[].autoRollback.onVerification <[]string> max=2	# OnVerification is the list of terminal verification phases that should trigger an automated rollback. Only Failed and Error are accepted (note: "Error", not "Errored" as in onPromotion). When absent or empty, defaults to [Failed].
 spec.promotionPolicies[].stage <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"	# Stage is the name of the Stage to which this policy applies. Deprecated: Use StageSelector instead.
 spec.promotionPolicies[].stageSelector <object>	# StageSelector is a selector that matches the Stage resource to which this policy applies.
 spec.promotionPolicies[].stageSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -14,6 +22,11 @@ spec.promotionPolicies[].stageSelector.matchExpressions[].operator <string> (req
 spec.promotionPolicies[].stageSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.promotionPolicies[].stageSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.promotionPolicies[].stageSelector.name <string>	# Name is the name of the resource to which this policy applies. It can be an exact name, a regex pattern (with prefix "regex:"), or a glob pattern (with prefix "glob:"). When both Name and LabelSelector are specified, the Name is ANDed with the LabelSelector. I.e., the resource must match both the Name and LabelSelector to be selected by this policy. NOTE: Using a specific exact name is the most secure option. Pattern matching via regex or glob can be exploited by users with permissions to match promotion policies that weren't intended to apply to their resources. For example, a user could create a resource with a name deliberately crafted to match the pattern, potentially bypassing intended promotion controls.
+spec.stageLinks <[]object>	# StageLinks defines deep links shown when viewing Stage resources within this project. These are shown in addition to any cluster-level StageLinks defined in ClusterConfig.
+spec.stageLinks[].description <string>	# Description is an optional human-readable summary shown alongside the link.
+spec.stageLinks[].if <string>	# If is an optional expression condition. When set, the link is only shown when the expression evaluates to true.
+spec.stageLinks[].title <string> (required) min=1	# Title is the display label for the link.
+spec.stageLinks[].url <string> (required) min=1	# URL is an expression that resolves to the link's href.
 spec.webhookReceivers <[]object>	# WebhookReceivers describes Project-specific webhook receivers used for processing events from various external platforms
 spec.webhookReceivers[].artifactory <object>	# Artifactory contains the configuration for a webhook receiver that is compatible with JFrog Artifactory payloads.
 spec.webhookReceivers[].artifactory.secretRef <object> (required)	# SecretRef contains a reference to a Secret. For Project-scoped webhook receivers, the referenced Secret must be in the same namespace as the ProjectConfig. For cluster-scoped webhook receivers, the referenced Secret must be in the designated "system resources" namespace. The Secret's data map is expected to contain a `secret-token` key whose value is the shared secret used to authenticate the webhook requests sent by JFrog Artifactory. For more information please refer to the JFrog Artifactory documentation: https://jfrog.com/help/r/jfrog-platform-administration-documentation/webhooks
