@@ -1,4 +1,4 @@
-# schema source: Kargo v1.10.9 https://github.com/akuity/kargo
+# schema source: Kargo v1.11.0 https://github.com/akuity/kargo
 apiVersion <string> enum=kargo.akuity.io/v1alpha1
 kind <string> enum=Stage
 metadata.name <string> (required)
@@ -51,6 +51,14 @@ spec.verification.args[].name <string> (required)	# Name is the name of the argu
 spec.verification.args[].value <string> (required)	# Value is the value of the argument.
 status <object>	# Status describes the Stage's current and recent Freight, health, and more.
 status.autoPromotionEnabled <boolean>	# AutoPromotionEnabled indicates whether automatic promotion is enabled for the Stage based on the ProjectConfig.
+status.autoPromotionHolds <map[string]object>	# AutoPromotionHolds records active auto-promotion holds for this Stage. A hold is established when a Promotion selects Freight other than the auto-promotion candidate for that origin, pausing auto-promotion for that origin until explicitly released. Auto-promotions themselves never establish holds. Keys are string representations of FreightOrigins (e.g. "Warehouse/my-warehouse"); values describe the Promotion that established the hold.
+status.autoPromotionHolds.<key>.actor <string>	# Actor identifies the user who triggered the hold.
+status.autoPromotionHolds.<key>.createdAt <string> format=date-time	# CreatedAt is the creation timestamp of the Promotion that established this hold.
+status.autoPromotionHolds.<key>.freightName <string> (required)	# FreightName is the name of the Freight selected when the hold was created.
+status.autoPromotionHolds.<key>.origin <object> (required)	# Origin describes the FreightOrigin pinned by this hold. It matches the enclosing map key.
+status.autoPromotionHolds.<key>.origin.kind <string> (required) enum=Warehouse	# Kind is the kind of resource from which Freight may have originated. At present, this can only be "Warehouse".
+status.autoPromotionHolds.<key>.origin.name <string> (required)	# Name is the name of the resource of the kind indicated by the Kind field from which Freight may originate.
+status.autoPromotionHolds.<key>.promotionName <string>	# PromotionName is the name of the Promotion that established this hold. Stored here as a paper trail that survives Promotion garbage collection.
 status.conditions <[]object>	# Conditions contains the last observations of the Stage's current state.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
 status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.

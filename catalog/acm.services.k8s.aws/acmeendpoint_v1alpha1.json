@@ -1,5 +1,5 @@
 {
-  "description": "Dashboard is the Schema for the Dashboards API",
+  "description": "AcmeEndpoint is the Schema for the AcmeEndpoints API",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -14,26 +14,86 @@
     },
     "spec": {
       "additionalProperties": false,
-      "description": "DashboardSpec defines the desired state of Dashboard.",
+      "description": "AcmeEndpointSpec defines the desired state of AcmeEndpoint.\n\nContains detailed information about an ACME endpoint.",
       "properties": {
-        "dashboardBody": {
-          "description": "The detailed information about the dashboard in JSON format, including the\nwidgets to include and their location on the dashboard. This parameter is\nrequired.\n\nFor more information about the syntax, see Dashboard Body Structure and Syntax\n(https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Dashboard-Body-Structure.html).",
+        "authorizationBehavior": {
+          "description": "The authorization behavior for the ACME endpoint. Valid values: PRE_APPROVED.\n\nThe authorization behavior for the ACME endpoint.",
           "type": "string"
         },
-        "dashboardName": {
-          "description": "The name of the dashboard. If a dashboard with this name already exists,\nthis call modifies that dashboard, replacing its current contents. Otherwise,\na new dashboard is created. The maximum length is 255, and valid characters\nare A-Z, a-z, 0-9, \"-\", and \"_\". This parameter is required.",
+        "certificateAuthority": {
+          "additionalProperties": false,
+          "description": "The certificate authority to use for issuing certificates through this endpoint.\nCurrently only PublicCertificateAuthority (Amazon Trust Services) is supported.\nOptionally specify AllowedKeyAlgorithms to restrict key algorithms for issued certificates.\n\nThe type of certificate authority to use for issuing certificates through\nthis ACME endpoint.",
+          "properties": {
+            "publicCertificateAuthority": {
+              "additionalProperties": false,
+              "description": "Configuration for a public certificate authority.",
+              "properties": {
+                "allowedKeyAlgorithms": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "certificateTags": {
+          "description": "Tags to apply to certificates issued through this ACME endpoint.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A key-value pair that identifies or specifies metadata about an ACM resource.",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-validations": [
+            {
+              "message": "Value is immutable once set",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "contact": {
+          "description": "Whether ACME clients must provide contact information during account registration.\nValid values: REQUIRED, NOT_REQUIRED.\n\nSpecifies whether ACME clients must provide contact information during account\nregistration.",
           "type": "string"
+        },
+        "tags": {
+          "description": "One or more tags to associate with the ACME endpoint.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A key-value pair that identifies or specifies metadata about an ACM resource.",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
         }
       },
       "required": [
-        "dashboardBody",
-        "dashboardName"
+        "authorizationBehavior",
+        "certificateAuthority"
       ],
       "type": "object"
     },
     "status": {
       "additionalProperties": false,
-      "description": "DashboardStatus defines the observed state of Dashboard",
+      "description": "AcmeEndpointStatus defines the observed state of AcmeEndpoint",
       "properties": {
         "ackResourceMetadata": {
           "additionalProperties": false,
@@ -61,6 +121,10 @@
             "region"
           ],
           "type": "object"
+        },
+        "acmeEndpointARN": {
+          "description": "The Amazon Resource Name (ARN) of the ACME endpoint.\n\nRegex Pattern: `^arn:aws[a-z-]*:acm:[a-z0-9-]+:[0-9]{12}:acme-endpoint/[a-zA-Z0-9-]+$`",
+          "type": "string"
         },
         "conditions": {
           "description": "All CRs managed by ACK have a common `Status.Conditions` member that\ncontains a collection of `ackv1alpha1.Condition` objects that describe\nthe various terminal states of the CR and its backend AWS service API\nresource",
@@ -98,27 +162,32 @@
           },
           "type": "array"
         },
-        "dashboardValidationMessages": {
-          "description": "If the input for PutDashboard was correct and the dashboard was successfully\ncreated or modified, this result is empty.\n\nIf this result includes only warning messages, then the input was valid enough\nfor the dashboard to be created or modified, but some elements of the dashboard\nmight not render.\n\nIf this result includes error messages, the input was not valid and the operation\nfailed.",
-          "items": {
-            "additionalProperties": false,
-            "description": "An error or warning for the operation.",
-            "properties": {
-              "dataPath": {
-                "type": "string"
-              },
-              "message": {
-                "type": "string"
-              }
-            },
-            "type": "object"
-          },
-          "type": "array"
+        "createdAt": {
+          "description": "The time at which the ACME endpoint was created.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "endpointURL": {
+          "description": "The URL of the ACME endpoint.",
+          "type": "string"
+        },
+        "failureReason": {
+          "description": "The reason the ACME endpoint failed, if applicable.",
+          "type": "string"
+        },
+        "status": {
+          "description": "The status of the ACME endpoint.",
+          "type": "string"
+        },
+        "updatedAt": {
+          "description": "The time at which the ACME endpoint was last updated.",
+          "format": "date-time",
+          "type": "string"
         }
       },
       "type": "object"
     }
   },
   "type": "object",
-  "x-flux-schema-type": "Dashboard"
+  "x-flux-schema-type": "AcmeEndpoint"
 }
