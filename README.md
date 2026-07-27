@@ -233,7 +233,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.19.0 | 3 | 2026-07-11 |
 | [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.20.1 | 1 | 2026-07-23 |
 | [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.9 | 10 | 2026-07-25 |
-| [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.7.0 | 4 | 2026-07-09 |
+| [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.7.1 | 4 | 2026-07-27 |
 | [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.15.0 | 9 | 2026-07-09 |
 | [Volcano JobFlow](https://schemas.fluxoperator.dev/p/volcano) | `volcano-jobflow` | v1.15.0 | 2 | 2026-07-09 |
 
