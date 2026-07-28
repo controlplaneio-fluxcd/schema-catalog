@@ -1,4 +1,4 @@
-# schema source: Agentgateway v1.4.0-beta.1 https://github.com/agentgateway/agentgateway
+# schema source: Agentgateway v1.4.0 https://github.com/agentgateway/agentgateway
 apiVersion <string> enum=agentgateway.dev/v1alpha1
 kind <string> enum=AgentgatewayModel
 metadata.name <string> (required)
@@ -118,12 +118,18 @@ spec.policies.auth.oauthTokenExchange.cache.inMemory.defaultTtl <string>	# TTL u
 spec.policies.auth.oauthTokenExchange.cache.inMemory.maxEntries <integer> format=int32	# Default 8192; 0 disables the cache.
 spec.policies.auth.oauthTokenExchange.clientAuth <object>	# Client authentication for the token endpoint. When unset, none is sent.
 spec.policies.auth.oauthTokenExchange.clientAuth.clientId <string> (required) min=1	# Client ID sent to the token endpoint.
-spec.policies.auth.oauthTokenExchange.clientAuth.method <string> enum=ClientSecretBasic|ClientSecretPost|PrivateKeyJwt	# Defaults to ClientSecretBasic.
-spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt <object>	# privateKeyJwt client assertion settings. Required when method is PrivateKeyJwt.
-spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.alg <string> enum=ES256|ES384|RS256|RS384|RS512	# JWS signing algorithm. Defaults to RS256.
+spec.policies.auth.oauthTokenExchange.clientAuth.method <string> enum=ClientSecretBasic|ClientSecretPost|PrivateKeyJwt	# Client authentication method. Defaults to ClientSecretBasic.
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt <object>	# Client assertion settings. Required when method is PrivateKeyJwt.
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.alg <string> enum=ES256|ES384|PS256|RS256|RS384|RS512	# JWS signing algorithm. Defaults to RS256.
 spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.assertionAudience <string> (required) min=1	# Audience for the client assertion, typically the token endpoint URL.
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.certificateHeader <string> enum=x5c|x5t#S256	# JWS certificate header. Required when certificateRef is set.
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.certificateRef <object>	# PEM-encoded X.509 certificate chain, leaf first, for certificateHeader. The leaf public key should match signingKeyRef; a mismatch only logs a warning but the token endpoint will reject the assertions. Required when certificateHeader is set. The key defaults to `certificate`.
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.certificateRef.group <string>	# API group of the referenced credential; empty selects the core API group
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.certificateRef.key <string> min=1 max=253	# Key in the referenced Secret. If omitted, a location-specific default is used
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.certificateRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.certificateRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.kid <string>	# Optional JWS key ID header.
-spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.signingKeyRef <object> (required)	# Secret providing the `signingKey` key by default with a PEM-encoded RSA or EC private key; override the key name via `signingKeyRef.key`.
+spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.signingKeyRef <object> (required)	# PEM-encoded RSA or EC private key; key defaults to `signingKey`.
 spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.signingKeyRef.group <string>	# API group of the referenced credential; empty selects the core API group
 spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.signingKeyRef.key <string> min=1 max=253	# Key in the referenced Secret. If omitted, a location-specific default is used
 spec.policies.auth.oauthTokenExchange.clientAuth.privateKeyJwt.signingKeyRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`

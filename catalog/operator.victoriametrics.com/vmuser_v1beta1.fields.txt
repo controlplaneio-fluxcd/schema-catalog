@@ -1,12 +1,9 @@
-# schema source: VictoriaMetrics Operator v0.73.1 https://github.com/VictoriaMetrics/operator
+# schema source: VictoriaMetrics Operator v0.68.7 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1beta1
 kind <string> enum=VMUser
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# VMUserSpec defines the desired state of VMUser
-spec.access_log <object>	# AccessLog configures per-user access logging. When set, vmauth logs each request for this user with fields including request_uri, status_code, duration_ms, username, etc. See https://docs.victoriametrics.com/victoriametrics/vmauth/#access-log available since v1.138.0 vmauth version
-spec.access_log.filters <object>	# Filters defines optional filters that control which requests are logged.
-spec.access_log.filters.skip_status_codes <[]integer>	# SkipStatusCodes lists HTTP status codes whose responses are excluded from the access log. For example, [200, 204] suppresses logging of successful responses.
 spec.bearerToken <string>	# BearerToken Authorization header value for accessing protected endpoint.
 spec.default_url <[]string>	# DefaultURLs backend url for non-matching paths filter usually used for default backend with error message
 spec.disable_secret_creation <boolean>	# DisableSecretCreation skips related secret creation for vmuser
@@ -18,16 +15,6 @@ spec.headers <[]string>	# Headers represent additional http headers, that vmauth
 spec.ip_filters <object>	# IPFilters defines per target src ip filters supported only with enterprise version of [vmauth](https://docs.victoriametrics.com/victoriametrics/vmauth/#ip-filters)
 spec.ip_filters.allow_list <[]string>
 spec.ip_filters.deny_list <[]string>
-spec.jwt <object>	# JWT defines JWT based auth for a user
-spec.jwt.matchClaims <map[string]string>	# MatchClaims enables claim based routing
-spec.jwt.oidc <object>	# OIDC defines OIDC configuration section
-spec.jwt.oidc.issuer <string> (required)	# Issuer defines issuer URL for OIDC
-spec.jwt.publicKeyRefs <[]object>	# PublicKeyRefs defines a list of Secret selectors that reference public keys
-spec.jwt.publicKeyRefs[].key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
-spec.jwt.publicKeyRefs[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.jwt.publicKeyRefs[].optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.jwt.publicKeys <[]string>	# PublicKeys defines a list of public keys that are used for signature verification
-spec.jwt.skipVerify <boolean>	# SkipVerify skips signature verification for testing purposes
 spec.load_balancing_policy <string> enum=least_loaded|first_available	# LoadBalancingPolicy defines load balancing policy to use for backend urls. Supported policies: least_loaded, first_available. See [here](https://docs.victoriametrics.com/victoriametrics/vmauth/#load-balancing) for more details (default "least_loaded")
 spec.managedMetadata <object>	# ManagedMetadata defines metadata that will be added to the all objects created by operator for the given CustomResource
 spec.managedMetadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
@@ -44,20 +31,14 @@ spec.response_headers <[]string>	# ResponseHeaders represent additional http hea
 spec.retry_status_codes <[]integer>	# RetryStatusCodes defines http status codes in numeric format for request retries e.g. [429,503]
 spec.targetRefs <[]object> (required)	# TargetRefs - reference to endpoints, which user may access.
 spec.targetRefs[].crd <object>	# CRD describes exist operator's CRD object, operator generates access url based on CRD params.
-spec.targetRefs[].crd.kind <string> (required) enum=VMAgent|VMAlert|VMSingle|VLogs|VMAlertManager|VMAlertmanager|VMCluster/vmselect|VMCluster/vmstorage|VMCluster/vminsert|VLSingle|VLCluster/vlinsert|VLCluster/vlselect|VLCluster/vlstorage|VLAgent|VTCluster/vtinsert|VTCluster/vtselect|VTCluster/vtstorage|VTSingle|VMAnomaly	# Kind one of: VMAgent,VMAlert, VMSingle, VMCluster/vmselect, VMCluster/vmstorage,VMCluster/vminsert,VMAlertManager, VLSingle, VLCluster/vlinsert, VLCluster/vlselect, VLCluster/vlstorage, VTSingle, VTCluster/vtinsert, VTCluster/vtselect, VTCluster/vtstorage VMAnomaly and VLAgent
-spec.targetRefs[].crd.name <string> (required)	# Name of the target Kubernetes object
-spec.targetRefs[].crd.namespace <string> (required)	# Namespace of the target Kubernetes object
-spec.targetRefs[].crd.objects <[]object>	# Objects defines list of name/namespace pairs that define existing k8s object
-spec.targetRefs[].crd.objects[].name <string> (required)	# Name of the target Kubernetes object
-spec.targetRefs[].crd.objects[].namespace <string> (required)	# Namespace of the target Kubernetes object
-spec.targetRefs[].crd.objects[].useExtraService <boolean>	# UseExtraService instructs the operator to prefer the CR's additional service (created via spec.serviceSpec) over the default service when building the target URL.
-spec.targetRefs[].crd.useExtraService <boolean>	# UseExtraService instructs the operator to prefer the CR's additional service (created via spec.serviceSpec) over the default service when building the target URL.
+spec.targetRefs[].crd.kind <string> (required) enum=VMAgent|VMAlert|VMSingle|VLogs|VMAlertManager|VMAlertmanager|VMCluster/vmselect|VMCluster/vmstorage|VMCluster/vminsert|VLSingle|VLCluster/vlinsert|VLCluster/vlselect|VLCluster/vlstorage|VLAgent|VTCluster/vtinsert|VTCluster/vtselect|VTCluster/vtstorage|VTSingle	# Kind one of: VMAgent,VMAlert, VMSingle, VMCluster/vmselect, VMCluster/vmstorage,VMCluster/vminsert,VMAlertManager, VLSingle, VLCluster/vlinsert, VLCluster/vlselect, VLCluster/vlstorage, VTSingle, VTCluster/vtinsert, VTCluster/vtselect, VTCluster/vtstorage and VLAgent
+spec.targetRefs[].crd.name <string> (required)	# Name target CRD object name
+spec.targetRefs[].crd.namespace <string> (required)	# Namespace target CRD object namespace.
 spec.targetRefs[].discover_backend_ips <boolean>	# DiscoverBackendIPs instructs discovering URLPrefix backend IPs via DNS.
 spec.targetRefs[].drop_src_path_prefix_parts <integer>	# DropSrcPathPrefixParts is the number of `/`-delimited request path prefix parts to drop before proxying the request to backend. See [here](https://docs.victoriametrics.com/victoriametrics/vmauth/#dropping-request-path-prefix) for more details.
 spec.targetRefs[].headers <[]string>	# RequestHeaders represent additional http headers, that vmauth uses in form of ["header_key: header_value"] multiple values for header key: ["header_key: value1,value2"] it's available since 1.68.0 version of vmauth
 spec.targetRefs[].hosts <[]string>
 spec.targetRefs[].load_balancing_policy <string> enum=least_loaded|first_available	# LoadBalancingPolicy defines load balancing policy to use for backend urls. Supported policies: least_loaded, first_available. See [here](https://docs.victoriametrics.com/victoriametrics/vmauth/#load-balancing) for more details (default "least_loaded")
-spec.targetRefs[].name <string>	# Name references item at VMAuths spec.defaultTargetRefs map, with name set other attributes are skipped
 spec.targetRefs[].paths <[]string>	# Paths - matched path to route.
 spec.targetRefs[].query_args <[]object>	# QueryArgs appends list of query arguments to generated URL
 spec.targetRefs[].query_args[].name <string> (required)	# Name of query argument
@@ -111,7 +92,6 @@ spec.tokenRef <object>	# TokenRef allows fetching token from user-created secret
 spec.tokenRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.tokenRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.tokenRef.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.useLegacyNaming <boolean>	# UseLegacyNaming uses standalone Helm chart naming for managed resources: the CR name is used directly instead of the default "<type>-<name>" convention.
 spec.username <string>	# Username basic auth user name for accessing protected endpoint, will be replaced with metadata.name of VMUser if omitted.
 status <object>	# VMUserStatus defines the observed state of VMUser
 status.conditions <[]object>	# Known .status.conditions.type are: "Available", "Progressing", and "Degraded"

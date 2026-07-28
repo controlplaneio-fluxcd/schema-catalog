@@ -3441,7 +3441,7 @@
                               "type": "string"
                             },
                             "method": {
-                              "description": "Defaults to ClientSecretBasic.",
+                              "description": "Client authentication method. Defaults to ClientSecretBasic.",
                               "enum": [
                                 "ClientSecretBasic",
                                 "ClientSecretPost",
@@ -3451,13 +3451,14 @@
                             },
                             "privateKeyJwt": {
                               "additionalProperties": false,
-                              "description": "privateKeyJwt client assertion settings. Required when method is PrivateKeyJwt.",
+                              "description": "Client assertion settings. Required when method is PrivateKeyJwt.",
                               "properties": {
                                 "alg": {
                                   "description": "JWS signing algorithm. Defaults to RS256.",
                                   "enum": [
                                     "ES256",
                                     "ES384",
+                                    "PS256",
                                     "RS256",
                                     "RS384",
                                     "RS512"
@@ -3469,13 +3470,58 @@
                                   "minLength": 1,
                                   "type": "string"
                                 },
+                                "certificateHeader": {
+                                  "description": "JWS certificate header. Required when certificateRef is set.",
+                                  "enum": [
+                                    "x5c",
+                                    "x5t#S256"
+                                  ],
+                                  "type": "string"
+                                },
+                                "certificateRef": {
+                                  "additionalProperties": false,
+                                  "description": "PEM-encoded X.509 certificate chain, leaf first, for certificateHeader. The\nleaf public key should match signingKeyRef; a mismatch only logs a warning\nbut the token endpoint will reject the assertions. Required when\ncertificateHeader is set. The key defaults to `certificate`.",
+                                  "properties": {
+                                    "group": {
+                                      "description": "API group of the referenced credential; empty selects the core API group",
+                                      "type": "string"
+                                    },
+                                    "key": {
+                                      "description": "Key in the referenced Secret. If omitted, a location-specific default is used",
+                                      "maxLength": 253,
+                                      "minLength": 1,
+                                      "type": "string"
+                                    },
+                                    "kind": {
+                                      "description": "Kind of the referenced credential; empty defaults to `Secret`",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referenced credential",
+                                      "maxLength": 253,
+                                      "minLength": 1,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic",
+                                  "x-kubernetes-validations": [
+                                    {
+                                      "message": "custom credential refs must set both group and kind",
+                                      "rule": "(!has(self.group) || size(self.group) == 0) ? (!has(self.kind) || size(self.kind) == 0 || self.kind == 'Secret') : (has(self.kind) && size(self.kind) > 0)"
+                                    }
+                                  ]
+                                },
                                 "kid": {
                                   "description": "Optional JWS key ID header.",
                                   "type": "string"
                                 },
                                 "signingKeyRef": {
                                   "additionalProperties": false,
-                                  "description": "Secret providing the `signingKey` key by default with a PEM-encoded RSA\nor EC private key; override the key name via `signingKeyRef.key`.",
+                                  "description": "PEM-encoded RSA or EC private key; key defaults to `signingKey`.",
                                   "properties": {
                                     "group": {
                                       "description": "API group of the referenced credential; empty selects the core API group",
@@ -3515,7 +3561,13 @@
                                 "assertionAudience",
                                 "signingKeyRef"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-validations": [
+                                {
+                                  "message": "certificateRef and certificateHeader must be set together",
+                                  "rule": "has(self.certificateRef) == has(self.certificateHeader)"
+                                }
+                              ]
                             },
                             "secretRef": {
                               "additionalProperties": false,
@@ -3651,7 +3703,7 @@
                               "type": "string"
                             },
                             "method": {
-                              "description": "Defaults to ClientSecretBasic.",
+                              "description": "Client authentication method. Defaults to ClientSecretBasic.",
                               "enum": [
                                 "ClientSecretBasic",
                                 "ClientSecretPost",
@@ -3661,13 +3713,14 @@
                             },
                             "privateKeyJwt": {
                               "additionalProperties": false,
-                              "description": "privateKeyJwt client assertion settings. Required when method is PrivateKeyJwt.",
+                              "description": "Client assertion settings. Required when method is PrivateKeyJwt.",
                               "properties": {
                                 "alg": {
                                   "description": "JWS signing algorithm. Defaults to RS256.",
                                   "enum": [
                                     "ES256",
                                     "ES384",
+                                    "PS256",
                                     "RS256",
                                     "RS384",
                                     "RS512"
@@ -3679,13 +3732,58 @@
                                   "minLength": 1,
                                   "type": "string"
                                 },
+                                "certificateHeader": {
+                                  "description": "JWS certificate header. Required when certificateRef is set.",
+                                  "enum": [
+                                    "x5c",
+                                    "x5t#S256"
+                                  ],
+                                  "type": "string"
+                                },
+                                "certificateRef": {
+                                  "additionalProperties": false,
+                                  "description": "PEM-encoded X.509 certificate chain, leaf first, for certificateHeader. The\nleaf public key should match signingKeyRef; a mismatch only logs a warning\nbut the token endpoint will reject the assertions. Required when\ncertificateHeader is set. The key defaults to `certificate`.",
+                                  "properties": {
+                                    "group": {
+                                      "description": "API group of the referenced credential; empty selects the core API group",
+                                      "type": "string"
+                                    },
+                                    "key": {
+                                      "description": "Key in the referenced Secret. If omitted, a location-specific default is used",
+                                      "maxLength": 253,
+                                      "minLength": 1,
+                                      "type": "string"
+                                    },
+                                    "kind": {
+                                      "description": "Kind of the referenced credential; empty defaults to `Secret`",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Name of the referenced credential",
+                                      "maxLength": 253,
+                                      "minLength": 1,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic",
+                                  "x-kubernetes-validations": [
+                                    {
+                                      "message": "custom credential refs must set both group and kind",
+                                      "rule": "(!has(self.group) || size(self.group) == 0) ? (!has(self.kind) || size(self.kind) == 0 || self.kind == 'Secret') : (has(self.kind) && size(self.kind) > 0)"
+                                    }
+                                  ]
+                                },
                                 "kid": {
                                   "description": "Optional JWS key ID header.",
                                   "type": "string"
                                 },
                                 "signingKeyRef": {
                                   "additionalProperties": false,
-                                  "description": "Secret providing the `signingKey` key by default with a PEM-encoded RSA\nor EC private key; override the key name via `signingKeyRef.key`.",
+                                  "description": "PEM-encoded RSA or EC private key; key defaults to `signingKey`.",
                                   "properties": {
                                     "group": {
                                       "description": "API group of the referenced credential; empty selects the core API group",
@@ -3725,7 +3823,13 @@
                                 "assertionAudience",
                                 "signingKeyRef"
                               ],
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-validations": [
+                                {
+                                  "message": "certificateRef and certificateHeader must be set together",
+                                  "rule": "has(self.certificateRef) == has(self.certificateHeader)"
+                                }
+                              ]
                             },
                             "secretRef": {
                               "additionalProperties": false,
@@ -4232,7 +4336,7 @@
                           "type": "string"
                         },
                         "method": {
-                          "description": "Defaults to ClientSecretBasic.",
+                          "description": "Client authentication method. Defaults to ClientSecretBasic.",
                           "enum": [
                             "ClientSecretBasic",
                             "ClientSecretPost",
@@ -4242,13 +4346,14 @@
                         },
                         "privateKeyJwt": {
                           "additionalProperties": false,
-                          "description": "privateKeyJwt client assertion settings. Required when method is PrivateKeyJwt.",
+                          "description": "Client assertion settings. Required when method is PrivateKeyJwt.",
                           "properties": {
                             "alg": {
                               "description": "JWS signing algorithm. Defaults to RS256.",
                               "enum": [
                                 "ES256",
                                 "ES384",
+                                "PS256",
                                 "RS256",
                                 "RS384",
                                 "RS512"
@@ -4260,13 +4365,58 @@
                               "minLength": 1,
                               "type": "string"
                             },
+                            "certificateHeader": {
+                              "description": "JWS certificate header. Required when certificateRef is set.",
+                              "enum": [
+                                "x5c",
+                                "x5t#S256"
+                              ],
+                              "type": "string"
+                            },
+                            "certificateRef": {
+                              "additionalProperties": false,
+                              "description": "PEM-encoded X.509 certificate chain, leaf first, for certificateHeader. The\nleaf public key should match signingKeyRef; a mismatch only logs a warning\nbut the token endpoint will reject the assertions. Required when\ncertificateHeader is set. The key defaults to `certificate`.",
+                              "properties": {
+                                "group": {
+                                  "description": "API group of the referenced credential; empty selects the core API group",
+                                  "type": "string"
+                                },
+                                "key": {
+                                  "description": "Key in the referenced Secret. If omitted, a location-specific default is used",
+                                  "maxLength": 253,
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "kind": {
+                                  "description": "Kind of the referenced credential; empty defaults to `Secret`",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Name of the referenced credential",
+                                  "maxLength": 253,
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic",
+                              "x-kubernetes-validations": [
+                                {
+                                  "message": "custom credential refs must set both group and kind",
+                                  "rule": "(!has(self.group) || size(self.group) == 0) ? (!has(self.kind) || size(self.kind) == 0 || self.kind == 'Secret') : (has(self.kind) && size(self.kind) > 0)"
+                                }
+                              ]
+                            },
                             "kid": {
                               "description": "Optional JWS key ID header.",
                               "type": "string"
                             },
                             "signingKeyRef": {
                               "additionalProperties": false,
-                              "description": "Secret providing the `signingKey` key by default with a PEM-encoded RSA\nor EC private key; override the key name via `signingKeyRef.key`.",
+                              "description": "PEM-encoded RSA or EC private key; key defaults to `signingKey`.",
                               "properties": {
                                 "group": {
                                   "description": "API group of the referenced credential; empty selects the core API group",
@@ -4306,7 +4456,13 @@
                             "assertionAudience",
                             "signingKeyRef"
                           ],
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "certificateRef and certificateHeader must be set together",
+                              "rule": "has(self.certificateRef) == has(self.certificateHeader)"
+                            }
+                          ]
                         },
                         "secretRef": {
                           "additionalProperties": false,
