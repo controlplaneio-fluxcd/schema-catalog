@@ -28,16 +28,6 @@
           "type": "object",
           "x-kubernetes-preserve-unknown-fields": true
         },
-        "arbitraryFSAccessThroughSMs": {
-          "additionalProperties": false,
-          "description": "ArbitraryFSAccessThroughSMs configures whether configuration\ncan contain paths to arbitrary files on the file system\ne.g bearer token files, basic auth password files, tls certs file paths",
-          "properties": {
-            "deny": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
         "claimTemplates": {
           "description": "ClaimTemplates allows adding additional VolumeClaimTemplates for StatefulSet",
           "items": {
@@ -122,7 +112,7 @@
                   },
                   "resources": {
                     "additionalProperties": false,
-                    "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                    "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                     "properties": {
                       "limits": {
                         "additionalProperties": {
@@ -238,7 +228,7 @@
                       "description": "When a controller receives persistentvolume claim update with ClaimResourceStatus for a resource\nthat it does not recognizes, then it should ignore that update and let other controllers\nhandle it.",
                       "type": "string"
                     },
-                    "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
+                    "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
                     "type": "object",
                     "x-kubernetes-map-type": "granular"
                   },
@@ -253,7 +243,7 @@
                         }
                       ]
                     },
-                    "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
+                    "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
                     "type": "object"
                   },
                   "capacity": {
@@ -355,10 +345,6 @@
         },
         "clusterDomainName": {
           "description": "ClusterDomainName defines domain name suffix for in-cluster dns addresses\naka .cluster.local\nused to build pod peer addresses for in-cluster communication",
-          "type": "string"
-        },
-        "componentVersion": {
-          "description": "ComponentVersion defines default images tag for all components.\nit can be overwritten with component specific image.tag value.",
           "type": "string"
         },
         "configMaps": {
@@ -647,10 +633,6 @@
         "dnsPolicy": {
           "description": "DNSPolicy sets DNS policy for the pod",
           "type": "string"
-        },
-        "enableServiceLinks": {
-          "description": "EnableServiceLinks indicates whether information about services should be injected into pod's\nenvironment variables, matching the syntax of Docker links.\nOptional: Defaults to true.",
-          "type": "boolean"
         },
         "enforcedNamespaceLabel": {
           "description": "EnforcedNamespaceLabel defines the namespace label key for top route matcher for VMAlertmanagerConfig\nDefault is \"namespace\"",
@@ -1064,7 +1046,7 @@
           "type": "object"
         },
         "imagePullSecrets": {
-          "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
+          "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod",
           "items": {
             "additionalProperties": false,
             "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
@@ -1251,11 +1233,6 @@
         "portName": {
           "description": "PortName used for the pods and governing service.\nThis defaults to web",
           "type": "string"
-        },
-        "preStopSleepSeconds": {
-          "description": "PreStopSleepSeconds defines the number of seconds to sleep in the preStop lifecycle hook.\nIt gives time for load balancers to remove the pod from rotation before the pod is terminated.\nDefaults to 15 for applicable components. Set to 0 to disable.",
-          "format": "int32",
-          "type": "integer"
         },
         "priorityClassName": {
           "description": "PriorityClassName class assigned to the Pods",
@@ -1581,7 +1558,7 @@
                     },
                     "resources": {
                       "additionalProperties": false,
-                      "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                      "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                       "properties": {
                         "limits": {
                           "additionalProperties": {
@@ -1697,7 +1674,7 @@
                         "description": "When a controller receives persistentvolume claim update with ClaimResourceStatus for a resource\nthat it does not recognizes, then it should ignore that update and let other controllers\nhandle it.",
                         "type": "string"
                       },
-                      "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
+                      "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
                       "type": "object",
                       "x-kubernetes-map-type": "granular"
                     },
@@ -1712,7 +1689,7 @@
                           }
                         ]
                       },
-                      "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
+                      "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
                       "type": "object"
                     },
                     "capacity": {
@@ -1853,7 +1830,7 @@
                 "type": "string"
               },
               "operator": {
-                "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
+                "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
                 "type": "string"
               },
               "tolerationSeconds": {
@@ -1904,11 +1881,11 @@
               "description": "Endpoint defines tracing URL where traces will be sent",
               "type": "string"
             },
-            "headers": {
+            "http_headers": {
               "additionalProperties": {
                 "type": "string"
               },
-              "description": "Headers defines custom HTTP headers for tracing",
+              "description": "HTTPHeaders defines custom HTTP headers for tracing",
               "type": "object"
             },
             "insecure": {
@@ -2032,10 +2009,6 @@
           "description": "UseDefaultResources controls resource settings\nBy default, operator sets built-in resource requirements",
           "type": "boolean"
         },
-        "useLegacyNaming": {
-          "description": "UseLegacyNaming uses standalone Helm chart naming for managed resources:\nthe CR name is used directly instead of the default \"<type>-<name>\" convention.",
-          "type": "boolean"
-        },
         "useStrictSecurity": {
           "description": "UseStrictSecurity enables strict security mode for component\nit restricts disk writes access\nuses non-root user out of the box\ndrops not needed security permissions",
           "type": "boolean"
@@ -2098,256 +2071,6 @@
             "x-kubernetes-preserve-unknown-fields": true
           },
           "type": "array"
-        },
-        "vpa": {
-          "additionalProperties": false,
-          "description": "Configures vertical pod autoscaling.",
-          "properties": {
-            "recommenders": {
-              "description": "Recommenders specifies custom VPA recommender names.",
-              "items": {
-                "additionalProperties": false,
-                "description": "VerticalPodAutoscalerRecommenderSelector points to a specific Vertical Pod Autoscaler recommender.\nIn the future it might pass parameters to the recommender.",
-                "properties": {
-                  "name": {
-                    "description": "Name of the recommender responsible for generating recommendation for this object.",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "name"
-                ],
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "resourcePolicy": {
-              "additionalProperties": false,
-              "description": "ResourcePolicy controls how the autoscaler computes recommended resources per container.",
-              "properties": {
-                "containerPolicies": {
-                  "description": "Per-container resource policies.",
-                  "items": {
-                    "additionalProperties": false,
-                    "description": "ContainerResourcePolicy controls how autoscaler computes the recommended\nresources for a specific container.",
-                    "properties": {
-                      "containerName": {
-                        "description": "Name of the container or DefaultContainerResourcePolicy, in which\ncase the policy is used by the containers that don't have their own\npolicy specified.",
-                        "type": "string"
-                      },
-                      "controlledResources": {
-                        "description": "Specifies the type of recommendations that will be computed\n(and possibly applied) by VPA.\nIf not specified, the default of [ResourceCPU, ResourceMemory] will be used.",
-                        "items": {
-                          "description": "ResourceName is the name identifying various resources in a ResourceList.",
-                          "type": "string"
-                        },
-                        "type": "array"
-                      },
-                      "controlledValues": {
-                        "description": "Specifies which resource values should be controlled.\nThe default is \"RequestsAndLimits\".",
-                        "enum": [
-                          "RequestsAndLimits",
-                          "RequestsOnly"
-                        ],
-                        "type": "string"
-                      },
-                      "maxAllowed": {
-                        "additionalProperties": {
-                          "oneOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "integer"
-                            }
-                          ]
-                        },
-                        "description": "Specifies the maximum amount of resources that will be recommended\nfor the container. The default is no maximum.",
-                        "type": "object"
-                      },
-                      "memoryAggregationIntervalCount": {
-                        "description": "memoryAggregationIntervalCount is the number of consecutive\nmemoryAggregationIntervals which make up the memory aggregation window.\nThe total window length is:\nMemoryAggregationIntervalSeconds * MemoryAggregationIntervalCount.",
-                        "format": "int64",
-                        "minimum": 1,
-                        "type": "integer"
-                      },
-                      "memoryAggregationIntervalSeconds": {
-                        "description": "memoryAggregationIntervalSeconds is the length of a single interval\n(in seconds) for which the peak memory usage is computed.\nMemory usage peaks are aggregated in multiples of this interval.\nIn other words, there is one memory usage sample per interval\n(the maximum usage over that interval).",
-                        "format": "int32",
-                        "minimum": 1,
-                        "type": "integer"
-                      },
-                      "minAllowed": {
-                        "additionalProperties": {
-                          "oneOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "integer"
-                            }
-                          ]
-                        },
-                        "description": "Specifies the minimal amount of resources that will be recommended\nfor the container. The default is no minimum.",
-                        "type": "object"
-                      },
-                      "mode": {
-                        "description": "Whether autoscaler is enabled for the container. The default is \"Auto\".",
-                        "enum": [
-                          "Auto",
-                          "Off"
-                        ],
-                        "type": "string"
-                      },
-                      "oomBumpUpRatio": {
-                        "description": "oomBumpUpRatio is the ratio to increase memory when OOM is detected.",
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "integer"
-                          }
-                        ]
-                      },
-                      "oomMinBumpUp": {
-                        "description": "oomMinBumpUp is the minimum increase in memory when OOM is detected.",
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "integer"
-                          }
-                        ]
-                      },
-                      "startupBoost": {
-                        "additionalProperties": false,
-                        "description": "startupBoost specifies the startup boost policy for the container.\nThis overrides any pod-level startup boost policy.\nThe startup boost policy takes precedence over the rest of the fields in\nthis struct, except for ContainerName and ControlledValues.",
-                        "properties": {
-                          "cpu": {
-                            "additionalProperties": false,
-                            "description": "cpu specifies the CPU startup boost policy.\nIf this field is not set, no startup boost is applied.",
-                            "properties": {
-                              "durationSeconds": {
-                                "description": "durationSeconds indicates for how long to keep the pod boosted after it goes to Ready.\nDefaults to 0.",
-                                "format": "int32",
-                                "type": "integer"
-                              },
-                              "factor": {
-                                "description": "factor specifies the factor to apply to the resource request.\nThis field is required when Type is \"Factor\".",
-                                "format": "int32",
-                                "type": "integer"
-                              },
-                              "quantity": {
-                                "description": "quantity specifies the absolute resource quantity to be used as the\nresource request and limit during the boost phase.\nThis field is required when Type is \"Quantity\".",
-                                "oneOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "integer"
-                                  }
-                                ]
-                              },
-                              "type": {
-                                "description": "type specifies the kind of boost to apply.\nSupported values are: \"Factor\", \"Quantity\".\nNo startupboost will be applied for unrecognized values.",
-                                "enum": [
-                                  "Factor",
-                                  "Quantity"
-                                ],
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ],
-                            "type": "object",
-                            "x-kubernetes-validations": [
-                              {
-                                "message": "factor is required when type is Factor and forbidden otherwise",
-                                "rule": "(self.type == 'Factor') == has(self.factor)"
-                              },
-                              {
-                                "message": "quantity is required when type is Quantity and forbidden otherwise",
-                                "rule": "(self.type == 'Quantity') == has(self.quantity)"
-                              }
-                            ]
-                          }
-                        },
-                        "type": "object"
-                      }
-                    },
-                    "type": "object"
-                  },
-                  "type": "array"
-                }
-              },
-              "type": "object"
-            },
-            "updatePolicy": {
-              "additionalProperties": false,
-              "description": "UpdatePolicy controls how the autoscaler applies changes to pod resources.",
-              "properties": {
-                "evictAfterOOMSeconds": {
-                  "description": "evictAfterOOMSeconds specifies the time in seconds to wait after an OOM event before\nconsidering the pod for eviction. Pods that have OOMed in less than this time\nsince start will be evicted.",
-                  "format": "int32",
-                  "minimum": 1,
-                  "type": "integer"
-                },
-                "evictionRequirements": {
-                  "description": "EvictionRequirements is a list of EvictionRequirements that need to\nevaluate to true in order for a Pod to be evicted. If more than one\nEvictionRequirement is specified, all of them need to be fulfilled to allow eviction.",
-                  "items": {
-                    "additionalProperties": false,
-                    "description": "EvictionRequirement defines a single condition which needs to be true in\norder to evict a Pod",
-                    "properties": {
-                      "changeRequirement": {
-                        "description": "EvictionChangeRequirement refers to the relationship between the new target recommendation for a Pod and its current requests, what kind of change is necessary for the Pod to be evicted",
-                        "enum": [
-                          "TargetHigherThanRequests",
-                          "TargetLowerThanRequests"
-                        ],
-                        "type": "string"
-                      },
-                      "resources": {
-                        "description": "Resources is a list of one or more resources that the condition applies\nto. If more than one resource is given, the EvictionRequirement is fulfilled\nif at least one resource meets `changeRequirement`.",
-                        "items": {
-                          "description": "ResourceName is the name identifying various resources in a ResourceList.",
-                          "type": "string"
-                        },
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "changeRequirement",
-                      "resources"
-                    ],
-                    "type": "object"
-                  },
-                  "type": "array"
-                },
-                "minReplicas": {
-                  "description": "Minimal number of replicas which need to be alive for Updater to attempt\npod eviction (pending other checks like PDB). Only positive values are\nallowed. Overrides global '--min-replicas' flag.",
-                  "format": "int32",
-                  "type": "integer"
-                },
-                "updateMode": {
-                  "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Recreate'.",
-                  "enum": [
-                    "Off",
-                    "Initial",
-                    "Recreate",
-                    "InPlaceOrRecreate",
-                    "InPlace",
-                    "Auto"
-                  ],
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
-          },
-          "type": "object"
         },
         "webConfig": {
           "additionalProperties": false,
@@ -2587,9 +2310,6 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
-        },
-        "lastAppliedSpec": {
-          "x-kubernetes-preserve-unknown-fields": true
         },
         "observedGeneration": {
           "description": "ObservedGeneration defines current generation picked by operator for the\nreconcile",
