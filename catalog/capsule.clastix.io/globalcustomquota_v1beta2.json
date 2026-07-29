@@ -152,6 +152,11 @@
                 "description": "API version, API group, or API group/version selector of the referent.\n\nEmpty APIVersion means the core Kubernetes API version \"v1\".\nUse \"*\" to explicitly match all API groups and versions.\n\nExamples:\n- \"\" means core \"v1\".\n- \"v1\" means core \"v1\".\n- \"apps\" means any version in the \"apps\" API group.\n- \"apps/v1\" means the \"apps/v1\" API group/version.\n- \"apps/*\" means any version in the \"apps\" API group.",
                 "type": "string"
               },
+              "cel": {
+                "description": "CEL expression evaluated against the source object.\nThe object is available as \"object\".\nMust evaluate to kubernetes.Quantity or list<kubernetes.Quantity>.\nMutually exclusive with path and must be empty when op is \"count\".",
+                "maxLength": 4096,
+                "type": "string"
+              },
               "kind": {
                 "description": "Kind of the referent.\n\nUse \"*\" to match all kinds.",
                 "minLength": 1,
@@ -176,6 +181,16 @@
                 "items": {
                   "additionalProperties": false,
                   "properties": {
+                    "celExpressions": {
+                      "description": "Additional CEL expressions evaluated against the selected object.\nThe object is available as \"object\".\nAll must evaluate to true for this selector to match.\nCEL expressions and fieldSelectors may be used together.",
+                      "items": {
+                        "maxLength": 4096,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 64,
+                      "type": "array"
+                    },
                     "fieldSelectors": {
                       "description": "Additional boolean JSONPath expressions.\nAll must evaluate to true for this selector to match.",
                       "items": {
@@ -235,8 +250,8 @@
             "type": "object",
             "x-kubernetes-validations": [
               {
-                "message": "path must be empty when op is 'count'; otherwise path must be set and non-empty",
-                "rule": "self.op == 'count' ? !has(self.path) || size(self.path) == 0 : has(self.path) && size(self.path) > 0"
+                "message": "path and cel must be empty when op is 'count'; otherwise exactly one of path or cel must be set and non-empty",
+                "rule": "self.op == 'count' ? ((!has(self.path) || size(self.path) == 0) && (!has(self.cel) || size(self.cel) == 0)) : ((has(self.path) && size(self.path) > 0) != (has(self.cel) && size(self.cel) > 0))"
               }
             ]
           },
@@ -379,6 +394,11 @@
           "items": {
             "additionalProperties": false,
             "properties": {
+              "cel": {
+                "description": "CEL expression evaluated against the source object.\nThe object is available as \"object\".\nMust evaluate to kubernetes.Quantity or list<kubernetes.Quantity>.\nMutually exclusive with path and must be empty when op is \"count\".",
+                "maxLength": 4096,
+                "type": "string"
+              },
               "group": {
                 "type": "string"
               },
@@ -400,7 +420,7 @@
                 "type": "string"
               },
               "scope": {
-                "description": "Path on GVK where usage is evaluated",
+                "description": "Scope of the GVK where usage is evaluated.",
                 "type": "string"
               },
               "selectors": {
@@ -408,6 +428,16 @@
                 "items": {
                   "additionalProperties": false,
                   "properties": {
+                    "celExpressions": {
+                      "description": "Additional CEL expressions evaluated against the selected object.\nThe object is available as \"object\".\nAll must evaluate to true for this selector to match.\nCEL expressions and fieldSelectors may be used together.",
+                      "items": {
+                        "maxLength": 4096,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 64,
+                      "type": "array"
+                    },
                     "fieldSelectors": {
                       "description": "Additional boolean JSONPath expressions.\nAll must evaluate to true for this selector to match.",
                       "items": {

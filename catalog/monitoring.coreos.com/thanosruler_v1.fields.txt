@@ -1,4 +1,4 @@
-# schema source: Prometheus Operator v0.92.1 https://github.com/prometheus-operator/prometheus-operator
+# schema source: Prometheus Operator v0.93.0 https://github.com/prometheus-operator/prometheus-operator
 apiVersion <string> enum=monitoring.coreos.com/v1
 kind <string> enum=ThanosRuler
 metadata.name <string> (required)
@@ -654,7 +654,7 @@ spec.remoteWrite[].headers <map[string]string>	# headers defines the custom HTTP
 spec.remoteWrite[].messageVersion <string> enum=V1.0|V2.0	# messageVersion defines the Remote Write message's version to use when writing to the endpoint. `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0. `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0. When `Version2.0` is selected, Prometheus will automatically be configured to append the metadata of scraped metrics to the WAL. Before setting this field, consult with your remote storage provider what message version it supports. It requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.
 spec.remoteWrite[].metadataConfig <object>	# metadataConfig defines how to send a series metadata to the remote storage. When the field is empty, **no metadata** is sent. But when the field is null, metadata is sent.
 spec.remoteWrite[].metadataConfig.maxSamplesPerSend <integer> format=int32 min=-1	# maxSamplesPerSend defines the maximum number of metadata samples per send. It requires Prometheus >= v2.29.0.
-spec.remoteWrite[].metadataConfig.send <boolean>	# send defines whether metric metadata is sent to the remote storage or not.
+spec.remoteWrite[].metadataConfig.send <boolean>	# send defines whether metric metadata is sent to the remote storage or not. The setting is ignored when Remote Write message's version 2.0 is used.
 spec.remoteWrite[].metadataConfig.sendInterval <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# sendInterval defines how frequently metric metadata is sent to the remote storage.
 spec.remoteWrite[].name <string>	# name of the remote write queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate queues. It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
 spec.remoteWrite[].noProxy <string>	# noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
@@ -771,7 +771,7 @@ spec.remoteWrite[].tlsConfig.serverName <string>	# serverName is used to verify 
 spec.remoteWrite[].url <string> (required) pattern="^(http|https)://.+$"	# url defines the URL of the endpoint to send samples to. It must use the HTTP or HTTPS scheme.
 spec.remoteWrite[].writeRelabelConfigs <[]object>	# writeRelabelConfigs defines the list of remote write relabel configurations.
 spec.remoteWrite[].writeRelabelConfigs[].action <string> enum=replace|Replace|keep|Keep|drop|Drop|hashmod|HashMod|labelmap|LabelMap|labeldrop|LabelDrop|labelkeep|LabelKeep|lowercase|Lowercase|uppercase|Uppercase|keepequal|KeepEqual|dropequal|DropEqual default="replace"	# action to perform based on the regex matching. `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. Default: "Replace"
-spec.remoteWrite[].writeRelabelConfigs[].modulus <integer> format=int64	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
+spec.remoteWrite[].writeRelabelConfigs[].modulus <integer> format=int64 min=0	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
 spec.remoteWrite[].writeRelabelConfigs[].regex <string>	# regex defines the regular expression against which the extracted value is matched.
 spec.remoteWrite[].writeRelabelConfigs[].replacement <string>	# replacement value against which a Replace action is performed if the regular expression matches. Regex capture groups are available.
 spec.remoteWrite[].writeRelabelConfigs[].separator <string>	# separator defines the string between concatenated SourceLabels.

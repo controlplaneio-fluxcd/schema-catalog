@@ -1,4 +1,4 @@
-# schema source: Capsule v0.13.10 https://github.com/projectcapsule/capsule
+# schema source: Capsule v0.13.11 https://github.com/projectcapsule/capsule
 apiVersion <string> enum=capsule.clastix.io/v1beta2
 kind <string> enum=QuantityLedger
 metadata.name <string> (required)
@@ -21,6 +21,7 @@ status.conditions[].status <string> (required) enum=True|False|Unknown	# status 
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.pendingDeletes <[]object>	# Pending delete hints carried over from admission delete handling.
 status.pendingDeletes[].createdAt <string> (required) format=date-time
+status.pendingDeletes[].id <string>	# ID identifies the admission request that added this hint. It allows a failed multi-quota admission to roll back only its own hint.
 status.pendingDeletes[].objectRef <object> (required)	# QuotaLedgerObjectRef identifies the object for which a reservation exists. UID may be empty for CREATE admission before the object is persisted.
 status.pendingDeletes[].objectRef.apiGroup <string>	# APIGroup of the tracked object.
 status.pendingDeletes[].objectRef.apiVersion <string> (required) min=1	# APIVersion of the tracked object, for example "v1".
@@ -30,6 +31,7 @@ status.pendingDeletes[].objectRef.namespace <string>	# Namespace of the tracked 
 status.pendingDeletes[].objectRef.uid <string>	# UID of the tracked object.
 status.reservations <[]object>	# Active inflight reservations for this quota.
 status.reservations[].createdAt <string> (required) format=date-time	# Time the reservation was first created.
+status.reservations[].delta <int-or-string>	# Delta is the additional amount held against the quota while the admitted object is materializing. For creates this is normally equal to Usage. For updates it is max(newUsage-oldUsage, 0), so admission never releases capacity before the API server has persisted the update. A nil value is interpreted as Usage for backwards compatibility with ledgers written before this field was introduced.
 status.reservations[].expiresAt <string> format=date-time	# Time after which the reservation may be considered stale.
 status.reservations[].id <string> (required) min=1	# Unique reservation identifier.
 status.reservations[].objectRef <object> (required)	# Object that this reservation is intended to create/update.

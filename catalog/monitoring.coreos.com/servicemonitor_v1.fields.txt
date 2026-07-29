@@ -1,4 +1,4 @@
-# schema source: Prometheus Operator v0.92.1 https://github.com/prometheus-operator/prometheus-operator
+# schema source: Prometheus Operator v0.93.0 https://github.com/prometheus-operator/prometheus-operator
 apiVersion <string> enum=monitoring.coreos.com/v1
 kind <string> enum=ServiceMonitor
 metadata.name <string> (required)
@@ -37,7 +37,7 @@ spec.endpoints[].honorTimestamps <boolean>	# honorTimestamps defines whether Pro
 spec.endpoints[].interval <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# interval at which Prometheus scrapes the metrics from the target. If empty, Prometheus uses the global scrape interval.
 spec.endpoints[].metricRelabelings <[]object>	# metricRelabelings defines the relabeling rules to apply to the samples before ingestion.
 spec.endpoints[].metricRelabelings[].action <string> enum=replace|Replace|keep|Keep|drop|Drop|hashmod|HashMod|labelmap|LabelMap|labeldrop|LabelDrop|labelkeep|LabelKeep|lowercase|Lowercase|uppercase|Uppercase|keepequal|KeepEqual|dropequal|DropEqual default="replace"	# action to perform based on the regex matching. `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. Default: "Replace"
-spec.endpoints[].metricRelabelings[].modulus <integer> format=int64	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
+spec.endpoints[].metricRelabelings[].modulus <integer> format=int64 min=0	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
 spec.endpoints[].metricRelabelings[].regex <string>	# regex defines the regular expression against which the extracted value is matched.
 spec.endpoints[].metricRelabelings[].replacement <string>	# replacement value against which a Replace action is performed if the regular expression matches. Regex capture groups are available.
 spec.endpoints[].metricRelabelings[].separator <string>	# separator defines the string between concatenated SourceLabels.
@@ -100,7 +100,7 @@ spec.endpoints[].proxyFromEnvironment <boolean>	# proxyFromEnvironment defines w
 spec.endpoints[].proxyUrl <string> pattern="^(http|https|socks5)://.+$"	# proxyUrl defines the HTTP proxy server to use.
 spec.endpoints[].relabelings <[]object>	# relabelings defines the relabeling rules to apply the target's metadata labels. The Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 spec.endpoints[].relabelings[].action <string> enum=replace|Replace|keep|Keep|drop|Drop|hashmod|HashMod|labelmap|LabelMap|labeldrop|LabelDrop|labelkeep|LabelKeep|lowercase|Lowercase|uppercase|Uppercase|keepequal|KeepEqual|dropequal|DropEqual default="replace"	# action to perform based on the regex matching. `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. Default: "Replace"
-spec.endpoints[].relabelings[].modulus <integer> format=int64	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
+spec.endpoints[].relabelings[].modulus <integer> format=int64 min=0	# modulus to take of the hash of the source label values. Only applicable when the action is `HashMod`.
 spec.endpoints[].relabelings[].regex <string>	# regex defines the regular expression against which the extracted value is matched.
 spec.endpoints[].relabelings[].replacement <string>	# replacement value against which a Replace action is performed if the regular expression matches. Regex capture groups are available.
 spec.endpoints[].relabelings[].separator <string>	# separator defines the string between concatenated SourceLabels.
@@ -142,17 +142,17 @@ spec.endpoints[].tlsConfig.serverName <string>	# serverName is used to verify th
 spec.endpoints[].trackTimestampsStaleness <boolean>	# trackTimestampsStaleness defines whether Prometheus tracks staleness of the metrics that have an explicit timestamp present in scraped data. Has no effect if `honorTimestamps` is false. It requires Prometheus >= v2.48.0.
 spec.fallbackScrapeProtocol <string> enum=PrometheusProto|OpenMetricsText0.0.1|OpenMetricsText1.0.0|PrometheusText0.0.4|PrometheusText1.0.0	# fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type. It requires Prometheus >= v3.0.0.
 spec.jobLabel <string>	# jobLabel selects the label from the associated Kubernetes `Service` object which will be used as the `job` label for all metrics. For example if `jobLabel` is set to `foo` and the Kubernetes `Service` object is labeled with `foo: bar`, then Prometheus adds the `job="bar"` label to all ingested metrics. If the value of this field is empty or if the label doesn't exist for the given Service, the `job` label of the metrics defaults to the name of the associated Kubernetes `Service`.
-spec.keepDroppedTargets <integer> format=int64	# keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling that will be kept in memory. 0 means no limit. It requires Prometheus >= v2.47.0.
-spec.labelLimit <integer> format=int64	# labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample. It requires Prometheus >= v2.27.0.
-spec.labelNameLengthLimit <integer> format=int64	# labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample. It requires Prometheus >= v2.27.0.
-spec.labelValueLengthLimit <integer> format=int64	# labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample. It requires Prometheus >= v2.27.0.
+spec.keepDroppedTargets <integer> format=int64 min=0	# keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling that will be kept in memory. 0 means no limit. It requires Prometheus >= v2.47.0.
+spec.labelLimit <integer> format=int64 min=0	# labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample. It requires Prometheus >= v2.27.0.
+spec.labelNameLengthLimit <integer> format=int64 min=0	# labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample. It requires Prometheus >= v2.27.0.
+spec.labelValueLengthLimit <integer> format=int64 min=0	# labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample. It requires Prometheus >= v2.27.0.
 spec.namespaceSelector <object>	# namespaceSelector defines in which namespace(s) Prometheus should discover the services. By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
 spec.namespaceSelector.any <boolean>	# any defines the boolean describing whether all namespaces are selected in contrast to a list restricting them.
 spec.namespaceSelector.matchNames <[]string>	# matchNames defines the list of namespace names to select from.
-spec.nativeHistogramBucketLimit <integer> format=int64	# nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram, buckets will be merged to stay within the limit. It requires Prometheus >= v2.45.0.
+spec.nativeHistogramBucketLimit <integer> format=int64 min=0	# nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram, buckets will be merged to stay within the limit. It requires Prometheus >= v2.45.0.
 spec.nativeHistogramMinBucketFactor <int-or-string>	# nativeHistogramMinBucketFactor defines if the growth factor of one bucket to the next is smaller than this, buckets will be merged to increase the factor sufficiently. It requires Prometheus >= v2.50.0.
 spec.podTargetLabels <[]string>	# podTargetLabels defines the labels which are transferred from the associated Kubernetes `Pod` object onto the ingested metrics.
-spec.sampleLimit <integer> format=int64	# sampleLimit defines a per-scrape limit on the number of scraped samples that will be accepted.
+spec.sampleLimit <integer> format=int64 min=0	# sampleLimit defines a per-scrape limit on the number of scraped samples that will be accepted.
 spec.scrapeClass <string> min=1	# scrapeClass defines the scrape class to apply.
 spec.scrapeClassicHistograms <boolean>	# scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram. It requires Prometheus >= v2.45.0. Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
 spec.scrapeNativeHistograms <boolean>	# scrapeNativeHistograms defines whether to enable scraping of native histograms. It requires Prometheus >= v3.8.0.
@@ -166,7 +166,7 @@ spec.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,val
 spec.selectorMechanism <string> enum=RelabelConfig|RoleSelector	# selectorMechanism defines the mechanism used to select the endpoints to scrape. By default, the selection process relies on relabel configurations to filter the discovered targets. Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters. Which strategy is best for your use case needs to be carefully evaluated. It requires Prometheus >= v2.17.0.
 spec.serviceDiscoveryRole <string> enum=Endpoints|EndpointSlice	# serviceDiscoveryRole defines the service discovery role used to discover targets. If set, the value should be either "Endpoints" or "EndpointSlice". Otherwise it defaults to the value defined in the Prometheus/PrometheusAgent resource.
 spec.targetLabels <[]string>	# targetLabels defines the labels which are transferred from the associated Kubernetes `Service` object onto the ingested metrics.
-spec.targetLimit <integer> format=int64	# targetLimit defines a limit on the number of scraped targets that will be accepted.
+spec.targetLimit <integer> format=int64 min=0	# targetLimit defines a limit on the number of scraped targets that will be accepted.
 status <object>	# status defines the status subresource. It is under active development and is updated only when the "StatusForConfigurationResources" feature gate is enabled. Most recent observed status of the ServiceMonitor. Read-only. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 status.bindings <[]object>	# bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.
 status.bindings[].conditions <[]object>	# conditions defines the current state of the configuration resource when bound to the referenced Workload object.
