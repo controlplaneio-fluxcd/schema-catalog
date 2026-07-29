@@ -1,4 +1,4 @@
-# schema source: Capsule v0.13.10 https://github.com/projectcapsule/capsule
+# schema source: Capsule v0.13.11 https://github.com/projectcapsule/capsule
 apiVersion <string> enum=capsule.clastix.io/v1beta2
 kind <string> enum=CustomQuota
 metadata.name <string> (required)
@@ -15,10 +15,12 @@ spec.scopeSelectors[].matchExpressions[].values <[]string>	# values is an array 
 spec.scopeSelectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.sources <[]object> (required)	# Target resource
 spec.sources[].apiVersion <string>	# API version, API group, or API group/version selector of the referent. Empty APIVersion means the core Kubernetes API version "v1". Use "*" to explicitly match all API groups and versions. Examples: - "" means core "v1". - "v1" means core "v1". - "apps" means any version in the "apps" API group. - "apps/v1" means the "apps/v1" API group/version. - "apps/*" means any version in the "apps" API group.
+spec.sources[].cel <string> max=4096	# CEL expression evaluated against the source object. The object is available as "object". Must evaluate to kubernetes.Quantity or list<kubernetes.Quantity>. Mutually exclusive with path and must be empty when op is "count".
 spec.sources[].kind <string> (required) min=1	# Kind of the referent. Use "*" to match all kinds.
 spec.sources[].op <string> enum=add|sub|count default="add"	# Operation used to evaluate usage.
 spec.sources[].path <string>	# Path on GVK where usage is evaluated. Must be empty when op is "count". Required and non-empty for all other operations.
 spec.sources[].selectors <[]object>	# Provide more granular selectors for these sources The ScopeSelector and NamespaceSelector are always applied Allowing these selectors to make further selecting on the resulting subset.
+spec.sources[].selectors[].celExpressions <[]string> max=64	# Additional CEL expressions evaluated against the selected object. The object is available as "object". All must evaluate to true for this selector to match. CEL expressions and fieldSelectors may be used together.
 spec.sources[].selectors[].fieldSelectors <[]string>	# Additional boolean JSONPath expressions. All must evaluate to true for this selector to match.
 spec.sources[].selectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
 spec.sources[].selectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
@@ -43,12 +45,14 @@ status.conditions[].status <string> (required) enum=True|False|Unknown	# status 
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation the controller has observed.
 status.targets <[]object> (required)	# Targeting GVK
+status.targets[].cel <string> max=4096	# CEL expression evaluated against the source object. The object is available as "object". Must evaluate to kubernetes.Quantity or list<kubernetes.Quantity>. Mutually exclusive with path and must be empty when op is "count".
 status.targets[].group <string> (required)
 status.targets[].kind <string> (required)
 status.targets[].op <string> enum=add|sub|count default="add"	# Operation used to evaluate usage.
 status.targets[].path <string>	# Path on GVK where usage is evaluated. Must be empty when op is "count". Required and non-empty for all other operations.
-status.targets[].scope <string>	# Path on GVK where usage is evaluated
+status.targets[].scope <string>	# Scope of the GVK where usage is evaluated.
 status.targets[].selectors <[]object>	# Provide more granular selectors for these sources The ScopeSelector and NamespaceSelector are always applied Allowing these selectors to make further selecting on the resulting subset.
+status.targets[].selectors[].celExpressions <[]string> max=64	# Additional CEL expressions evaluated against the selected object. The object is available as "object". All must evaluate to true for this selector to match. CEL expressions and fieldSelectors may be used together.
 status.targets[].selectors[].fieldSelectors <[]string>	# Additional boolean JSONPath expressions. All must evaluate to true for this selector to match.
 status.targets[].selectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
 status.targets[].selectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
