@@ -303,6 +303,11 @@ curl -fsS https://schemas.fluxoperator.dev/mcp \
   --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"curl","version":"dev"}}}}'
 ```
 
+The smoke matrix has a scripted superset in `scripts/mcp-e2e-test.ts`
+(`bun run mcp-e2e`). This post-deploy helper checks the modern 2026-07-28 lane,
+the legacy lane, error semantics, and the discovery documents against
+production by default. Pass a base URL to target a local Wrangler dev session.
+
 Validation must pass both directions: a valid manifest passes, and the same
 manifest with an intentionally invalid field fails.
 
