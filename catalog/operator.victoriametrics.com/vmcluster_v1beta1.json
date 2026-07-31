@@ -24,8 +24,83 @@
           "description": "ClusterVersion defines default images tag for all components.\nit can be overwritten with component specific image.tag value.",
           "type": "string"
         },
+        "discovery": {
+          "additionalProperties": false,
+          "description": "Discovery configures automatic vmstorage node discovery for vminsert and vmselect.\nThis is an enterprise feature and requires a valid license key.\nSee https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#automatic-vmstorage-discovery",
+          "properties": {
+            "enabled": {
+              "description": "Enabled turns on automatic vmstorage node discovery via DNS SRV records.\nThis is an enterprise feature and requires a valid license key.\nSee https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#automatic-vmstorage-discovery",
+              "type": "boolean"
+            },
+            "filter": {
+              "description": "Filter is an optional regexp filter applied to discovered vmstorage addresses.\nOnly addresses matching the filter are used; non-matching addresses are ignored.",
+              "type": "string"
+            },
+            "interval": {
+              "description": "Interval is the interval for refreshing the vmstorage node list resolved from DNS SRV records.\nThe minimum supported value is 1s.\nDefaults to 2s if not set.",
+              "pattern": "^[0-9]+(s|m|h)$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object"
+        },
+        "downsampling": {
+          "additionalProperties": false,
+          "description": "Downsampling defines downsampling rules applied to vmselect and vmstorage components.\nRequires enterprise license. See https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#downsampling",
+          "properties": {
+            "dedupInterval": {
+              "description": "DedupInterval sets the deduplication interval used with downsampling.\nIt corresponds to -dedup.minScrapeInterval flag.\nMust be a multiple of all configured downsampling intervals.",
+              "type": "string"
+            },
+            "rules": {
+              "description": "Rules defines downsampling rules.\nEach rule matches time series by an optional filter and applies downsampling after a given offset.",
+              "items": {
+                "additionalProperties": false,
+                "description": "DownsamplingRule defines downsampling periods for an optional label filter.\nAll period intervals must be pairwise multiples of each other.",
+                "properties": {
+                  "filter": {
+                    "description": "Filter is an optional MetricsQL label filter for matching time series.\nIf not set, the rule is applied to all time series.\nExample: '{env=\"prod\"}'",
+                    "type": "string"
+                  },
+                  "periods": {
+                    "description": "Periods defines the downsampling time horizons applied to matching series.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "DownsamplingPeriod defines a single downsampling time horizon.",
+                      "properties": {
+                        "interval": {
+                          "description": "Interval is the target downsampling resolution; only the last sample per interval is kept.\nExample: \"10m\"",
+                          "type": "string"
+                        },
+                        "offset": {
+                          "description": "Offset is the minimum age of data before downsampling is applied.\nExample: \"30d\"",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "interval",
+                        "offset"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "periods"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
         "imagePullSecrets": {
-          "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod",
+          "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
           "items": {
             "additionalProperties": false,
             "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
@@ -144,6 +219,10 @@
           "description": "ServiceAccountName is the name of the ServiceAccount to use to run the\nVMSelect, VMStorage and VMInsert Pods.",
           "type": "string"
         },
+        "useLegacyNaming": {
+          "description": "UseLegacyNaming switches component resource naming from the default prefix convention\n(<component>-<name>, e.g. \"vmselect-myapp\") to a suffix convention (<name>-<component>,\ne.g. \"myapp-vmselect\"). Useful when migrating from standalone Helm charts.",
+          "type": "boolean"
+        },
         "useStrictSecurity": {
           "description": "UseStrictSecurity enables strict security mode for component\nit restricts disk writes access\nuses non-root user out of the box\ndrops not needed security permissions",
           "type": "boolean"
@@ -158,6 +237,10 @@
             },
             "clusterNativeListenPort": {
               "description": "ClusterNativePort for multi-level cluster setup.\nMore [details](https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#multi-level-cluster-setup)",
+              "type": "string"
+            },
+            "componentVersion": {
+              "description": "ComponentVersion defines default images tag for this component.\nit can be overwritten with component specific image.tag value.",
               "type": "string"
             },
             "configMaps": {
@@ -186,6 +269,29 @@
             "disableSelfServiceScrape": {
               "description": "DisableSelfServiceScrape controls creation of VMServiceScrape by operator\nfor the application.\nHas priority over `VM_DISABLESELFSERVICESCRAPECREATION` operator env variable",
               "type": "boolean"
+            },
+            "discovery": {
+              "additionalProperties": false,
+              "description": "Discovery overrides the cluster-level discovery config for vminsert.",
+              "properties": {
+                "enabled": {
+                  "description": "Enabled turns on automatic vmstorage node discovery via DNS SRV records.\nThis is an enterprise feature and requires a valid license key.\nSee https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#automatic-vmstorage-discovery",
+                  "type": "boolean"
+                },
+                "filter": {
+                  "description": "Filter is an optional regexp filter applied to discovered vmstorage addresses.\nOnly addresses matching the filter are used; non-matching addresses are ignored.",
+                  "type": "string"
+                },
+                "interval": {
+                  "description": "Interval is the interval for refreshing the vmstorage node list resolved from DNS SRV records.\nThe minimum supported value is 1s.\nDefaults to 2s if not set.",
+                  "pattern": "^[0-9]+(s|m|h)$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "type": "object"
             },
             "dnsConfig": {
               "additionalProperties": false,
@@ -236,6 +342,10 @@
             "dnsPolicy": {
               "description": "DNSPolicy sets DNS policy for the pod",
               "type": "string"
+            },
+            "enableServiceLinks": {
+              "description": "EnableServiceLinks indicates whether information about services should be injected into pod's\nenvironment variables, matching the syntax of Docker links.\nOptional: Defaults to true.",
+              "type": "boolean"
             },
             "extraArgs": {
               "additionalProperties": {
@@ -389,14 +499,14 @@
                   "type": "string"
                 },
                 "tag": {
-                  "description": "Tag contains desired docker image version",
+                  "description": "Tag contains desired docker image version.\nIt may be a regular tag (e.g. \"v1.96.0\") or a digest\n(e.g. \"sha256:<hex>\"); a digest is joined to the repository with \"@\"\ninstead of \":\", allowing images to be pinned by digest.",
                   "type": "string"
                 }
               },
               "type": "object"
             },
             "imagePullSecrets": {
-              "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod",
+              "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
               "items": {
                 "additionalProperties": false,
                 "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
@@ -475,6 +585,355 @@
               "description": "MinReadySeconds defines a minimum number of seconds to wait before starting update next pod\nif previous in healthy state\nHas no effect for VLogs and VMSingle",
               "format": "int32",
               "type": "integer"
+            },
+            "networkPolicy": {
+              "additionalProperties": false,
+              "description": "NetworkPolicy defines network access rules for pods created by this CR.",
+              "properties": {
+                "egress": {
+                  "description": "Egress defines the list of egress rules applied to pods selected by this CR.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "NetworkPolicyEgressRule describes a particular set of traffic that is allowed out of pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and to.\nThis type is beta-level in 1.8",
+                    "properties": {
+                      "ports": {
+                        "description": "ports is a list of destination ports for outgoing traffic.\nEach item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPort describes a port to allow traffic on",
+                          "properties": {
+                            "endPort": {
+                              "description": "endPort indicates that the range of ports from port to endPort if set, inclusive,\nshould be allowed by the policy. This field cannot be defined if the port field\nis not defined or if the port field is defined as a named (string) port.\nThe endPort must be equal or greater than port.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "port": {
+                              "description": "port represents the port on the given protocol. This can either be a numerical or named\nport on a pod. If this field is not provided, this matches all port names and\nnumbers.\nIf present, only traffic on the specified protocol AND port will be matched.",
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "protocol": {
+                              "description": "protocol represents the protocol (TCP, UDP, or SCTP) which traffic must match.\nIf not specified, this field defaults to TCP.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "to": {
+                        "description": "to is a list of destinations for outgoing traffic of pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all destinations (traffic not restricted by\ndestination). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the to list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
+                          "properties": {
+                            "ipBlock": {
+                              "additionalProperties": false,
+                              "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
+                              "properties": {
+                                "cidr": {
+                                  "description": "cidr is a string representing the IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"",
+                                  "type": "string"
+                                },
+                                "except": {
+                                  "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                }
+                              },
+                              "required": [
+                                "cidr"
+                              ],
+                              "type": "object"
+                            },
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "description": "namespaceSelector selects namespaces using cluster-scoped labels. This field follows\nstandard label selector semantics; if present but empty, it selects all namespaces.\n\nIf podSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the namespaces selected by namespaceSelector.\nOtherwise it selects all pods in the namespaces selected by namespaceSelector.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "description": "podSelector is a label selector which selects pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.\n\nIf namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the Namespaces selected by NamespaceSelector.\nOtherwise it selects the pods matching podSelector in the policy's own namespace.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "ingress": {
+                  "description": "Ingress defines the list of ingress rules applied to pods selected by this CR.\nEach rule allows traffic which matches both the from and ports sections.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "NetworkPolicyIngressRule describes a particular set of traffic that is allowed to the pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and from.",
+                    "properties": {
+                      "from": {
+                        "description": "from is a list of sources which should be able to access the pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all sources (traffic not restricted by\nsource). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the from list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
+                          "properties": {
+                            "ipBlock": {
+                              "additionalProperties": false,
+                              "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
+                              "properties": {
+                                "cidr": {
+                                  "description": "cidr is a string representing the IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"",
+                                  "type": "string"
+                                },
+                                "except": {
+                                  "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                }
+                              },
+                              "required": [
+                                "cidr"
+                              ],
+                              "type": "object"
+                            },
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "description": "namespaceSelector selects namespaces using cluster-scoped labels. This field follows\nstandard label selector semantics; if present but empty, it selects all namespaces.\n\nIf podSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the namespaces selected by namespaceSelector.\nOtherwise it selects all pods in the namespaces selected by namespaceSelector.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "description": "podSelector is a label selector which selects pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.\n\nIf namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the Namespaces selected by NamespaceSelector.\nOtherwise it selects the pods matching podSelector in the policy's own namespace.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "ports": {
+                        "description": "ports is a list of ports which should be made accessible on the pods selected for\nthis rule. Each item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPort describes a port to allow traffic on",
+                          "properties": {
+                            "endPort": {
+                              "description": "endPort indicates that the range of ports from port to endPort if set, inclusive,\nshould be allowed by the policy. This field cannot be defined if the port field\nis not defined or if the port field is defined as a named (string) port.\nThe endPort must be equal or greater than port.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "port": {
+                              "description": "port represents the port on the given protocol. This can either be a numerical or named\nport on a pod. If this field is not provided, this matches all port names and\nnumbers.\nIf present, only traffic on the specified protocol AND port will be matched.",
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "protocol": {
+                              "description": "protocol represents the protocol (TCP, UDP, or SCTP) which traffic must match.\nIf not specified, this field defaults to TCP.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             },
             "nodeSelector": {
               "additionalProperties": {
@@ -559,6 +1018,11 @@
             "port": {
               "description": "Port listen address",
               "type": "string"
+            },
+            "preStopSleepSeconds": {
+              "description": "PreStopSleepSeconds defines the number of seconds to sleep in the preStop lifecycle hook.\nIt gives time for load balancers to remove the pod from rotation before the pod is terminated.\nDefaults to 15 for applicable components. Set to 0 to disable.",
+              "format": "int32",
+              "type": "integer"
             },
             "priorityClassName": {
               "description": "PriorityClassName class assigned to the Pods",
@@ -784,7 +1248,7 @@
                     "type": "string"
                   },
                   "operator": {
-                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
                     "type": "string"
                   },
                   "tolerationSeconds": {
@@ -952,6 +1416,18 @@
                             "description": "Specifies the maximum amount of resources that will be recommended\nfor the container. The default is no maximum.",
                             "type": "object"
                           },
+                          "memoryAggregationIntervalCount": {
+                            "description": "memoryAggregationIntervalCount is the number of consecutive\nmemoryAggregationIntervals which make up the memory aggregation window.\nThe total window length is:\nMemoryAggregationIntervalSeconds * MemoryAggregationIntervalCount.",
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "memoryAggregationIntervalSeconds": {
+                            "description": "memoryAggregationIntervalSeconds is the length of a single interval\n(in seconds) for which the peak memory usage is computed.\nMemory usage peaks are aggregated in multiples of this interval.\nIn other words, there is one memory usage sample per interval\n(the maximum usage over that interval).",
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
                           "minAllowed": {
                             "additionalProperties": {
                               "oneOf": [
@@ -973,6 +1449,84 @@
                               "Off"
                             ],
                             "type": "string"
+                          },
+                          "oomBumpUpRatio": {
+                            "description": "oomBumpUpRatio is the ratio to increase memory when OOM is detected.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          },
+                          "oomMinBumpUp": {
+                            "description": "oomMinBumpUp is the minimum increase in memory when OOM is detected.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          },
+                          "startupBoost": {
+                            "additionalProperties": false,
+                            "description": "startupBoost specifies the startup boost policy for the container.\nThis overrides any pod-level startup boost policy.\nThe startup boost policy takes precedence over the rest of the fields in\nthis struct, except for ContainerName and ControlledValues.",
+                            "properties": {
+                              "cpu": {
+                                "additionalProperties": false,
+                                "description": "cpu specifies the CPU startup boost policy.\nIf this field is not set, no startup boost is applied.",
+                                "properties": {
+                                  "durationSeconds": {
+                                    "description": "durationSeconds indicates for how long to keep the pod boosted after it goes to Ready.\nDefaults to 0.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "factor": {
+                                    "description": "factor specifies the factor to apply to the resource request.\nThis field is required when Type is \"Factor\".",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "quantity": {
+                                    "description": "quantity specifies the absolute resource quantity to be used as the\nresource request and limit during the boost phase.\nThis field is required when Type is \"Quantity\".",
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "integer"
+                                      }
+                                    ]
+                                  },
+                                  "type": {
+                                    "description": "type specifies the kind of boost to apply.\nSupported values are: \"Factor\", \"Quantity\".\nNo startupboost will be applied for unrecognized values.",
+                                    "enum": [
+                                      "Factor",
+                                      "Quantity"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "factor is required when type is Factor and forbidden otherwise",
+                                    "rule": "(self.type == 'Factor') == has(self.factor)"
+                                  },
+                                  {
+                                    "message": "quantity is required when type is Quantity and forbidden otherwise",
+                                    "rule": "(self.type == 'Quantity') == has(self.quantity)"
+                                  }
+                                ]
+                              }
+                            },
+                            "type": "object"
                           }
                         },
                         "type": "object"
@@ -986,6 +1540,12 @@
                   "additionalProperties": false,
                   "description": "UpdatePolicy controls how the autoscaler applies changes to pod resources.",
                   "properties": {
+                    "evictAfterOOMSeconds": {
+                      "description": "evictAfterOOMSeconds specifies the time in seconds to wait after an OOM event before\nconsidering the pod for eviction. Pods that have OOMed in less than this time\nsince start will be evicted.",
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
                     "evictionRequirements": {
                       "description": "EvictionRequirements is a list of EvictionRequirements that need to\nevaluate to true in order for a Pod to be evicted. If more than one\nEvictionRequirement is specified, all of them need to be fulfilled to allow eviction.",
                       "items": {
@@ -1023,12 +1583,13 @@
                       "type": "integer"
                     },
                     "updateMode": {
-                      "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Auto'.",
+                      "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Recreate'.",
                       "enum": [
                         "Off",
                         "Initial",
                         "Recreate",
                         "InPlaceOrRecreate",
+                        "InPlace",
                         "Auto"
                       ],
                       "type": "string"
@@ -1067,6 +1628,10 @@
               "description": "ClusterNativePort for multi-level cluster setup.\nMore [details](https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#multi-level-cluster-setup)",
               "type": "string"
             },
+            "componentVersion": {
+              "description": "ComponentVersion defines default images tag for this component.\nit can be overwritten with component specific image.tag value.",
+              "type": "string"
+            },
             "configMaps": {
               "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Application\nobject, which shall be mounted into the Application container\nat /etc/vm/configs/CONFIGMAP_NAME folder",
               "items": {
@@ -1093,6 +1658,29 @@
             "disableSelfServiceScrape": {
               "description": "DisableSelfServiceScrape controls creation of VMServiceScrape by operator\nfor the application.\nHas priority over `VM_DISABLESELFSERVICESCRAPECREATION` operator env variable",
               "type": "boolean"
+            },
+            "discovery": {
+              "additionalProperties": false,
+              "description": "Discovery overrides the cluster-level discovery config for vmselect.",
+              "properties": {
+                "enabled": {
+                  "description": "Enabled turns on automatic vmstorage node discovery via DNS SRV records.\nThis is an enterprise feature and requires a valid license key.\nSee https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#automatic-vmstorage-discovery",
+                  "type": "boolean"
+                },
+                "filter": {
+                  "description": "Filter is an optional regexp filter applied to discovered vmstorage addresses.\nOnly addresses matching the filter are used; non-matching addresses are ignored.",
+                  "type": "string"
+                },
+                "interval": {
+                  "description": "Interval is the interval for refreshing the vmstorage node list resolved from DNS SRV records.\nThe minimum supported value is 1s.\nDefaults to 2s if not set.",
+                  "pattern": "^[0-9]+(s|m|h)$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "type": "object"
             },
             "dnsConfig": {
               "additionalProperties": false,
@@ -1143,6 +1731,10 @@
             "dnsPolicy": {
               "description": "DNSPolicy sets DNS policy for the pod",
               "type": "string"
+            },
+            "enableServiceLinks": {
+              "description": "EnableServiceLinks indicates whether information about services should be injected into pod's\nenvironment variables, matching the syntax of Docker links.\nOptional: Defaults to true.",
+              "type": "boolean"
             },
             "extraArgs": {
               "additionalProperties": {
@@ -1222,6 +1814,25 @@
               },
               "type": "array"
             },
+            "extraStorageNodes": {
+              "description": "ExtraStorageNodes - defines additional storage nodes to VMSelect,\navailable for select only. Useful for adding an existing vmsingle nodes\nto the cluster in a read-only mode.",
+              "items": {
+                "additionalProperties": false,
+                "description": "VMStorageNode defines an additional, non-operator-managed vmstorage node",
+                "properties": {
+                  "addr": {
+                    "description": "Addr defines storage node address",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "addr"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
             "hostAliases": {
               "description": "HostAliases provides mapping for ip and hostname,\nthat would be propagated to pod,\ncannot be used with HostNetwork.",
               "items": {
@@ -1296,14 +1907,14 @@
                   "type": "string"
                 },
                 "tag": {
-                  "description": "Tag contains desired docker image version",
+                  "description": "Tag contains desired docker image version.\nIt may be a regular tag (e.g. \"v1.96.0\") or a digest\n(e.g. \"sha256:<hex>\"); a digest is joined to the repository with \"@\"\ninstead of \":\", allowing images to be pinned by digest.",
                   "type": "string"
                 }
               },
               "type": "object"
             },
             "imagePullSecrets": {
-              "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod",
+              "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
               "items": {
                 "additionalProperties": false,
                 "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
@@ -1359,6 +1970,355 @@
               "description": "MinReadySeconds defines a minimum number of seconds to wait before starting update next pod\nif previous in healthy state\nHas no effect for VLogs and VMSingle",
               "format": "int32",
               "type": "integer"
+            },
+            "networkPolicy": {
+              "additionalProperties": false,
+              "description": "NetworkPolicy defines network access rules for pods created by this CR.",
+              "properties": {
+                "egress": {
+                  "description": "Egress defines the list of egress rules applied to pods selected by this CR.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "NetworkPolicyEgressRule describes a particular set of traffic that is allowed out of pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and to.\nThis type is beta-level in 1.8",
+                    "properties": {
+                      "ports": {
+                        "description": "ports is a list of destination ports for outgoing traffic.\nEach item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPort describes a port to allow traffic on",
+                          "properties": {
+                            "endPort": {
+                              "description": "endPort indicates that the range of ports from port to endPort if set, inclusive,\nshould be allowed by the policy. This field cannot be defined if the port field\nis not defined or if the port field is defined as a named (string) port.\nThe endPort must be equal or greater than port.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "port": {
+                              "description": "port represents the port on the given protocol. This can either be a numerical or named\nport on a pod. If this field is not provided, this matches all port names and\nnumbers.\nIf present, only traffic on the specified protocol AND port will be matched.",
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "protocol": {
+                              "description": "protocol represents the protocol (TCP, UDP, or SCTP) which traffic must match.\nIf not specified, this field defaults to TCP.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "to": {
+                        "description": "to is a list of destinations for outgoing traffic of pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all destinations (traffic not restricted by\ndestination). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the to list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
+                          "properties": {
+                            "ipBlock": {
+                              "additionalProperties": false,
+                              "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
+                              "properties": {
+                                "cidr": {
+                                  "description": "cidr is a string representing the IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"",
+                                  "type": "string"
+                                },
+                                "except": {
+                                  "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                }
+                              },
+                              "required": [
+                                "cidr"
+                              ],
+                              "type": "object"
+                            },
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "description": "namespaceSelector selects namespaces using cluster-scoped labels. This field follows\nstandard label selector semantics; if present but empty, it selects all namespaces.\n\nIf podSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the namespaces selected by namespaceSelector.\nOtherwise it selects all pods in the namespaces selected by namespaceSelector.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "description": "podSelector is a label selector which selects pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.\n\nIf namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the Namespaces selected by NamespaceSelector.\nOtherwise it selects the pods matching podSelector in the policy's own namespace.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "ingress": {
+                  "description": "Ingress defines the list of ingress rules applied to pods selected by this CR.\nEach rule allows traffic which matches both the from and ports sections.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "NetworkPolicyIngressRule describes a particular set of traffic that is allowed to the pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and from.",
+                    "properties": {
+                      "from": {
+                        "description": "from is a list of sources which should be able to access the pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all sources (traffic not restricted by\nsource). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the from list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
+                          "properties": {
+                            "ipBlock": {
+                              "additionalProperties": false,
+                              "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
+                              "properties": {
+                                "cidr": {
+                                  "description": "cidr is a string representing the IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"",
+                                  "type": "string"
+                                },
+                                "except": {
+                                  "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                }
+                              },
+                              "required": [
+                                "cidr"
+                              ],
+                              "type": "object"
+                            },
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "description": "namespaceSelector selects namespaces using cluster-scoped labels. This field follows\nstandard label selector semantics; if present but empty, it selects all namespaces.\n\nIf podSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the namespaces selected by namespaceSelector.\nOtherwise it selects all pods in the namespaces selected by namespaceSelector.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "description": "podSelector is a label selector which selects pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.\n\nIf namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the Namespaces selected by NamespaceSelector.\nOtherwise it selects the pods matching podSelector in the policy's own namespace.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "ports": {
+                        "description": "ports is a list of ports which should be made accessible on the pods selected for\nthis rule. Each item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPort describes a port to allow traffic on",
+                          "properties": {
+                            "endPort": {
+                              "description": "endPort indicates that the range of ports from port to endPort if set, inclusive,\nshould be allowed by the policy. This field cannot be defined if the port field\nis not defined or if the port field is defined as a named (string) port.\nThe endPort must be equal or greater than port.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "port": {
+                              "description": "port represents the port on the given protocol. This can either be a numerical or named\nport on a pod. If this field is not provided, this matches all port names and\nnumbers.\nIf present, only traffic on the specified protocol AND port will be matched.",
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "protocol": {
+                              "description": "protocol represents the protocol (TCP, UDP, or SCTP) which traffic must match.\nIf not specified, this field defaults to TCP.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             },
             "nodeSelector": {
               "additionalProperties": {
@@ -1458,6 +2418,11 @@
             "port": {
               "description": "Port listen address",
               "type": "string"
+            },
+            "preStopSleepSeconds": {
+              "description": "PreStopSleepSeconds defines the number of seconds to sleep in the preStop lifecycle hook.\nIt gives time for load balancers to remove the pod from rotation before the pod is terminated.\nDefaults to 15 for applicable components. Set to 0 to disable.",
+              "format": "int32",
+              "type": "integer"
             },
             "priorityClassName": {
               "description": "PriorityClassName class assigned to the Pods",
@@ -1784,7 +2749,7 @@
                         },
                         "resources": {
                           "additionalProperties": false,
-                          "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                          "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                           "properties": {
                             "limits": {
                               "additionalProperties": {
@@ -1900,7 +2865,7 @@
                             "description": "When a controller receives persistentvolume claim update with ClaimResourceStatus for a resource\nthat it does not recognizes, then it should ignore that update and let other controllers\nhandle it.",
                             "type": "string"
                           },
-                          "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
+                          "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
                           "type": "object",
                           "x-kubernetes-map-type": "granular"
                         },
@@ -1915,7 +2880,7 @@
                               }
                             ]
                           },
-                          "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
+                          "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
                           "type": "object"
                         },
                         "capacity": {
@@ -2032,7 +2997,7 @@
                     "type": "string"
                   },
                   "operator": {
-                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
                     "type": "string"
                   },
                   "tolerationSeconds": {
@@ -2192,6 +3157,18 @@
                             "description": "Specifies the maximum amount of resources that will be recommended\nfor the container. The default is no maximum.",
                             "type": "object"
                           },
+                          "memoryAggregationIntervalCount": {
+                            "description": "memoryAggregationIntervalCount is the number of consecutive\nmemoryAggregationIntervals which make up the memory aggregation window.\nThe total window length is:\nMemoryAggregationIntervalSeconds * MemoryAggregationIntervalCount.",
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "memoryAggregationIntervalSeconds": {
+                            "description": "memoryAggregationIntervalSeconds is the length of a single interval\n(in seconds) for which the peak memory usage is computed.\nMemory usage peaks are aggregated in multiples of this interval.\nIn other words, there is one memory usage sample per interval\n(the maximum usage over that interval).",
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
                           "minAllowed": {
                             "additionalProperties": {
                               "oneOf": [
@@ -2213,6 +3190,84 @@
                               "Off"
                             ],
                             "type": "string"
+                          },
+                          "oomBumpUpRatio": {
+                            "description": "oomBumpUpRatio is the ratio to increase memory when OOM is detected.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          },
+                          "oomMinBumpUp": {
+                            "description": "oomMinBumpUp is the minimum increase in memory when OOM is detected.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          },
+                          "startupBoost": {
+                            "additionalProperties": false,
+                            "description": "startupBoost specifies the startup boost policy for the container.\nThis overrides any pod-level startup boost policy.\nThe startup boost policy takes precedence over the rest of the fields in\nthis struct, except for ContainerName and ControlledValues.",
+                            "properties": {
+                              "cpu": {
+                                "additionalProperties": false,
+                                "description": "cpu specifies the CPU startup boost policy.\nIf this field is not set, no startup boost is applied.",
+                                "properties": {
+                                  "durationSeconds": {
+                                    "description": "durationSeconds indicates for how long to keep the pod boosted after it goes to Ready.\nDefaults to 0.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "factor": {
+                                    "description": "factor specifies the factor to apply to the resource request.\nThis field is required when Type is \"Factor\".",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "quantity": {
+                                    "description": "quantity specifies the absolute resource quantity to be used as the\nresource request and limit during the boost phase.\nThis field is required when Type is \"Quantity\".",
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "integer"
+                                      }
+                                    ]
+                                  },
+                                  "type": {
+                                    "description": "type specifies the kind of boost to apply.\nSupported values are: \"Factor\", \"Quantity\".\nNo startupboost will be applied for unrecognized values.",
+                                    "enum": [
+                                      "Factor",
+                                      "Quantity"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "factor is required when type is Factor and forbidden otherwise",
+                                    "rule": "(self.type == 'Factor') == has(self.factor)"
+                                  },
+                                  {
+                                    "message": "quantity is required when type is Quantity and forbidden otherwise",
+                                    "rule": "(self.type == 'Quantity') == has(self.quantity)"
+                                  }
+                                ]
+                              }
+                            },
+                            "type": "object"
                           }
                         },
                         "type": "object"
@@ -2226,6 +3281,12 @@
                   "additionalProperties": false,
                   "description": "UpdatePolicy controls how the autoscaler applies changes to pod resources.",
                   "properties": {
+                    "evictAfterOOMSeconds": {
+                      "description": "evictAfterOOMSeconds specifies the time in seconds to wait after an OOM event before\nconsidering the pod for eviction. Pods that have OOMed in less than this time\nsince start will be evicted.",
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
                     "evictionRequirements": {
                       "description": "EvictionRequirements is a list of EvictionRequirements that need to\nevaluate to true in order for a Pod to be evicted. If more than one\nEvictionRequirement is specified, all of them need to be fulfilled to allow eviction.",
                       "items": {
@@ -2263,12 +3324,13 @@
                       "type": "integer"
                     },
                     "updateMode": {
-                      "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Auto'.",
+                      "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Recreate'.",
                       "enum": [
                         "Off",
                         "Initial",
                         "Recreate",
                         "InPlaceOrRecreate",
+                        "InPlace",
                         "Auto"
                       ],
                       "type": "string"
@@ -2298,6 +3360,10 @@
                 "x-kubernetes-preserve-unknown-fields": true
               },
               "type": "array"
+            },
+            "componentVersion": {
+              "description": "ComponentVersion defines default images tag for this component.\nit can be overwritten with component specific image.tag value.",
+              "type": "string"
             },
             "configMaps": {
               "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Application\nobject, which shall be mounted into the Application container\nat /etc/vm/configs/CONFIGMAP_NAME folder",
@@ -2375,6 +3441,10 @@
             "dnsPolicy": {
               "description": "DNSPolicy sets DNS policy for the pod",
               "type": "string"
+            },
+            "enableServiceLinks": {
+              "description": "EnableServiceLinks indicates whether information about services should be injected into pod's\nenvironment variables, matching the syntax of Docker links.\nOptional: Defaults to true.",
+              "type": "boolean"
             },
             "extraArgs": {
               "additionalProperties": {
@@ -2563,7 +3633,7 @@
                           "type": "integer"
                         },
                         "tolerance": {
-                          "description": "tolerance is the tolerance on the ratio between the current and desired\nmetric value under which no updates are made to the desired number of\nreplicas (e.g. 0.01 for 1%). Must be greater than or equal to zero. If not\nset, the default cluster-wide tolerance is applied (by default 10%).\n\nFor example, if autoscaling is configured with a memory consumption target of 100Mi,\nand scale-down and scale-up tolerances of 5% and 1% respectively, scaling will be\ntriggered when the actual consumption falls below 95Mi or exceeds 101Mi.\n\nThis is an alpha field and requires enabling the HPAConfigurableTolerance\nfeature gate.",
+                          "description": "tolerance is the tolerance on the ratio between the current and desired\nmetric value under which no updates are made to the desired number of\nreplicas (e.g. 0.01 for 1%). Must be greater than or equal to zero. If not\nset, the default cluster-wide tolerance is applied (by default 10%).\n\nFor example, if autoscaling is configured with a memory consumption target of 100Mi,\nand scale-down and scale-up tolerances of 5% and 1% respectively, scaling will be\ntriggered when the actual consumption falls below 95Mi or exceeds 101Mi.\n\nThis is an beta field and requires the HPAConfigurableTolerance feature\ngate to be enabled.",
                           "oneOf": [
                             {
                               "type": "string"
@@ -2621,7 +3691,7 @@
                           "type": "integer"
                         },
                         "tolerance": {
-                          "description": "tolerance is the tolerance on the ratio between the current and desired\nmetric value under which no updates are made to the desired number of\nreplicas (e.g. 0.01 for 1%). Must be greater than or equal to zero. If not\nset, the default cluster-wide tolerance is applied (by default 10%).\n\nFor example, if autoscaling is configured with a memory consumption target of 100Mi,\nand scale-down and scale-up tolerances of 5% and 1% respectively, scaling will be\ntriggered when the actual consumption falls below 95Mi or exceeds 101Mi.\n\nThis is an alpha field and requires enabling the HPAConfigurableTolerance\nfeature gate.",
+                          "description": "tolerance is the tolerance on the ratio between the current and desired\nmetric value under which no updates are made to the desired number of\nreplicas (e.g. 0.01 for 1%). Must be greater than or equal to zero. If not\nset, the default cluster-wide tolerance is applied (by default 10%).\n\nFor example, if autoscaling is configured with a memory consumption target of 100Mi,\nand scale-down and scale-up tolerances of 5% and 1% respectively, scaling will be\ntriggered when the actual consumption falls below 95Mi or exceeds 101Mi.\n\nThis is an beta field and requires the HPAConfigurableTolerance feature\ngate to be enabled.",
                           "oneOf": [
                             {
                               "type": "string"
@@ -3158,14 +4228,14 @@
                   "type": "string"
                 },
                 "tag": {
-                  "description": "Tag contains desired docker image version",
+                  "description": "Tag contains desired docker image version.\nIt may be a regular tag (e.g. \"v1.96.0\") or a digest\n(e.g. \"sha256:<hex>\"); a digest is joined to the repository with \"@\"\ninstead of \":\", allowing images to be pinned by digest.",
                   "type": "string"
                 }
               },
               "type": "object"
             },
             "imagePullSecrets": {
-              "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#referring-to-an-imagepullsecrets-on-a-pod",
+              "description": "ImagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling images from registries\nsee https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
               "items": {
                 "additionalProperties": false,
                 "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
@@ -3237,6 +4307,355 @@
               "description": "MinReadySeconds defines a minimum number of seconds to wait before starting update next pod\nif previous in healthy state\nHas no effect for VLogs and VMSingle",
               "format": "int32",
               "type": "integer"
+            },
+            "networkPolicy": {
+              "additionalProperties": false,
+              "description": "NetworkPolicy defines network access rules for pods created by this CR.",
+              "properties": {
+                "egress": {
+                  "description": "Egress defines the list of egress rules applied to pods selected by this CR.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "NetworkPolicyEgressRule describes a particular set of traffic that is allowed out of pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and to.\nThis type is beta-level in 1.8",
+                    "properties": {
+                      "ports": {
+                        "description": "ports is a list of destination ports for outgoing traffic.\nEach item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPort describes a port to allow traffic on",
+                          "properties": {
+                            "endPort": {
+                              "description": "endPort indicates that the range of ports from port to endPort if set, inclusive,\nshould be allowed by the policy. This field cannot be defined if the port field\nis not defined or if the port field is defined as a named (string) port.\nThe endPort must be equal or greater than port.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "port": {
+                              "description": "port represents the port on the given protocol. This can either be a numerical or named\nport on a pod. If this field is not provided, this matches all port names and\nnumbers.\nIf present, only traffic on the specified protocol AND port will be matched.",
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "protocol": {
+                              "description": "protocol represents the protocol (TCP, UDP, or SCTP) which traffic must match.\nIf not specified, this field defaults to TCP.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "to": {
+                        "description": "to is a list of destinations for outgoing traffic of pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all destinations (traffic not restricted by\ndestination). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the to list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
+                          "properties": {
+                            "ipBlock": {
+                              "additionalProperties": false,
+                              "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
+                              "properties": {
+                                "cidr": {
+                                  "description": "cidr is a string representing the IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"",
+                                  "type": "string"
+                                },
+                                "except": {
+                                  "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                }
+                              },
+                              "required": [
+                                "cidr"
+                              ],
+                              "type": "object"
+                            },
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "description": "namespaceSelector selects namespaces using cluster-scoped labels. This field follows\nstandard label selector semantics; if present but empty, it selects all namespaces.\n\nIf podSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the namespaces selected by namespaceSelector.\nOtherwise it selects all pods in the namespaces selected by namespaceSelector.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "description": "podSelector is a label selector which selects pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.\n\nIf namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the Namespaces selected by NamespaceSelector.\nOtherwise it selects the pods matching podSelector in the policy's own namespace.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "ingress": {
+                  "description": "Ingress defines the list of ingress rules applied to pods selected by this CR.\nEach rule allows traffic which matches both the from and ports sections.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "NetworkPolicyIngressRule describes a particular set of traffic that is allowed to the pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and from.",
+                    "properties": {
+                      "from": {
+                        "description": "from is a list of sources which should be able to access the pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all sources (traffic not restricted by\nsource). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the from list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
+                          "properties": {
+                            "ipBlock": {
+                              "additionalProperties": false,
+                              "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
+                              "properties": {
+                                "cidr": {
+                                  "description": "cidr is a string representing the IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"",
+                                  "type": "string"
+                                },
+                                "except": {
+                                  "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                }
+                              },
+                              "required": [
+                                "cidr"
+                              ],
+                              "type": "object"
+                            },
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "description": "namespaceSelector selects namespaces using cluster-scoped labels. This field follows\nstandard label selector semantics; if present but empty, it selects all namespaces.\n\nIf podSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the namespaces selected by namespaceSelector.\nOtherwise it selects all pods in the namespaces selected by namespaceSelector.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "description": "podSelector is a label selector which selects pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.\n\nIf namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects\nthe pods matching podSelector in the Namespaces selected by NamespaceSelector.\nOtherwise it selects the pods matching podSelector in the policy's own namespace.",
+                              "properties": {
+                                "matchExpressions": {
+                                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "key is the label key that the selector applies to.",
+                                        "type": "string"
+                                      },
+                                      "operator": {
+                                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                                        "type": "string"
+                                      },
+                                      "values": {
+                                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                                        "items": {
+                                          "type": "string"
+                                        },
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
+                                      }
+                                    },
+                                    "required": [
+                                      "key",
+                                      "operator"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
+                                },
+                                "matchLabels": {
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  },
+                                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                                  "type": "object"
+                                }
+                              },
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "ports": {
+                        "description": "ports is a list of ports which should be made accessible on the pods selected for\nthis rule. Each item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "NetworkPolicyPort describes a port to allow traffic on",
+                          "properties": {
+                            "endPort": {
+                              "description": "endPort indicates that the range of ports from port to endPort if set, inclusive,\nshould be allowed by the policy. This field cannot be defined if the port field\nis not defined or if the port field is defined as a named (string) port.\nThe endPort must be equal or greater than port.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "port": {
+                              "description": "port represents the port on the given protocol. This can either be a numerical or named\nport on a pod. If this field is not provided, this matches all port names and\nnumbers.\nIf present, only traffic on the specified protocol AND port will be matched.",
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "protocol": {
+                              "description": "protocol represents the protocol (TCP, UDP, or SCTP) which traffic must match.\nIf not specified, this field defaults to TCP.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             },
             "nodeSelector": {
               "additionalProperties": {
@@ -3337,6 +4756,11 @@
               "description": "Port listen address",
               "type": "string"
             },
+            "preStopSleepSeconds": {
+              "description": "PreStopSleepSeconds defines the number of seconds to sleep in the preStop lifecycle hook.\nIt gives time for load balancers to remove the pod from rotation before the pod is terminated.\nDefaults to 15 for applicable components. Set to 0 to disable.",
+              "format": "int32",
+              "type": "integer"
+            },
             "priorityClassName": {
               "description": "PriorityClassName class assigned to the Pods",
               "type": "string"
@@ -3429,6 +4853,29 @@
                 }
               },
               "type": "object"
+            },
+            "retentionFilters": {
+              "description": "RetentionFilters defines per-series retention filters for vmstorage.\nRequires enterprise license. See https://docs.victoriametrics.com/victoriametrics/cluster-victoriametrics/#retention-filters",
+              "items": {
+                "additionalProperties": false,
+                "description": "RetentionFilter defines per-series retention based on a label filter.\nRequires enterprise license.\nSee https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#retention-filters",
+                "properties": {
+                  "filter": {
+                    "description": "Filter is a MetricsQL label filter for matching time series.\nExample: '{env=\"dev\"}'",
+                    "type": "string"
+                  },
+                  "retention": {
+                    "description": "Retention is the retention period for matching time series.\nMust not exceed the global retentionPeriod.\nExample: \"3d\", \"1w\"",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "filter",
+                  "retention"
+                ],
+                "type": "object"
+              },
+              "type": "array"
             },
             "revisionHistoryLimitCount": {
               "description": "The number of old ReplicaSets to retain to allow rollback in deployment or\nmaximum number of revisions that will be maintained in the Deployment revision history.\nHas no effect at StatefulSets\nDefaults to 10.",
@@ -3592,7 +5039,7 @@
                     "type": "string"
                   },
                   "operator": {
-                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
                     "type": "string"
                   },
                   "tolerationSeconds": {
@@ -3920,7 +5367,7 @@
                       "type": "string"
                     },
                     "tag": {
-                      "description": "Tag contains desired docker image version",
+                      "description": "Tag contains desired docker image version.\nIt may be a regular tag (e.g. \"v1.96.0\") or a digest\n(e.g. \"sha256:<hex>\"); a digest is joined to the repository with \"@\"\ninstead of \":\", allowing images to be pinned by digest.",
                       "type": "string"
                     }
                   },
@@ -4211,6 +5658,18 @@
                             "description": "Specifies the maximum amount of resources that will be recommended\nfor the container. The default is no maximum.",
                             "type": "object"
                           },
+                          "memoryAggregationIntervalCount": {
+                            "description": "memoryAggregationIntervalCount is the number of consecutive\nmemoryAggregationIntervals which make up the memory aggregation window.\nThe total window length is:\nMemoryAggregationIntervalSeconds * MemoryAggregationIntervalCount.",
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "memoryAggregationIntervalSeconds": {
+                            "description": "memoryAggregationIntervalSeconds is the length of a single interval\n(in seconds) for which the peak memory usage is computed.\nMemory usage peaks are aggregated in multiples of this interval.\nIn other words, there is one memory usage sample per interval\n(the maximum usage over that interval).",
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
                           "minAllowed": {
                             "additionalProperties": {
                               "oneOf": [
@@ -4232,6 +5691,84 @@
                               "Off"
                             ],
                             "type": "string"
+                          },
+                          "oomBumpUpRatio": {
+                            "description": "oomBumpUpRatio is the ratio to increase memory when OOM is detected.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          },
+                          "oomMinBumpUp": {
+                            "description": "oomMinBumpUp is the minimum increase in memory when OOM is detected.",
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          },
+                          "startupBoost": {
+                            "additionalProperties": false,
+                            "description": "startupBoost specifies the startup boost policy for the container.\nThis overrides any pod-level startup boost policy.\nThe startup boost policy takes precedence over the rest of the fields in\nthis struct, except for ContainerName and ControlledValues.",
+                            "properties": {
+                              "cpu": {
+                                "additionalProperties": false,
+                                "description": "cpu specifies the CPU startup boost policy.\nIf this field is not set, no startup boost is applied.",
+                                "properties": {
+                                  "durationSeconds": {
+                                    "description": "durationSeconds indicates for how long to keep the pod boosted after it goes to Ready.\nDefaults to 0.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "factor": {
+                                    "description": "factor specifies the factor to apply to the resource request.\nThis field is required when Type is \"Factor\".",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "quantity": {
+                                    "description": "quantity specifies the absolute resource quantity to be used as the\nresource request and limit during the boost phase.\nThis field is required when Type is \"Quantity\".",
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "integer"
+                                      }
+                                    ]
+                                  },
+                                  "type": {
+                                    "description": "type specifies the kind of boost to apply.\nSupported values are: \"Factor\", \"Quantity\".\nNo startupboost will be applied for unrecognized values.",
+                                    "enum": [
+                                      "Factor",
+                                      "Quantity"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "factor is required when type is Factor and forbidden otherwise",
+                                    "rule": "(self.type == 'Factor') == has(self.factor)"
+                                  },
+                                  {
+                                    "message": "quantity is required when type is Quantity and forbidden otherwise",
+                                    "rule": "(self.type == 'Quantity') == has(self.quantity)"
+                                  }
+                                ]
+                              }
+                            },
+                            "type": "object"
                           }
                         },
                         "type": "object"
@@ -4245,6 +5782,12 @@
                   "additionalProperties": false,
                   "description": "UpdatePolicy controls how the autoscaler applies changes to pod resources.",
                   "properties": {
+                    "evictAfterOOMSeconds": {
+                      "description": "evictAfterOOMSeconds specifies the time in seconds to wait after an OOM event before\nconsidering the pod for eviction. Pods that have OOMed in less than this time\nsince start will be evicted.",
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
                     "evictionRequirements": {
                       "description": "EvictionRequirements is a list of EvictionRequirements that need to\nevaluate to true in order for a Pod to be evicted. If more than one\nEvictionRequirement is specified, all of them need to be fulfilled to allow eviction.",
                       "items": {
@@ -4282,12 +5825,13 @@
                       "type": "integer"
                     },
                     "updateMode": {
-                      "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Auto'.",
+                      "description": "Controls when autoscaler applies changes to the pod resources.\nThe default is 'Recreate'.",
                       "enum": [
                         "Off",
                         "Initial",
                         "Recreate",
                         "InPlaceOrRecreate",
+                        "InPlace",
                         "Auto"
                       ],
                       "type": "string"
@@ -4370,6 +5914,9 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "lastAppliedSpec": {
+          "x-kubernetes-preserve-unknown-fields": true
         },
         "observedGeneration": {
           "description": "ObservedGeneration defines current generation picked by operator for the\nreconcile",
