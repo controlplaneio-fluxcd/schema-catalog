@@ -1,17 +1,17 @@
-# schema source: VictoriaMetrics Operator v0.68.7 https://github.com/VictoriaMetrics/operator
+# schema source: VictoriaMetrics Operator v0.74.0 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1beta1
 kind <string> enum=VMServiceScrape
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# VMServiceScrapeSpec defines the desired state of VMServiceScrape
 spec.attach_metadata <object>	# AttachMetadata configures metadata attaching from service discovery
-spec.attach_metadata.namespace <boolean>	# Namespace instructs vmagent to add namespace specific metadata from service discovery Valid for roles: pod, service, endpoints, endpointslice, ingress.
-spec.attach_metadata.node <boolean>	# Node instructs vmagent to add node specific metadata from service discovery Valid for roles: pod, endpoints, endpointslice.
+spec.attach_metadata.namespace <boolean>	# Namespace instructs vmagent or vmsingle to add namespace specific metadata from service discovery Valid for roles: pod, service, endpoints, endpointslice, ingress.
+spec.attach_metadata.node <boolean>	# Node instructs vmagent or vmsingle to add node specific metadata from service discovery Valid for roles: pod, endpoints, endpointslice.
 spec.discoveryRole <string> enum=endpoints|service|endpointslices|endpointslice	# DiscoveryRole - defines kubernetes_sd role for objects discovery. by default, its endpoints. can be changed to service or endpointslices. note, that with service setting, you have to use port: "name" and cannot use targetPort for endpoints.
 spec.endpoints <[]object> (required)	# A list of endpoints allowed as part of this ServiceScrape.
 spec.endpoints[].attach_metadata <object>	# AttachMetadata configures metadata attaching from service discovery
-spec.endpoints[].attach_metadata.namespace <boolean>	# Namespace instructs vmagent to add namespace specific metadata from service discovery Valid for roles: pod, service, endpoints, endpointslice, ingress.
-spec.endpoints[].attach_metadata.node <boolean>	# Node instructs vmagent to add node specific metadata from service discovery Valid for roles: pod, endpoints, endpointslice.
+spec.endpoints[].attach_metadata.namespace <boolean>	# Namespace instructs vmagent or vmsingle to add namespace specific metadata from service discovery Valid for roles: pod, service, endpoints, endpointslice, ingress.
+spec.endpoints[].attach_metadata.node <boolean>	# Node instructs vmagent or vmsingle to add node specific metadata from service discovery Valid for roles: pod, endpoints, endpointslice.
 spec.endpoints[].authorization <object>	# Authorization with http header Authorization
 spec.endpoints[].authorization.credentials <object>	# Reference to the secret with value for authorization
 spec.endpoints[].authorization.credentials.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
@@ -36,7 +36,7 @@ spec.endpoints[].bearerTokenSecret.name <string> default=""	# Name of the refere
 spec.endpoints[].bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
 spec.endpoints[].follow_redirects <boolean>	# FollowRedirects controls redirects for scraping.
 spec.endpoints[].honorLabels <boolean>	# HonorLabels chooses the metric's labels on collisions with target labels.
-spec.endpoints[].honorTimestamps <boolean>	# HonorTimestamps controls whether vmagent respects the timestamps present in scraped data.
+spec.endpoints[].honorTimestamps <boolean>	# HonorTimestamps controls whether vmagent or vmsingle respects the timestamps present in scraped data.
 spec.endpoints[].interval <string>	# Interval at which metrics should be scraped
 spec.endpoints[].max_scrape_size <string>	# MaxScrapeSize defines a maximum size of scraped data for a job
 spec.endpoints[].metricRelabelConfigs <[]object>	# MetricRelabelConfigs to apply to samples after scrapping.
@@ -126,10 +126,17 @@ spec.endpoints[].tlsConfig.serverName <string>	# Used to verify the hostname for
 spec.endpoints[].vm_scrape_params <object>	# VMScrapeParams defines VictoriaMetrics specific scrape parameters
 spec.endpoints[].vm_scrape_params.disable_compression <boolean>	# DisableCompression
 spec.endpoints[].vm_scrape_params.disable_keep_alive <boolean>	# disable_keepalive allows disabling HTTP keep-alive when scraping targets. By default, HTTP keep-alive is enabled, so TCP connections to scrape targets could be reused. See https://docs.victoriametrics.com/victoriametrics/vmagent/#scrape_config-enhancements
-spec.endpoints[].vm_scrape_params.headers <[]string>	# Headers allows sending custom headers to scrape targets must be in of semicolon separated header with it's value eg: headerName: headerValue vmagent supports since 1.79.0 version
+spec.endpoints[].vm_scrape_params.headers <[]string>	# Headers allows sending custom headers to scrape targets must be in of semicolon separated header with it's value eg: headerName: headerValue vmagent and vmsingle support since 1.79.0 version
 spec.endpoints[].vm_scrape_params.no_stale_markers <boolean>
 spec.endpoints[].vm_scrape_params.proxy_client_config <object>	# ProxyClientConfig configures proxy auth settings for scraping See feature description https://docs.victoriametrics.com/victoriametrics/vmagent/#scraping-targets-via-a-proxy
-spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization <object>	# Authorization with http header Authorization
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials <object>	# Reference to the secret with value for authorization
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentialsFile <string>	# File with value for authorization
+spec.endpoints[].vm_scrape_params.proxy_client_config.authorization.type <string>	# Type of authorization, default to bearer
+spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth <object>	# BasicAuth allows proxy to authenticate over basic authentication
 spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
 spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -139,12 +146,32 @@ spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username <objec
 spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token <object>	# SecretKeySelector selects a key of a Secret.
+spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token <object>	# Secret to mount to read bearer token for scraping targets proxy auth. The secret needs to be in the same namespace as the scrape object and accessible by the victoria-metrics operator.
 spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token_file <string>
-spec.endpoints[].vm_scrape_params.proxy_client_config.tls_config <any>
+spec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token_file <string>	# BearerTokenFile defines file to read bearer token from for proxy auth.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2 <object>	# OAuth2 defines auth configuration
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id <object> (required)	# The secret or configmap containing the OAuth2 client id
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap.key <string> (required)	# The key to select.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret <object>	# Secret containing data to use for the targets.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret <object>	# The secret containing the OAuth2 client secret
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret_file <string>	# ClientSecretFile defines path for client secret file.
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.endpoint_params <map[string]string>	# Parameters to append to the token URL
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.proxy_url <string>	# The proxy URL for token_url connection Is only supported by Scrape objects family
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.scopes <[]string>	# OAuth2 scopes used for the token request
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.tls_config <any>	# TLSConfig for token_url connection Is only supported by Scrape objects family
+spec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.token_url <string> (required) min=1	# The URL to fetch the token from
+spec.endpoints[].vm_scrape_params.proxy_client_config.tls_config <any>	# TLSConfig configuration to use when scraping the endpoint
 spec.endpoints[].vm_scrape_params.scrape_align_interval <string>
 spec.endpoints[].vm_scrape_params.scrape_offset <string>
 spec.endpoints[].vm_scrape_params.stream_parse <boolean>

@@ -16,6 +16,27 @@
       "additionalProperties": false,
       "description": "VMUserSpec defines the desired state of VMUser",
       "properties": {
+        "access_log": {
+          "additionalProperties": false,
+          "description": "AccessLog configures per-user access logging.\nWhen set, vmauth logs each request for this user with fields including\nrequest_uri, status_code, duration_ms, username, etc.\nSee https://docs.victoriametrics.com/victoriametrics/vmauth/#access-log\n\navailable since v1.138.0 vmauth version",
+          "properties": {
+            "filters": {
+              "additionalProperties": false,
+              "description": "Filters defines optional filters that control which requests are logged.",
+              "properties": {
+                "skip_status_codes": {
+                  "description": "SkipStatusCodes lists HTTP status codes whose responses are excluded from the access log.\nFor example, [200, 204] suppresses logging of successful responses.",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
         "bearerToken": {
           "description": "BearerToken Authorization header value for accessing protected endpoint.",
           "type": "string"
@@ -69,6 +90,128 @@
                 "type": "string"
               },
               "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "jwt": {
+          "additionalProperties": false,
+          "description": "JWT defines JWT based auth for a user",
+          "properties": {
+            "defaultVMAccessClaim": {
+              "additionalProperties": false,
+              "description": "DefaultVMAccessClaim defines vm_access claim parameters to use when a JWT\ndoesn't carry a vm_access claim of its own. Set to an empty object to opt in\na token that only needs to pass matchClaims/oidc verification without vm_access.",
+              "properties": {
+                "logsAccountID": {
+                  "description": "LogsAccountID defines accountID to use for logs requests templating",
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "logsExtraFilters": {
+                  "description": "LogsExtraFilters defines a list of logsql filters to apply for logs requests templating",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "logsExtraStreamFilters": {
+                  "description": "LogsExtraStreamFilters defines a list of logsql stream filters to apply for logs requests templating",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "logsProjectID": {
+                  "description": "LogsProjectID defines projectID to use for logs requests templating",
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "metricsAccountID": {
+                  "description": "MetricsAccountID defines accountID to use for metrics requests templating",
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "metricsExtraFilters": {
+                  "description": "MetricsExtraFilters defines a list of promql filters to apply for metrics requests templating",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "metricsExtraLabels": {
+                  "description": "MetricsExtraLabels defines a list of extra labels to apply for metrics requests templating",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "metricsProjectID": {
+                  "description": "MetricsProjectID defines projectID to use for metrics requests templating",
+                  "format": "int32",
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
+            "matchClaims": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "MatchClaims enables claim based routing",
+              "type": "object"
+            },
+            "oidc": {
+              "additionalProperties": false,
+              "description": "OIDC defines OIDC configuration section",
+              "properties": {
+                "issuer": {
+                  "description": "Issuer defines issuer URL for OIDC",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "issuer"
+              ],
+              "type": "object"
+            },
+            "publicKeyRefs": {
+              "description": "PublicKeyRefs defines a list of Secret selectors that reference public keys",
+              "items": {
+                "additionalProperties": false,
+                "description": "SecretKeySelector selects a key of a Secret.",
+                "properties": {
+                  "key": {
+                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "default": "",
+                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                    "type": "string"
+                  },
+                  "optional": {
+                    "description": "Specify whether the Secret or its key must be defined",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "key"
+                ],
+                "type": "object",
+                "x-kubernetes-map-type": "atomic"
+              },
+              "type": "array"
+            },
+            "publicKeys": {
+              "description": "PublicKeys defines a list of public keys that are used for signature verification",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "skipVerify": {
+              "description": "SkipVerify skips signature verification for testing purposes",
+              "type": "boolean"
             }
           },
           "type": "object"
@@ -170,7 +313,7 @@
                 "description": "CRD describes exist operator's CRD object,\noperator generates access url based on CRD params.",
                 "properties": {
                   "kind": {
-                    "description": "Kind one of:\nVMAgent,VMAlert, VMSingle, VMCluster/vmselect, VMCluster/vmstorage,VMCluster/vminsert,VMAlertManager, VLSingle, VLCluster/vlinsert, VLCluster/vlselect, VLCluster/vlstorage, VTSingle, VTCluster/vtinsert, VTCluster/vtselect, VTCluster/vtstorage and VLAgent",
+                    "description": "Kind one of:\nVMAgent,VMAlert, VMSingle, VMCluster/vmselect, VMCluster/vmstorage,VMCluster/vminsert,VMAlertManager, VLSingle, VLCluster/vlinsert, VLCluster/vlselect, VLCluster/vlstorage, VTSingle, VTCluster/vtinsert, VTCluster/vtselect, VTCluster/vtstorage VMAnomaly and VLAgent",
                     "enum": [
                       "VMAgent",
                       "VMAlert",
@@ -189,17 +332,49 @@
                       "VTCluster/vtinsert",
                       "VTCluster/vtselect",
                       "VTCluster/vtstorage",
-                      "VTSingle"
+                      "VTSingle",
+                      "VMAnomaly"
                     ],
                     "type": "string"
                   },
                   "name": {
-                    "description": "Name target CRD object name",
+                    "description": "Name of the target Kubernetes object",
                     "type": "string"
                   },
                   "namespace": {
-                    "description": "Namespace target CRD object namespace.",
+                    "description": "Namespace of the target Kubernetes object",
                     "type": "string"
+                  },
+                  "objects": {
+                    "description": "Objects defines list of name/namespace pairs that define existing k8s object",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "NamespacedName defines name and namespace pairs to reference k8s object",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the target Kubernetes object",
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the target Kubernetes object",
+                          "type": "string"
+                        },
+                        "useExtraService": {
+                          "description": "UseExtraService instructs the operator to prefer the CR's additional service\n(created via spec.serviceSpec) over the default service when building the target URL.",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "namespace"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "useExtraService": {
+                    "description": "UseExtraService instructs the operator to prefer the CR's additional service\n(created via spec.serviceSpec) over the default service when building the target URL.",
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -236,6 +411,10 @@
                   "least_loaded",
                   "first_available"
                 ],
+                "type": "string"
+              },
+              "name": {
+                "description": "Name references item at VMAuths spec.defaultTargetRefs map, with name set other attributes are skipped",
                 "type": "string"
               },
               "paths": {
@@ -569,6 +748,10 @@
           ],
           "type": "object",
           "x-kubernetes-map-type": "atomic"
+        },
+        "useLegacyNaming": {
+          "description": "UseLegacyNaming uses standalone Helm chart naming for managed resources:\nthe CR name is used directly instead of the default \"<type>-<name>\" convention.",
+          "type": "boolean"
         },
         "username": {
           "description": "Username basic auth user name for accessing protected endpoint,\nwill be replaced with metadata.name of VMUser if omitted.",
