@@ -1,10 +1,18 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
+import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/server";
+
+/**
+ * First revision of the stateless (modern) protocol era, served by the SDK v2
+ * handler. The SDK exports no named constant for it: its
+ * SUPPORTED_PROTOCOL_VERSIONS lists the legacy era, which the handler's
+ * compatibility lane also still serves.
+ */
+const MODERN_PROTOCOL_VERSION = "2026-07-28";
 
 /** Runtime identity, shared verbatim between the MCP server and its Server Card. */
-export const SERVER_INFO = { name: "flux-schema-catalog", title: "Flux Schema Catalog", version: "0.1.0" };
+export const SERVER_INFO = { name: "flux-schema-catalog", title: "Flux Schema Catalog", version: "0.2.0" };
 
 const SERVER_DESCRIPTION =
   "Authoritative JSON Schemas and greppable field indexes for core Kubernetes, OpenShift, the Flux ecosystem, " +
@@ -49,7 +57,11 @@ export function serveServerCard(req: Request): Response {
     websiteUrl: "https://schemas.fluxoperator.dev",
     repository: { url: "https://github.com/controlplaneio-fluxcd/schema-catalog", source: "github" },
     remotes: [
-      { type: "streamable-http", url: endpoint, supportedProtocolVersions: SUPPORTED_PROTOCOL_VERSIONS },
+      {
+        type: "streamable-http",
+        url: endpoint,
+        supportedProtocolVersions: [MODERN_PROTOCOL_VERSION, ...SUPPORTED_PROTOCOL_VERSIONS],
+      },
     ],
     serverInfo: SERVER_INFO,
     transport: { type: "streamable-http", endpoint },

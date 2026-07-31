@@ -165,6 +165,13 @@ The server `instructions` steer agents through a `grep_catalog` ->
 `grep_schema` -> `get_schema` escalation so most field questions never load a
 full schema.
 
+The official MCP SDK v2 `@modelcontextprotocol/server` runs behind the
+Cloudflare `agents/mcp/server` stateless handler. It serves the modern
+2026-07-28 protocol with per-request `_meta`, `Mcp-Method`/`Mcp-Name`, and
+`server/discover`, plus a built-in legacy lane for 2025 stateless clients.
+Legacy responses are SSE-framed, GET returns 405, and an unknown tool returns
+JSON-RPC -32602.
+
 ```shell
 claude mcp add --transport http flux-schema-catalog https://schemas.fluxoperator.dev/mcp
 ```
@@ -288,7 +295,18 @@ curl -fsS https://schemas.fluxoperator.dev/mcp \
   -H 'content-type: application/json' \
   -H 'accept: application/json, text/event-stream' \
   --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"dev"}}}'
+curl -fsS https://schemas.fluxoperator.dev/mcp \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -H 'mcp-protocol-version: 2026-07-28' \
+  -H 'mcp-method: server/discover' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"curl","version":"dev"}}}}'
 ```
+
+The smoke matrix has a scripted superset in `scripts/mcp-e2e-test.ts`
+(`bun run mcp-e2e`). This post-deploy helper checks the modern 2026-07-28 lane,
+the legacy lane, error semantics, and the discovery documents against
+production by default. Pass a base URL to target a local Wrangler dev session.
 
 Validation must pass both directions: a valid manifest passes, and the same
 manifest with an intentionally invalid field fails.

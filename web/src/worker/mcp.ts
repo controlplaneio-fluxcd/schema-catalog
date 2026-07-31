@@ -1,8 +1,16 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { createMcpHandler, WorkerTransport } from "agents/mcp";
+/**
+ * Stateless MCP endpoint for the modern 2026-07-28 protocol, including the
+ * per-request `_meta` envelope, `Mcp-Method`/`Mcp-Name` headers, and
+ * `server/discover`. The SDK also provides built-in compatibility for
+ * 2025-era stateless clients. Legacy responses are SSE-framed because the
+ * fallback has no JSON mode, legacy GET returns 405, and an unknown tool is a
+ * -32602 protocol error.
+ */
+import { McpServer } from "@modelcontextprotocol/server";
+import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
 import { SERVER_INFO } from "./server-card.ts";
 import {
@@ -17,6 +25,10 @@ import {
 import { getCatalogObject } from "./catalog.ts";
 import type { Env } from "./index.ts";
 import { loadIndex } from "./index-data.ts";
+
+// Catalog content changes only at deploy and is public, so 2026-era clients
+// can cache list results and the discover probe for one hour in shared caches.
+const CACHE_HINT = { ttlMs: 3_600_000, cacheScope: "public" } as const;
 
 /**
  * System instructions sent to MCP clients. They position the catalog as the
@@ -58,21 +70,38 @@ const GrepSchemaInput = z.object({
   limit: z.number().int().min(1).max(500).default(200),
 });
 
+let handler: ReturnType<typeof createMcpHandler> | undefined;
+
+// Read by the server factory on every request instead of closing over the
+// first request's env, so a surviving isolate picks up binding changes.
+let currentEnv: Env;
+
 /**
- * Handles the stateless streamable HTTP MCP endpoint at `/mcp`. The transport
- * uses no session IDs, so every request builds a server instance whose tools
- * load the current memoized index and catalog objects through Worker bindings.
+ * Handles modern 2026-07-28 stateless requests and the SDK's built-in legacy
+ * compatibility lane at `/mcp`. Every request gets a fresh server instance.
  */
 export function handleMcp(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const server = createCatalogMcpServer(env);
-  const transport = new WorkerTransport({ sessionIdGenerator: undefined });
-  const handler = createMcpHandler(server, { route: "/mcp", transport });
+  currentEnv = env;
+  handler ??= createMcpHandler(() => createCatalogMcpServer(currentEnv), {
+    // The route is an EXACT pathname match, and src/worker/index.ts dispatches
+    // only the exact `/mcp` path.
+    route: "/mcp",
+    // The v2 wrapper validates browser Origin headers against a
+    // localhost/workers.dev allowlist by default, which would lock hosted MCP
+    // clients out of the custom domain. The content is public, read-only, and
+    // unauthenticated with no session to steal, so origins are unrestricted.
+    allowedOriginHostnames: "*",
+  });
   return handler(req, env, ctx);
 }
 
 function createCatalogMcpServer(env: Env): McpServer {
   const server = new McpServer(SERVER_INFO, {
     instructions,
+    cacheHints: {
+      "server/discover": CACHE_HINT,
+      "tools/list": CACHE_HINT,
+    },
   });
 
   server.registerTool(

@@ -81,6 +81,10 @@ run, dev, sync, deploy, archive) are listed in
   validate <manifests> --schema-location ./catalog` against a real example.
 - Web changes: `bun run lint && bun test` inside `web/`, plus the smoke
   matrix in [web/README.md](web/README.md#verification) for serving changes.
+  Verify MCP serving changes end to end with `bun scripts/mcp-e2e-test.ts`
+  from `web/` (or `bun run mcp-e2e`); it runs the full modern-plus-legacy
+  protocol suite against production by default and accepts a base URL for a
+  local Wrangler dev instance.
 
 ## CI
 
