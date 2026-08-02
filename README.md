@@ -224,7 +224,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.1 | 18 | 2026-07-16 |
 | [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.6.2 | 7 | 2026-07-09 |
 | [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.19.0 | 22 | 2026-07-23 |
-| [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.1 | 54 | 2026-07-16 |
+| [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.2 | 54 | 2026-08-02 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v0.9.0 | 2 | 2026-07-09 |
 | [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.7.2 | 19 | 2026-07-25 |
