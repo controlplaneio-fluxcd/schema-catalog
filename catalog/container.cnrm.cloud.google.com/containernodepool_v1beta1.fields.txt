@@ -1,65 +1,65 @@
-# schema source: GCP Config Connector v1.153.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.154.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=container.cnrm.cloud.google.com/v1beta1
 kind <string> enum=ContainerNodePool
 metadata.name <string> (required)
 metadata.namespace <string> (required)
-spec <object> (required)
-spec.autoscaling <object>	# Configuration required by cluster autoscaler to adjust the size of the node pool to the current cluster usage. To disable autoscaling, set minNodeCount and maxNodeCount to 0.
-spec.autoscaling.locationPolicy <string>	# Location policy specifies the algorithm used when scaling-up the node pool. "BALANCED" - Is a best effort policy that aims to balance the sizes of available zones. "ANY" - Instructs the cluster autoscaler to prioritize utilization of unused reservations, and reduces preemption risk for Spot VMs.
-spec.autoscaling.maxNodeCount <integer>	# Maximum number of nodes per zone in the node pool. Must be >= min_node_count. Cannot be used with total limits.
-spec.autoscaling.minNodeCount <integer>	# Minimum number of nodes per zone in the node pool. Must be >=0 and <= max_node_count. Cannot be used with total limits.
-spec.autoscaling.totalMaxNodeCount <integer>	# Maximum number of all nodes in the node pool. Must be >= total_min_node_count. Cannot be used with per zone limits.
-spec.autoscaling.totalMinNodeCount <integer>	# Minimum number of all nodes in the node pool. Must be >=0 and <= total_max_node_count. Cannot be used with per zone limits.
-spec.clusterRef <object> (required)
-spec.clusterRef.external <string>	# Allowed value: The `name` field of a `ContainerCluster` resource.
-spec.clusterRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.clusterRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.initialNodeCount <integer>	# Immutable. The initial number of nodes for the pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Changing this will force recreation of the resource.
+spec <object> (required)	# ContainerNodePoolSpec defines the desired state of ContainerNodePool
+spec.autoscaling <object>	# Autoscaler configuration for this NodePool. Autoscaler is enabled only if a valid configuration is present.
+spec.autoscaling.locationPolicy <string>	# Location policy used when scaling up a nodepool.
+spec.autoscaling.maxNodeCount <integer> format=int32	# Maximum number of nodes for one location in the node pool. Must be >= min_node_count. There has to be enough quota to scale up the cluster.
+spec.autoscaling.minNodeCount <integer> format=int32	# Minimum number of nodes for one location in the node pool. Must be greater than or equal to 0 and less than or equal to max_node_count.
+spec.autoscaling.totalMaxNodeCount <integer> format=int32	# Maximum number of nodes in the node pool. Must be greater than or equal to total_min_node_count. There has to be enough quota to scale up the cluster. The total_*_node_count fields are mutually exclusive with the *_node_count fields.
+spec.autoscaling.totalMinNodeCount <integer> format=int32	# Minimum number of nodes in the node pool. Must be greater than or equal to 0 and less than or equal to total_max_node_count. The total_*_node_count fields are mutually exclusive with the *_node_count fields.
+spec.clusterRef <object> (required)	# The GKE cluster this node pool belongs to.
+spec.clusterRef.external <string>	# The GKE cluster. Valid formats: `projects/{projectID}/locations/{location}/clusters/{clusterID}` `projects/{projectID}/zones/{zone}/clusters/{clusterID}`
+spec.clusterRef.name <string>	# Name of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names */
+spec.clusterRef.namespace <string>	# Namespace of the project resource. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ */
+spec.initialNodeCount <integer> format=int32	# The initial node count for the pool. You must ensure that your Compute Engine resource quota is sufficient for this number of instances. You must also have available firewall and routes quota.
 spec.location <string> (required)	# Immutable. The location (region or zone) of the cluster.
-spec.management <object>	# Node management configuration, wherein auto-repair and auto-upgrade is configured.
-spec.management.autoRepair <boolean>	# Whether the nodes will be automatically repaired.
-spec.management.autoUpgrade <boolean>	# Whether the nodes will be automatically upgraded.
-spec.maxPodsPerNode <integer>	# Immutable. The maximum number of pods per node in this node pool. Note that this does not work on node pools which are "route-based" - that is, node pools belonging to clusters that do not have IP Aliasing enabled.
+spec.management <object>	# NodeManagement configuration for this NodePool.
+spec.management.autoRepair <boolean>	# A flag that specifies whether the node auto-repair is enabled for the node pool. If enabled, the nodes in this node pool will be monitored and, if they fail health checks too many times, an automatic repair action will be triggered.
+spec.management.autoUpgrade <boolean>	# A flag that specifies whether node auto-upgrade is enabled for the node pool. If enabled, node auto-upgrade helps keep the nodes in your node pool up to date with the latest release version of Kubernetes.
+spec.maxPodsPerNode <integer>	# The constraint on the maximum number of pods that can be run simultaneously on a node in the node pool.
 spec.namePrefix <string>	# Immutable. Creates a unique name for the node pool beginning with the specified prefix. Conflicts with name.
 spec.networkConfig <object>	# Networking configuration for this NodePool. If specified, it overrides the cluster-level defaults.
-spec.networkConfig.additionalNodeNetworkConfigs <[]object>	# Immutable. We specify the additional node networks for this node pool using this list. Each node network corresponds to an additional interface.
-spec.networkConfig.additionalNodeNetworkConfigs[].networkRef <object>	# Immutable. Name of the VPC where the additional interface belongs.
-spec.networkConfig.additionalNodeNetworkConfigs[].networkRef.external <string>	# Allowed value: The `selfLink` field of a `ComputeNetwork` resource.
-spec.networkConfig.additionalNodeNetworkConfigs[].networkRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.networkConfig.additionalNodeNetworkConfigs[].networkRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef <object>	# Immutable. Name of the subnetwork where the additional interface belongs.
-spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.external <string>	# Allowed value: The `selfLink` field of a `ComputeSubnetwork` resource.
-spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.networkConfig.additionalPodNetworkConfigs <[]object>	# Immutable. We specify the additional pod networks for this node pool using this list. Each pod network corresponds to an additional alias IP range for the node.
-spec.networkConfig.additionalPodNetworkConfigs[].maxPodsPerNode <integer>	# Immutable. The maximum number of pods per node which use this pod network.
-spec.networkConfig.additionalPodNetworkConfigs[].secondaryPodRange <string>	# Immutable. The name of the secondary range on the subnet which provides IP address for this pod range.
-spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef <object>	# Immutable. Name of the subnetwork where the additional pod network belongs.
-spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef.external <string>	# Allowed value: The `selfLink` field of a `ComputeSubnetwork` resource.
-spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.networkConfig.createPodRange <boolean>	# Immutable. Whether to create a new range for pod IPs in this node pool. Defaults are provided for pod_range and pod_ipv4_cidr_block if they are not specified.
-spec.networkConfig.enablePrivateNodes <boolean>	# Whether nodes have internal IP addresses only.
-spec.networkConfig.podCidrOverprovisionConfig <object>	# Immutable. Configuration for node-pool level pod cidr overprovision. If not set, the cluster level setting will be inherited.
+spec.networkConfig.additionalNodeNetworkConfigs <[]object>	# We specify the additional node networks for this node pool using this list. Each node network corresponds to an additional interface.
+spec.networkConfig.additionalNodeNetworkConfigs[].networkRef <object>	# ComputeNetworkRef is a reference to a GCP ComputeNetwork.
+spec.networkConfig.additionalNodeNetworkConfigs[].networkRef.external <string>	# A reference to an externally managed ComputeNetwork resource. Should be in the format "projects/{{projectID}}/global/networks/{{networkID}}".
+spec.networkConfig.additionalNodeNetworkConfigs[].networkRef.name <string>	# The name of a ComputeNetwork resource.
+spec.networkConfig.additionalNodeNetworkConfigs[].networkRef.namespace <string>	# The namespace of a ComputeNetwork resource.
+spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef <object>	# ComputeSubnetworkRef is a reference to a GCP ComputeSubnetwork.
+spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.external <string>	# A reference to an externally managed ComputeSubnetwork resource. Should be in the format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.name <string>	# The name of a ComputeSubnetwork resource.
+spec.networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.namespace <string>	# The namespace of a ComputeSubnetwork resource.
+spec.networkConfig.additionalPodNetworkConfigs <[]object>	# We specify the additional pod networks for this node pool using this list. Each pod network corresponds to an additional alias IP range for the node.
+spec.networkConfig.additionalPodNetworkConfigs[].maxPodsPerNode <integer>	# The maximum number of pods per node which use this pod network.
+spec.networkConfig.additionalPodNetworkConfigs[].secondaryPodRange <string>	# The name of the secondary range on the subnet which provides IP address for this pod range.
+spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef <object>	# ComputeSubnetworkRef is a reference to a GCP ComputeSubnetwork.
+spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef.external <string>	# A reference to an externally managed ComputeSubnetwork resource. Should be in the format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef.name <string>	# The name of a ComputeSubnetwork resource.
+spec.networkConfig.additionalPodNetworkConfigs[].subnetworkRef.namespace <string>	# The namespace of a ComputeSubnetwork resource.
+spec.networkConfig.createPodRange <boolean>	# Input only. Whether to create a new range for pod IPs in this node pool. Defaults are provided for `pod_range` and `pod_ipv4_cidr_block` if they are not specified. If neither `create_pod_range` or `pod_range` are specified, the cluster-level default (`ip_allocation_policy.cluster_ipv4_cidr_block`) is used. Only applicable if `ip_allocation_policy.use_ip_aliases` is true. This field cannot be changed after the node pool has been created.
+spec.networkConfig.enablePrivateNodes <boolean>	# Whether nodes have internal IP addresses only. If enable_private_nodes is not specified, then the value is derived from [Cluster.NetworkConfig.default_enable_private_nodes].
+spec.networkConfig.podCidrOverprovisionConfig <object>	# [PRIVATE FIELD] Pod CIDR size overprovisioning config for the nodepool. Pod CIDR size per node depends on max_pods_per_node. By default, the value of max_pods_per_node is rounded off to next power of 2 and we then double that to get the size of pod CIDR block per node. Example: max_pods_per_node of 30 would result in 64 IPs (/26). This config can disable the doubling of IPs (we still round off to next power of 2) Example: max_pods_per_node of 30 will result in 32 IPs (/27) when overprovisioning is disabled.
 spec.networkConfig.podCidrOverprovisionConfig.disabled <boolean> (required)
-spec.networkConfig.podIpv4CidrBlock <string>	# Immutable. The IP address range for pod IPs in this node pool. Only applicable if create_pod_range is true. Set to blank to have a range chosen with the default size. Set to /netmask (e.g. /14) to have a range chosen with a specific netmask. Set to a CIDR notation (e.g. 10.96.0.0/14) to pick a specific range to use.
-spec.networkConfig.podRange <string>	# Immutable. The ID of the secondary range for pod IPs. If create_pod_range is true, this ID is used for the new range. If create_pod_range is false, uses an existing secondary range with this ID.
-spec.networkConfig.subnetworkRef <object>	# Immutable. The subnetwork path for the node pool. Format: projects/{project}/regions/{region}/subnetworks/{subnetwork}. If not set, the provider/API will choose the subnetwork (e.g. based on IP utilization) and report it here.
-spec.networkConfig.subnetworkRef.external <string>	# Allowed value: The `selfLink` field of a `ComputeSubnetwork` resource.
-spec.networkConfig.subnetworkRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.networkConfig.subnetworkRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.nodeConfig <object>	# Immutable. The configuration of the nodepool.
+spec.networkConfig.podIpv4CidrBlock <string>	# The IP address range for pod IPs in this node pool. Only applicable if `create_pod_range` is true. Set to blank to have a range chosen with the default size. Set to /netmask (e.g. `/14`) to have a range chosen with a specific netmask. Set to a CIDR notation (e.g. `10.96.0.0/14`) to pick a specific range to use. Only applicable if `ip_allocation_policy.use_ip_aliases` is true. This field cannot be changed after the node pool has been created.
+spec.networkConfig.podRange <string>	# The ID of the secondary range for pod IPs. If `create_pod_range` is true, this ID is used for the new range. If `create_pod_range` is false, uses an existing secondary range with this ID. Only applicable if `ip_allocation_policy.use_ip_aliases` is true. This field cannot be changed after the node pool has been created.
+spec.networkConfig.subnetworkRef <object>	# ComputeSubnetworkRef is a reference to a GCP ComputeSubnetwork.
+spec.networkConfig.subnetworkRef.external <string>	# A reference to an externally managed ComputeSubnetwork resource. Should be in the format "projects/{{projectID}}/regions/{{region}}/subnetworks/{{subnetworkID}}".
+spec.networkConfig.subnetworkRef.name <string>	# The name of a ComputeSubnetwork resource.
+spec.networkConfig.subnetworkRef.namespace <string>	# The namespace of a ComputeSubnetwork resource.
+spec.nodeConfig <object>	# The node configuration of the pool.
 spec.nodeConfig.advancedMachineFeatures <object>	# Immutable. Specifies options for controlling advanced machine features.
 spec.nodeConfig.advancedMachineFeatures.enableNestedVirtualization <boolean>	# Immutable. Whether or not to enable nested virtualization (defaults to false).
 spec.nodeConfig.advancedMachineFeatures.threadsPerCore <integer>	# Immutable. The number of threads per physical core. To disable simultaneous multithreading (SMT) set this to 1. If unset, the maximum number of threads supported per core by the underlying processor is assumed.
-spec.nodeConfig.bootDiskKMSCryptoKeyRef <object>
-spec.nodeConfig.bootDiskKMSCryptoKeyRef.external <string>	# Allowed value: The `selfLink` field of a `KMSCryptoKey` resource.
-spec.nodeConfig.bootDiskKMSCryptoKeyRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.nodeConfig.bootDiskKMSCryptoKeyRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.nodeConfig.bootDiskKMSCryptoKeyRef <object>	# Immutable. Cryptographic key used to encrypt the boot disk.
+spec.nodeConfig.bootDiskKMSCryptoKeyRef.external <string>	# A reference to an externally managed KMSCryptoKey. Should be in the format `projects/[kms_project_id]/locations/[region]/keyRings/[key_ring_id]/cryptoKeys/[key]`.
+spec.nodeConfig.bootDiskKMSCryptoKeyRef.name <string>	# The `name` of a `KMSCryptoKey` resource.
+spec.nodeConfig.bootDiskKMSCryptoKeyRef.namespace <string>	# The `namespace` of a `KMSCryptoKey` resource.
 spec.nodeConfig.confidentialNodes <object>	# Immutable. Configuration for the confidential nodes feature, which makes nodes run on confidential VMs. Warning: This configuration can't be changed (or added/removed) after pool creation without deleting and recreating the entire pool.
 spec.nodeConfig.confidentialNodes.confidentialInstanceType <string>	# Immutable. Defines the type of technology used by the confidential node.
 spec.nodeConfig.confidentialNodes.enabled <boolean> (required)	# Immutable. Whether Confidential Nodes feature is enabled for all nodes in this pool.
-spec.nodeConfig.diskSizeGb <integer>	# Immutable. Size of the disk attached to each node, specified in GB. The smallest allowed disk size is 10GB.
+spec.nodeConfig.diskSizeGb <integer> format=int32	# Immutable. Size of the disk attached to each node, specified in GB. The smallest allowed disk size is 10GB.
 spec.nodeConfig.diskType <string>	# Immutable. Type of the disk attached to each node. Such as pd-standard, pd-balanced or pd-ssd.
 spec.nodeConfig.ephemeralStorageConfig <object>	# Immutable. Parameters for the ephemeral storage filesystem. If unspecified, ephemeral storage is backed by the boot disk.
 spec.nodeConfig.ephemeralStorageConfig.localSsdCount <integer> (required)	# Immutable. Number of local SSDs to use to back ephemeral storage. Uses NVMe interfaces. Each local SSD must be 375 or 3000 GB in size, and all local SSDs must share the same size.
@@ -69,7 +69,7 @@ spec.nodeConfig.ephemeralStorageLocalSsdConfig.localSsdCount <integer> (required
 spec.nodeConfig.fastSocket <object>	# Enable or disable NCCL Fast Socket in the node pool.
 spec.nodeConfig.fastSocket.enabled <boolean> (required)	# Whether or not NCCL Fast Socket is enabled.
 spec.nodeConfig.gcfsConfig <object>	# Immutable. GCFS configuration for this node.
-spec.nodeConfig.gcfsConfig.enabled <boolean> (required)	# Immutable. Whether or not GCFS is enabled.
+spec.nodeConfig.gcfsConfig.enabled <boolean> (required)	# Whether or not GCFS is enabled.
 spec.nodeConfig.guestAccelerator <[]object>	# Immutable. List of the type and count of accelerator cards attached to the instance.
 spec.nodeConfig.guestAccelerator[].count <integer> (required)	# Immutable. The number of the accelerator cards exposed to an instance.
 spec.nodeConfig.guestAccelerator[].gpuDriverInstallationConfig <object>	# Immutable. Configuration for auto installation of GPU driver.
@@ -89,21 +89,21 @@ spec.nodeConfig.kubeletConfig.cpuCfsQuota <boolean>	# Enable CPU CFS quota enfor
 spec.nodeConfig.kubeletConfig.cpuCfsQuotaPeriod <string>	# Set the CPU CFS quota period value 'cpu.cfs_period_us'.
 spec.nodeConfig.kubeletConfig.cpuManagerPolicy <string> (required)	# Control the CPU management policy on the node.
 spec.nodeConfig.kubeletConfig.podPidsLimit <integer>	# Controls the maximum number of processes allowed to run in a pod.
-spec.nodeConfig.labels <map[string]string>	# The map of Kubernetes labels (key/value pairs) to be applied to each node. These will added in addition to any default label(s) that Kubernetes may apply to the node.
+spec.nodeConfig.labels <map[string]string>	# Immutable. The map of Kubernetes labels (key/value pairs) to be applied to each node. These will added in addition to any default label(s) that Kubernetes may apply to the node.
 spec.nodeConfig.linuxNodeConfig <object>	# Parameters that can be configured on Linux nodes.
 spec.nodeConfig.linuxNodeConfig.cgroupMode <string>	# cgroupMode specifies the cgroup mode to be used on the node.
 spec.nodeConfig.linuxNodeConfig.sysctls <map[string]string>	# The Linux kernel parameters to be applied to the nodes and all pods running on the nodes.
 spec.nodeConfig.localNvmeSsdBlockConfig <object>	# Immutable. Parameters for raw-block local NVMe SSDs.
 spec.nodeConfig.localNvmeSsdBlockConfig.localSsdCount <integer> (required)	# Immutable. Number of raw-block local NVMe SSD disks to be attached to the node. Each local SSD is 375 GB in size.
-spec.nodeConfig.localSsdCount <integer>	# Immutable. The number of local SSD disks to be attached to the node.
+spec.nodeConfig.localSsdCount <integer> format=int32	# Immutable. The number of local SSD disks to be attached to the node.
 spec.nodeConfig.loggingVariant <string>	# Type of logging agent that is used as the default value for node pools in the cluster. Valid values include DEFAULT and MAX_THROUGHPUT.
 spec.nodeConfig.machineType <string>	# Immutable. The name of a Google Compute Engine machine type.
 spec.nodeConfig.metadata <map[string]string>	# Immutable. The metadata key/value pairs assigned to instances in the cluster.
 spec.nodeConfig.minCpuPlatform <string>	# Immutable. Minimum CPU platform to be used by this instance. The instance may be scheduled on the specified or newer CPU platform.
 spec.nodeConfig.nodeGroupRef <object>	# Immutable. Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes.
-spec.nodeConfig.nodeGroupRef.external <string>	# Allowed value: The `name` field of a `ComputeNodeGroup` resource.
-spec.nodeConfig.nodeGroupRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.nodeConfig.nodeGroupRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.nodeConfig.nodeGroupRef.external <string>	# A reference to an externally managed ComputeNodeGroup resource. Should be in the format "projects/{{projectID}}/zones/{{zone}}/nodeGroups/{{nodeGroupID}}".
+spec.nodeConfig.nodeGroupRef.name <string>	# The name of a ComputeNodeGroup resource.
+spec.nodeConfig.nodeGroupRef.namespace <string>	# The namespace of a ComputeNodeGroup resource.
 spec.nodeConfig.oauthScopes <[]string>	# Immutable. The set of Google API scopes to be made available on all of the node VMs.
 spec.nodeConfig.preemptible <boolean>	# Immutable. Whether the nodes are created as preemptible VM instances.
 spec.nodeConfig.reservationAffinity <object>	# Immutable. The reservation affinity configuration for the node pool.
@@ -114,7 +114,7 @@ spec.nodeConfig.resourceLabels <map[string]string>	# The GCE resource labels (a 
 spec.nodeConfig.sandboxConfig <object>	# Immutable. Sandbox configuration for this node.
 spec.nodeConfig.sandboxConfig.sandboxType <string> (required)	# Type of the sandbox to use for the node (e.g. 'gvisor').
 spec.nodeConfig.serviceAccountRef <object>
-spec.nodeConfig.serviceAccountRef.external <string>	# Allowed value: The `email` field of an `IAMServiceAccount` resource.
+spec.nodeConfig.serviceAccountRef.external <string>	# The `email` field of an `IAMServiceAccount` resource.
 spec.nodeConfig.serviceAccountRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.nodeConfig.serviceAccountRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 spec.nodeConfig.shieldedInstanceConfig <object>	# Immutable. Shielded Instance options.
@@ -132,41 +132,49 @@ spec.nodeConfig.taint[].effect <string> (required)	# Effect for taint.
 spec.nodeConfig.taint[].key <string> (required)	# Key for taint.
 spec.nodeConfig.taint[].value <string> (required)	# Value for taint.
 spec.nodeConfig.windowsNodeConfig <object>	# Parameters that can be configured on Windows nodes.
-spec.nodeConfig.windowsNodeConfig.osVersion <string>	# os_version specifies the Windows Server release version to be used on the node.
+spec.nodeConfig.windowsNodeConfig.osVersion <string>	# Operating system version of the Windows nodes.
 spec.nodeConfig.workloadMetadataConfig <object>	# The workload metadata configuration for this node.
 spec.nodeConfig.workloadMetadataConfig.mode <string>	# Mode is the configuration for how to expose metadata to workloads running on the node.
 spec.nodeConfig.workloadMetadataConfig.nodeMetadata <string>	# DEPRECATED. Deprecated in favor of mode. NodeMetadata is the configuration for how to expose metadata to the workloads running on the node.
-spec.nodeCount <integer>	# The number of nodes per instance group. This field can be used to update the number of nodes per instance group but should not be used alongside autoscaling.
-spec.nodeLocations <[]string>	# The list of zones in which the node pool's nodes should be located. Nodes must be in the region of their regional cluster or in the same region as their cluster's zone for zonal clusters. If unspecified, the cluster-level node_locations will be used.
-spec.placementPolicy <object>	# Immutable. Specifies the node placement policy.
-spec.placementPolicy.policyNameRef <object>	# Immutable. If set, refers to the name of a custom resource policy supplied by the user. The resource policy must be in the same project and region as the node pool. If not found, InvalidArgument error is returned.
-spec.placementPolicy.policyNameRef.external <string>	# Allowed value: The `selfLink` field of a `ComputeResourcePolicy` resource.
-spec.placementPolicy.policyNameRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.placementPolicy.policyNameRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.placementPolicy.tpuTopology <string>	# TPU placement topology for pod slice node pool. https://cloud.google.com/tpu/docs/types-topologies#tpu_topologies.
-spec.placementPolicy.type <string> (required)	# Type defines the type of placement policy.
+spec.nodeCount <integer> format=int32	# The node count of the pool.
+spec.nodeLocations <[]string>	# The list of Google Compute Engine zones in which the NodePool's nodes should be located.
+spec.placementPolicy <object>	# Specifies the node placement policy.
+spec.placementPolicy.policyNameRef <object>	# If set, refers to the name of a custom resource policy supplied by the user. The resource policy must be in the same project and region as the node pool. If not found, InvalidArgument error is returned.
+spec.placementPolicy.policyNameRef.external <string>	# A reference to an externally managed ComputeResourcePolicy resource. Should be in the format "projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}".
+spec.placementPolicy.policyNameRef.name <string>	# The name of a ComputeResourcePolicy resource.
+spec.placementPolicy.policyNameRef.namespace <string>	# The namespace of a ComputeResourcePolicy resource.
+spec.placementPolicy.tpuTopology <string>	# Optional. TPU placement topology for pod slice node pool.
+spec.placementPolicy.type <string> (required)	# The type of placement.
+spec.queuedProvisioning <object>	# Immutable. Specifies the configuration of queued provisioning.
+spec.queuedProvisioning.enabled <boolean>	# Immutable. Denotes that this node pool is QRM specific, meaning nodes can be only obtained through queuing via the Cluster Autoscaler ProvisioningRequest API.
 spec.resourceID <string>	# Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default.
-spec.upgradeSettings <object>	# Specify node upgrade settings to change how many nodes GKE attempts to upgrade at once. The number of nodes upgraded simultaneously is the sum of max_surge and max_unavailable. The maximum number of nodes upgraded simultaneously is limited to 20.
-spec.upgradeSettings.blueGreenSettings <object>	# Settings for BlueGreen node pool upgrade.
+spec.upgradeSettings <object>	# Upgrade settings control disruption and speed of the upgrade.
+spec.upgradeSettings.blueGreenSettings <object>	# Settings for blue-green upgrade strategy.
 spec.upgradeSettings.blueGreenSettings.nodePoolSoakDuration <string>	# Time needed after draining entire blue pool. After this period, blue pool will be cleaned up.
-spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy <object> (required)	# Standard rollout policy is the default policy for blue-green.
+spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy <object> (required)	# Standard policy for the blue-green upgrade.
 spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy.batchNodeCount <integer>	# Number of blue nodes to drain in a batch.
-spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy.batchPercentage <number>	# Percentage of the blue pool nodes to drain in a batch.
-spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy.batchSoakDuration <string>	# Soak time after each batch gets drained.
-spec.upgradeSettings.maxSurge <integer>	# The number of additional nodes that can be added to the node pool during an upgrade. Increasing max_surge raises the number of nodes that can be upgraded simultaneously. Can be set to 0 or greater.
-spec.upgradeSettings.maxUnavailable <integer>	# The number of nodes that can be simultaneously unavailable during an upgrade. Increasing max_unavailable raises the number of nodes that can be upgraded in parallel. Can be set to 0 or greater.
-spec.upgradeSettings.strategy <string>	# Update strategy for the given nodepool.
-spec.version <string>
-status <object>
-status.conditions <[]object>	# Conditions represent the latest available observation of the resource's current state.
+spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy.batchPercentage <number>	# Percentage of the bool pool nodes to drain in a batch. The range of this field should be (0.0, 1.0].
+spec.upgradeSettings.blueGreenSettings.standardRolloutPolicy.batchSoakDuration <string>	# Soak time after each batch gets drained. A duration in seconds with up to nine fractional digits, ending with 's'. Example: "3.5s".
+spec.upgradeSettings.maxSurge <integer> format=int32	# The maximum number of nodes that can be created beyond the current size of the node pool during the upgrade process.
+spec.upgradeSettings.maxUnavailable <integer> format=int32	# The maximum number of nodes that can be simultaneously unavailable during the upgrade process. A node is considered available if its status is Ready.
+spec.upgradeSettings.strategy <string>	# Update strategy of the node pool.
+spec.version <string>	# The version of Kubernetes running on this NodePool's nodes.
+status <object>	# ContainerNodePoolStatus defines the config connector machine state of ContainerNodePool
+status.conditions <[]object>	# Conditions represent the latest available observations of the ContainerNodePool's current state.
 status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
 status.conditions[].message <string>	# Human-readable message indicating details about last transition.
 status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
 status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
 status.conditions[].type <string>	# Type is the type of the condition.
+status.externalRef <string>	# A unique specifier for the ContainerNodePool resource in GCP.
 status.instanceGroupUrls <[]string>	# The resource URLs of the managed instance groups associated with this node pool.
 status.managedInstanceGroupUrls <[]string>	# List of instance group URLs which have been assigned to this node pool.
-status.observedGeneration <integer>	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
 status.observedState <object>	# The observed state of the underlying GCP resource.
+status.observedState.nodeConfig <object>	# The observed node config of the GKE node pool.
+status.observedState.nodeConfig.taint <[]object>	# List of Kubernetes taints to be applied to each node.
+status.observedState.nodeConfig.taint[].effect <string> (required)	# Effect for taint.
+status.observedState.nodeConfig.taint[].key <string> (required)	# Key for taint.
+status.observedState.nodeConfig.taint[].value <string> (required)	# Value for taint.
 status.observedState.version <string>
 status.operation <string>

@@ -21,7 +21,7 @@
           "type": "string"
         },
         "ipCidrRange": {
-          "description": "The range of internal addresses that are owned by this subnetwork. Provide this property when you create the subnetwork. For example, 10.0.0.0/8 or 192.168.0.0/16. Ranges must be unique and non-overlapping within a network. Only IPv4 is supported.",
+          "description": "The range of internal addresses that are owned by this subnetwork. Provide this property when you create the subnetwork. For example, 10.0.0.0/8 or 192.168.0.0/16. Ranges must be unique and non-overlapping within a network. Only IPv4 is supported. Field is optional when 'reservedInternalRangeRef' is defined, otherwise required.",
           "type": "string"
         },
         "ipv6AccessType": {
@@ -124,6 +124,56 @@
           "description": "Immutable. The GCP region for this subnetwork.",
           "type": "string"
         },
+        "reservedInternalRangeRef": {
+          "additionalProperties": false,
+          "description": "Immutable. The reference to the reserved internal range.",
+          "oneOf": [
+            {
+              "not": {
+                "required": [
+                  "external"
+                ]
+              },
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "namespace"
+                    ]
+                  }
+                ]
+              },
+              "required": [
+                "external"
+              ]
+            }
+          ],
+          "properties": {
+            "external": {
+              "description": "A reference to an externally managed NetworkConnectivityInternalRange resource. Should be in the format \"projects/{{projectID}}/locations/{{location}}/internalRanges/{{internalrangeID}}\".",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name field of a NetworkConnectivityInternalRange resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "The namespace field of a NetworkConnectivityInternalRange resource.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "resourceID": {
           "description": "Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default.",
           "type": "string"
@@ -137,16 +187,65 @@
             "additionalProperties": false,
             "properties": {
               "ipCidrRange": {
-                "description": "The range of IP addresses belonging to this subnetwork secondary range. Provide this property when you create the subnetwork. Ranges must be unique and non-overlapping with all primary and secondary IP ranges within a network. Only IPv4 is supported. The range can be any range listed in the Valid ranges list.",
+                "description": "The range of IP addresses belonging to this subnetwork secondary range. Provide this property when you create the subnetwork. Ranges must be unique and non-overlapping with all primary and secondary IP ranges within a network. Only IPv4 is supported. Field is optional when 'reservedInternalRangeRef' is defined, otherwise required. The range can be any range listed in the Valid ranges list.",
                 "type": "string"
               },
               "rangeName": {
                 "description": "The name associated with this subnetwork secondary range, used when adding an alias IP range to a VM instance. The name must be 1-63 characters long, and comply with RFC1035. The name must be unique within the subnetwork.",
                 "type": "string"
+              },
+              "reservedInternalRangeRef": {
+                "additionalProperties": false,
+                "description": "The reference to the reserved internal range.",
+                "oneOf": [
+                  {
+                    "not": {
+                      "required": [
+                        "external"
+                      ]
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "namespace"
+                          ]
+                        }
+                      ]
+                    },
+                    "required": [
+                      "external"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "external": {
+                    "description": "A reference to an externally managed NetworkConnectivityInternalRange resource. Should be in the format \"projects/{{projectID}}/locations/{{location}}/internalRanges/{{internalrangeID}}\".",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name field of a NetworkConnectivityInternalRange resource.",
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "description": "The namespace field of a NetworkConnectivityInternalRange resource.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
               }
             },
             "required": [
-              "ipCidrRange",
               "rangeName"
             ],
             "type": "object"
@@ -159,7 +258,6 @@
         }
       },
       "required": [
-        "ipCidrRange",
         "networkRef",
         "region"
       ],

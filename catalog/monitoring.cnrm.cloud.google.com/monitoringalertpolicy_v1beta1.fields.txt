@@ -1,9 +1,9 @@
-# schema source: GCP Config Connector v1.153.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.154.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=monitoring.cnrm.cloud.google.com/v1beta1
 kind <string> enum=MonitoringAlertPolicy
 metadata.name <string> (required)
 metadata.namespace <string> (required)
-spec <object> (required)
+spec <object> (required)	# MonitoringAlertPolicySpec defines the desired state of MonitoringAlertPolicy
 spec.alertStrategy <object>	# Control over how this alert policy's notification channels are notified.
 spec.alertStrategy.autoClose <string>	# If an alert policy that was active has no data for this long, any open incidents will close.
 spec.alertStrategy.notificationChannelStrategy <[]object>	# Control over how the notification channels in 'notification_channels' are notified when this alert fires, on a per-channel basis.
@@ -22,7 +22,7 @@ spec.conditions[].conditionAbsent.aggregations[].perSeriesAligner <string>	# The
 spec.conditions[].conditionAbsent.duration <string> (required)	# The amount of time that a time series must fail to report new data to be considered failing. Currently, only values that are a multiple of a minute--e.g. 60s, 120s, or 300s --are supported.
 spec.conditions[].conditionAbsent.filter <string>	# A filter that identifies which time series should be compared with the threshold.The filter is similar to the one that is specified in the MetricService.ListTimeSeries request (that call is useful to verify the time series that will be retrieved / processed) and must specify the metric type and optionally may contain restrictions on resource type, resource labels, and metric labels. This field may not exceed 2048 Unicode characters in length.
 spec.conditions[].conditionAbsent.trigger <object>	# The number/percent of time series for which the comparison must hold in order for the condition to trigger. If unspecified, then the condition will trigger if the comparison is true for any of the time series that have been identified by filter and aggregations.
-spec.conditions[].conditionAbsent.trigger.count <integer>	# The absolute number of time series that must fail the predicate for the condition to be triggered.
+spec.conditions[].conditionAbsent.trigger.count <integer> format=int64	# The absolute number of time series that must fail the predicate for the condition to be triggered.
 spec.conditions[].conditionAbsent.trigger.percent <number>	# The percentage of time series that must fail the predicate for the condition to be triggered.
 spec.conditions[].conditionMatchedLog <object>	# A condition that checks for log messages matching given constraints. If set, no other conditions can be present.
 spec.conditions[].conditionMatchedLog.filter <string> (required)	# A logs-based filter.
@@ -32,7 +32,7 @@ spec.conditions[].conditionMonitoringQueryLanguage.duration <string> (required)	
 spec.conditions[].conditionMonitoringQueryLanguage.evaluationMissingData <string>	# A condition control that determines how metric-threshold conditions are evaluated when data stops arriving. Possible values: ["EVALUATION_MISSING_DATA_INACTIVE", "EVALUATION_MISSING_DATA_ACTIVE", "EVALUATION_MISSING_DATA_NO_OP"].
 spec.conditions[].conditionMonitoringQueryLanguage.query <string> (required)	# Monitoring Query Language query that outputs a boolean stream.
 spec.conditions[].conditionMonitoringQueryLanguage.trigger <object>	# The number/percent of time series for which the comparison must hold in order for the condition to trigger. If unspecified, then the condition will trigger if the comparison is true for any of the time series that have been identified by filter and aggregations, or by the ratio, if denominator_filter and denominator_aggregations are specified.
-spec.conditions[].conditionMonitoringQueryLanguage.trigger.count <integer>	# The absolute number of time series that must fail the predicate for the condition to be triggered.
+spec.conditions[].conditionMonitoringQueryLanguage.trigger.count <integer> format=int64	# The absolute number of time series that must fail the predicate for the condition to be triggered.
 spec.conditions[].conditionMonitoringQueryLanguage.trigger.percent <number>	# The percentage of time series that must fail the predicate for the condition to be triggered.
 spec.conditions[].conditionPrometheusQueryLanguage <object>	# A Monitoring Query Language query that outputs a boolean stream A condition type that allows alert policies to be defined using Prometheus Query Language (PromQL). The PrometheusQueryLanguageCondition message contains information from a Prometheus alerting rule and its associated rule group.
 spec.conditions[].conditionPrometheusQueryLanguage.alertRule <string>	# The alerting rule name of this alert in the corresponding Prometheus configuration file. Some external tools may require this field to be populated correctly in order to refer to the original Prometheus configuration file. The rule group name and the alert name are necessary to update the relevant AlertPolicies in case the definition of the rule group changes in the future. This field is optional. If this field is not empty, then it must be a valid Prometheus label name.
@@ -41,6 +41,25 @@ spec.conditions[].conditionPrometheusQueryLanguage.evaluationInterval <string>	#
 spec.conditions[].conditionPrometheusQueryLanguage.labels <map[string]string>	# Labels to add to or overwrite in the PromQL query result. Label names must be valid. Label values can be templatized by using variables. The only available variable names are the names of the labels in the PromQL result, including "__name__" and "value". "labels" may be empty. This field is intended to be used for organizing and identifying the AlertPolicy.
 spec.conditions[].conditionPrometheusQueryLanguage.query <string> (required)	# The PromQL expression to evaluate. Every evaluation cycle this expression is evaluated at the current time, and all resultant time series become pending/firing alerts. This field must not be empty.
 spec.conditions[].conditionPrometheusQueryLanguage.ruleGroup <string>	# The rule group name of this alert in the corresponding Prometheus configuration file. Some external tools may require this field to be populated correctly in order to refer to the original Prometheus configuration file. The rule group name and the alert name are necessary to update the relevant AlertPolicies in case the definition of the rule group changes in the future. This field is optional. If this field is not empty, then it must be a valid Prometheus label name.
+spec.conditions[].conditionSql <object>	# A condition that allows alerting policies to be defined using GoogleSQL.
+spec.conditions[].conditionSql.booleanTest <object>	# Test the boolean value in the indicated column.
+spec.conditions[].conditionSql.booleanTest.column <string> (required)	# The name of the column containing the boolean value.
+spec.conditions[].conditionSql.daily <object>	# Schedule the query to execute every so many days.
+spec.conditions[].conditionSql.daily.executionTime <object>	# The time of day (in UTC) at which the query should run.
+spec.conditions[].conditionSql.daily.executionTime.hours <integer> format=int32	# Hours of day in 24 hour format.
+spec.conditions[].conditionSql.daily.executionTime.minutes <integer> format=int32	# Minutes of hour of day.
+spec.conditions[].conditionSql.daily.executionTime.nanos <integer> format=int32	# Fractions of seconds in nanoseconds.
+spec.conditions[].conditionSql.daily.executionTime.seconds <integer> format=int32	# Seconds of minutes of the time.
+spec.conditions[].conditionSql.daily.periodicity <integer> (required) format=int32	# The number of days between runs.
+spec.conditions[].conditionSql.hourly <object>	# Schedule the query to execute every so many hours.
+spec.conditions[].conditionSql.hourly.minuteOffset <integer> format=int32	# The number of minutes after the hour (in UTC) to run the query.
+spec.conditions[].conditionSql.hourly.periodicity <integer> (required) format=int32	# Number of hours between runs.
+spec.conditions[].conditionSql.minutes <object>	# Schedule the query to execute every so many minutes.
+spec.conditions[].conditionSql.minutes.periodicity <integer> (required) format=int32	# Number of minutes between runs.
+spec.conditions[].conditionSql.query <string> (required)	# The Log Analytics SQL query to run, as a string.
+spec.conditions[].conditionSql.rowCountTest <object>	# Test the row count against a threshold.
+spec.conditions[].conditionSql.rowCountTest.comparison <string> (required)	# The comparison to apply between the number of rows returned by the query and the threshold.
+spec.conditions[].conditionSql.rowCountTest.threshold <integer> (required) format=int64	# The value against which to compare the row count.
 spec.conditions[].conditionThreshold <object>	# A condition that compares a time series against a threshold.
 spec.conditions[].conditionThreshold.aggregations <[]object>	# Specifies the alignment of data points in individual time series as well as how to combine the retrieved time series together (such as when aggregating multiple streams on each resource to a single stream for each resource or when aggregating streams across all members of a group of resources). Multiple aggregations are applied in the order specified.This field is similar to the one in the MetricService.ListTimeSeries request. It is advisable to use the ListTimeSeries method when debugging this field.
 spec.conditions[].conditionThreshold.aggregations[].alignmentPeriod <string>	# The alignment period for per-time series alignment. If present, alignmentPeriod must be at least 60 seconds. After per-time series alignment, each time series will contain data points only on the period boundaries. If perSeriesAligner is not specified or equals ALIGN_NONE, then this field is ignored. If perSeriesAligner is specified and does not equal ALIGN_NONE, then this field must be defined; otherwise an error is returned.
@@ -61,7 +80,7 @@ spec.conditions[].conditionThreshold.forecastOptions <object>	# When this field 
 spec.conditions[].conditionThreshold.forecastOptions.forecastHorizon <string> (required)	# The length of time into the future to forecast whether a timeseries will violate the threshold. If the predicted value is found to violate the threshold, and the violation is observed in all forecasts made for the Configured 'duration', then the timeseries is considered to be failing.
 spec.conditions[].conditionThreshold.thresholdValue <number>	# A value against which to compare the time series.
 spec.conditions[].conditionThreshold.trigger <object>	# The number/percent of time series for which the comparison must hold in order for the condition to trigger. If unspecified, then the condition will trigger if the comparison is true for any of the time series that have been identified by filter and aggregations, or by the ratio, if denominator_filter and denominator_aggregations are specified.
-spec.conditions[].conditionThreshold.trigger.count <integer>	# The absolute number of time series that must fail the predicate for the condition to be triggered.
+spec.conditions[].conditionThreshold.trigger.count <integer> format=int64	# The absolute number of time series that must fail the predicate for the condition to be triggered.
 spec.conditions[].conditionThreshold.trigger.percent <number>	# The percentage of time series that must fail the predicate for the condition to be triggered.
 spec.conditions[].displayName <string> (required)	# A short name or phrase used to identify the condition in dashboards, notifications, and incidents. To avoid confusion, don't use the same display name for multiple conditions in the same policy.
 spec.conditions[].name <string>	# The unique resource name for this condition. Its syntax is: projects/[PROJECT_ID]/alertPolicies/[POLICY_ID]/conditions/[CONDITION_ID] [CONDITION_ID] is assigned by Stackdriver Monitoring when the condition is created as part of a new or updated alerting policy.
@@ -71,13 +90,13 @@ spec.documentation.content <string>	# The text of the documentation, interpreted
 spec.documentation.mimeType <string>	# The format of the content field. Presently, only the value "text/markdown" is supported.
 spec.enabled <boolean>	# Whether or not the policy is enabled. The default is true.
 spec.notificationChannels <[]object>
-spec.notificationChannels[].external <string>	# Allowed value: The `name` field of a `MonitoringNotificationChannel` resource.
-spec.notificationChannels[].name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.notificationChannels[].namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+spec.notificationChannels[].external <string>	# A reference to an externally managed MonitoringNotificationChannel resource. Should be in the format "projects/{{projectID}}/notificationChannels/{{channelID}}".
+spec.notificationChannels[].name <string>	# The name of a MonitoringNotificationChannel resource.
+spec.notificationChannels[].namespace <string>	# The namespace of a MonitoringNotificationChannel resource.
 spec.resourceID <string>	# Immutable. Optional. The service-generated name of the resource. Used for acquisition only. Leave unset to create a new resource.
 spec.severity <string>	# The severity of an alert policy indicates how important incidents generated by that policy are. The severity level will be displayed on the Incident detail page and in notifications. Possible values: ["CRITICAL", "ERROR", "WARNING"].
-status <object>
-status.conditions <[]object>	# Conditions represent the latest available observation of the resource's current state.
+status <object>	# MonitoringAlertPolicyStatus defines the config connector machine state of MonitoringAlertPolicy
+status.conditions <[]object>	# Conditions represent the latest available observations of the MonitoringAlertPolicy's current state.
 status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
 status.conditions[].message <string>	# Human-readable message indicating details about last transition.
 status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
@@ -87,4 +106,4 @@ status.creationRecord <[]object>	# A read-only record of the creation of the ale
 status.creationRecord[].mutateTime <string>	# When the change occurred.
 status.creationRecord[].mutatedBy <string>	# The email address of the user making the change.
 status.name <string>	# The unique resource name for this policy. Its syntax is: projects/[PROJECT_ID]/alertPolicies/[ALERT_POLICY_ID].
-status.observedGeneration <integer>	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
