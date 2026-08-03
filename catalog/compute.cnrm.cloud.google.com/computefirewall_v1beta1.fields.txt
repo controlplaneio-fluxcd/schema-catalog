@@ -1,9 +1,9 @@
-# schema source: GCP Config Connector v1.153.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.154.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=compute.cnrm.cloud.google.com/v1beta1
 kind <string> enum=ComputeFirewall
 metadata.name <string> (required)
 metadata.namespace <string> (required)
-spec <object> (required)
+spec <object> (required)	# ComputeFirewallSpec defines the desired state of ComputeFirewall
 spec.allow <[]object>	# The list of ALLOW rules specified by this firewall. Each rule specifies a protocol and port-range tuple that describes a permitted connection.
 spec.allow[].ports <[]string>	# An optional list of ports to which this rule applies. This field is only applicable for UDP or TCP protocol. Each entry must be either an integer or a range. If not specified, this rule applies to connections through any port. Example inputs include: ["22"], ["80","443"], and ["12345-12349"].
 spec.allow[].protocol <string> (required)	# The IP protocol to which this rule applies. The protocol type is required when creating a firewall rule. This value can either be one of the following well known protocol strings (tcp, udp, icmp, esp, ah, sctp, ipip, all), or the IP protocol number.
@@ -18,29 +18,29 @@ spec.enableLogging <boolean>	# DEPRECATED. Deprecated in favor of log_config. Th
 spec.logConfig <object>	# This field denotes the logging options for a particular firewall rule. If defined, logging is enabled, and logs will be exported to Cloud Logging.
 spec.logConfig.metadata <string> (required)	# This field denotes whether to include or exclude metadata for firewall logs. Possible values: ["EXCLUDE_ALL_METADATA", "INCLUDE_ALL_METADATA"].
 spec.networkRef <object> (required)	# The network to attach this firewall to.
-spec.networkRef.external <string>	# Allowed value: The `selfLink` field of a `ComputeNetwork` resource.
-spec.networkRef.name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.networkRef.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-spec.priority <integer>	# Priority for this rule. This is an integer between 0 and 65535, both inclusive. When not specified, the value assumed is 1000. Relative priorities determine precedence of conflicting rules. Lower value of priority implies higher precedence (eg, a rule with priority 0 has higher precedence than a rule with priority 1). DENY rules take precedence over ALLOW rules having equal priority.
+spec.networkRef.external <string>	# A reference to an externally managed ComputeNetwork resource. Should be in the format "projects/{{projectID}}/global/networks/{{networkID}}".
+spec.networkRef.name <string>	# The name of a ComputeNetwork resource.
+spec.networkRef.namespace <string>	# The namespace of a ComputeNetwork resource.
+spec.priority <integer> format=int64	# Priority for this rule. This is an integer between 0 and 65535, both inclusive. When not specified, the value assumed is 1000. Relative priorities determine precedence of conflicting rules. Lower value of priority implies higher precedence (eg, a rule with priority 0 has higher precedence than a rule with priority 1). DENY rules take precedence over ALLOW rules having equal priority.
 spec.resourceID <string>	# Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default.
 spec.sourceRanges <[]string>	# If source ranges are specified, the firewall will apply only to traffic that has source IP address in these ranges. These ranges must be expressed in CIDR format. One or both of sourceRanges and sourceTags may be set. If both properties are set, the firewall will apply to traffic that has source IP address within sourceRanges OR the source IP that belongs to a tag listed in the sourceTags property. The connection does not need to match both properties for the firewall to apply. IPv4 or IPv6 ranges are supported. For INGRESS traffic, one of 'source_ranges', 'source_tags' or 'source_service_accounts' is required.
 spec.sourceServiceAccounts <[]object>
-spec.sourceServiceAccounts[].external <string>	# Allowed value: The `email` field of an `IAMServiceAccount` resource.
+spec.sourceServiceAccounts[].external <string>	# The `email` field of an `IAMServiceAccount` resource.
 spec.sourceServiceAccounts[].name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.sourceServiceAccounts[].namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 spec.sourceTags <[]string>	# If source tags are specified, the firewall will apply only to traffic with source IP that belongs to a tag listed in source tags. Source tags cannot be used to control traffic to an instance's external IP address. Because tags are associated with an instance, not an IP address. One or both of sourceRanges and sourceTags may be set. If both properties are set, the firewall will apply to traffic that has source IP address within sourceRanges OR the source IP that belongs to a tag listed in the sourceTags property. The connection does not need to match both properties for the firewall to apply. For INGRESS traffic, one of 'source_ranges', 'source_tags' or 'source_service_accounts' is required.
 spec.targetServiceAccounts <[]object>
-spec.targetServiceAccounts[].external <string>	# Allowed value: The `email` field of an `IAMServiceAccount` resource.
+spec.targetServiceAccounts[].external <string>	# The `email` field of an `IAMServiceAccount` resource.
 spec.targetServiceAccounts[].name <string>	# Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.targetServiceAccounts[].namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 spec.targetTags <[]string>	# A list of instance tags indicating sets of instances located in the network that may make network connections as specified in allowed[]. If no targetTags are specified, the firewall rule applies to all instances on the specified network.
-status <object>
-status.conditions <[]object>	# Conditions represent the latest available observation of the resource's current state.
+status <object>	# ComputeFirewallStatus defines the config connector machine state of ComputeFirewall
+status.conditions <[]object>	# Conditions represent the latest available observations of the ComputeFirewall's current state.
 status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
 status.conditions[].message <string>	# Human-readable message indicating details about last transition.
 status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
 status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
 status.conditions[].type <string>	# Type is the type of the condition.
 status.creationTimestamp <string>	# Creation timestamp in RFC3339 text format.
-status.observedGeneration <integer>	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
 status.selfLink <string>

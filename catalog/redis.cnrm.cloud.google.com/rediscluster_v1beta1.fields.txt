@@ -1,4 +1,4 @@
-# schema source: GCP Config Connector v1.153.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.154.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=redis.cnrm.cloud.google.com/v1beta1
 kind <string> enum=RedisCluster
 metadata.name <string> (required)
@@ -14,6 +14,18 @@ spec.automatedBackupConfig.fixedFrequencySchedule.startTime.minutes <integer> fo
 spec.automatedBackupConfig.fixedFrequencySchedule.startTime.nanos <integer> format=int32	# Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.
 spec.automatedBackupConfig.fixedFrequencySchedule.startTime.seconds <integer> format=int32	# Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.
 spec.automatedBackupConfig.retention <string>	# Optional. How long to keep automated backups before the backups are deleted. The value should be between 1 day and 365 days. If not specified, the default value is 35 days.
+spec.crossClusterReplicationConfig <object>	# Optional. Cross cluster replication config.
+spec.crossClusterReplicationConfig.clusterRole <string>	# The role of the cluster in cross cluster replication.
+spec.crossClusterReplicationConfig.primaryCluster <object>	# Details of the primary cluster that is used as the replication source for this secondary cluster. This field is only set for a secondary cluster.
+spec.crossClusterReplicationConfig.primaryCluster.clusterRef <object>	# The full resource path of the remote cluster in the format: projects/<project>/locations/<region>/clusters/<cluster-id>
+spec.crossClusterReplicationConfig.primaryCluster.clusterRef.external <string>	# A reference to an externally managed RedisCluster resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/clusters/{{clusterID}}".
+spec.crossClusterReplicationConfig.primaryCluster.clusterRef.name <string>	# The name of a RedisCluster resource.
+spec.crossClusterReplicationConfig.primaryCluster.clusterRef.namespace <string>	# The namespace of a RedisCluster resource.
+spec.crossClusterReplicationConfig.secondaryClusters <[]object>	# List of secondary clusters that are replicating from this primary cluster. This field is only set for a primary cluster.
+spec.crossClusterReplicationConfig.secondaryClusters[].clusterRef <object>	# The full resource path of the remote cluster in the format: projects/<project>/locations/<region>/clusters/<cluster-id>
+spec.crossClusterReplicationConfig.secondaryClusters[].clusterRef.external <string>	# A reference to an externally managed RedisCluster resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/clusters/{{clusterID}}".
+spec.crossClusterReplicationConfig.secondaryClusters[].clusterRef.name <string>	# The name of a RedisCluster resource.
+spec.crossClusterReplicationConfig.secondaryClusters[].clusterRef.namespace <string>	# The namespace of a RedisCluster resource.
 spec.deletionProtectionEnabled <boolean>	# Optional. The delete operation will fail when the value is set to true.
 spec.kmsKeyRef <object>	# Optional. The KMS key name to encrypt data at rest.
 spec.kmsKeyRef.external <string>	# A reference to an externally managed KMSCryptoKey. Should be in the format `projects/[kms_project_id]/locations/[region]/keyRings/[key_ring_id]/cryptoKeys/[key]`.
@@ -65,6 +77,21 @@ status.externalRef <string>	# A unique specifier for the RedisCluster resource i
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
 status.observedState <object>	# ObservedState is the state of the resource as most recently observed in GCP.
 status.observedState.createTime <string>	# Output only. The timestamp associated with the cluster creation request.
+status.observedState.crossClusterReplicationConfig <object>	# Output only. Cross cluster replication config.
+status.observedState.crossClusterReplicationConfig.membership <object>	# Output only. An output only view of all the member clusters participating in the cross cluster replication. This view will be provided by every member cluster irrespective of its cluster role(primary or secondary). A primary cluster can provide information about all the secondary clusters replicating from it. However, a secondary cluster only knows about the primary cluster from which it is replicating. However, for scenarios, where the primary cluster is unavailable(e.g. regional outage), a GetCluster request can be sent to any other member cluster and this field will list all the member clusters participating in cross cluster replication.
+status.observedState.crossClusterReplicationConfig.membership.primaryCluster <object>	# Output only. The primary cluster that acts as the source of replication for the secondary clusters.
+status.observedState.crossClusterReplicationConfig.membership.primaryCluster.cluster <string>	# The full resource path of the remote cluster in the format: projects/<project>/locations/<region>/clusters/<cluster-id>
+status.observedState.crossClusterReplicationConfig.membership.primaryCluster.uid <string>	# Output only. The unique identifier of the remote cluster.
+status.observedState.crossClusterReplicationConfig.membership.secondaryClusters <[]object>	# Output only. The list of secondary clusters replicating from the primary cluster.
+status.observedState.crossClusterReplicationConfig.membership.secondaryClusters[].cluster <string>	# The full resource path of the remote cluster in the format: projects/<project>/locations/<region>/clusters/<cluster-id>
+status.observedState.crossClusterReplicationConfig.membership.secondaryClusters[].uid <string>	# Output only. The unique identifier of the remote cluster.
+status.observedState.crossClusterReplicationConfig.primaryCluster <object>	# Details of the primary cluster that is used as the replication source for this secondary cluster. This field is only set for a secondary cluster.
+status.observedState.crossClusterReplicationConfig.primaryCluster.cluster <string>	# The full resource path of the remote cluster in the format: projects/<project>/locations/<region>/clusters/<cluster-id>
+status.observedState.crossClusterReplicationConfig.primaryCluster.uid <string>	# Output only. The unique identifier of the remote cluster.
+status.observedState.crossClusterReplicationConfig.secondaryClusters <[]object>	# List of secondary clusters that are replicating from this primary cluster. This field is only set for a primary cluster.
+status.observedState.crossClusterReplicationConfig.secondaryClusters[].cluster <string>	# The full resource path of the remote cluster in the format: projects/<project>/locations/<region>/clusters/<cluster-id>
+status.observedState.crossClusterReplicationConfig.secondaryClusters[].uid <string>	# Output only. The unique identifier of the remote cluster.
+status.observedState.crossClusterReplicationConfig.updateTime <string>	# Output only. The last time cross cluster replication config was updated.
 status.observedState.discoveryEndpoints <[]object>	# Output only. Endpoints created on each given network, for Redis clients to connect to the cluster. Currently only one discovery endpoint is supported.
 status.observedState.discoveryEndpoints[].address <string>	# Output only. Address of the exposed Redis endpoint used by clients to connect to the service. The address could be either IP or hostname.
 status.observedState.discoveryEndpoints[].port <integer> format=int32	# Output only. The port number of the exposed Redis endpoint.

@@ -1,0 +1,213 @@
+# schema source: GCP Config Connector v1.154.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
+apiVersion <string> enum=dlp.cnrm.cloud.google.com/v1alpha1
+kind <string> enum=DLPDiscoveryConfig
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# DLPDiscoveryConfigSpec defines the desired state of DLPDiscoveryConfig
+spec.actions <[]object>	# Actions to execute at the completion of scanning.
+spec.actions[].exportData <object>	# Export data profiles into a provided location.
+spec.actions[].exportData.profileTable <object>	# Store all profiles to BigQuery. * The system will create a new dataset and table for you if none are are provided. The dataset will be named `sensitive_data_protection_discovery` and table will be named `discovery_profiles`. This table will be placed in the same project as the container project running the scan. After the first profile is generated and the dataset and table are created, the discovery scan configuration will be updated with the dataset and table names. * See [Analyze data profiles stored in BigQuery](https://cloud.google.com/sensitive-data-protection/docs/analyze-data-profiles). * See [Sample queries for your BigQuery table](https://cloud.google.com/sensitive-data-protection/docs/analyze-data-profiles#sample_sql_queries). * Data is inserted using [streaming insert](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) and so data may be in the buffer for a period of time after the profile has finished. * The Pub/Sub notification is sent before the streaming buffer is guaranteed to be written, so data may not be instantly visible to queries by the time your topic receives the Pub/Sub notification. * The best practice is to use the same table for an entire organization so that you can take advantage of the [provided Looker reports](https://cloud.google.com/sensitive-data-protection/docs/analyze-data-profiles#use_a_premade_report). If you use VPC Service Controls to define security perimeters, then you must use a separate table for each boundary.
+spec.actions[].exportData.profileTable.datasetID <string>	# Dataset ID of the table.
+spec.actions[].exportData.profileTable.projectID <string>	# The Google Cloud project ID of the project containing the table. If omitted, project ID is inferred from the API call.
+spec.actions[].exportData.profileTable.tableID <string>	# Name of the table.
+spec.actions[].exportData.sampleFindingsTable <object>	# Store sample [data profile findings][google.privacy.dlp.v2.DataProfileFinding] in an existing table or a new table in an existing dataset. Each regeneration will result in new rows in BigQuery. Data is inserted using [streaming insert](https://cloud.google.com/blog/products/bigquery/life-of-a-bigquery-streaming-insert) and so data may be in the buffer for a period of time after the profile has finished.
+spec.actions[].exportData.sampleFindingsTable.datasetID <string>	# Dataset ID of the table.
+spec.actions[].exportData.sampleFindingsTable.projectID <string>	# The Google Cloud project ID of the project containing the table. If omitted, project ID is inferred from the API call.
+spec.actions[].exportData.sampleFindingsTable.tableID <string>	# Name of the table.
+spec.actions[].pubSubNotification <object>	# Publish a message into the Pub/Sub topic.
+spec.actions[].pubSubNotification.detailOfMessage <string>	# How much data to include in the Pub/Sub message. If the user wishes to limit the size of the message, they can use resource_name and fetch the profile fields they wish to. Per table profile (not per column).
+spec.actions[].pubSubNotification.event <string>	# The type of event that triggers a Pub/Sub. At most one `PubSubNotification` per EventType is permitted.
+spec.actions[].pubSubNotification.pubsubCondition <object>	# Conditions (e.g., data risk or sensitivity level) for triggering a Pub/Sub.
+spec.actions[].pubSubNotification.pubsubCondition.expressions <object>	# An expression.
+spec.actions[].pubSubNotification.pubsubCondition.expressions.conditions <[]object>	# Conditions to apply to the expression.
+spec.actions[].pubSubNotification.pubsubCondition.expressions.conditions[].minimumRiskScore <string>	# The minimum data risk score that triggers the condition.
+spec.actions[].pubSubNotification.pubsubCondition.expressions.conditions[].minimumSensitivityScore <string>	# The minimum sensitivity level that triggers the condition.
+spec.actions[].pubSubNotification.pubsubCondition.expressions.logicalOperator <string>	# The operator to apply to the collection of conditions.
+spec.actions[].pubSubNotification.topicRef <object>	# Cloud Pub/Sub topic to send notifications to.
+spec.actions[].pubSubNotification.topicRef.external <string>	# A reference to an externally managed PubSubTopic resource. Should be in the format "projects/{{projectID}}/topics/{{topicID}}".
+spec.actions[].pubSubNotification.topicRef.name <string>	# The name of a PubSubTopic resource.
+spec.actions[].pubSubNotification.topicRef.namespace <string>	# The namespace of a PubSubTopic resource.
+spec.actions[].publishToChronicle <object (free-form)>	# Publishes generated data profiles to Google Security Operations. For more information, see [Use Sensitive Data Protection data in context-aware analytics](https://cloud.google.com/chronicle/docs/detection/usecase-dlp-high-risk-user-download).
+spec.actions[].publishToDataplexCatalog <object>	# Publishes a portion of each profile to Dataplex Catalog with the aspect type Sensitive Data Protection Profile.
+spec.actions[].publishToDataplexCatalog.lowerDataRiskToLow <boolean>	# Whether creating a Dataplex Catalog aspect for a profiled resource should lower the risk of the profile for that resource. This also lowers the data risk of resources at the lower levels of the resource hierarchy. For example, reducing the data risk of a table data profile also reduces the data risk of the constituent column data profiles.
+spec.actions[].publishToScc <object (free-form)>	# Publishes findings to Security Command Center for each data profile.
+spec.actions[].tagResources <object>	# Tags the profiled resources with the specified tag values.
+spec.actions[].tagResources.lowerDataRiskToLow <boolean>	# Whether applying a tag to a resource should lower the risk of the profile for that resource. For example, in conjunction with an [IAM deny policy](https://cloud.google.com/iam/docs/deny-overview), you can deny all principals a permission if a tag value is present, mitigating the risk of the resource. This also lowers the data risk of resources at the lower levels of the resource hierarchy. For example, reducing the data risk of a table data profile also reduces the data risk of the constituent column data profiles.
+spec.actions[].tagResources.profileGenerationsToTag <[]string>	# The profile generations for which the tag should be attached to resources. If you attach a tag to only new profiles, then if the sensitivity score of a profile subsequently changes, its tag doesn't change. By default, this field includes only new profiles. To include both new and updated profiles for tagging, this field should explicitly include both `PROFILE_GENERATION_NEW` and `PROFILE_GENERATION_UPDATE`.
+spec.actions[].tagResources.tagConditions <[]object>	# The tags to associate with different conditions.
+spec.actions[].tagResources.tagConditions[].sensitivityScore <object>	# Conditions attaching the tag to a resource on its profile having this sensitivity score.
+spec.actions[].tagResources.tagConditions[].sensitivityScore.score <string>	# The sensitivity score applied to the resource.
+spec.actions[].tagResources.tagConditions[].tag <object>	# The tag value to attach to resources.
+spec.actions[].tagResources.tagConditions[].tag.namespacedValue <string>	# The namespaced name for the tag value to attach to resources. Must be in the format `{parent_id}/{tag_key_short_name}/{short_name}`, for example, "123456/environment/prod".
+spec.displayName <string>	# Display name (max 100 chars)
+spec.inspectTemplates <[]string>	# Detection logic for profile generation.
+spec.location <string> (required)	# The location of this resource.
+spec.orgConfig <object>	# Only set when the parent is an org.
+spec.orgConfig.location <object>	# The data to scan: folder, org, or project
+spec.orgConfig.location.folderID <integer> format=int64	# The ID of the folder within an organization to be scanned.
+spec.orgConfig.location.organizationID <integer> format=int64	# The ID of an organization to scan.
+spec.orgConfig.projectID <string>	# The project that will run the scan. The DLP service account that exists within this project must have access to all resources that are profiled, and the DLP API must be enabled.
+spec.otherCloudStartingLocation <object>	# Must be set only when scanning other clouds.
+spec.otherCloudStartingLocation.awsLocation <object>	# The AWS starting location for discovery.
+spec.otherCloudStartingLocation.awsLocation.accountID <string>	# The AWS account ID that this discovery config applies to. Within an AWS organization, you can find the AWS account ID inside an AWS account ARN. Example: arn:{partition}:organizations::{management_account_id}:account/{org_id}/{account_id}
+spec.otherCloudStartingLocation.awsLocation.allAssetInventoryAssets <boolean>	# All AWS assets stored in Asset Inventory that didn't match other AWS discovery configs.
+spec.processingLocation <object>	# Optional. Processing location configuration. Vertex AI dataset scanning will set processing_location.image_fallback_type to MultiRegionProcessing by default.
+spec.processingLocation.imageFallbackLocation <object>	# Image processing will fall back using this configuration.
+spec.processingLocation.imageFallbackLocation.globalProcessing <object (free-form)>	# Processing will happen in the global region.
+spec.processingLocation.imageFallbackLocation.multiRegionProcessing <object (free-form)>	# Processing will happen in a multi-region that contains the current region if available.
+spec.projectRef <object> (required)	# The project that this resource belongs to.
+spec.projectRef.external <string>	# The `projectID` field of a project, when not managed by Config Connector.
+spec.projectRef.kind <string>	# The kind of the Project resource; optional but must be `Project` if provided.
+spec.projectRef.name <string>	# The `name` field of a `Project` resource.
+spec.projectRef.namespace <string>	# The `namespace` field of a `Project` resource.
+spec.resourceID <string>	# The DLPDiscoveryConfig name. If not given, the metadata.name will be used.
+spec.status <string> (required)	# Required. A status for this configuration.
+spec.targets <[]object>	# Target to match against for determining what to scan and how frequently.
+spec.targets[].bigQueryTarget <object>	# BigQuery target for Discovery. The first target to match a table will be the one applied.
+spec.targets[].bigQueryTarget.cadence <object>	# How often and when to update profiles. New tables that match both the filter and conditions are scanned as quickly as possible depending on system capacity.
+spec.targets[].bigQueryTarget.cadence.inspectTemplateModifiedCadence <object>	# Governs when to update data profiles when the inspection rules defined by the `InspectTemplate` change. If not set, changing the template will not cause a data profile to update.
+spec.targets[].bigQueryTarget.cadence.inspectTemplateModifiedCadence.frequency <string>	# How frequently data profiles can be updated when the template is modified. Defaults to never.
+spec.targets[].bigQueryTarget.cadence.refreshFrequency <string>	# Frequency at which profiles should be updated, regardless of whether the underlying resource has changed. Defaults to never.
+spec.targets[].bigQueryTarget.cadence.schemaModifiedCadence <object>	# Governs when to update data profiles when a schema is modified.
+spec.targets[].bigQueryTarget.cadence.schemaModifiedCadence.frequency <string>	# How frequently profiles may be updated when schemas are modified. Defaults to monthly.
+spec.targets[].bigQueryTarget.cadence.schemaModifiedCadence.types <[]string>	# The type of events to consider when deciding if the table's schema has been modified and should have the profile updated. Defaults to NEW_COLUMNS.
+spec.targets[].bigQueryTarget.cadence.tableModifiedCadence <object>	# Governs when to update data profiles when a table is modified.
+spec.targets[].bigQueryTarget.cadence.tableModifiedCadence.frequency <string>	# How frequently data profiles can be updated when tables are modified. Defaults to never.
+spec.targets[].bigQueryTarget.cadence.tableModifiedCadence.types <[]string>	# The type of events to consider when deciding if the table has been modified and should have the profile updated. Defaults to MODIFIED_TIMESTAMP.
+spec.targets[].bigQueryTarget.conditions <object>	# In addition to matching the filter, these conditions must be true before a profile is generated.
+spec.targets[].bigQueryTarget.conditions.createdAfter <string>	# BigQuery table must have been created after this date. Used to avoid backfilling.
+spec.targets[].bigQueryTarget.conditions.orConditions <object>	# At least one of the conditions must be true for a table to be scanned.
+spec.targets[].bigQueryTarget.conditions.orConditions.minAge <string>	# Minimum age a table must have before Cloud DLP can profile it. Value must be 1 hour or greater.
+spec.targets[].bigQueryTarget.conditions.orConditions.minRowCount <integer> format=int32	# Minimum number of rows that should be present before Cloud DLP profiles a table
+spec.targets[].bigQueryTarget.conditions.typeCollection <string>	# Restrict discovery to categories of table types.
+spec.targets[].bigQueryTarget.conditions.types <object>	# Restrict discovery to specific table types.
+spec.targets[].bigQueryTarget.conditions.types.types <[]string>	# A set of BigQuery table types.
+spec.targets[].bigQueryTarget.disabled <object (free-form)>	# Tables that match this filter will not have profiles created.
+spec.targets[].bigQueryTarget.filter <object>	# Required. The tables the discovery cadence applies to. The first target with a matching filter will be the one to apply to a table.
+spec.targets[].bigQueryTarget.filter.otherTables <object (free-form)>	# Catch-all. This should always be the last filter in the list because anything above it will apply first. Should only appear once in a configuration. If none is specified, a default one will be added automatically.
+spec.targets[].bigQueryTarget.filter.tableReference <object>	# The table to scan. Discovery configurations including this can only include one DiscoveryTarget (the DiscoveryTarget with this TableReference).
+spec.targets[].bigQueryTarget.filter.tableReference.datasetID <string>	# Dataset ID of the table.
+spec.targets[].bigQueryTarget.filter.tableReference.projectID <string>	# The Google Cloud project ID of the project containing the table. If omitted, the project ID is inferred from the parent project. This field is required if the parent resource is an organization.
+spec.targets[].bigQueryTarget.filter.tableReference.tableID <string>	# Name of the table.
+spec.targets[].bigQueryTarget.filter.tables <object>	# A specific set of tables for this filter to apply to. A table collection must be specified in only one filter per config. If a table id or dataset is empty, Cloud DLP assumes all tables in that collection must be profiled. Must specify a project ID.
+spec.targets[].bigQueryTarget.filter.tables.includeRegexes <object>	# A collection of regular expressions to match a BigQuery table against.
+spec.targets[].bigQueryTarget.filter.tables.includeRegexes.patterns <[]object>	# A single BigQuery regular expression pattern to match against one or more tables, datasets, or projects that contain BigQuery tables.
+spec.targets[].bigQueryTarget.filter.tables.includeRegexes.patterns[].datasetIDRegex <string>	# If unset, this property matches all datasets.
+spec.targets[].bigQueryTarget.filter.tables.includeRegexes.patterns[].projectIDRegex <string>	# For organizations, if unset, will match all projects. Has no effect for data profile configurations created within a project.
+spec.targets[].bigQueryTarget.filter.tables.includeRegexes.patterns[].tableIDRegex <string>	# If unset, this property matches all tables.
+spec.targets[].cloudSQLTarget <object>	# Cloud SQL target for Discovery. The first target to match a table will be the one applied.
+spec.targets[].cloudSQLTarget.conditions <object>	# In addition to matching the filter, these conditions must be true before a profile is generated.
+spec.targets[].cloudSQLTarget.conditions.databaseEngines <[]string>	# Optional. Database engines that should be profiled. Optional. Defaults to ALL_SUPPORTED_DATABASE_ENGINES if unspecified.
+spec.targets[].cloudSQLTarget.conditions.types <[]string>	# Data profiles will only be generated for the database resource types specified in this field. If not specified, defaults to [DATABASE_RESOURCE_TYPE_ALL_SUPPORTED_TYPES].
+spec.targets[].cloudSQLTarget.disabled <object (free-form)>	# Disable profiling for database resources that match this filter.
+spec.targets[].cloudSQLTarget.filter <object>	# Required. The tables the discovery cadence applies to. The first target with a matching filter will be the one to apply to a table.
+spec.targets[].cloudSQLTarget.filter.collection <object>	# A specific set of database resources for this filter to apply to.
+spec.targets[].cloudSQLTarget.filter.collection.includeRegexes <object>	# A collection of regular expressions to match a database resource against.
+spec.targets[].cloudSQLTarget.filter.collection.includeRegexes.patterns <[]object>	# A group of regular expression patterns to match against one or more database resources. Maximum of 100 entries. The sum of all regular expression's length can't exceed 10 KiB.
+spec.targets[].cloudSQLTarget.filter.collection.includeRegexes.patterns[].databaseRegex <string>	# Regex to test the database name against. If empty, all databases match.
+spec.targets[].cloudSQLTarget.filter.collection.includeRegexes.patterns[].databaseResourceNameRegex <string>	# Regex to test the database resource's name against. An example of a database resource name is a table's name. Other database resource names like view names could be included in the future. If empty, all database resources match.
+spec.targets[].cloudSQLTarget.filter.collection.includeRegexes.patterns[].instanceRegex <string>	# Regex to test the instance name against. If empty, all instances match.
+spec.targets[].cloudSQLTarget.filter.collection.includeRegexes.patterns[].projectIDRegex <string>	# For organizations, if unset, will match all projects. Has no effect for configurations created within a project.
+spec.targets[].cloudSQLTarget.filter.databaseResourceReference <object>	# The database resource to scan. Targets including this can only include one target (the target with this database resource reference).
+spec.targets[].cloudSQLTarget.filter.databaseResourceReference.database <string>	# Required. Name of a database within the instance.
+spec.targets[].cloudSQLTarget.filter.databaseResourceReference.databaseResource <string>	# Required. Name of a database resource, for example, a table within the database.
+spec.targets[].cloudSQLTarget.filter.databaseResourceReference.instance <string>	# Required. The instance where this resource is located. For example: Cloud SQL instance ID.
+spec.targets[].cloudSQLTarget.filter.databaseResourceReference.projectID <string>	# Required. If within a project-level config, then this must match the config's project ID.
+spec.targets[].cloudSQLTarget.filter.others <object (free-form)>	# Catch-all. This should always be the last target in the list because anything above it will apply first. Should only appear once in a configuration. If none is specified, a default one will be added automatically.
+spec.targets[].cloudSQLTarget.generationCadence <object>	# How often and when to update profiles. New tables that match both the filter and conditions are scanned as quickly as possible depending on system capacity.
+spec.targets[].cloudSQLTarget.generationCadence.inspectTemplateModifiedCadence <object>	# Governs when to update data profiles when the inspection rules defined by the `InspectTemplate` change. If not set, changing the template will not cause a data profile to update.
+spec.targets[].cloudSQLTarget.generationCadence.inspectTemplateModifiedCadence.frequency <string>	# How frequently data profiles can be updated when the template is modified. Defaults to never.
+spec.targets[].cloudSQLTarget.generationCadence.refreshFrequency <string>	# Data changes (non-schema changes) in Cloud SQL tables can't trigger reprofiling. If you set this field, profiles are refreshed at this frequency regardless of whether the underlying tables have changed. Defaults to never.
+spec.targets[].cloudSQLTarget.generationCadence.schemaModifiedCadence <object>	# When to reprofile if the schema has changed.
+spec.targets[].cloudSQLTarget.generationCadence.schemaModifiedCadence.frequency <string>	# Frequency to regenerate data profiles when the schema is modified. Defaults to monthly.
+spec.targets[].cloudSQLTarget.generationCadence.schemaModifiedCadence.types <[]string>	# The types of schema modifications to consider. Defaults to NEW_COLUMNS.
+spec.targets[].cloudStorageTarget <object>	# Cloud Storage target for Discovery. The first target to match a table will be the one applied.
+spec.targets[].cloudStorageTarget.conditions <object>	# Optional. In addition to matching the filter, these conditions must be true before a profile is generated.
+spec.targets[].cloudStorageTarget.conditions.cloudStorageConditions <object>	# Optional. Cloud Storage conditions.
+spec.targets[].cloudStorageTarget.conditions.cloudStorageConditions.includedBucketAttributes <[]string>	# Required. Only objects with the specified attributes will be scanned. Defaults to [ALL_SUPPORTED_BUCKETS] if unset.
+spec.targets[].cloudStorageTarget.conditions.cloudStorageConditions.includedObjectAttributes <[]string>	# Required. Only objects with the specified attributes will be scanned. If an object has one of the specified attributes but is inside an excluded bucket, it will not be scanned. Defaults to [ALL_SUPPORTED_OBJECTS]. A profile will be created even if no objects match the included_object_attributes.
+spec.targets[].cloudStorageTarget.conditions.createdAfter <string>	# Optional. File store must have been created after this date. Used to avoid backfilling.
+spec.targets[].cloudStorageTarget.conditions.minAge <string>	# Optional. Minimum age a file store must have. If set, the value must be 1 hour or greater.
+spec.targets[].cloudStorageTarget.disabled <object (free-form)>	# Optional. Disable profiling for buckets that match this filter.
+spec.targets[].cloudStorageTarget.filter <object>	# Required. The buckets the generation_cadence applies to. The first target with a matching filter will be the one to apply to a bucket.
+spec.targets[].cloudStorageTarget.filter.cloudStorageResourceReference <object>	# Optional. The bucket to scan. Targets including this can only include one target (the target with this bucket). This enables profiling the contents of a single bucket, while the other options allow for easy profiling of many bucets within a project or an organization.
+spec.targets[].cloudStorageTarget.filter.cloudStorageResourceReference.bucketName <string>	# Required. The bucket to scan.
+spec.targets[].cloudStorageTarget.filter.cloudStorageResourceReference.projectID <string>	# Required. If within a project-level config, then this must match the config's project id.
+spec.targets[].cloudStorageTarget.filter.collection <object>	# Optional. A specific set of buckets for this filter to apply to.
+spec.targets[].cloudStorageTarget.filter.collection.includeRegexes <object>	# Optional. A collection of regular expressions to match a file store against.
+spec.targets[].cloudStorageTarget.filter.collection.includeRegexes.patterns <[]object>	# Required. The group of regular expression patterns to match against one or more file stores. Maximum of 100 entries. The sum of all regular expression's length can't exceed 10 KiB.
+spec.targets[].cloudStorageTarget.filter.collection.includeRegexes.patterns[].cloudStorageRegex <object>	# Optional. Regex for Cloud Storage.
+spec.targets[].cloudStorageTarget.filter.collection.includeRegexes.patterns[].cloudStorageRegex.bucketNameRegex <string>	# Optional. Regex to test the bucket name against. If empty, all buckets match. Example: "marketing2021" or "(marketing)\d{4}" will both match the bucket gs://marketing2021
+spec.targets[].cloudStorageTarget.filter.collection.includeRegexes.patterns[].cloudStorageRegex.projectIDRegex <string>	# Optional. For organizations, if unset, will match all projects.
+spec.targets[].cloudStorageTarget.filter.others <object (free-form)>	# Optional. Catch-all. This should always be the last target in the list because anything above it will apply first. Should only appear once in a configuration. If none is specified, a default one will be added automatically.
+spec.targets[].cloudStorageTarget.generationCadence <object>	# Optional. How often and when to update profiles. New buckets that match both the filter and conditions are scanned as quickly as possible depending on system capacity.
+spec.targets[].cloudStorageTarget.generationCadence.inspectTemplateModifiedCadence <object>	# Optional. Governs when to update data profiles when the inspection rules defined by the `InspectTemplate` change. If not set, changing the template will not cause a data profile to update.
+spec.targets[].cloudStorageTarget.generationCadence.inspectTemplateModifiedCadence.frequency <string>	# How frequently data profiles can be updated when the template is modified. Defaults to never.
+spec.targets[].cloudStorageTarget.generationCadence.refreshFrequency <string>	# Optional. Data changes in Cloud Storage can't trigger reprofiling. If you set this field, profiles are refreshed at this frequency regardless of whether the underlying buckets have changed. Defaults to never.
+spec.targets[].otherCloudTarget <object>	# Other clouds target for discovery. The first target to match a resource will be the one applied.
+spec.targets[].otherCloudTarget.conditions <object>	# Optional. In addition to matching the filter, these conditions must be true before a profile is generated.
+spec.targets[].otherCloudTarget.conditions.amazonS3BucketConditions <object>	# Amazon S3 bucket conditions.
+spec.targets[].otherCloudTarget.conditions.amazonS3BucketConditions.bucketTypes <[]string>	# Optional. Bucket types that should be profiled. Optional. Defaults to TYPE_ALL_SUPPORTED if unspecified.
+spec.targets[].otherCloudTarget.conditions.amazonS3BucketConditions.objectStorageClasses <[]string>	# Optional. Object classes that should be profiled. Optional. Defaults to ALL_SUPPORTED_CLASSES if unspecified.
+spec.targets[].otherCloudTarget.conditions.minAge <string>	# Minimum age a resource must be before Cloud DLP can profile it. Value must be 1 hour or greater.
+spec.targets[].otherCloudTarget.dataSourceType <object (free-form)>	# Required. The type of data profiles generated by this discovery target. Supported values are: * aws/s3/bucket
+spec.targets[].otherCloudTarget.disabled <object (free-form)>	# Disable profiling for resources that match this filter.
+spec.targets[].otherCloudTarget.filter <object>	# Required. The resources that the discovery cadence applies to. The first target with a matching filter will be the one to apply to a resource.
+spec.targets[].otherCloudTarget.filter.collection <object>	# A collection of resources for this filter to apply to.
+spec.targets[].otherCloudTarget.filter.collection.includeRegexes <object>	# A collection of regular expressions to match a resource against.
+spec.targets[].otherCloudTarget.filter.collection.includeRegexes.patterns <[]object>	# A group of regular expression patterns to match against one or more resources. Maximum of 100 entries. The sum of all regular expression's length can't exceed 10 KiB.
+spec.targets[].otherCloudTarget.filter.collection.includeRegexes.patterns[].amazonS3BucketRegex <object>	# Regex for Amazon S3 buckets.
+spec.targets[].otherCloudTarget.filter.collection.includeRegexes.patterns[].amazonS3BucketRegex.awsAccountRegex <object>	# The AWS account regex.
+spec.targets[].otherCloudTarget.filter.collection.includeRegexes.patterns[].amazonS3BucketRegex.awsAccountRegex.accountIDRegex <string>	# Optional. Regex to test the AWS account ID against. If empty, all accounts match.
+spec.targets[].otherCloudTarget.filter.collection.includeRegexes.patterns[].amazonS3BucketRegex.bucketNameRegex <string>	# Optional. Regex to test the bucket name against. If empty, all buckets match.
+spec.targets[].otherCloudTarget.filter.others <object (free-form)>	# Optional. Catch-all. This should always be the last target in the list because anything above it will apply first. Should only appear once in a configuration. If none is specified, a default one will be added automatically.
+spec.targets[].otherCloudTarget.filter.singleResource <object>	# The resource to scan. Configs using this filter can only have one target (the target with this single resource reference).
+spec.targets[].otherCloudTarget.filter.singleResource.amazonS3Bucket <object>	# Amazon S3 bucket.
+spec.targets[].otherCloudTarget.filter.singleResource.amazonS3Bucket.awsAccount <object>	# The AWS account.
+spec.targets[].otherCloudTarget.filter.singleResource.amazonS3Bucket.awsAccount.accountID <string>	# Required. AWS account ID.
+spec.targets[].otherCloudTarget.filter.singleResource.amazonS3Bucket.bucketName <string>	# Required. The bucket name.
+spec.targets[].otherCloudTarget.generationCadence <object>	# How often and when to update data profiles. New resources that match both the filter and conditions are scanned as quickly as possible depending on system capacity.
+spec.targets[].otherCloudTarget.generationCadence.inspectTemplateModifiedCadence <object>	# Optional. Governs when to update data profiles when the inspection rules defined by the `InspectTemplate` change. If not set, changing the template will not cause a data profile to update.
+spec.targets[].otherCloudTarget.generationCadence.inspectTemplateModifiedCadence.frequency <string>	# How frequently data profiles can be updated when the template is modified. Defaults to never.
+spec.targets[].otherCloudTarget.generationCadence.refreshFrequency <string>	# Optional. Frequency to update profiles regardless of whether the underlying resource has changes. Defaults to never.
+spec.targets[].secretsTarget <object (free-form)>	# Discovery target that looks for credentials and secrets stored in cloud resource metadata and reports them as vulnerabilities to Security Command Center. Only one target of this type is allowed.
+spec.targets[].vertexDatasetTarget <object>	# Vertex AI dataset target for Discovery. The first target to match a dataset will be the one applied. Note that discovery for Vertex AI can incur Cloud Storage Class B operation charges for storage.objects.get operations and retrieval fees. For more information, see [Cloud Storage pricing](https://cloud.google.com/storage/pricing#price-tables). Note that discovery for Vertex AI dataset will not be able to scan images unless DiscoveryConfig.processing_location.image_fallback_location has multi_region_processing or global_processing configured.
+spec.targets[].vertexDatasetTarget.conditions <object>	# In addition to matching the filter, these conditions must be true before a profile is generated.
+spec.targets[].vertexDatasetTarget.conditions.createdAfter <string>	# Vertex AI dataset must have been created after this date. Used to avoid backfilling.
+spec.targets[].vertexDatasetTarget.conditions.minAge <string>	# Minimum age a Vertex AI dataset must have. If set, the value must be 1 hour or greater.
+spec.targets[].vertexDatasetTarget.disabled <object (free-form)>	# Disable profiling for datasets that match this filter.
+spec.targets[].vertexDatasetTarget.filter <object>	# Required. The datasets the discovery cadence applies to. The first target with a matching filter will be the one to apply to a dataset.
+spec.targets[].vertexDatasetTarget.filter.collection <object>	# A specific set of Vertex AI datasets for this filter to apply to.
+spec.targets[].vertexDatasetTarget.filter.collection.vertexDatasetRegexes <object>	# The regex used to filter dataset resources.
+spec.targets[].vertexDatasetTarget.filter.collection.vertexDatasetRegexes.patterns <[]object>	# Required. The group of regular expression patterns to match against one or more datasets. Maximum of 100 entries. The sum of the lengths of all regular expressions can't exceed 10 KiB.
+spec.targets[].vertexDatasetTarget.filter.collection.vertexDatasetRegexes.patterns[].projectIDRegex <string>	# For organizations, if unset, will match all projects. Has no effect for configurations created within a project.
+spec.targets[].vertexDatasetTarget.filter.others <object (free-form)>	# Catch-all. This should always be the last target in the list because anything above it will apply first. Should only appear once in a configuration. If none is specified, a default one will be added automatically.
+spec.targets[].vertexDatasetTarget.filter.vertexDatasetResourceReference <object>	# The dataset resource to scan. Targets including this can only include one target (the target with this dataset resource reference).
+spec.targets[].vertexDatasetTarget.filter.vertexDatasetResourceReference.datasetResourceName <string>	# Required. The name of the dataset resource. If set within a project-level configuration, the specified resource must be within the project.
+spec.targets[].vertexDatasetTarget.generationCadence <object>	# How often and when to update profiles. New datasets that match both the filter and conditions are scanned as quickly as possible depending on system capacity.
+spec.targets[].vertexDatasetTarget.generationCadence.inspectTemplateModifiedCadence <object>	# Governs when to update data profiles when the inspection rules defined by the `InspectTemplate` change. If not set, changing the template will not cause a data profile to be updated.
+spec.targets[].vertexDatasetTarget.generationCadence.inspectTemplateModifiedCadence.frequency <string>	# How frequently data profiles can be updated when the template is modified. Defaults to never.
+spec.targets[].vertexDatasetTarget.generationCadence.refreshFrequency <string>	# If you set this field, profiles are refreshed at this frequency regardless of whether the underlying datasets have changed. Defaults to never.
+status <object>	# DLPDiscoveryConfigStatus defines the config connector machine state of DLPDiscoveryConfig
+status.conditions <[]object>	# Conditions represent the latest available observations of the object's current state.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.externalRef <string>	# A unique specifier for the DLPDiscoveryConfig resource in GCP.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.observedState <object>	# ObservedState is the state of the resource as most recently observed in GCP.
+status.observedState.createTime <string>	# Output only. The creation timestamp of a DiscoveryConfig.
+status.observedState.errors <[]object>	# Output only. A stream of errors encountered when the config was activated. Repeated errors may result in the config automatically being paused. Output only field. Will return the last 100 errors. Whenever the config is modified this list will be cleared.
+status.observedState.errors[].details <object>	# Detailed error codes and messages.
+status.observedState.errors[].details.code <integer> format=int32	# The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+status.observedState.errors[].details.message <string>	# A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+status.observedState.errors[].extraInfo <string>	# Additional information about the error.
+status.observedState.errors[].timestamps <[]string>	# The times the error occurred. List includes the oldest timestamp and the last 9 timestamps.
+status.observedState.lastRunTime <string>	# Output only. The timestamp of the last time this config was executed.
+status.observedState.targets <[]object>	# Target to match against for determining what to scan and how frequently.
+status.observedState.targets[].otherCloudTarget <object>	# Other clouds target for discovery. The first target to match a resource will be the one applied.
+status.observedState.targets[].otherCloudTarget.dataSourceType <object>	# Required. The type of data profiles generated by this discovery target. Supported values are: * aws/s3/bucket
+status.observedState.targets[].otherCloudTarget.dataSourceType.dataSource <string>	# Output only. An identifying string to the type of resource being profiled. Current values: * google/bigquery/table * google/project * google/sql/table * google/gcs/bucket
+status.observedState.updateTime <string>	# Output only. The last update timestamp of a DiscoveryConfig.

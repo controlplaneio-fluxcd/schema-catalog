@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-116-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C882-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-638%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-116-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C955-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-640%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -154,7 +154,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Crossplane](https://schemas.fluxoperator.dev/p/crossplane) | `crossplane` | v2.3.4 | 25 | 2026-07-24 |
 | [External Secrets](https://schemas.fluxoperator.dev/p/external-secrets) | `external-secrets` | v2.8.0 | 29 | 2026-07-18 |
 | [Falco Operator](https://schemas.fluxoperator.dev/p/falco-operator) | `falco-operator` | v0.4.1 | 5 | 2026-07-09 |
-| [GCP Config Connector](https://schemas.fluxoperator.dev/p/config-connector) | `config-connector` | v1.153.0 | 578 | 2026-07-09 |
+| [GCP Config Connector](https://schemas.fluxoperator.dev/p/config-connector) | `config-connector` | v1.154.1 | 651 | 2026-08-03 |
 | [Image Scanner Operator](https://schemas.fluxoperator.dev/p/image-scanner-operator) | `image-scanner-operator` | v0.16.21 | 1 | 2026-07-10 |
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.9.3 | 2 | 2026-07-28 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.40.3 | 5 | 2026-07-23 |
