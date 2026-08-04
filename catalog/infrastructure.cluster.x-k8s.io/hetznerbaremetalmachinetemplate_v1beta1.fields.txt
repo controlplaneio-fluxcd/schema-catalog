@@ -1,10 +1,13 @@
-# schema source: Cluster API Hetzner v1.1.7 https://github.com/syself/cluster-api-provider-hetzner
+# schema source: Cluster API Hetzner v1.1.8 https://github.com/syself/cluster-api-provider-hetzner
 apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta1
 kind <string> enum=HetznerBareMetalMachineTemplate
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# HetznerBareMetalMachineTemplateSpec defines the desired state of HetznerBareMetalMachineTemplate.
 spec.template <object> (required)	# HetznerBareMetalMachineTemplateResource describes the data needed to create a HetznerBareMetalMachine from a template.
+spec.template.metadata <object>	# Standard object's metadata.
+spec.template.metadata.annotations <map[string]string>	# annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+spec.template.metadata.labels <map[string]string>	# labels is a map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
 spec.template.spec <object> (required)	# Spec is the specification of the desired behavior of the machine.
 spec.template.spec.hostSelector <object>	# HostSelector specifies matching criteria for labels on HetznerBareMetalHosts. This is used to limit the set of HetznerBareMetalHost objects considered for claiming for a HetznerBareMetalMachine.
 spec.template.spec.hostSelector.matchExpressions <[]object>	# MatchExpressions defines the label match expressions that must be true on a chosen BareMetalHost.
@@ -17,11 +20,12 @@ spec.template.spec.installImage.btrfsDefinitions <[]object>	# BTRFSDefinitions d
 spec.template.spec.installImage.btrfsDefinitions[].mount <string> (required)	# Mount defines the mountpath.
 spec.template.spec.installImage.btrfsDefinitions[].subvolume <string> (required)	# SubVolume defines the subvolume name.
 spec.template.spec.installImage.btrfsDefinitions[].volume <string> (required)	# Volume defines the btrfs volume name.
+spec.template.spec.installImage.deviceStringType <string> enum=|short|wwn	# DeviceStringType instructs CAPH to either use the short device name, or the WWN when calling ImageURLCommand. It is not used when ImageURLCommand is not set. "" and "short" both pass the short device name (e.g. "sda"); "wwn" passes the WWN (e.g. "eui.00253885910c8cec").
 spec.template.spec.installImage.image <object> (required)	# Image is the image to be provisioned. It defines the image for baremetal machine.
 spec.template.spec.installImage.image.name <string>	# Name defines the archive name after download. This has to be a valid name for Installimage.
 spec.template.spec.installImage.image.path <string>	# Path is the local path for a preinstalled image from upstream.
 spec.template.spec.installImage.image.url <string>	# URL defines the remote URL for downloading a tar, tar.gz, tar.bz, tar.bz2, tar.xz, tgz, tbz, txz image.
-spec.template.spec.installImage.imageURLCommand <string>	# ImageURLCommand is the basename of a command file below /shared on the controller pod which provisions a machine from Image.URL. CAPH copies that command into the rescue system and executes it there. Docs: https://syself.com/docs/caph/developers/image-url-command ImageURLCommand must be set if the machine should be provisioned from Image.URL without installimage. The command name must start with image-url-command-.
+spec.template.spec.installImage.imageURLCommand <string>	# ImageURLCommand is the basename of a command file below /shared on the controller pod which provisions a machine from Image.URL. CAPH copies that command into the rescue system and executes it there. Docs: https://syself.com/docs/caph/developers/image-url-command ImageURLCommand must be set if the machine should be provisioned from Image.URL without installimage.
 spec.template.spec.installImage.logicalVolumeDefinitions <[]object>	# LVMDefinitions defines the logical volume definitions to be created.
 spec.template.spec.installImage.logicalVolumeDefinitions[].filesystem <string> (required)	# FileSystem defines the filesystem for this logical volume.
 spec.template.spec.installImage.logicalVolumeDefinitions[].mount <string> (required)	# Mount defines the mountpath.
@@ -36,6 +40,7 @@ spec.template.spec.installImage.postInstallScript <string>	# PostInstallScript (
 spec.template.spec.installImage.swraid <integer> enum=0|1 default=0	# Swraid defines the SWRAID in InstallImage. It enables or disables raids. Set 1 to enable.
 spec.template.spec.installImage.swraidLevel <integer> enum=0|1|5|6|10 default=1	# SwraidLevel defines the SWRAIDLEVEL in InstallImage. Only relevant if the raid is enabled. Pick one of 0,1,5,6,10. Ignored if Swraid=0.
 spec.template.spec.providerID <string>	# ProviderID is set by the controller to either (new) `hrobot://<server-id>` or (old) `hcloud://bm-NNNN` format. If the HetznerBareMetalMachineSpec has already a ProviderID, then this will never change. If the ProviderID is empty, the controller sets it to the old format by default (hcloud://bm-NNNN), except the Annotation `capi.syself.com/use-hrobot-provider-id-for-baremetal` on the hetznerCluster is set to `"true"`.
+spec.template.spec.skipCheckDisk <boolean>	# SkipCheckDisk skips the CheckDisk step during provisioning. This is equivalent to setting the annotation capi.syself.com/ignore-check-disk on the HetznerBareMetalHost.
 spec.template.spec.sshSpec <object>	# SSHSpec gives a reference on the secret where SSH details are specified as well as ports for SSH.
 spec.template.spec.sshSpec.noSSHAfterInstallImage <boolean>	# NoSSHAfterInstallImage disables SSH access to the machine after installimage completed successfully.
 spec.template.spec.sshSpec.portAfterCloudInit <integer>	# PortAfterCloudInit is deprecated. Since PR Install Cloud-Init-Data via post-install.sh #1407 this field is not functional. Deprecated: This field is not used anymore.
