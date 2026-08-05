@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=compute.gcp.m.upbound.io/v1beta1
 kind <string> enum=NetworkFirewallPolicyRule
 metadata.name <string> (required)
@@ -28,6 +28,7 @@ spec.forProvider.match <object>	# A match condition that incoming traffic is eva
 spec.forProvider.match.destAddressGroups <[]string>	# Address groups which should be matched against the traffic destination. Maximum number of destination address groups is 10.
 spec.forProvider.match.destFqdns <[]string>	# Fully Qualified Domain Name (FQDN) which should be matched against traffic destination. Maximum number of destination fqdn allowed is 100.
 spec.forProvider.match.destIpRanges <[]string>	# CIDR IP address range. Maximum number of destination CIDR IP ranges allowed is 5000.
+spec.forProvider.match.destNetworkContext <string>	# Network context of the traffic destination. Possible values are: UNSPECIFIED, INTERNET, INTRA_VPC, NON_INTERNET, VPC_NETWORKS.
 spec.forProvider.match.destRegionCodes <[]string>	# Region codes whose IP addresses will be used to match for destination of traffic. Should be specified as 2 letter country code defined as per ISO 3166 alpha-2 country codes. ex."US" Maximum number of dest region codes allowed is 5000.
 spec.forProvider.match.destThreatIntelligences <[]string>	# Names of Network Threat Intelligence lists. The IPs in these lists will be matched against traffic destination.
 spec.forProvider.match.layer4Configs <[]object>	# Pairs of IP protocols and ports that the rule should match. Structure is documented below.
@@ -49,6 +50,21 @@ spec.forProvider.match.srcAddressGroupsSelector.policy.resolution <string> enum=
 spec.forProvider.match.srcAddressGroupsSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.match.srcFqdns <[]string>	# Fully Qualified Domain Name (FQDN) which should be matched against traffic source. Maximum number of source fqdn allowed is 100.
 spec.forProvider.match.srcIpRanges <[]string>	# CIDR IP address range. Maximum number of source CIDR IP ranges allowed is 5000.
+spec.forProvider.match.srcNetworkContext <string>	# Network context of the traffic source. Possible values are: UNSPECIFIED, INTERNET, INTRA_VPC, NON_INTERNET, VPC_NETWORKS.
+spec.forProvider.match.srcNetworks <[]string>	# Networks of the traffic source. It can be either a full or partial url.
+spec.forProvider.match.srcNetworksRefs <[]object>	# References to Network in compute to populate srcNetworks.
+spec.forProvider.match.srcNetworksRefs[].name <string> (required)	# Name of the referenced object.
+spec.forProvider.match.srcNetworksRefs[].namespace <string>	# Namespace of the referenced object
+spec.forProvider.match.srcNetworksRefs[].policy <object>	# Policies for referencing.
+spec.forProvider.match.srcNetworksRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.match.srcNetworksRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.match.srcNetworksSelector <object>	# Selector for a list of Network in compute to populate srcNetworks.
+spec.forProvider.match.srcNetworksSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.match.srcNetworksSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.match.srcNetworksSelector.namespace <string>	# Namespace for the selector
+spec.forProvider.match.srcNetworksSelector.policy <object>	# Policies for selection.
+spec.forProvider.match.srcNetworksSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.match.srcNetworksSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.match.srcRegionCodes <[]string>	# Region codes whose IP addresses will be used to match for source of traffic. Should be specified as 2 letter country code defined as per ISO 3166 alpha-2 country codes. ex."US" Maximum number of source region codes allowed is 5000.
 spec.forProvider.match.srcSecureTags <[]object>	# List of secure tag values, which should be matched at the source of the traffic. For INGRESS rule, if all the srcSecureTag are INEFFECTIVE, and there is no srcIpRange, this rule will be ignored. Maximum number of source tag values allowed is 256. Structure is documented below.
 spec.forProvider.match.srcSecureTags[].name <string>	# Name of the secure tag, created with TagManager's TagValue API.
@@ -70,9 +86,24 @@ spec.forProvider.priority <number> (required)	# An integer indicating the priori
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.forProvider.ruleName <string>	# An optional name for the rule. This field is not a unique identifier and can be updated.
 spec.forProvider.securityProfileGroup <string>	# A fully-qualified URL of a SecurityProfile resource instance. Example: https://networksecurity.googleapis.com/v1/projects/{project}/locations/{location}/securityProfileGroups/my-security-profile-group Must be specified if action = 'apply_security_profile_group' and cannot be specified for other actions.
+spec.forProvider.targetForwardingRules <[]string>	# A list of forwarding rules to which this rule applies. This field allows you to control which load balancers get this rule. For example, the following are valid values:
+spec.forProvider.targetForwardingRulesRefs <[]object>	# References to ForwardingRule in compute to populate targetForwardingRules.
+spec.forProvider.targetForwardingRulesRefs[].name <string> (required)	# Name of the referenced object.
+spec.forProvider.targetForwardingRulesRefs[].namespace <string>	# Namespace of the referenced object
+spec.forProvider.targetForwardingRulesRefs[].policy <object>	# Policies for referencing.
+spec.forProvider.targetForwardingRulesRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.targetForwardingRulesRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.targetForwardingRulesSelector <object>	# Selector for a list of ForwardingRule in compute to populate targetForwardingRules.
+spec.forProvider.targetForwardingRulesSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.targetForwardingRulesSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.targetForwardingRulesSelector.namespace <string>	# Namespace for the selector
+spec.forProvider.targetForwardingRulesSelector.policy <object>	# Policies for selection.
+spec.forProvider.targetForwardingRulesSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.targetForwardingRulesSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.targetSecureTags <[]object>	# A list of secure tags that controls which instances the firewall rule applies to. If targetSecureTag are specified, then the firewall rule applies only to instances in the VPC network that have one of those EFFECTIVE secure tags, if all the targetSecureTag are in INEFFECTIVE state, then this rule will be ignored. targetSecureTag may not be set at the same time as targetServiceAccounts. If neither targetServiceAccounts nor targetSecureTag are specified, the firewall rule applies to all instances on the specified network. Maximum number of target label tags allowed is 256. Structure is documented below.
 spec.forProvider.targetSecureTags[].name <string>	# Name of the secure tag, created with TagManager's TagValue API.
 spec.forProvider.targetServiceAccounts <[]string>	# A list of service accounts indicating the sets of instances that are applied with this rule.
+spec.forProvider.targetType <string>	# Target types of the firewall policy rule. Default value is INSTANCES. When target_type is INTERNAL_MANAGED_LB, target_forwarding_rules must be set Possible values are: INSTANCES, INTERNAL_MANAGED_LB.
 spec.forProvider.tlsInspect <boolean>	# Boolean flag indicating if the traffic should be TLS decrypted. Can be set only if action = 'apply_security_profile_group' and cannot be set for other actions.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.action <string>	# The Action to perform when the client connection triggers the rule. Valid actions are "allow", "deny", "goto_next" and "apply_security_profile_group".
@@ -84,6 +115,7 @@ spec.initProvider.match <object>	# A match condition that incoming traffic is ev
 spec.initProvider.match.destAddressGroups <[]string>	# Address groups which should be matched against the traffic destination. Maximum number of destination address groups is 10.
 spec.initProvider.match.destFqdns <[]string>	# Fully Qualified Domain Name (FQDN) which should be matched against traffic destination. Maximum number of destination fqdn allowed is 100.
 spec.initProvider.match.destIpRanges <[]string>	# CIDR IP address range. Maximum number of destination CIDR IP ranges allowed is 5000.
+spec.initProvider.match.destNetworkContext <string>	# Network context of the traffic destination. Possible values are: UNSPECIFIED, INTERNET, INTRA_VPC, NON_INTERNET, VPC_NETWORKS.
 spec.initProvider.match.destRegionCodes <[]string>	# Region codes whose IP addresses will be used to match for destination of traffic. Should be specified as 2 letter country code defined as per ISO 3166 alpha-2 country codes. ex."US" Maximum number of dest region codes allowed is 5000.
 spec.initProvider.match.destThreatIntelligences <[]string>	# Names of Network Threat Intelligence lists. The IPs in these lists will be matched against traffic destination.
 spec.initProvider.match.layer4Configs <[]object>	# Pairs of IP protocols and ports that the rule should match. Structure is documented below.
@@ -105,6 +137,21 @@ spec.initProvider.match.srcAddressGroupsSelector.policy.resolution <string> enum
 spec.initProvider.match.srcAddressGroupsSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.match.srcFqdns <[]string>	# Fully Qualified Domain Name (FQDN) which should be matched against traffic source. Maximum number of source fqdn allowed is 100.
 spec.initProvider.match.srcIpRanges <[]string>	# CIDR IP address range. Maximum number of source CIDR IP ranges allowed is 5000.
+spec.initProvider.match.srcNetworkContext <string>	# Network context of the traffic source. Possible values are: UNSPECIFIED, INTERNET, INTRA_VPC, NON_INTERNET, VPC_NETWORKS.
+spec.initProvider.match.srcNetworks <[]string>	# Networks of the traffic source. It can be either a full or partial url.
+spec.initProvider.match.srcNetworksRefs <[]object>	# References to Network in compute to populate srcNetworks.
+spec.initProvider.match.srcNetworksRefs[].name <string> (required)	# Name of the referenced object.
+spec.initProvider.match.srcNetworksRefs[].namespace <string>	# Namespace of the referenced object
+spec.initProvider.match.srcNetworksRefs[].policy <object>	# Policies for referencing.
+spec.initProvider.match.srcNetworksRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.match.srcNetworksRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.match.srcNetworksSelector <object>	# Selector for a list of Network in compute to populate srcNetworks.
+spec.initProvider.match.srcNetworksSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.match.srcNetworksSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.match.srcNetworksSelector.namespace <string>	# Namespace for the selector
+spec.initProvider.match.srcNetworksSelector.policy <object>	# Policies for selection.
+spec.initProvider.match.srcNetworksSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.match.srcNetworksSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.match.srcRegionCodes <[]string>	# Region codes whose IP addresses will be used to match for source of traffic. Should be specified as 2 letter country code defined as per ISO 3166 alpha-2 country codes. ex."US" Maximum number of source region codes allowed is 5000.
 spec.initProvider.match.srcSecureTags <[]object>	# List of secure tag values, which should be matched at the source of the traffic. For INGRESS rule, if all the srcSecureTag are INEFFECTIVE, and there is no srcIpRange, this rule will be ignored. Maximum number of source tag values allowed is 256. Structure is documented below.
 spec.initProvider.match.srcSecureTags[].name <string>	# Name of the secure tag, created with TagManager's TagValue API.
@@ -125,9 +172,24 @@ spec.initProvider.match.srcThreatIntelligences <[]string>	# Names of Network Thr
 spec.initProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.initProvider.ruleName <string>	# An optional name for the rule. This field is not a unique identifier and can be updated.
 spec.initProvider.securityProfileGroup <string>	# A fully-qualified URL of a SecurityProfile resource instance. Example: https://networksecurity.googleapis.com/v1/projects/{project}/locations/{location}/securityProfileGroups/my-security-profile-group Must be specified if action = 'apply_security_profile_group' and cannot be specified for other actions.
+spec.initProvider.targetForwardingRules <[]string>	# A list of forwarding rules to which this rule applies. This field allows you to control which load balancers get this rule. For example, the following are valid values:
+spec.initProvider.targetForwardingRulesRefs <[]object>	# References to ForwardingRule in compute to populate targetForwardingRules.
+spec.initProvider.targetForwardingRulesRefs[].name <string> (required)	# Name of the referenced object.
+spec.initProvider.targetForwardingRulesRefs[].namespace <string>	# Namespace of the referenced object
+spec.initProvider.targetForwardingRulesRefs[].policy <object>	# Policies for referencing.
+spec.initProvider.targetForwardingRulesRefs[].policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.targetForwardingRulesRefs[].policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.targetForwardingRulesSelector <object>	# Selector for a list of ForwardingRule in compute to populate targetForwardingRules.
+spec.initProvider.targetForwardingRulesSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.targetForwardingRulesSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.targetForwardingRulesSelector.namespace <string>	# Namespace for the selector
+spec.initProvider.targetForwardingRulesSelector.policy <object>	# Policies for selection.
+spec.initProvider.targetForwardingRulesSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.targetForwardingRulesSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.targetSecureTags <[]object>	# A list of secure tags that controls which instances the firewall rule applies to. If targetSecureTag are specified, then the firewall rule applies only to instances in the VPC network that have one of those EFFECTIVE secure tags, if all the targetSecureTag are in INEFFECTIVE state, then this rule will be ignored. targetSecureTag may not be set at the same time as targetServiceAccounts. If neither targetServiceAccounts nor targetSecureTag are specified, the firewall rule applies to all instances on the specified network. Maximum number of target label tags allowed is 256. Structure is documented below.
 spec.initProvider.targetSecureTags[].name <string>	# Name of the secure tag, created with TagManager's TagValue API.
 spec.initProvider.targetServiceAccounts <[]string>	# A list of service accounts indicating the sets of instances that are applied with this rule.
+spec.initProvider.targetType <string>	# Target types of the firewall policy rule. Default value is INSTANCES. When target_type is INTERNAL_MANAGED_LB, target_forwarding_rules must be set Possible values are: INSTANCES, INTERNAL_MANAGED_LB.
 spec.initProvider.tlsInspect <boolean>	# Boolean flag indicating if the traffic should be TLS decrypted. Can be set only if action = 'apply_security_profile_group' and cannot be set for other actions.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
 spec.providerConfigRef <object> default={"kind":"ClusterProviderConfig","name":"default"}	# ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -139,6 +201,7 @@ status <object>	# NetworkFirewallPolicyRuleStatus defines the observed state of 
 status.atProvider <object>
 status.atProvider.action <string>	# The Action to perform when the client connection triggers the rule. Valid actions are "allow", "deny", "goto_next" and "apply_security_profile_group".
 status.atProvider.creationTimestamp <string>	# Creation timestamp in RFC3339 text format.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# An optional description for this resource.
 status.atProvider.direction <string>	# The direction in which this rule applies. Possible values are: INGRESS, EGRESS.
 status.atProvider.disabled <boolean>	# Denotes whether the firewall policy rule is disabled. When set to true, the firewall policy rule is not enforced and traffic behaves as if it did not exist. If this is unspecified, the firewall policy rule will be enabled.
@@ -150,6 +213,7 @@ status.atProvider.match <object>	# A match condition that incoming traffic is ev
 status.atProvider.match.destAddressGroups <[]string>	# Address groups which should be matched against the traffic destination. Maximum number of destination address groups is 10.
 status.atProvider.match.destFqdns <[]string>	# Fully Qualified Domain Name (FQDN) which should be matched against traffic destination. Maximum number of destination fqdn allowed is 100.
 status.atProvider.match.destIpRanges <[]string>	# CIDR IP address range. Maximum number of destination CIDR IP ranges allowed is 5000.
+status.atProvider.match.destNetworkContext <string>	# Network context of the traffic destination. Possible values are: UNSPECIFIED, INTERNET, INTRA_VPC, NON_INTERNET, VPC_NETWORKS.
 status.atProvider.match.destRegionCodes <[]string>	# Region codes whose IP addresses will be used to match for destination of traffic. Should be specified as 2 letter country code defined as per ISO 3166 alpha-2 country codes. ex."US" Maximum number of dest region codes allowed is 5000.
 status.atProvider.match.destThreatIntelligences <[]string>	# Names of Network Threat Intelligence lists. The IPs in these lists will be matched against traffic destination.
 status.atProvider.match.layer4Configs <[]object>	# Pairs of IP protocols and ports that the rule should match. Structure is documented below.
@@ -158,6 +222,8 @@ status.atProvider.match.layer4Configs[].ports <[]string>	# An optional list of p
 status.atProvider.match.srcAddressGroups <[]string>	# Address groups which should be matched against the traffic source. Maximum number of source address groups is 10.
 status.atProvider.match.srcFqdns <[]string>	# Fully Qualified Domain Name (FQDN) which should be matched against traffic source. Maximum number of source fqdn allowed is 100.
 status.atProvider.match.srcIpRanges <[]string>	# CIDR IP address range. Maximum number of source CIDR IP ranges allowed is 5000.
+status.atProvider.match.srcNetworkContext <string>	# Network context of the traffic source. Possible values are: UNSPECIFIED, INTERNET, INTRA_VPC, NON_INTERNET, VPC_NETWORKS.
+status.atProvider.match.srcNetworks <[]string>	# Networks of the traffic source. It can be either a full or partial url.
 status.atProvider.match.srcRegionCodes <[]string>	# Region codes whose IP addresses will be used to match for source of traffic. Should be specified as 2 letter country code defined as per ISO 3166 alpha-2 country codes. ex."US" Maximum number of source region codes allowed is 5000.
 status.atProvider.match.srcSecureTags <[]object>	# List of secure tag values, which should be matched at the source of the traffic. For INGRESS rule, if all the srcSecureTag are INEFFECTIVE, and there is no srcIpRange, this rule will be ignored. Maximum number of source tag values allowed is 256. Structure is documented below.
 status.atProvider.match.srcSecureTags[].name <string>	# Name of the secure tag, created with TagManager's TagValue API.
@@ -168,10 +234,12 @@ status.atProvider.project <string>	# The ID of the project in which the resource
 status.atProvider.ruleName <string>	# An optional name for the rule. This field is not a unique identifier and can be updated.
 status.atProvider.ruleTupleCount <number>	# Calculation of the complexity of a single firewall policy rule.
 status.atProvider.securityProfileGroup <string>	# A fully-qualified URL of a SecurityProfile resource instance. Example: https://networksecurity.googleapis.com/v1/projects/{project}/locations/{location}/securityProfileGroups/my-security-profile-group Must be specified if action = 'apply_security_profile_group' and cannot be specified for other actions.
+status.atProvider.targetForwardingRules <[]string>	# A list of forwarding rules to which this rule applies. This field allows you to control which load balancers get this rule. For example, the following are valid values:
 status.atProvider.targetSecureTags <[]object>	# A list of secure tags that controls which instances the firewall rule applies to. If targetSecureTag are specified, then the firewall rule applies only to instances in the VPC network that have one of those EFFECTIVE secure tags, if all the targetSecureTag are in INEFFECTIVE state, then this rule will be ignored. targetSecureTag may not be set at the same time as targetServiceAccounts. If neither targetServiceAccounts nor targetSecureTag are specified, the firewall rule applies to all instances on the specified network. Maximum number of target label tags allowed is 256. Structure is documented below.
 status.atProvider.targetSecureTags[].name <string>	# Name of the secure tag, created with TagManager's TagValue API.
 status.atProvider.targetSecureTags[].state <string>	# (Output) State of the secure tag, either EFFECTIVE or INEFFECTIVE. A secure tag is INEFFECTIVE when it is deleted or its network is deleted.
 status.atProvider.targetServiceAccounts <[]string>	# A list of service accounts indicating the sets of instances that are applied with this rule.
+status.atProvider.targetType <string>	# Target types of the firewall policy rule. Default value is INSTANCES. When target_type is INTERNAL_MANAGED_LB, target_forwarding_rules must be set Possible values are: INSTANCES, INTERNAL_MANAGED_LB.
 status.atProvider.tlsInspect <boolean>	# Boolean flag indicating if the traffic should be TLS decrypted. Can be set only if action = 'apply_security_profile_group' and cannot be set for other actions.
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
@@ -180,4 +248,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

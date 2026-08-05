@@ -1,4 +1,4 @@
-# schema source: Upbound Azure Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-azure
+# schema source: Upbound Azure Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-azure
 apiVersion <string> enum=recoveryservices.azure.upbound.io/v1beta2
 kind <string> enum=Vault (cluster-scoped)
 metadata.name <string> (required)
@@ -18,8 +18,11 @@ spec.forProvider.identity.type <string>	# Specifies the type of Managed Service 
 spec.forProvider.immutability <string>	# Immutability Settings of vault, possible values include: Locked, Unlocked and Disabled.
 spec.forProvider.location <string>	# Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 spec.forProvider.monitoring <object>	# A monitoring block as defined below.
+spec.forProvider.monitoring.alertsForAllFailoverIssuesEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for all failover issues. Defaults to true.
 spec.forProvider.monitoring.alertsForAllJobFailuresEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for security scenarios and job failure scenarios. Defaults to true.
+spec.forProvider.monitoring.alertsForAllReplicationIssuesEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for all replication issues. Defaults to true.
 spec.forProvider.monitoring.alertsForCriticalOperationFailuresEnabled <boolean>	# Enabling/Disabling alerts from the older (classic alerts) solution. Defaults to true. More details could be found here.
+spec.forProvider.monitoring.emailNotificationsForSiteRecoveryEnabled <boolean>	# Enabling/Disabling email notifications for site recovery (classic alerts) solution. Defaults to true.
 spec.forProvider.publicNetworkAccessEnabled <boolean>	# Is it enabled to access the vault from public networks. Defaults to true.
 spec.forProvider.resourceGroupName <string>	# The name of the resource group in which to create the Recovery Services Vault. Changing this forces a new resource to be created.
 spec.forProvider.resourceGroupNameRef <object>	# Reference to a ResourceGroup in azure to populate resourceGroupName.
@@ -34,7 +37,7 @@ spec.forProvider.resourceGroupNameSelector.policy <object>	# Policies for select
 spec.forProvider.resourceGroupNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.resourceGroupNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.sku <string>	# Sets the vault's SKU. Possible values include: Standard, RS0.
-spec.forProvider.softDeleteEnabled <boolean>	# Is soft delete enable for this Vault? Defaults to true.
+spec.forProvider.softDeleteEnabled <boolean>
 spec.forProvider.storageModeType <string>	# The storage type of the Recovery Services Vault. Possible values are GeoRedundant, LocallyRedundant and ZoneRedundant. Defaults to GeoRedundant.
 spec.forProvider.tags <map[string]string>	# A mapping of tags to assign to the resource.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
@@ -51,11 +54,14 @@ spec.initProvider.identity.type <string>	# Specifies the type of Managed Service
 spec.initProvider.immutability <string>	# Immutability Settings of vault, possible values include: Locked, Unlocked and Disabled.
 spec.initProvider.location <string>	# Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 spec.initProvider.monitoring <object>	# A monitoring block as defined below.
+spec.initProvider.monitoring.alertsForAllFailoverIssuesEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for all failover issues. Defaults to true.
 spec.initProvider.monitoring.alertsForAllJobFailuresEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for security scenarios and job failure scenarios. Defaults to true.
+spec.initProvider.monitoring.alertsForAllReplicationIssuesEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for all replication issues. Defaults to true.
 spec.initProvider.monitoring.alertsForCriticalOperationFailuresEnabled <boolean>	# Enabling/Disabling alerts from the older (classic alerts) solution. Defaults to true. More details could be found here.
+spec.initProvider.monitoring.emailNotificationsForSiteRecoveryEnabled <boolean>	# Enabling/Disabling email notifications for site recovery (classic alerts) solution. Defaults to true.
 spec.initProvider.publicNetworkAccessEnabled <boolean>	# Is it enabled to access the vault from public networks. Defaults to true.
 spec.initProvider.sku <string>	# Sets the vault's SKU. Possible values include: Standard, RS0.
-spec.initProvider.softDeleteEnabled <boolean>	# Is soft delete enable for this Vault? Defaults to true.
+spec.initProvider.softDeleteEnabled <boolean>
 spec.initProvider.storageModeType <string>	# The storage type of the Recovery Services Vault. Possible values are GeoRedundant, LocallyRedundant and ZoneRedundant. Defaults to GeoRedundant.
 spec.initProvider.tags <map[string]string>	# A mapping of tags to assign to the resource.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. This field is planned to replace the DeletionPolicy field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. If both are custom, the DeletionPolicy field will be ignored. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -85,12 +91,15 @@ status.atProvider.identity.type <string>	# Specifies the type of Managed Service
 status.atProvider.immutability <string>	# Immutability Settings of vault, possible values include: Locked, Unlocked and Disabled.
 status.atProvider.location <string>	# Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 status.atProvider.monitoring <object>	# A monitoring block as defined below.
+status.atProvider.monitoring.alertsForAllFailoverIssuesEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for all failover issues. Defaults to true.
 status.atProvider.monitoring.alertsForAllJobFailuresEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for security scenarios and job failure scenarios. Defaults to true.
+status.atProvider.monitoring.alertsForAllReplicationIssuesEnabled <boolean>	# Enabling/Disabling built-in Azure Monitor alerts for all replication issues. Defaults to true.
 status.atProvider.monitoring.alertsForCriticalOperationFailuresEnabled <boolean>	# Enabling/Disabling alerts from the older (classic alerts) solution. Defaults to true. More details could be found here.
+status.atProvider.monitoring.emailNotificationsForSiteRecoveryEnabled <boolean>	# Enabling/Disabling email notifications for site recovery (classic alerts) solution. Defaults to true.
 status.atProvider.publicNetworkAccessEnabled <boolean>	# Is it enabled to access the vault from public networks. Defaults to true.
 status.atProvider.resourceGroupName <string>	# The name of the resource group in which to create the Recovery Services Vault. Changing this forces a new resource to be created.
 status.atProvider.sku <string>	# Sets the vault's SKU. Possible values include: Standard, RS0.
-status.atProvider.softDeleteEnabled <boolean>	# Is soft delete enable for this Vault? Defaults to true.
+status.atProvider.softDeleteEnabled <boolean>
 status.atProvider.storageModeType <string>	# The storage type of the Recovery Services Vault. Possible values are GeoRedundant, LocallyRedundant and ZoneRedundant. Defaults to GeoRedundant.
 status.atProvider.tags <map[string]string>	# A mapping of tags to assign to the resource.
 status.conditions <[]object>	# Conditions of the resource.
@@ -100,4 +109,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

@@ -87,86 +87,6 @@
                   "description": "Service account to be used for building the container. The format of this field is projects/{projectId}/serviceAccounts/{serviceAccountEmail}.",
                   "type": "string"
                 },
-                "serviceAccountRef": {
-                  "additionalProperties": false,
-                  "description": "Reference to a ServiceAccount in cloudplatform to populate serviceAccount.",
-                  "properties": {
-                    "name": {
-                      "description": "Name of the referenced object.",
-                      "type": "string"
-                    },
-                    "policy": {
-                      "additionalProperties": false,
-                      "description": "Policies for referencing.",
-                      "properties": {
-                        "resolution": {
-                          "default": "Required",
-                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
-                          "enum": [
-                            "Required",
-                            "Optional"
-                          ],
-                          "type": "string"
-                        },
-                        "resolve": {
-                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
-                          "enum": [
-                            "Always",
-                            "IfNotPresent"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "name"
-                  ],
-                  "type": "object"
-                },
-                "serviceAccountSelector": {
-                  "additionalProperties": false,
-                  "description": "Selector for a ServiceAccount in cloudplatform to populate serviceAccount.",
-                  "properties": {
-                    "matchControllerRef": {
-                      "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
-                      "type": "boolean"
-                    },
-                    "matchLabels": {
-                      "additionalProperties": {
-                        "type": "string"
-                      },
-                      "description": "MatchLabels ensures an object with matching labels is selected.",
-                      "type": "object"
-                    },
-                    "policy": {
-                      "additionalProperties": false,
-                      "description": "Policies for selection.",
-                      "properties": {
-                        "resolution": {
-                          "default": "Required",
-                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
-                          "enum": [
-                            "Required",
-                            "Optional"
-                          ],
-                          "type": "string"
-                        },
-                        "resolve": {
-                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
-                          "enum": [
-                            "Always",
-                            "IfNotPresent"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "type": "object"
-                },
                 "sourceLocation": {
                   "description": "The Cloud Storage bucket URI where the function source code is located.",
                   "type": "string"
@@ -193,6 +113,10 @@
               },
               "type": "array"
             },
+            "defaultUriDisabled": {
+              "description": "Disables public resolution of the default URI of this service.",
+              "type": "boolean"
+            },
             "deletionProtection": {
               "description": "Defaults to true.\nWhen the field is set to false, deleting the service is allowed.",
               "type": "boolean"
@@ -200,6 +124,10 @@
             "description": {
               "description": "User-provided description of the Service. This field currently has a 512-character limit.",
               "type": "string"
+            },
+            "iapEnabled": {
+              "description": "Used to enable/disable IAP for the cloud-run service.",
+              "type": "boolean"
             },
             "ingress": {
               "description": "Provides the ingress settings for this Service. On output, returns the currently observed ingress settings, or INGRESS_TRAFFIC_UNSPECIFIED if no revision is active.\nPossible values are: INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL_ONLY, INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER.",
@@ -213,7 +141,7 @@
               "additionalProperties": {
                 "type": "string"
               },
-              "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component,\nenvironment, state, etc. For more information, visit https://cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with  run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 Service.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
+              "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component,\nenvironment, state, etc. For more information, visit https://docs.cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with  run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 Service.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
               "type": "object",
               "x-kubernetes-map-type": "granular"
             },
@@ -225,6 +153,20 @@
               "description": "The location of the cloud run service",
               "type": "string"
             },
+            "multiRegionSettings": {
+              "additionalProperties": false,
+              "description": "Settings for creating a Multi-Region Service. Make sure to use region = 'global' when using them. For more information, visit https://cloud.google.com/run/docs/multiple-regions#deploy\nStructure is documented below.",
+              "properties": {
+                "regions": {
+                  "description": "The list of regions to deploy the multi-region Service.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
             "project": {
               "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
               "type": "string"
@@ -235,6 +177,10 @@
               "properties": {
                 "manualInstanceCount": {
                   "description": "Total instance count for the service in manual scaling mode. This number of instances is divided among all revisions with specified traffic based on the percent of traffic they are receiving.",
+                  "type": "number"
+                },
+                "maxInstanceCount": {
+                  "description": "Maximum number of serving instances that this resource should have. Must not be less than minimum instance count. If absent, Cloud Run will calculate\na default value based on the project's available container instances quota in the region and specified instance size.",
                   "type": "number"
                 },
                 "minInstanceCount": {
@@ -515,6 +461,59 @@
                         },
                         "type": "object"
                       },
+                      "readinessProbe": {
+                        "additionalProperties": false,
+                        "description": "Periodic probe of container readiness.\nStructure is documented below.",
+                        "properties": {
+                          "failureThreshold": {
+                            "description": "Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.",
+                            "type": "number"
+                          },
+                          "grpc": {
+                            "additionalProperties": false,
+                            "description": "GRPC specifies an action involving a GRPC port.\nStructure is documented below.",
+                            "properties": {
+                              "port": {
+                                "description": "Port number to access on the container. Must be in the range 1 to 65535.\nIf not specified, defaults to the exposed port of the container, which\nis the value of container.ports[0].containerPort.",
+                                "type": "number"
+                              },
+                              "service": {
+                                "description": "The name of the service to place in the gRPC HealthCheckRequest\n(see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).\nIf this is not specified, the default behavior is defined by gRPC.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "httpGet": {
+                            "additionalProperties": false,
+                            "description": "HTTPGet specifies the http request to perform. Exactly one of HTTPGet or TCPSocket must be specified.\nStructure is documented below.",
+                            "properties": {
+                              "path": {
+                                "description": "Path that is exported by the NFS server.",
+                                "type": "string"
+                              },
+                              "port": {
+                                "description": "Port number to access on the container. Must be in the range 1 to 65535.\nIf not specified, defaults to the exposed port of the container, which\nis the value of container.ports[0].containerPort.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "periodSeconds": {
+                            "description": "How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. Must be greater or equal than timeoutSeconds",
+                            "type": "number"
+                          },
+                          "successThreshold": {
+                            "description": "Minimum consecutive successes for the probe to be considered successful after having failed.\nDefaults to 2.",
+                            "type": "number"
+                          },
+                          "timeoutSeconds": {
+                            "description": "Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. Maximum value is 3600. Must be smaller than periodSeconds. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+                            "type": "number"
+                          }
+                        },
+                        "type": "object"
+                      },
                       "resources": {
                         "additionalProperties": false,
                         "description": "Compute Resource requirements by this container. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources\nStructure is documented below.",
@@ -527,7 +526,7 @@
                             "additionalProperties": {
                               "type": "string"
                             },
-                            "description": "Only memory, CPU, and nvidia.com/gpu are supported. Use key cpu for CPU limit, memory for memory limit, nvidia.com/gpu for gpu limit. Note: The only supported values for CPU are '1', '2', '4', and '8'. Setting 4 CPU requires at least 2Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go",
+                            "description": "Only memory, CPU, and nvidia.com/gpu are supported. Use key cpu for CPU limit, memory for memory limit, nvidia.com/gpu for gpu limit. Note: The only supported values for CPU are '1', '2', '4', '6' and '8'. Setting 4 CPU requires at least 2Gi of memory, setting 6 or more CPU requires at least 4Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go",
                             "type": "object",
                             "x-kubernetes-map-type": "granular"
                           },
@@ -632,6 +631,10 @@
                             "name": {
                               "description": "Volume's name.",
                               "type": "string"
+                            },
+                            "subPath": {
+                              "description": "Path within the volume from which the container's volume should be mounted.",
+                              "type": "string"
                             }
                           },
                           "type": "object"
@@ -659,11 +662,15 @@
                   "description": "True if GPU zonal redundancy is disabled on this revision.",
                   "type": "boolean"
                 },
+                "healthCheckDisabled": {
+                  "description": "Disables health checking containers during deployment.",
+                  "type": "boolean"
+                },
                 "labels": {
                   "additionalProperties": {
                     "type": "string"
                   },
-                  "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component, environment, state, etc.\nFor more information, visit https://cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 RevisionTemplate.",
+                  "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component, environment, state, etc.\nFor more information, visit https://docs.cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 RevisionTemplate.",
                   "type": "object",
                   "x-kubernetes-map-type": "granular"
                 },
@@ -822,7 +829,7 @@
                         "description": "Ephemeral storage used as a shared volume.\nStructure is documented below.",
                         "properties": {
                           "medium": {
-                            "description": "The different types of medium supported for EmptyDir.\nDefault value is MEMORY.\nPossible values are: MEMORY.",
+                            "description": "The different types of medium supported for EmptyDir.\nDefault value is MEMORY.\nPossible values are: MEMORY, DISK.",
                             "type": "string"
                           },
                           "sizeLimit": {
@@ -837,7 +844,7 @@
                         "description": "Cloud Storage bucket mounted as a volume using GCSFuse. This feature is only supported in the gen2 execution environment.\nStructure is documented below.",
                         "properties": {
                           "bucket": {
-                            "description": "GCS Bucket name",
+                            "description": "The Cloud Storage bucket name.",
                             "type": "string"
                           },
                           "bucketRef": {
@@ -919,6 +926,13 @@
                               }
                             },
                             "type": "object"
+                          },
+                          "mountOptions": {
+                            "description": "A list of flags to pass to the gcsfuse command for configuring this volume.\nFlags should be passed without leading dashes.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
                           },
                           "readOnly": {
                             "description": "If true, mount the NFS volume as read only",
@@ -1210,86 +1224,6 @@
                   "description": "Service account to be used for building the container. The format of this field is projects/{projectId}/serviceAccounts/{serviceAccountEmail}.",
                   "type": "string"
                 },
-                "serviceAccountRef": {
-                  "additionalProperties": false,
-                  "description": "Reference to a ServiceAccount in cloudplatform to populate serviceAccount.",
-                  "properties": {
-                    "name": {
-                      "description": "Name of the referenced object.",
-                      "type": "string"
-                    },
-                    "policy": {
-                      "additionalProperties": false,
-                      "description": "Policies for referencing.",
-                      "properties": {
-                        "resolution": {
-                          "default": "Required",
-                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
-                          "enum": [
-                            "Required",
-                            "Optional"
-                          ],
-                          "type": "string"
-                        },
-                        "resolve": {
-                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
-                          "enum": [
-                            "Always",
-                            "IfNotPresent"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "name"
-                  ],
-                  "type": "object"
-                },
-                "serviceAccountSelector": {
-                  "additionalProperties": false,
-                  "description": "Selector for a ServiceAccount in cloudplatform to populate serviceAccount.",
-                  "properties": {
-                    "matchControllerRef": {
-                      "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
-                      "type": "boolean"
-                    },
-                    "matchLabels": {
-                      "additionalProperties": {
-                        "type": "string"
-                      },
-                      "description": "MatchLabels ensures an object with matching labels is selected.",
-                      "type": "object"
-                    },
-                    "policy": {
-                      "additionalProperties": false,
-                      "description": "Policies for selection.",
-                      "properties": {
-                        "resolution": {
-                          "default": "Required",
-                          "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
-                          "enum": [
-                            "Required",
-                            "Optional"
-                          ],
-                          "type": "string"
-                        },
-                        "resolve": {
-                          "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
-                          "enum": [
-                            "Always",
-                            "IfNotPresent"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "type": "object"
-                },
                 "sourceLocation": {
                   "description": "The Cloud Storage bucket URI where the function source code is located.",
                   "type": "string"
@@ -1316,6 +1250,10 @@
               },
               "type": "array"
             },
+            "defaultUriDisabled": {
+              "description": "Disables public resolution of the default URI of this service.",
+              "type": "boolean"
+            },
             "deletionProtection": {
               "description": "Defaults to true.\nWhen the field is set to false, deleting the service is allowed.",
               "type": "boolean"
@@ -1323,6 +1261,10 @@
             "description": {
               "description": "User-provided description of the Service. This field currently has a 512-character limit.",
               "type": "string"
+            },
+            "iapEnabled": {
+              "description": "Used to enable/disable IAP for the cloud-run service.",
+              "type": "boolean"
             },
             "ingress": {
               "description": "Provides the ingress settings for this Service. On output, returns the currently observed ingress settings, or INGRESS_TRAFFIC_UNSPECIFIED if no revision is active.\nPossible values are: INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL_ONLY, INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER.",
@@ -1336,13 +1278,27 @@
               "additionalProperties": {
                 "type": "string"
               },
-              "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component,\nenvironment, state, etc. For more information, visit https://cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with  run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 Service.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
+              "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component,\nenvironment, state, etc. For more information, visit https://docs.cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with  run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 Service.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
               "type": "object",
               "x-kubernetes-map-type": "granular"
             },
             "launchStage": {
               "description": "The launch stage as defined by Google Cloud Platform Launch Stages. Cloud Run supports ALPHA, BETA, and GA.\nIf no value is specified, GA is assumed. Set the launch stage to a preview stage on input to allow use of preview features in that stage. On read (or output), describes whether the resource uses preview features.\nFor example, if ALPHA is provided as input, but only BETA and GA-level features are used, this field will be BETA on output.\nPossible values are: UNIMPLEMENTED, PRELAUNCH, EARLY_ACCESS, ALPHA, BETA, GA, DEPRECATED.",
               "type": "string"
+            },
+            "multiRegionSettings": {
+              "additionalProperties": false,
+              "description": "Settings for creating a Multi-Region Service. Make sure to use region = 'global' when using them. For more information, visit https://cloud.google.com/run/docs/multiple-regions#deploy\nStructure is documented below.",
+              "properties": {
+                "regions": {
+                  "description": "The list of regions to deploy the multi-region Service.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             },
             "project": {
               "description": "The ID of the project in which the resource belongs.\nIf it is not provided, the provider project is used.",
@@ -1354,6 +1310,10 @@
               "properties": {
                 "manualInstanceCount": {
                   "description": "Total instance count for the service in manual scaling mode. This number of instances is divided among all revisions with specified traffic based on the percent of traffic they are receiving.",
+                  "type": "number"
+                },
+                "maxInstanceCount": {
+                  "description": "Maximum number of serving instances that this resource should have. Must not be less than minimum instance count. If absent, Cloud Run will calculate\na default value based on the project's available container instances quota in the region and specified instance size.",
                   "type": "number"
                 },
                 "minInstanceCount": {
@@ -1634,6 +1594,59 @@
                         },
                         "type": "object"
                       },
+                      "readinessProbe": {
+                        "additionalProperties": false,
+                        "description": "Periodic probe of container readiness.\nStructure is documented below.",
+                        "properties": {
+                          "failureThreshold": {
+                            "description": "Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.",
+                            "type": "number"
+                          },
+                          "grpc": {
+                            "additionalProperties": false,
+                            "description": "GRPC specifies an action involving a GRPC port.\nStructure is documented below.",
+                            "properties": {
+                              "port": {
+                                "description": "Port number to access on the container. Must be in the range 1 to 65535.\nIf not specified, defaults to the exposed port of the container, which\nis the value of container.ports[0].containerPort.",
+                                "type": "number"
+                              },
+                              "service": {
+                                "description": "The name of the service to place in the gRPC HealthCheckRequest\n(see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).\nIf this is not specified, the default behavior is defined by gRPC.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "httpGet": {
+                            "additionalProperties": false,
+                            "description": "HTTPGet specifies the http request to perform. Exactly one of HTTPGet or TCPSocket must be specified.\nStructure is documented below.",
+                            "properties": {
+                              "path": {
+                                "description": "Path that is exported by the NFS server.",
+                                "type": "string"
+                              },
+                              "port": {
+                                "description": "Port number to access on the container. Must be in the range 1 to 65535.\nIf not specified, defaults to the exposed port of the container, which\nis the value of container.ports[0].containerPort.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "periodSeconds": {
+                            "description": "How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. Must be greater or equal than timeoutSeconds",
+                            "type": "number"
+                          },
+                          "successThreshold": {
+                            "description": "Minimum consecutive successes for the probe to be considered successful after having failed.\nDefaults to 2.",
+                            "type": "number"
+                          },
+                          "timeoutSeconds": {
+                            "description": "Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. Maximum value is 3600. Must be smaller than periodSeconds. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+                            "type": "number"
+                          }
+                        },
+                        "type": "object"
+                      },
                       "resources": {
                         "additionalProperties": false,
                         "description": "Compute Resource requirements by this container. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources\nStructure is documented below.",
@@ -1646,7 +1659,7 @@
                             "additionalProperties": {
                               "type": "string"
                             },
-                            "description": "Only memory, CPU, and nvidia.com/gpu are supported. Use key cpu for CPU limit, memory for memory limit, nvidia.com/gpu for gpu limit. Note: The only supported values for CPU are '1', '2', '4', and '8'. Setting 4 CPU requires at least 2Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go",
+                            "description": "Only memory, CPU, and nvidia.com/gpu are supported. Use key cpu for CPU limit, memory for memory limit, nvidia.com/gpu for gpu limit. Note: The only supported values for CPU are '1', '2', '4', '6' and '8'. Setting 4 CPU requires at least 2Gi of memory, setting 6 or more CPU requires at least 4Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go",
                             "type": "object",
                             "x-kubernetes-map-type": "granular"
                           },
@@ -1751,6 +1764,10 @@
                             "name": {
                               "description": "Volume's name.",
                               "type": "string"
+                            },
+                            "subPath": {
+                              "description": "Path within the volume from which the container's volume should be mounted.",
+                              "type": "string"
                             }
                           },
                           "type": "object"
@@ -1778,11 +1795,15 @@
                   "description": "True if GPU zonal redundancy is disabled on this revision.",
                   "type": "boolean"
                 },
+                "healthCheckDisabled": {
+                  "description": "Disables health checking containers during deployment.",
+                  "type": "boolean"
+                },
                 "labels": {
                   "additionalProperties": {
                     "type": "string"
                   },
-                  "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component, environment, state, etc.\nFor more information, visit https://cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 RevisionTemplate.",
+                  "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component, environment, state, etc.\nFor more information, visit https://docs.cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 RevisionTemplate.",
                   "type": "object",
                   "x-kubernetes-map-type": "granular"
                 },
@@ -1941,7 +1962,7 @@
                         "description": "Ephemeral storage used as a shared volume.\nStructure is documented below.",
                         "properties": {
                           "medium": {
-                            "description": "The different types of medium supported for EmptyDir.\nDefault value is MEMORY.\nPossible values are: MEMORY.",
+                            "description": "The different types of medium supported for EmptyDir.\nDefault value is MEMORY.\nPossible values are: MEMORY, DISK.",
                             "type": "string"
                           },
                           "sizeLimit": {
@@ -1956,7 +1977,7 @@
                         "description": "Cloud Storage bucket mounted as a volume using GCSFuse. This feature is only supported in the gen2 execution environment.\nStructure is documented below.",
                         "properties": {
                           "bucket": {
-                            "description": "GCS Bucket name",
+                            "description": "The Cloud Storage bucket name.",
                             "type": "string"
                           },
                           "bucketRef": {
@@ -2038,6 +2059,13 @@
                               }
                             },
                             "type": "object"
+                          },
+                          "mountOptions": {
+                            "description": "A list of flags to pass to the gcsfuse command for configuring this volume.\nFlags should be passed without leading dashes.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
                           },
                           "readOnly": {
                             "description": "If true, mount the NFS volume as read only",
@@ -2500,8 +2528,16 @@
               },
               "type": "array"
             },
+            "defaultUriDisabled": {
+              "description": "Disables public resolution of the default URI of this service.",
+              "type": "boolean"
+            },
             "deleteTime": {
               "description": "The deletion time.",
+              "type": "string"
+            },
+            "deletionPolicy": {
+              "description": "Defaults to DELETE.\nWhen set to \"DELETE\", deleting the resource is allowed.",
               "type": "string"
             },
             "deletionProtection": {
@@ -2538,6 +2574,10 @@
               "description": "A number that monotonically increases every time the user modifies the desired state. Please note that unlike v1, this is an int64 value. As with most Google APIs, its JSON representation will be a string instead of an integer.",
               "type": "string"
             },
+            "iapEnabled": {
+              "description": "Used to enable/disable IAP for the cloud-run service.",
+              "type": "boolean"
+            },
             "id": {
               "description": "an identifier for the resource with format projects/{{project}}/locations/{{location}}/services/{{name}}",
               "type": "string"
@@ -2554,7 +2594,7 @@
               "additionalProperties": {
                 "type": "string"
               },
-              "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component,\nenvironment, state, etc. For more information, visit https://cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with  run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 Service.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
+              "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component,\nenvironment, state, etc. For more information, visit https://docs.cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with  run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 Service.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
               "type": "object",
               "x-kubernetes-map-type": "granular"
             },
@@ -2578,6 +2618,24 @@
               "description": "The location of the cloud run service",
               "type": "string"
             },
+            "multiRegionSettings": {
+              "additionalProperties": false,
+              "description": "Settings for creating a Multi-Region Service. Make sure to use region = 'global' when using them. For more information, visit https://cloud.google.com/run/docs/multiple-regions#deploy\nStructure is documented below.",
+              "properties": {
+                "multiRegionId": {
+                  "description": "(Output)\nSystem-generated unique id for the multi-region Service.",
+                  "type": "string"
+                },
+                "regions": {
+                  "description": "The list of regions to deploy the multi-region Service.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
             "observedGeneration": {
               "description": "The generation of this Service currently serving traffic. See comments in reconciling for additional information on reconciliation process in Cloud Run. Please note that unlike v1, this is an int64 value. As with most Google APIs, its JSON representation will be a string instead of an integer.",
               "type": "string"
@@ -2596,6 +2654,10 @@
               "properties": {
                 "manualInstanceCount": {
                   "description": "Total instance count for the service in manual scaling mode. This number of instances is divided among all revisions with specified traffic based on the percent of traffic they are receiving.",
+                  "type": "number"
+                },
+                "maxInstanceCount": {
+                  "description": "Maximum number of serving instances that this resource should have. Must not be less than minimum instance count. If absent, Cloud Run will calculate\na default value based on the project's available container instances quota in the region and specified instance size.",
                   "type": "number"
                 },
                 "minInstanceCount": {
@@ -2814,6 +2876,59 @@
                         },
                         "type": "object"
                       },
+                      "readinessProbe": {
+                        "additionalProperties": false,
+                        "description": "Periodic probe of container readiness.\nStructure is documented below.",
+                        "properties": {
+                          "failureThreshold": {
+                            "description": "Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.",
+                            "type": "number"
+                          },
+                          "grpc": {
+                            "additionalProperties": false,
+                            "description": "GRPC specifies an action involving a GRPC port.\nStructure is documented below.",
+                            "properties": {
+                              "port": {
+                                "description": "Port number to access on the container. Must be in the range 1 to 65535.\nIf not specified, defaults to the exposed port of the container, which\nis the value of container.ports[0].containerPort.",
+                                "type": "number"
+                              },
+                              "service": {
+                                "description": "The name of the service to place in the gRPC HealthCheckRequest\n(see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).\nIf this is not specified, the default behavior is defined by gRPC.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "httpGet": {
+                            "additionalProperties": false,
+                            "description": "HTTPGet specifies the http request to perform. Exactly one of HTTPGet or TCPSocket must be specified.\nStructure is documented below.",
+                            "properties": {
+                              "path": {
+                                "description": "Path that is exported by the NFS server.",
+                                "type": "string"
+                              },
+                              "port": {
+                                "description": "Port number to access on the container. Must be in the range 1 to 65535.\nIf not specified, defaults to the exposed port of the container, which\nis the value of container.ports[0].containerPort.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "periodSeconds": {
+                            "description": "How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. Must be greater or equal than timeoutSeconds",
+                            "type": "number"
+                          },
+                          "successThreshold": {
+                            "description": "Minimum consecutive successes for the probe to be considered successful after having failed.\nDefaults to 2.",
+                            "type": "number"
+                          },
+                          "timeoutSeconds": {
+                            "description": "Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. Maximum value is 3600. Must be smaller than periodSeconds. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+                            "type": "number"
+                          }
+                        },
+                        "type": "object"
+                      },
                       "resources": {
                         "additionalProperties": false,
                         "description": "Compute Resource requirements by this container. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources\nStructure is documented below.",
@@ -2826,7 +2941,7 @@
                             "additionalProperties": {
                               "type": "string"
                             },
-                            "description": "Only memory, CPU, and nvidia.com/gpu are supported. Use key cpu for CPU limit, memory for memory limit, nvidia.com/gpu for gpu limit. Note: The only supported values for CPU are '1', '2', '4', and '8'. Setting 4 CPU requires at least 2Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go",
+                            "description": "Only memory, CPU, and nvidia.com/gpu are supported. Use key cpu for CPU limit, memory for memory limit, nvidia.com/gpu for gpu limit. Note: The only supported values for CPU are '1', '2', '4', '6' and '8'. Setting 4 CPU requires at least 2Gi of memory, setting 6 or more CPU requires at least 4Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go",
                             "type": "object",
                             "x-kubernetes-map-type": "granular"
                           },
@@ -2931,6 +3046,10 @@
                             "name": {
                               "description": "Volume's name.",
                               "type": "string"
+                            },
+                            "subPath": {
+                              "description": "Path within the volume from which the container's volume should be mounted.",
+                              "type": "string"
                             }
                           },
                           "type": "object"
@@ -2958,11 +3077,15 @@
                   "description": "True if GPU zonal redundancy is disabled on this revision.",
                   "type": "boolean"
                 },
+                "healthCheckDisabled": {
+                  "description": "Disables health checking containers during deployment.",
+                  "type": "boolean"
+                },
                 "labels": {
                   "additionalProperties": {
                     "type": "string"
                   },
-                  "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component, environment, state, etc.\nFor more information, visit https://cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 RevisionTemplate.",
+                  "description": "Unstructured key value map that can be used to organize and categorize objects. User-provided labels are shared with Google's billing system, so they can be used to filter, or break down billing charges by team, component, environment, state, etc.\nFor more information, visit https://docs.cloud.google.com/resource-manager/docs/creating-managing-labels or https://cloud.google.com/run/docs/configuring/labels.\nCloud Run API v2 does not support labels with run.googleapis.com, cloud.googleapis.com, serving.knative.dev, or autoscaling.knative.dev namespaces, and they will be rejected.\nAll system labels in v1 now have a corresponding field in v2 RevisionTemplate.",
                   "type": "object",
                   "x-kubernetes-map-type": "granular"
                 },
@@ -3037,7 +3160,7 @@
                         "description": "Ephemeral storage used as a shared volume.\nStructure is documented below.",
                         "properties": {
                           "medium": {
-                            "description": "The different types of medium supported for EmptyDir.\nDefault value is MEMORY.\nPossible values are: MEMORY.",
+                            "description": "The different types of medium supported for EmptyDir.\nDefault value is MEMORY.\nPossible values are: MEMORY, DISK.",
                             "type": "string"
                           },
                           "sizeLimit": {
@@ -3052,8 +3175,15 @@
                         "description": "Cloud Storage bucket mounted as a volume using GCSFuse. This feature is only supported in the gen2 execution environment.\nStructure is documented below.",
                         "properties": {
                           "bucket": {
-                            "description": "GCS Bucket name",
+                            "description": "The Cloud Storage bucket name.",
                             "type": "string"
+                          },
+                          "mountOptions": {
+                            "description": "A list of flags to pass to the gcsfuse command for configuring this volume.\nFlags should be passed without leading dashes.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
                           },
                           "readOnly": {
                             "description": "If true, mount the NFS volume as read only",
@@ -3344,6 +3474,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "lastHandledReconcileAt": {
+          "description": "LastHandledReconcileAt holds the value of the most recent\nreconcile-requested-at annotation token that the controller has\nprocessed. Users can compare this to the annotation to determine\nwhether a reconcile request has been handled.",
+          "type": "string"
         },
         "observedGeneration": {
           "description": "ObservedGeneration is the latest metadata.generation\nwhich resulted in either a ready state, or stalled due to error\nit can not recover from without human intervention.",

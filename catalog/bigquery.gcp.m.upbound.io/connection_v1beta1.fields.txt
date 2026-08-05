@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=bigquery.gcp.m.upbound.io/v1beta1
 kind <string> enum=Connection
 metadata.name <string> (required)
@@ -21,10 +21,10 @@ spec.forProvider.cloudSpanner.useParallelism <boolean>	# If parallelism should b
 spec.forProvider.cloudSpanner.useServerlessAnalytics <boolean>	# If the serverless analytics service should be used to read data from Cloud Spanner. useParallelism must be set when using serverless analytics.
 spec.forProvider.cloudSql <object>	# Connection properties specific to the Cloud SQL. Structure is documented below.
 spec.forProvider.cloudSql.credential <object>	# Cloud SQL properties. Structure is documented below.
-spec.forProvider.cloudSql.credential.passwordSecretRef <object>	# Password for database. Note: This property is sensitive and will not be displayed in the plan.
+spec.forProvider.cloudSql.credential.passwordSecretRef <object>	# Password configuration for the connector. Structure is documented below.
 spec.forProvider.cloudSql.credential.passwordSecretRef.key <string> (required)
 spec.forProvider.cloudSql.credential.passwordSecretRef.name <string> (required)	# Name of the secret.
-spec.forProvider.cloudSql.credential.username <string>	# Username for database.
+spec.forProvider.cloudSql.credential.username <string>	# Username for the connector.
 spec.forProvider.cloudSql.credential.usernameRef <object>	# Reference to a User in sql to populate username.
 spec.forProvider.cloudSql.credential.usernameRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.cloudSql.credential.usernameRef.namespace <string>	# Namespace of the referenced object
@@ -67,6 +67,23 @@ spec.forProvider.cloudSql.instanceIdSelector.policy <object>	# Policies for sele
 spec.forProvider.cloudSql.instanceIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.cloudSql.instanceIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.cloudSql.type <string>	# Type of the Cloud SQL database. Possible values are: DATABASE_TYPE_UNSPECIFIED, POSTGRES, MYSQL.
+spec.forProvider.configuration <object>	# Connector configuration. This is a generic configuration that is used to connect to external data sources such as AlloyDB, MySQL, and PostgreSQL using the BigQuery Connector framework. Structure is documented below.
+spec.forProvider.configuration.asset <object>	# Asset configuration for the connector. Structure is documented below.
+spec.forProvider.configuration.asset.database <string>	# Database name.
+spec.forProvider.configuration.asset.googleCloudResource <string>	# The full resource name of the Google Cloud resource. For AlloyDB, this is in the format of //alloydb.googleapis.com/projects/{project}/locations/{region}/clusters/{cluster}/instances/{instance}.
+spec.forProvider.configuration.authentication <object>	# Authentication configuration for the connector. Structure is documented below.
+spec.forProvider.configuration.authentication.usernamePassword <object>	# Username/password authentication configuration. Structure is documented below.
+spec.forProvider.configuration.authentication.usernamePassword.password <object>	# Password configuration for the connector. Structure is documented below.
+spec.forProvider.configuration.authentication.usernamePassword.password.plaintextSecretRef <object>	# The plaintext password. Note: This property is sensitive and will not be displayed in the plan.
+spec.forProvider.configuration.authentication.usernamePassword.password.plaintextSecretRef.key <string> (required)
+spec.forProvider.configuration.authentication.usernamePassword.password.plaintextSecretRef.name <string> (required)	# Name of the secret.
+spec.forProvider.configuration.authentication.usernamePassword.username <string>	# Username for the connector.
+spec.forProvider.configuration.connectorId <string>	# The ID of the connector. Possible values include google-alloydb, google-cloudsql-mysql, google-cloudsql-postgres, and other connector IDs supported by the BigQuery Connector framework.
+spec.forProvider.configuration.endpoint <object>	# Endpoint configuration for the connector. Structure is documented below.
+spec.forProvider.configuration.endpoint.hostPort <string>	# Host and port in the format of host:port for the connector endpoint.
+spec.forProvider.configuration.network <object>	# Network configuration for the connector. Structure is documented below.
+spec.forProvider.configuration.network.privateServiceConnect <object>	# Private Service Connect configuration for the connector. Structure is documented below.
+spec.forProvider.configuration.network.privateServiceConnect.networkAttachment <string>	# The resource name of a network attachment in the format of projects/{project}/regions/{region}/networkAttachments/{networkAttachment}.
 spec.forProvider.connectionId <string>	# Optional connection id that should be assigned to the created connection.
 spec.forProvider.description <string>	# A descriptive description for the connection
 spec.forProvider.friendlyName <string>	# A descriptive name for the connection
@@ -108,10 +125,10 @@ spec.initProvider.cloudSpanner.useParallelism <boolean>	# If parallelism should 
 spec.initProvider.cloudSpanner.useServerlessAnalytics <boolean>	# If the serverless analytics service should be used to read data from Cloud Spanner. useParallelism must be set when using serverless analytics.
 spec.initProvider.cloudSql <object>	# Connection properties specific to the Cloud SQL. Structure is documented below.
 spec.initProvider.cloudSql.credential <object>	# Cloud SQL properties. Structure is documented below.
-spec.initProvider.cloudSql.credential.passwordSecretRef <object> (required)	# Password for database. Note: This property is sensitive and will not be displayed in the plan.
+spec.initProvider.cloudSql.credential.passwordSecretRef <object> (required)	# Password configuration for the connector. Structure is documented below.
 spec.initProvider.cloudSql.credential.passwordSecretRef.key <string> (required)
 spec.initProvider.cloudSql.credential.passwordSecretRef.name <string> (required)	# Name of the secret.
-spec.initProvider.cloudSql.credential.username <string>	# Username for database.
+spec.initProvider.cloudSql.credential.username <string>	# Username for the connector.
 spec.initProvider.cloudSql.credential.usernameRef <object>	# Reference to a User in sql to populate username.
 spec.initProvider.cloudSql.credential.usernameRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.cloudSql.credential.usernameRef.namespace <string>	# Namespace of the referenced object
@@ -154,6 +171,23 @@ spec.initProvider.cloudSql.instanceIdSelector.policy <object>	# Policies for sel
 spec.initProvider.cloudSql.instanceIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.cloudSql.instanceIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.cloudSql.type <string>	# Type of the Cloud SQL database. Possible values are: DATABASE_TYPE_UNSPECIFIED, POSTGRES, MYSQL.
+spec.initProvider.configuration <object>	# Connector configuration. This is a generic configuration that is used to connect to external data sources such as AlloyDB, MySQL, and PostgreSQL using the BigQuery Connector framework. Structure is documented below.
+spec.initProvider.configuration.asset <object>	# Asset configuration for the connector. Structure is documented below.
+spec.initProvider.configuration.asset.database <string>	# Database name.
+spec.initProvider.configuration.asset.googleCloudResource <string>	# The full resource name of the Google Cloud resource. For AlloyDB, this is in the format of //alloydb.googleapis.com/projects/{project}/locations/{region}/clusters/{cluster}/instances/{instance}.
+spec.initProvider.configuration.authentication <object>	# Authentication configuration for the connector. Structure is documented below.
+spec.initProvider.configuration.authentication.usernamePassword <object>	# Username/password authentication configuration. Structure is documented below.
+spec.initProvider.configuration.authentication.usernamePassword.password <object>	# Password configuration for the connector. Structure is documented below.
+spec.initProvider.configuration.authentication.usernamePassword.password.plaintextSecretRef <object> (required)	# The plaintext password. Note: This property is sensitive and will not be displayed in the plan.
+spec.initProvider.configuration.authentication.usernamePassword.password.plaintextSecretRef.key <string> (required)
+spec.initProvider.configuration.authentication.usernamePassword.password.plaintextSecretRef.name <string> (required)	# Name of the secret.
+spec.initProvider.configuration.authentication.usernamePassword.username <string>	# Username for the connector.
+spec.initProvider.configuration.connectorId <string>	# The ID of the connector. Possible values include google-alloydb, google-cloudsql-mysql, google-cloudsql-postgres, and other connector IDs supported by the BigQuery Connector framework.
+spec.initProvider.configuration.endpoint <object>	# Endpoint configuration for the connector. Structure is documented below.
+spec.initProvider.configuration.endpoint.hostPort <string>	# Host and port in the format of host:port for the connector endpoint.
+spec.initProvider.configuration.network <object>	# Network configuration for the connector. Structure is documented below.
+spec.initProvider.configuration.network.privateServiceConnect <object>	# Private Service Connect configuration for the connector. Structure is documented below.
+spec.initProvider.configuration.network.privateServiceConnect.networkAttachment <string>	# The resource name of a network attachment in the format of projects/{project}/regions/{region}/networkAttachments/{networkAttachment}.
 spec.initProvider.connectionId <string>	# Optional connection id that should be assigned to the created connection.
 spec.initProvider.description <string>	# A descriptive description for the connection
 spec.initProvider.friendlyName <string>	# A descriptive name for the connection
@@ -209,12 +243,29 @@ status.atProvider.cloudSpanner.useParallelism <boolean>	# If parallelism should 
 status.atProvider.cloudSpanner.useServerlessAnalytics <boolean>	# If the serverless analytics service should be used to read data from Cloud Spanner. useParallelism must be set when using serverless analytics.
 status.atProvider.cloudSql <object>	# Connection properties specific to the Cloud SQL. Structure is documented below.
 status.atProvider.cloudSql.credential <object>	# Cloud SQL properties. Structure is documented below.
-status.atProvider.cloudSql.credential.username <string>	# Username for database.
+status.atProvider.cloudSql.credential.username <string>	# Username for the connector.
 status.atProvider.cloudSql.database <string>	# Database name.
 status.atProvider.cloudSql.instanceId <string>	# Cloud SQL instance ID in the form project:location:instance.
 status.atProvider.cloudSql.serviceAccountId <string>	# (Output) When the connection is used in the context of an operation in BigQuery, this service account will serve as the identity being used for connecting to the CloudSQL instance specified in this connection.
 status.atProvider.cloudSql.type <string>	# Type of the Cloud SQL database. Possible values are: DATABASE_TYPE_UNSPECIFIED, POSTGRES, MYSQL.
+status.atProvider.configuration <object>	# Connector configuration. This is a generic configuration that is used to connect to external data sources such as AlloyDB, MySQL, and PostgreSQL using the BigQuery Connector framework. Structure is documented below.
+status.atProvider.configuration.asset <object>	# Asset configuration for the connector. Structure is documented below.
+status.atProvider.configuration.asset.database <string>	# Database name.
+status.atProvider.configuration.asset.googleCloudResource <string>	# The full resource name of the Google Cloud resource. For AlloyDB, this is in the format of //alloydb.googleapis.com/projects/{project}/locations/{region}/clusters/{cluster}/instances/{instance}.
+status.atProvider.configuration.authentication <object>	# Authentication configuration for the connector. Structure is documented below.
+status.atProvider.configuration.authentication.serviceAccount <string>	# (Output) Output only. The service account used for authenticating with the connector.
+status.atProvider.configuration.authentication.usernamePassword <object>	# Username/password authentication configuration. Structure is documented below.
+status.atProvider.configuration.authentication.usernamePassword.password <object>	# Password configuration for the connector. Structure is documented below.
+status.atProvider.configuration.authentication.usernamePassword.password.secretType <string>	# (Output) Output only. The type of the secret.
+status.atProvider.configuration.authentication.usernamePassword.username <string>	# Username for the connector.
+status.atProvider.configuration.connectorId <string>	# The ID of the connector. Possible values include google-alloydb, google-cloudsql-mysql, google-cloudsql-postgres, and other connector IDs supported by the BigQuery Connector framework.
+status.atProvider.configuration.endpoint <object>	# Endpoint configuration for the connector. Structure is documented below.
+status.atProvider.configuration.endpoint.hostPort <string>	# Host and port in the format of host:port for the connector endpoint.
+status.atProvider.configuration.network <object>	# Network configuration for the connector. Structure is documented below.
+status.atProvider.configuration.network.privateServiceConnect <object>	# Private Service Connect configuration for the connector. Structure is documented below.
+status.atProvider.configuration.network.privateServiceConnect.networkAttachment <string>	# The resource name of a network attachment in the format of projects/{project}/regions/{region}/networkAttachments/{networkAttachment}.
 status.atProvider.connectionId <string>	# Optional connection id that should be assigned to the created connection.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# A descriptive description for the connection
 status.atProvider.friendlyName <string>	# A descriptive name for the connection
 status.atProvider.hasCredential <boolean>	# True if the connection has credential assigned.
@@ -236,4 +287,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=kms.gcp.upbound.io/v1beta2
 kind <string> enum=CryptoKey (cluster-scoped)
 metadata.name <string> (required)
@@ -23,7 +23,7 @@ spec.forProvider.keyRingSelector.policy.resolve <string> enum=Always|IfNotPresen
 spec.forProvider.labels <map[string]string>	# Labels with user-defined metadata to apply to this resource.
 spec.forProvider.purpose <string>	# The immutable purpose of this CryptoKey. See the purpose reference for possible inputs. Default value is "ENCRYPT_DECRYPT".
 spec.forProvider.rotationPeriod <string>	# Every time this period passes, generate a new CryptoKeyVersion and set it as the primary. The first rotation will take place after the specified period. The rotation period has the format of a decimal number with up to 9 fractional digits, followed by the letter s (seconds). It must be greater than a day (ie, 86400).
-spec.forProvider.skipInitialVersionCreation <boolean>	# If set to true, the request will create a CryptoKey without any CryptoKeyVersions. You must use the google_kms_crypto_key_version resource to create a new CryptoKeyVersion or google_kms_key_ring_import_job resource to import the CryptoKeyVersion.
+spec.forProvider.skipInitialVersionCreation <boolean>	# If set to true, the request will create a CryptoKey without any CryptoKeyVersions. You must use the google_kms_crypto_key_version resource to create a new CryptoKeyVersion or google_kms_key_ring_import_job resource to import the CryptoKeyVersion. This field is only applicable during initial CryptoKey creation.
 spec.forProvider.versionTemplate <object>	# A template describing settings for new crypto key versions. Structure is documented below.
 spec.forProvider.versionTemplate.algorithm <string>	# The algorithm to use when creating a version based on this template. See the algorithm reference for possible inputs.
 spec.forProvider.versionTemplate.protectionLevel <string>	# The protection level to use when creating a version based on this template. Possible values include "SOFTWARE", "HSM", "EXTERNAL", "EXTERNAL_VPC". Defaults to "SOFTWARE".
@@ -34,7 +34,7 @@ spec.initProvider.importOnly <boolean>	# Whether this key may contain imported v
 spec.initProvider.labels <map[string]string>	# Labels with user-defined metadata to apply to this resource.
 spec.initProvider.purpose <string>	# The immutable purpose of this CryptoKey. See the purpose reference for possible inputs. Default value is "ENCRYPT_DECRYPT".
 spec.initProvider.rotationPeriod <string>	# Every time this period passes, generate a new CryptoKeyVersion and set it as the primary. The first rotation will take place after the specified period. The rotation period has the format of a decimal number with up to 9 fractional digits, followed by the letter s (seconds). It must be greater than a day (ie, 86400).
-spec.initProvider.skipInitialVersionCreation <boolean>	# If set to true, the request will create a CryptoKey without any CryptoKeyVersions. You must use the google_kms_crypto_key_version resource to create a new CryptoKeyVersion or google_kms_key_ring_import_job resource to import the CryptoKeyVersion.
+spec.initProvider.skipInitialVersionCreation <boolean>	# If set to true, the request will create a CryptoKey without any CryptoKeyVersions. You must use the google_kms_crypto_key_version resource to create a new CryptoKeyVersion or google_kms_key_ring_import_job resource to import the CryptoKeyVersion. This field is only applicable during initial CryptoKey creation.
 spec.initProvider.versionTemplate <object>	# A template describing settings for new crypto key versions. Structure is documented below.
 spec.initProvider.versionTemplate.algorithm <string>	# The algorithm to use when creating a version based on this template. See the algorithm reference for possible inputs.
 spec.initProvider.versionTemplate.protectionLevel <string>	# The protection level to use when creating a version based on this template. Possible values include "SOFTWARE", "HSM", "EXTERNAL", "EXTERNAL_VPC". Defaults to "SOFTWARE".
@@ -50,6 +50,7 @@ spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the
 status <object>	# CryptoKeyStatus defines the observed state of CryptoKey.
 status.atProvider <object>
 status.atProvider.cryptoKeyBackend <string>	# The resource name of the backend environment associated with all CryptoKeyVersions within this CryptoKey. The resource name is in the format "projects//locations//ekmConnections/*" and only applies to "EXTERNAL_VPC" keys.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.destroyScheduledDuration <string>	# The period of time that versions of this key spend in the DESTROY_SCHEDULED state before transitioning to DESTROYED. If not specified at creation time, the default duration is 30 days.
 status.atProvider.effectiveLabels <map[string]string>	# for all of the labels present on the resource.
 status.atProvider.id <string>	# an identifier for the resource with format {{key_ring}}/cryptoKeys/{{name}}
@@ -61,7 +62,7 @@ status.atProvider.primary[].name <string>	# (Output) The resource name for this 
 status.atProvider.primary[].state <string>	# (Output) The current state of the CryptoKeyVersion.
 status.atProvider.purpose <string>	# The immutable purpose of this CryptoKey. See the purpose reference for possible inputs. Default value is "ENCRYPT_DECRYPT".
 status.atProvider.rotationPeriod <string>	# Every time this period passes, generate a new CryptoKeyVersion and set it as the primary. The first rotation will take place after the specified period. The rotation period has the format of a decimal number with up to 9 fractional digits, followed by the letter s (seconds). It must be greater than a day (ie, 86400).
-status.atProvider.skipInitialVersionCreation <boolean>	# If set to true, the request will create a CryptoKey without any CryptoKeyVersions. You must use the google_kms_crypto_key_version resource to create a new CryptoKeyVersion or google_kms_key_ring_import_job resource to import the CryptoKeyVersion.
+status.atProvider.skipInitialVersionCreation <boolean>	# If set to true, the request will create a CryptoKey without any CryptoKeyVersions. You must use the google_kms_crypto_key_version resource to create a new CryptoKeyVersion or google_kms_key_ring_import_job resource to import the CryptoKeyVersion. This field is only applicable during initial CryptoKey creation.
 status.atProvider.terraformLabels <map[string]string>	# The combination of labels configured directly on the resource and default labels configured on the provider.
 status.atProvider.versionTemplate <object>	# A template describing settings for new crypto key versions. Structure is documented below.
 status.atProvider.versionTemplate.algorithm <string>	# The algorithm to use when creating a version based on this template. See the algorithm reference for possible inputs.
@@ -73,4 +74,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

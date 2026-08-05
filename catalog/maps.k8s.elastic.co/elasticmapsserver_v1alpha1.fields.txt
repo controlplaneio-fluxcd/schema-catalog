@@ -1,14 +1,15 @@
-# schema source: Elastic Cloud v3.4.1 https://github.com/elastic/cloud-on-k8s
+# schema source: Elastic Cloud v3.5.0 https://github.com/elastic/cloud-on-k8s
 apiVersion <string> enum=maps.k8s.elastic.co/v1alpha1
 kind <string> enum=ElasticMapsServer
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# MapsSpec holds the specification of an Elastic Maps Server instance.
-spec.config <object (free-form)>	# Config holds the ElasticMapsServer configuration. See: https://www.elastic.co/guide/en/kibana/current/maps-connect-to-ems.html#elastic-maps-server-configuration
+spec.config <object (free-form)>	# Config holds the ElasticMapsServer configuration. See: https://www.elastic.co/docs/explore-analyze/visualize/maps/maps-connect-to-ems#elastic-maps-server-configuration
 spec.configRef <object>	# ConfigRef contains a reference to an existing Kubernetes Secret holding the Elastic Maps Server configuration. Configuration settings are merged and have precedence over settings specified in `config`.
 spec.configRef.secretName <string>	# SecretName is the name of the secret.
 spec.count <integer> format=int32	# Count of Elastic Maps Server instances to deploy.
 spec.elasticsearchRef <object>	# ElasticsearchRef is a reference to an Elasticsearch cluster running in the same Kubernetes cluster.
+spec.elasticsearchRef.clientCertificateSecretName <string>	# ClientCertificateSecretName is the name of an existing Kubernetes secret containing a client certificate (tls.crt) and private key (tls.key) for client authentication to the referenced resource. This field is only relevant when the referenced Elasticsearch cluster has client authentication enabled. If not specified and the referenced resource requires client authentication, ECK will auto-generate a client certificate.
 spec.elasticsearchRef.name <string>	# Name of an existing Kubernetes object corresponding to an Elastic resource managed by ECK.
 spec.elasticsearchRef.namespace <string>	# Namespace of the Kubernetes object. If empty, defaults to the current namespace.
 spec.elasticsearchRef.secretName <string>	# SecretName is the name of an existing Kubernetes secret that contains connection information for associating an Elastic resource not managed by the operator. The referenced secret must contain the following: - `url`: the URL to reach the Elastic resource - `username`: the username of the user to be authenticated to the Elastic resource - `password`: the password of the user to be authenticated to the Elastic resource - `ca.crt`: the CA certificate in PEM format (optional) - `api-key`: the key to authenticate against the Elastic resource instead of a username and password (supported only for `elasticsearchRefs` in AgentSpec and in BeatSpec) This field cannot be used in combination with the other fields name, namespace or serviceName.
@@ -59,13 +60,25 @@ spec.http.tls.selfSignedCertificate.subjectAltNames <[]object>	# SubjectAlternat
 spec.http.tls.selfSignedCertificate.subjectAltNames[].dns <string>	# DNS is the DNS name of the subject.
 spec.http.tls.selfSignedCertificate.subjectAltNames[].ip <string>	# IP is the IP address of the subject.
 spec.image <string>	# Image is the Elastic Maps Server Docker image to deploy.
-spec.podTemplate <object (free-form)>	# PodTemplate provides customisation options (labels, annotations, affinity rules, resource requests, and so on) for the Elastic Maps Server pods
+spec.podTemplate <object (free-form)>	# PodTemplate provides customization options (labels, annotations, affinity rules, resource requests, and so on) for the Elastic Maps Server pods
+spec.resources <object>	# Resources provides a shorthand to set CPU and Memory resources on the Elastic Maps Server container. When set, these values override any CPU or memory resource settings specified in the PodTemplate for the primary Elastic Maps Server container. To set resources on other containers, use the PodTemplate.
+spec.resources.limits <object>	# Limits is the shorthand for the main container's CPU and memory limits.
+spec.resources.limits.cpu <int-or-string>	# CPU overrides the main container's CPU request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any CPU value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a CPU value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's CPU, including an explicit zero quantity.
+spec.resources.limits.memory <int-or-string>	# Memory overrides the main container's memory request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any memory value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a memory value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's memory, including an explicit zero quantity.
+spec.resources.requests <object>	# Requests is the shorthand for the main container's CPU and memory requests.
+spec.resources.requests.cpu <int-or-string>	# CPU overrides the main container's CPU request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any CPU value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a CPU value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's CPU, including an explicit zero quantity.
+spec.resources.requests.memory <int-or-string>	# Memory overrides the main container's memory request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any memory value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a memory value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's memory, including an explicit zero quantity.
 spec.revisionHistoryLimit <integer> format=int32	# RevisionHistoryLimit is the number of revisions to retain to allow rollback in the underlying Deployment.
 spec.serviceAccountName <string>	# ServiceAccountName is used to check access from the current resource to a resource (for ex. Elasticsearch) in a different namespace. Can only be used if ECK is enforcing RBAC on references.
 spec.version <string> (required)	# Version of Elastic Maps Server.
 status <object>	# MapsStatus defines the observed state of Elastic Maps Server
 status.associationStatus <string>	# AssociationStatus is the status of an association resource.
 status.availableNodes <integer> format=int32	# AvailableNodes is the number of available replicas in the deployment.
+status.conditions <[]object>	# Conditions holds the current service state of the deployment.
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].status <string> (required)
+status.conditions[].type <string> (required)	# ConditionType defines the condition of a resource.
 status.count <integer> format=int32	# Count corresponds to Scale.Status.Replicas, which is the actual number of observed instances of the scaled object.
 status.health <string>	# Health of the deployment.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation observed for this Elastic Maps Server. It corresponds to the metadata generation, which is updated on mutation by the API Server. If the generation observed in status diverges from the generation in metadata, the Elastic Maps controller has not yet processed the changes contained in the Elastic Maps specification.

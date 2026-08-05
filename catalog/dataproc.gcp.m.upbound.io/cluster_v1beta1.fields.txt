@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=dataproc.gcp.m.upbound.io/v1beta1
 kind <string> enum=Cluster
 metadata.name <string> (required)
@@ -15,6 +15,8 @@ spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig <object>	# Disk Config
+spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
@@ -25,6 +27,7 @@ spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].roles <[]string>	# The roles associated with the GKE node pool. One of "DEFAULT", "CONTROLLER", "SPARK_DRIVER" or "SPARK_EXECUTOR".
 spec.forProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroupId <string>
 spec.forProvider.clusterConfig.clusterTier <string>	# The tier of the cluster.
+spec.forProvider.clusterConfig.clusterType <string>
 spec.forProvider.clusterConfig.dataprocMetricConfig <object>	# The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times. Structure defined below.
 spec.forProvider.clusterConfig.dataprocMetricConfig.metrics <[]object>	# Metrics sources to enable.
 spec.forProvider.clusterConfig.dataprocMetricConfig.metrics[].metricOverrides <[]string>	# One or more [available OSS metrics] (https://cloud.google.com/dataproc/docs/guides/monitoring#available_oss_metrics) to collect for the metric course.
@@ -33,6 +36,7 @@ spec.forProvider.clusterConfig.encryptionConfig <object>	# The Customer managed 
 spec.forProvider.clusterConfig.encryptionConfig.kmsKeyName <string>	# The Cloud KMS key name to use for PD disk encryption for all instances in the cluster.
 spec.forProvider.clusterConfig.endpointConfig <object>	# The config settings for port access on the cluster. Structure defined below.
 spec.forProvider.clusterConfig.endpointConfig.enableHttpPortAccess <boolean>	# The flag to enable http access to specific ports on the cluster from external sources (aka Component Gateway). Defaults to false.
+spec.forProvider.clusterConfig.engine <string>	# The cluster engine.
 spec.forProvider.clusterConfig.gceClusterConfig <object>	# Common config settings for resources of Google Compute Engine cluster instances, applicable to all instances in the cluster. Structure defined below.
 spec.forProvider.clusterConfig.gceClusterConfig.confidentialInstanceConfig <object>	# Confidential Instance Config for clusters using Confidential VMs
 spec.forProvider.clusterConfig.gceClusterConfig.confidentialInstanceConfig.enableConfidentialCompute <boolean>	# Defines whether the instance should have confidential compute enabled.
@@ -45,6 +49,7 @@ spec.forProvider.clusterConfig.gceClusterConfig.reservationAffinity <object>	# R
 spec.forProvider.clusterConfig.gceClusterConfig.reservationAffinity.consumeReservationType <string>	# Corresponds to the type of reservation consumption.
 spec.forProvider.clusterConfig.gceClusterConfig.reservationAffinity.key <string>	# Corresponds to the label key of reservation resource.
 spec.forProvider.clusterConfig.gceClusterConfig.reservationAffinity.values <[]string>	# Corresponds to the label values of reservation resource.
+spec.forProvider.clusterConfig.gceClusterConfig.resourceManagerTags <map[string]string>	# A map of resource manager tags to add to all instances. Keys must be in the format tagKeys/{tag_key_id} and values in the format tagValues/{tag_value_id} (see Secure tags).
 spec.forProvider.clusterConfig.gceClusterConfig.serviceAccount <string>	# The service account to be used by the Node VMs. If not specified, the "default" service account is used.
 spec.forProvider.clusterConfig.gceClusterConfig.serviceAccountRef <object>	# Reference to a ServiceAccount in cloudplatform to populate serviceAccount.
 spec.forProvider.clusterConfig.gceClusterConfig.serviceAccountRef.name <string> (required)	# Name of the referenced object.
@@ -72,17 +77,25 @@ spec.forProvider.clusterConfig.initializationAction[].script <string>	# The scri
 spec.forProvider.clusterConfig.initializationAction[].timeoutSec <number>	# The maximum duration (in seconds) which script is allowed to take to execute its action. GCP will default to a predetermined computed value if not set (currently 300).
 spec.forProvider.clusterConfig.lifecycleConfig <object>	# The settings for auto deletion cluster schedule. Structure defined below.
 spec.forProvider.clusterConfig.lifecycleConfig.autoDeleteTime <string>	# The time when cluster will be auto-deleted. A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds. Example: "2014-10-02T15:01:23.045123456Z".
-spec.forProvider.clusterConfig.lifecycleConfig.idleDeleteTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be deleted. Valid range: [10m, 14d].
+spec.forProvider.clusterConfig.lifecycleConfig.autoStopTime <string>	# The time when cluster will be auto-stopped. A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds. Example: "2014-10-02T15:01:23.045123456Z".
+spec.forProvider.clusterConfig.lifecycleConfig.idleDeleteTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be deleted. Valid range: [300s, 1209600s].
+spec.forProvider.clusterConfig.lifecycleConfig.idleStopTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be stopped. Valid range: [10m, 14d].
 spec.forProvider.clusterConfig.masterConfig <object>	# The Google Compute Engine config settings for the master instances in a cluster. Structure defined below.
 spec.forProvider.clusterConfig.masterConfig.accelerators <[]object>	# The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
 spec.forProvider.clusterConfig.masterConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 spec.forProvider.clusterConfig.masterConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 spec.forProvider.clusterConfig.masterConfig.diskConfig <object>	# Disk Config
+spec.forProvider.clusterConfig.masterConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.forProvider.clusterConfig.masterConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.forProvider.clusterConfig.masterConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.forProvider.clusterConfig.masterConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.forProvider.clusterConfig.masterConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
 spec.forProvider.clusterConfig.masterConfig.diskConfig.numLocalSsds <number>	# The amount of local SSD disks that will be attached to each master cluster node. Defaults to 0.
 spec.forProvider.clusterConfig.masterConfig.imageUri <string>	# The URI for the image to use for this worker. See the guide for more information.
+spec.forProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy <object>	# Instance flexibility Policy allowing a mixture of VM shapes.
+spec.forProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList <[]object>	# List of instance selection options that the group will use when creating new VMs.
+spec.forProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList[].machineTypes <[]string>	# Full machine-type names, e.g. "n1-standard-16".
+spec.forProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList[].rank <number>	# Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.
 spec.forProvider.clusterConfig.masterConfig.machineType <string>	# The name of a Google Compute Engine machine type to create for the master. If not specified, GCP will default to a predetermined computed value (currently n1-standard-4).
 spec.forProvider.clusterConfig.masterConfig.minCpuPlatform <string>	# The name of a minimum generation of CPU family for the master. If not specified, GCP will default to a predetermined computed value for each zone. See the guide for details about which CPU families are available (and defaulted) for each zone.
 spec.forProvider.clusterConfig.masterConfig.numInstances <number>	# Specifies the number of master nodes to create. If not specified, GCP will default to a predetermined computed value (currently 1).
@@ -90,6 +103,8 @@ spec.forProvider.clusterConfig.metastoreConfig <object>	# The config setting for
 spec.forProvider.clusterConfig.metastoreConfig.dataprocMetastoreService <string>	# Resource name of an existing Dataproc Metastore service.
 spec.forProvider.clusterConfig.preemptibleWorkerConfig <object>	# The Google Compute Engine config settings for the additional instances in a cluster. Structure defined below.
 spec.forProvider.clusterConfig.preemptibleWorkerConfig.diskConfig <object>	# Disk Config
+spec.forProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.forProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.forProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.forProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.forProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
@@ -133,11 +148,17 @@ spec.forProvider.clusterConfig.workerConfig.accelerators <[]object>	# The Comput
 spec.forProvider.clusterConfig.workerConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 spec.forProvider.clusterConfig.workerConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 spec.forProvider.clusterConfig.workerConfig.diskConfig <object>	# Disk Config
+spec.forProvider.clusterConfig.workerConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.forProvider.clusterConfig.workerConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.forProvider.clusterConfig.workerConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.forProvider.clusterConfig.workerConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.forProvider.clusterConfig.workerConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
 spec.forProvider.clusterConfig.workerConfig.diskConfig.numLocalSsds <number>	# The amount of local SSD disks that will be attached to each master cluster node. Defaults to 0.
 spec.forProvider.clusterConfig.workerConfig.imageUri <string>	# The URI for the image to use for this worker. See the guide for more information.
+spec.forProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy <object>	# Instance flexibility Policy allowing a mixture of VM shapes.
+spec.forProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList <[]object>	# List of instance selection options that the group will use when creating new VMs.
+spec.forProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList[].machineTypes <[]string>	# Full machine-type names, e.g. "n1-standard-16".
+spec.forProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList[].rank <number>	# Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.
 spec.forProvider.clusterConfig.workerConfig.machineType <string>	# The name of a Google Compute Engine machine type to create for the worker nodes. If not specified, GCP will default to a predetermined computed value (currently n1-standard-4).
 spec.forProvider.clusterConfig.workerConfig.minCpuPlatform <string>	# The name of a minimum generation of CPU family for the master. If not specified, GCP will default to a predetermined computed value for each zone. See the guide for details about which CPU families are available (and defaulted) for each zone.
 spec.forProvider.clusterConfig.workerConfig.minNumInstances <number>	# The minimum number of primary worker instances to create. If min_num_instances is set, cluster creation will succeed if the number of primary workers created is at least equal to the min_num_instances number.
@@ -186,6 +207,8 @@ spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfi
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig <object>	# Disk Config
+spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
@@ -196,6 +219,7 @@ spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfi
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].roles <[]string>	# The roles associated with the GKE node pool. One of "DEFAULT", "CONTROLLER", "SPARK_DRIVER" or "SPARK_EXECUTOR".
 spec.initProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroupId <string>
 spec.initProvider.clusterConfig.clusterTier <string>	# The tier of the cluster.
+spec.initProvider.clusterConfig.clusterType <string>
 spec.initProvider.clusterConfig.dataprocMetricConfig <object>	# The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times. Structure defined below.
 spec.initProvider.clusterConfig.dataprocMetricConfig.metrics <[]object>	# Metrics sources to enable.
 spec.initProvider.clusterConfig.dataprocMetricConfig.metrics[].metricOverrides <[]string>	# One or more [available OSS metrics] (https://cloud.google.com/dataproc/docs/guides/monitoring#available_oss_metrics) to collect for the metric course.
@@ -204,6 +228,7 @@ spec.initProvider.clusterConfig.encryptionConfig <object>	# The Customer managed
 spec.initProvider.clusterConfig.encryptionConfig.kmsKeyName <string>	# The Cloud KMS key name to use for PD disk encryption for all instances in the cluster.
 spec.initProvider.clusterConfig.endpointConfig <object>	# The config settings for port access on the cluster. Structure defined below.
 spec.initProvider.clusterConfig.endpointConfig.enableHttpPortAccess <boolean>	# The flag to enable http access to specific ports on the cluster from external sources (aka Component Gateway). Defaults to false.
+spec.initProvider.clusterConfig.engine <string>	# The cluster engine.
 spec.initProvider.clusterConfig.gceClusterConfig <object>	# Common config settings for resources of Google Compute Engine cluster instances, applicable to all instances in the cluster. Structure defined below.
 spec.initProvider.clusterConfig.gceClusterConfig.confidentialInstanceConfig <object>	# Confidential Instance Config for clusters using Confidential VMs
 spec.initProvider.clusterConfig.gceClusterConfig.confidentialInstanceConfig.enableConfidentialCompute <boolean>	# Defines whether the instance should have confidential compute enabled.
@@ -216,6 +241,7 @@ spec.initProvider.clusterConfig.gceClusterConfig.reservationAffinity <object>	# 
 spec.initProvider.clusterConfig.gceClusterConfig.reservationAffinity.consumeReservationType <string>	# Corresponds to the type of reservation consumption.
 spec.initProvider.clusterConfig.gceClusterConfig.reservationAffinity.key <string>	# Corresponds to the label key of reservation resource.
 spec.initProvider.clusterConfig.gceClusterConfig.reservationAffinity.values <[]string>	# Corresponds to the label values of reservation resource.
+spec.initProvider.clusterConfig.gceClusterConfig.resourceManagerTags <map[string]string>	# A map of resource manager tags to add to all instances. Keys must be in the format tagKeys/{tag_key_id} and values in the format tagValues/{tag_value_id} (see Secure tags).
 spec.initProvider.clusterConfig.gceClusterConfig.serviceAccount <string>	# The service account to be used by the Node VMs. If not specified, the "default" service account is used.
 spec.initProvider.clusterConfig.gceClusterConfig.serviceAccountRef <object>	# Reference to a ServiceAccount in cloudplatform to populate serviceAccount.
 spec.initProvider.clusterConfig.gceClusterConfig.serviceAccountRef.name <string> (required)	# Name of the referenced object.
@@ -243,17 +269,25 @@ spec.initProvider.clusterConfig.initializationAction[].script <string>	# The scr
 spec.initProvider.clusterConfig.initializationAction[].timeoutSec <number>	# The maximum duration (in seconds) which script is allowed to take to execute its action. GCP will default to a predetermined computed value if not set (currently 300).
 spec.initProvider.clusterConfig.lifecycleConfig <object>	# The settings for auto deletion cluster schedule. Structure defined below.
 spec.initProvider.clusterConfig.lifecycleConfig.autoDeleteTime <string>	# The time when cluster will be auto-deleted. A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds. Example: "2014-10-02T15:01:23.045123456Z".
-spec.initProvider.clusterConfig.lifecycleConfig.idleDeleteTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be deleted. Valid range: [10m, 14d].
+spec.initProvider.clusterConfig.lifecycleConfig.autoStopTime <string>	# The time when cluster will be auto-stopped. A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds. Example: "2014-10-02T15:01:23.045123456Z".
+spec.initProvider.clusterConfig.lifecycleConfig.idleDeleteTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be deleted. Valid range: [300s, 1209600s].
+spec.initProvider.clusterConfig.lifecycleConfig.idleStopTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be stopped. Valid range: [10m, 14d].
 spec.initProvider.clusterConfig.masterConfig <object>	# The Google Compute Engine config settings for the master instances in a cluster. Structure defined below.
 spec.initProvider.clusterConfig.masterConfig.accelerators <[]object>	# The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
 spec.initProvider.clusterConfig.masterConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 spec.initProvider.clusterConfig.masterConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 spec.initProvider.clusterConfig.masterConfig.diskConfig <object>	# Disk Config
+spec.initProvider.clusterConfig.masterConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.initProvider.clusterConfig.masterConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.initProvider.clusterConfig.masterConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.initProvider.clusterConfig.masterConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.initProvider.clusterConfig.masterConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
 spec.initProvider.clusterConfig.masterConfig.diskConfig.numLocalSsds <number>	# The amount of local SSD disks that will be attached to each master cluster node. Defaults to 0.
 spec.initProvider.clusterConfig.masterConfig.imageUri <string>	# The URI for the image to use for this worker. See the guide for more information.
+spec.initProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy <object>	# Instance flexibility Policy allowing a mixture of VM shapes.
+spec.initProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList <[]object>	# List of instance selection options that the group will use when creating new VMs.
+spec.initProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList[].machineTypes <[]string>	# Full machine-type names, e.g. "n1-standard-16".
+spec.initProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList[].rank <number>	# Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.
 spec.initProvider.clusterConfig.masterConfig.machineType <string>	# The name of a Google Compute Engine machine type to create for the master. If not specified, GCP will default to a predetermined computed value (currently n1-standard-4).
 spec.initProvider.clusterConfig.masterConfig.minCpuPlatform <string>	# The name of a minimum generation of CPU family for the master. If not specified, GCP will default to a predetermined computed value for each zone. See the guide for details about which CPU families are available (and defaulted) for each zone.
 spec.initProvider.clusterConfig.masterConfig.numInstances <number>	# Specifies the number of master nodes to create. If not specified, GCP will default to a predetermined computed value (currently 1).
@@ -261,6 +295,8 @@ spec.initProvider.clusterConfig.metastoreConfig <object>	# The config setting fo
 spec.initProvider.clusterConfig.metastoreConfig.dataprocMetastoreService <string>	# Resource name of an existing Dataproc Metastore service.
 spec.initProvider.clusterConfig.preemptibleWorkerConfig <object>	# The Google Compute Engine config settings for the additional instances in a cluster. Structure defined below.
 spec.initProvider.clusterConfig.preemptibleWorkerConfig.diskConfig <object>	# Disk Config
+spec.initProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.initProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.initProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.initProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.initProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
@@ -304,11 +340,17 @@ spec.initProvider.clusterConfig.workerConfig.accelerators <[]object>	# The Compu
 spec.initProvider.clusterConfig.workerConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 spec.initProvider.clusterConfig.workerConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 spec.initProvider.clusterConfig.workerConfig.diskConfig <object>	# Disk Config
+spec.initProvider.clusterConfig.workerConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+spec.initProvider.clusterConfig.workerConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 spec.initProvider.clusterConfig.workerConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 spec.initProvider.clusterConfig.workerConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 spec.initProvider.clusterConfig.workerConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
 spec.initProvider.clusterConfig.workerConfig.diskConfig.numLocalSsds <number>	# The amount of local SSD disks that will be attached to each master cluster node. Defaults to 0.
 spec.initProvider.clusterConfig.workerConfig.imageUri <string>	# The URI for the image to use for this worker. See the guide for more information.
+spec.initProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy <object>	# Instance flexibility Policy allowing a mixture of VM shapes.
+spec.initProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList <[]object>	# List of instance selection options that the group will use when creating new VMs.
+spec.initProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList[].machineTypes <[]string>	# Full machine-type names, e.g. "n1-standard-16".
+spec.initProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList[].rank <number>	# Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.
 spec.initProvider.clusterConfig.workerConfig.machineType <string>	# The name of a Google Compute Engine machine type to create for the worker nodes. If not specified, GCP will default to a predetermined computed value (currently n1-standard-4).
 spec.initProvider.clusterConfig.workerConfig.minCpuPlatform <string>	# The name of a minimum generation of CPU family for the master. If not specified, GCP will default to a predetermined computed value for each zone. See the guide for details about which CPU families are available (and defaulted) for each zone.
 spec.initProvider.clusterConfig.workerConfig.minNumInstances <number>	# The minimum number of primary worker instances to create. If min_num_instances is set, cluster creation will succeed if the number of primary workers created is at least equal to the min_num_instances number.
@@ -365,6 +407,8 @@ status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfi
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig <object>	# Disk Config
+status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].nodeGroupConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
@@ -377,6 +421,7 @@ status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroup[].roles <[]strin
 status.atProvider.clusterConfig.auxiliaryNodeGroups[].nodeGroupId <string>
 status.atProvider.clusterConfig.bucket <string>	# The name of the cloud storage bucket ultimately used to house the staging data for the cluster. If staging_bucket is specified, it will contain this value, otherwise it will be the auto generated name.
 status.atProvider.clusterConfig.clusterTier <string>	# The tier of the cluster.
+status.atProvider.clusterConfig.clusterType <string>
 status.atProvider.clusterConfig.dataprocMetricConfig <object>	# The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times. Structure defined below.
 status.atProvider.clusterConfig.dataprocMetricConfig.metrics <[]object>	# Metrics sources to enable.
 status.atProvider.clusterConfig.dataprocMetricConfig.metrics[].metricOverrides <[]string>	# One or more [available OSS metrics] (https://cloud.google.com/dataproc/docs/guides/monitoring#available_oss_metrics) to collect for the metric course.
@@ -386,6 +431,7 @@ status.atProvider.clusterConfig.encryptionConfig.kmsKeyName <string>	# The Cloud
 status.atProvider.clusterConfig.endpointConfig <object>	# The config settings for port access on the cluster. Structure defined below.
 status.atProvider.clusterConfig.endpointConfig.enableHttpPortAccess <boolean>	# The flag to enable http access to specific ports on the cluster from external sources (aka Component Gateway). Defaults to false.
 status.atProvider.clusterConfig.endpointConfig.httpPorts <map[string]string>	# The map of port descriptions to URLs. Will only be populated if enable_http_port_access is true.
+status.atProvider.clusterConfig.engine <string>	# The cluster engine.
 status.atProvider.clusterConfig.gceClusterConfig <object>	# Common config settings for resources of Google Compute Engine cluster instances, applicable to all instances in the cluster. Structure defined below.
 status.atProvider.clusterConfig.gceClusterConfig.confidentialInstanceConfig <object>	# Confidential Instance Config for clusters using Confidential VMs
 status.atProvider.clusterConfig.gceClusterConfig.confidentialInstanceConfig.enableConfidentialCompute <boolean>	# Defines whether the instance should have confidential compute enabled.
@@ -398,6 +444,7 @@ status.atProvider.clusterConfig.gceClusterConfig.reservationAffinity <object>	# 
 status.atProvider.clusterConfig.gceClusterConfig.reservationAffinity.consumeReservationType <string>	# Corresponds to the type of reservation consumption.
 status.atProvider.clusterConfig.gceClusterConfig.reservationAffinity.key <string>	# Corresponds to the label key of reservation resource.
 status.atProvider.clusterConfig.gceClusterConfig.reservationAffinity.values <[]string>	# Corresponds to the label values of reservation resource.
+status.atProvider.clusterConfig.gceClusterConfig.resourceManagerTags <map[string]string>	# A map of resource manager tags to add to all instances. Keys must be in the format tagKeys/{tag_key_id} and values in the format tagValues/{tag_value_id} (see Secure tags).
 status.atProvider.clusterConfig.gceClusterConfig.serviceAccount <string>	# The service account to be used by the Node VMs. If not specified, the "default" service account is used.
 status.atProvider.clusterConfig.gceClusterConfig.serviceAccountScopes <[]string>	# The set of Google API scopes to be made available on all of the node VMs under the service_account specified. Both OAuth2 URLs and gcloud short names are supported. To allow full access to all Cloud APIs, use the cloud-platform scope. See a complete list of scopes here.
 status.atProvider.clusterConfig.gceClusterConfig.shieldedInstanceConfig <object>	# Shielded Instance Config for clusters using Compute Engine Shielded VMs.
@@ -412,18 +459,29 @@ status.atProvider.clusterConfig.initializationAction[].script <string>	# The scr
 status.atProvider.clusterConfig.initializationAction[].timeoutSec <number>	# The maximum duration (in seconds) which script is allowed to take to execute its action. GCP will default to a predetermined computed value if not set (currently 300).
 status.atProvider.clusterConfig.lifecycleConfig <object>	# The settings for auto deletion cluster schedule. Structure defined below.
 status.atProvider.clusterConfig.lifecycleConfig.autoDeleteTime <string>	# The time when cluster will be auto-deleted. A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds. Example: "2014-10-02T15:01:23.045123456Z".
-status.atProvider.clusterConfig.lifecycleConfig.idleDeleteTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be deleted. Valid range: [10m, 14d].
+status.atProvider.clusterConfig.lifecycleConfig.autoStopTime <string>	# The time when cluster will be auto-stopped. A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds. Example: "2014-10-02T15:01:23.045123456Z".
+status.atProvider.clusterConfig.lifecycleConfig.idleDeleteTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be deleted. Valid range: [300s, 1209600s].
 status.atProvider.clusterConfig.lifecycleConfig.idleStartTime <string>	# Time when the cluster became idle (most recent job finished) and became eligible for deletion due to idleness.
+status.atProvider.clusterConfig.lifecycleConfig.idleStopTtl <string>	# The duration to keep the cluster alive while idling (no jobs running). After this TTL, the cluster will be stopped. Valid range: [10m, 14d].
 status.atProvider.clusterConfig.masterConfig <object>	# The Google Compute Engine config settings for the master instances in a cluster. Structure defined below.
 status.atProvider.clusterConfig.masterConfig.accelerators <[]object>	# The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
 status.atProvider.clusterConfig.masterConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 status.atProvider.clusterConfig.masterConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 status.atProvider.clusterConfig.masterConfig.diskConfig <object>	# Disk Config
+status.atProvider.clusterConfig.masterConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+status.atProvider.clusterConfig.masterConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 status.atProvider.clusterConfig.masterConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 status.atProvider.clusterConfig.masterConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 status.atProvider.clusterConfig.masterConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
 status.atProvider.clusterConfig.masterConfig.diskConfig.numLocalSsds <number>	# The amount of local SSD disks that will be attached to each master cluster node. Defaults to 0.
 status.atProvider.clusterConfig.masterConfig.imageUri <string>	# The URI for the image to use for this worker. See the guide for more information.
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy <object>	# Instance flexibility Policy allowing a mixture of VM shapes.
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList <[]object>	# List of instance selection options that the group will use when creating new VMs.
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList[].machineTypes <[]string>	# Full machine-type names, e.g. "n1-standard-16".
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionList[].rank <number>	# Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionResults <[]object>
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionResults[].machineType <string>	# The name of a Compute Engine machine type.
+status.atProvider.clusterConfig.masterConfig.instanceFlexibilityPolicy.instanceSelectionResults[].vmCount <number>
 status.atProvider.clusterConfig.masterConfig.instanceNames <[]string>	# List of worker instance names which have been assigned to the cluster.
 status.atProvider.clusterConfig.masterConfig.machineType <string>	# The name of a Google Compute Engine machine type to create for the master. If not specified, GCP will default to a predetermined computed value (currently n1-standard-4).
 status.atProvider.clusterConfig.masterConfig.minCpuPlatform <string>	# The name of a minimum generation of CPU family for the master. If not specified, GCP will default to a predetermined computed value for each zone. See the guide for details about which CPU families are available (and defaulted) for each zone.
@@ -432,6 +490,8 @@ status.atProvider.clusterConfig.metastoreConfig <object>	# The config setting fo
 status.atProvider.clusterConfig.metastoreConfig.dataprocMetastoreService <string>	# Resource name of an existing Dataproc Metastore service.
 status.atProvider.clusterConfig.preemptibleWorkerConfig <object>	# The Google Compute Engine config settings for the additional instances in a cluster. Structure defined below.
 status.atProvider.clusterConfig.preemptibleWorkerConfig.diskConfig <object>	# Disk Config
+status.atProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+status.atProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 status.atProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 status.atProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 status.atProvider.clusterConfig.preemptibleWorkerConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
@@ -480,16 +540,26 @@ status.atProvider.clusterConfig.workerConfig.accelerators <[]object>	# The Compu
 status.atProvider.clusterConfig.workerConfig.accelerators[].acceleratorCount <number>	# The number of the accelerator cards of this type exposed to this instance. Often restricted to one of 1, 2, 4, or 8.
 status.atProvider.clusterConfig.workerConfig.accelerators[].acceleratorType <string>	# The short name of the accelerator type to expose to this instance. For example, nvidia-tesla-k80.
 status.atProvider.clusterConfig.workerConfig.diskConfig <object>	# Disk Config
+status.atProvider.clusterConfig.workerConfig.diskConfig.bootDiskProvisionedIops <number>	# Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.
+status.atProvider.clusterConfig.workerConfig.diskConfig.bootDiskProvisionedThroughput <number>	# Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.
 status.atProvider.clusterConfig.workerConfig.diskConfig.bootDiskSizeGb <number>	# Size of the primary disk attached to each node, specified in GB. The primary disk contains the boot volume and system libraries, and the smallest allowed disk size is 10GB. GCP will default to a predetermined computed value if not set (currently 500GB). Note: If SSDs are not attached, it also contains the HDFS data blocks and Hadoop working directories.
 status.atProvider.clusterConfig.workerConfig.diskConfig.bootDiskType <string>	# The disk type of the primary disk attached to each node. One of "pd-ssd" or "pd-standard". Defaults to "pd-standard".
 status.atProvider.clusterConfig.workerConfig.diskConfig.localSsdInterface <string>	# Optional. Interface type of local SSDs (default is "scsi"). Valid values: "scsi" (Small Computer System Interface), "nvme" (Non-Volatile Memory Express). See local SSD performance.
 status.atProvider.clusterConfig.workerConfig.diskConfig.numLocalSsds <number>	# The amount of local SSD disks that will be attached to each master cluster node. Defaults to 0.
 status.atProvider.clusterConfig.workerConfig.imageUri <string>	# The URI for the image to use for this worker. See the guide for more information.
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy <object>	# Instance flexibility Policy allowing a mixture of VM shapes.
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList <[]object>	# List of instance selection options that the group will use when creating new VMs.
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList[].machineTypes <[]string>	# Full machine-type names, e.g. "n1-standard-16".
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionList[].rank <number>	# Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionResults <[]object>
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionResults[].machineType <string>	# The name of a Compute Engine machine type.
+status.atProvider.clusterConfig.workerConfig.instanceFlexibilityPolicy.instanceSelectionResults[].vmCount <number>
 status.atProvider.clusterConfig.workerConfig.instanceNames <[]string>	# List of worker instance names which have been assigned to the cluster.
 status.atProvider.clusterConfig.workerConfig.machineType <string>	# The name of a Google Compute Engine machine type to create for the worker nodes. If not specified, GCP will default to a predetermined computed value (currently n1-standard-4).
 status.atProvider.clusterConfig.workerConfig.minCpuPlatform <string>	# The name of a minimum generation of CPU family for the master. If not specified, GCP will default to a predetermined computed value for each zone. See the guide for details about which CPU families are available (and defaulted) for each zone.
 status.atProvider.clusterConfig.workerConfig.minNumInstances <number>	# The minimum number of primary worker instances to create. If min_num_instances is set, cluster creation will succeed if the number of primary workers created is at least equal to the min_num_instances number.
 status.atProvider.clusterConfig.workerConfig.numInstances <number>	# Specifies the number of worker nodes to create. If not specified, GCP will default to a predetermined computed value (currently 2). There is currently a beta feature which allows you to run a Single Node Cluster. In order to take advantage of this you need to set "dataproc:dataproc.allow.zero.workers" = "true" in cluster_config.software_config.properties
+status.atProvider.deletionPolicy <string>	# Defaults to "DELETE". When set to "DELETE", deleting the resource is allowed.
 status.atProvider.effectiveLabels <map[string]string>	# (Computed) The list of labels (key/value pairs) to be applied to instances in the cluster. GCP generates some itself including goog-dataproc-cluster-name which is the name of the cluster.
 status.atProvider.gracefulDecommissionTimeout <string>	# Does not affect auto scaling decomissioning from an autoscaling policy. Graceful decommissioning allows removing nodes from the cluster without interrupting jobs in progress. Timeout specifies how long to wait for jobs in progress to finish before forcefully removing nodes (and potentially interrupting jobs). Default timeout is 0 (for forceful decommission), and the maximum allowed timeout is 1 day. (see JSON representation of Duration). Only supported on Dataproc image versions 1.2 and higher. For more context see the docs
 status.atProvider.id <string>
@@ -533,4 +603,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

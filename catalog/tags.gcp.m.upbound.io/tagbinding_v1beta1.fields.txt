@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=tags.gcp.m.upbound.io/v1beta1
 kind <string> enum=TagBinding
 metadata.name <string> (required)
@@ -6,7 +6,7 @@ metadata.namespace <string> (required)
 spec <object> (required)	# TagBindingSpec defines the desired state of TagBinding
 spec.forProvider <object> (required)
 spec.forProvider.parent <string>	# The full resource name of the resource the TagValue is bound to. E.g. //cloudresourcemanager.googleapis.com/projects/123
-spec.forProvider.tagValue <string>	# The TagValue of the TagBinding. Must be of the form tagValues/456.
+spec.forProvider.tagValue <string>	# The TagValue of the TagBinding. Must be either in id format tagValues/{tag-value-id}, or namespaced format {parent-id}/{tag-key-short-name}/{tag-value-short-name}.
 spec.forProvider.tagValueRef <object>	# Reference to a TagValue in tags to populate tagValue.
 spec.forProvider.tagValueRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.tagValueRef.namespace <string>	# Namespace of the referenced object
@@ -22,7 +22,7 @@ spec.forProvider.tagValueSelector.policy.resolution <string> enum=Required|Optio
 spec.forProvider.tagValueSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.parent <string>	# The full resource name of the resource the TagValue is bound to. E.g. //cloudresourcemanager.googleapis.com/projects/123
-spec.initProvider.tagValue <string>	# The TagValue of the TagBinding. Must be of the form tagValues/456.
+spec.initProvider.tagValue <string>	# The TagValue of the TagBinding. Must be either in id format tagValues/{tag-value-id}, or namespaced format {parent-id}/{tag-key-short-name}/{tag-value-short-name}.
 spec.initProvider.tagValueRef <object>	# Reference to a TagValue in tags to populate tagValue.
 spec.initProvider.tagValueRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.tagValueRef.namespace <string>	# Namespace of the referenced object
@@ -44,10 +44,11 @@ spec.writeConnectionSecretToRef <object>	# WriteConnectionSecretToReference spec
 spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 status <object>	# TagBindingStatus defines the observed state of TagBinding.
 status.atProvider <object>
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.id <string>	# an identifier for the resource with format tagBindings/{{name}}
-status.atProvider.name <string>	# The generated id for the TagBinding. This is a string of the form: tagBindings/{full-resource-name}/{tag-value-name}
+status.atProvider.name <string>	# The generated id for the TagBinding. This is a string of the form tagBindings/{full-resource-name}/{tag-value-name} or tagBindings/{full-resource-name}/{tag-key-name}
 status.atProvider.parent <string>	# The full resource name of the resource the TagValue is bound to. E.g. //cloudresourcemanager.googleapis.com/projects/123
-status.atProvider.tagValue <string>	# The TagValue of the TagBinding. Must be of the form tagValues/456.
+status.atProvider.tagValue <string>	# The TagValue of the TagBinding. Must be either in id format tagValues/{tag-value-id}, or namespaced format {parent-id}/{tag-key-short-name}/{tag-value-short-name}.
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
 status.conditions[].message <string>	# A Message containing details about this condition's last transition from one status to another, if any.
@@ -55,4 +56,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

@@ -1,4 +1,4 @@
-# schema source: Upbound Azure Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-azure
+# schema source: Upbound Azure Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-azure
 apiVersion <string> enum=cosmosdb.azure.upbound.io/v1beta1
 kind <string> enum=MongoCluster (cluster-scoped)
 metadata.name <string> (required)
@@ -10,9 +10,17 @@ spec.forProvider.administratorPasswordSecretRef.key <string> (required)	# The ke
 spec.forProvider.administratorPasswordSecretRef.name <string> (required)	# Name of the secret.
 spec.forProvider.administratorPasswordSecretRef.namespace <string> (required)	# Namespace of the secret.
 spec.forProvider.administratorUsername <string>	# The administrator username of the MongoDB Cluster. Changing this forces a new resource to be created.
+spec.forProvider.authenticationMethods <[]string>	# A list of allowed authentication modes for the MongoDB Cluster. Possible values are NativeAuth and MicrosoftEntraID.
 spec.forProvider.computeTier <string>	# The compute tier to assign to the MongoDB Cluster. Possible values are Free, M10, M20, M25, M30, M40, M50, M60, M80, and M200.
-spec.forProvider.createMode <string>	# The creation mode for the MongoDB Cluster. Possibles values are Default and GeoReplica. Defaults to Default.
+spec.forProvider.createMode <string>	# The creation mode for the MongoDB Cluster. Possible values are Default, GeoReplica and PointInTimeRestore. Defaults to Default. Changing this forces a new resource to be created.
+spec.forProvider.customerManagedKey <object>	# A customer_managed_key block as defined below. Changing this forces a new resource to be created.
+spec.forProvider.customerManagedKey.keyVaultKeyId <string>	# The ID of the key vault key used for encryption. For example: https://example-vault-name.vault.azure.net/keys/example-key-name.
+spec.forProvider.customerManagedKey.userAssignedIdentityId <string>	# The ID of the User Assigned Identity that has access to the Key Vault Key.
+spec.forProvider.dataApiModeEnabled <boolean>	# Is the Data API for the MongoDB Cluster enabled? Defaults to false.
 spec.forProvider.highAvailabilityMode <string>	# The high availability mode for the MongoDB Cluster. Possibles values are Disabled and ZoneRedundantPreferred.
+spec.forProvider.identity <object>	# An identity block as detailed below.
+spec.forProvider.identity.identityIds <[]string>	# - A list of one or more Resource IDs for User Assigned Managed identities to assign.
+spec.forProvider.identity.type <string>	# The type of managed identity to assign. Possible value is UserAssigned.
 spec.forProvider.location <string>	# The supported Azure location where the MongoDB Cluster exists. Changing this forces a new resource to be created.
 spec.forProvider.previewFeatures <[]string>	# The preview features that can be enabled on the MongoDB Cluster. Changing this forces a new resource to be created.
 spec.forProvider.publicNetworkAccess <string>	# The Public Network Access setting for the MongoDB Cluster. Possibles values are Disabled and Enabled. Defaults to Enabled.
@@ -28,6 +36,9 @@ spec.forProvider.resourceGroupNameSelector.matchLabels <map[string]string>	# Mat
 spec.forProvider.resourceGroupNameSelector.policy <object>	# Policies for selection.
 spec.forProvider.resourceGroupNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.resourceGroupNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.restore <object>	# A restore block as defined below. Required when create_mode is set to PointInTimeRestore. Changing this forces a new resource to be created.
+spec.forProvider.restore.pointInTimeUtc <string>	# The point in time (in UTC) to restore from, in ISO 8601 format (e.g., 2024-01-01T00:00:00Z). Changing this forces a new resource to be created.
+spec.forProvider.restore.sourceId <string>	# The ID of the source MongoDB Cluster to restore from. Changing this forces a new resource to be created.
 spec.forProvider.shardCount <number>	# The Number of shards to provision on the MongoDB Cluster. Changing this forces a new resource to be created.
 spec.forProvider.sourceLocation <string>	# The location of the source MongoDB Cluster. Changing this forces a new resource to be created.
 spec.forProvider.sourceLocationRef <object>	# Reference to a MongoCluster in cosmosdb to populate sourceLocation.
@@ -54,6 +65,7 @@ spec.forProvider.sourceServerIdSelector.policy <object>	# Policies for selection
 spec.forProvider.sourceServerIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.sourceServerIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.storageSizeInGb <number>	# The size of the data disk space for the MongoDB Cluster.
+spec.forProvider.storageType <string>	# The storage type for the MongoDB Cluster. Possible values are PremiumSSD and PremiumSSDv2. Defaults to PremiumSSD. Changing this forces a new resource to be created.
 spec.forProvider.tags <map[string]string>	# A mapping of tags to assign to the MongoDB Cluster.
 spec.forProvider.version <string>	# The version for the MongoDB Cluster. Possibles values are 5.0, 6.0, 7.0 and 8.0.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
@@ -62,12 +74,23 @@ spec.initProvider.administratorPasswordSecretRef.key <string> (required)	# The k
 spec.initProvider.administratorPasswordSecretRef.name <string> (required)	# Name of the secret.
 spec.initProvider.administratorPasswordSecretRef.namespace <string> (required)	# Namespace of the secret.
 spec.initProvider.administratorUsername <string>	# The administrator username of the MongoDB Cluster. Changing this forces a new resource to be created.
+spec.initProvider.authenticationMethods <[]string>	# A list of allowed authentication modes for the MongoDB Cluster. Possible values are NativeAuth and MicrosoftEntraID.
 spec.initProvider.computeTier <string>	# The compute tier to assign to the MongoDB Cluster. Possible values are Free, M10, M20, M25, M30, M40, M50, M60, M80, and M200.
-spec.initProvider.createMode <string>	# The creation mode for the MongoDB Cluster. Possibles values are Default and GeoReplica. Defaults to Default.
+spec.initProvider.createMode <string>	# The creation mode for the MongoDB Cluster. Possible values are Default, GeoReplica and PointInTimeRestore. Defaults to Default. Changing this forces a new resource to be created.
+spec.initProvider.customerManagedKey <object>	# A customer_managed_key block as defined below. Changing this forces a new resource to be created.
+spec.initProvider.customerManagedKey.keyVaultKeyId <string>	# The ID of the key vault key used for encryption. For example: https://example-vault-name.vault.azure.net/keys/example-key-name.
+spec.initProvider.customerManagedKey.userAssignedIdentityId <string>	# The ID of the User Assigned Identity that has access to the Key Vault Key.
+spec.initProvider.dataApiModeEnabled <boolean>	# Is the Data API for the MongoDB Cluster enabled? Defaults to false.
 spec.initProvider.highAvailabilityMode <string>	# The high availability mode for the MongoDB Cluster. Possibles values are Disabled and ZoneRedundantPreferred.
+spec.initProvider.identity <object>	# An identity block as detailed below.
+spec.initProvider.identity.identityIds <[]string>	# - A list of one or more Resource IDs for User Assigned Managed identities to assign.
+spec.initProvider.identity.type <string>	# The type of managed identity to assign. Possible value is UserAssigned.
 spec.initProvider.location <string>	# The supported Azure location where the MongoDB Cluster exists. Changing this forces a new resource to be created.
 spec.initProvider.previewFeatures <[]string>	# The preview features that can be enabled on the MongoDB Cluster. Changing this forces a new resource to be created.
 spec.initProvider.publicNetworkAccess <string>	# The Public Network Access setting for the MongoDB Cluster. Possibles values are Disabled and Enabled. Defaults to Enabled.
+spec.initProvider.restore <object>	# A restore block as defined below. Required when create_mode is set to PointInTimeRestore. Changing this forces a new resource to be created.
+spec.initProvider.restore.pointInTimeUtc <string>	# The point in time (in UTC) to restore from, in ISO 8601 format (e.g., 2024-01-01T00:00:00Z). Changing this forces a new resource to be created.
+spec.initProvider.restore.sourceId <string>	# The ID of the source MongoDB Cluster to restore from. Changing this forces a new resource to be created.
 spec.initProvider.shardCount <number>	# The Number of shards to provision on the MongoDB Cluster. Changing this forces a new resource to be created.
 spec.initProvider.sourceLocation <string>	# The location of the source MongoDB Cluster. Changing this forces a new resource to be created.
 spec.initProvider.sourceLocationRef <object>	# Reference to a MongoCluster in cosmosdb to populate sourceLocation.
@@ -94,6 +117,7 @@ spec.initProvider.sourceServerIdSelector.policy <object>	# Policies for selectio
 spec.initProvider.sourceServerIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.sourceServerIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.storageSizeInGb <number>	# The size of the data disk space for the MongoDB Cluster.
+spec.initProvider.storageType <string>	# The storage type for the MongoDB Cluster. Possible values are PremiumSSD and PremiumSSDv2. Defaults to PremiumSSD. Changing this forces a new resource to be created.
 spec.initProvider.tags <map[string]string>	# A mapping of tags to assign to the MongoDB Cluster.
 spec.initProvider.version <string>	# The version for the MongoDB Cluster. Possibles values are 5.0, 6.0, 7.0 and 8.0.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. This field is planned to replace the DeletionPolicy field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. If both are custom, the DeletionPolicy field will be ignored. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -108,18 +132,30 @@ spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the
 status <object>	# MongoClusterStatus defines the observed state of MongoCluster.
 status.atProvider <object>
 status.atProvider.administratorUsername <string>	# The administrator username of the MongoDB Cluster. Changing this forces a new resource to be created.
+status.atProvider.authenticationMethods <[]string>	# A list of allowed authentication modes for the MongoDB Cluster. Possible values are NativeAuth and MicrosoftEntraID.
 status.atProvider.computeTier <string>	# The compute tier to assign to the MongoDB Cluster. Possible values are Free, M10, M20, M25, M30, M40, M50, M60, M80, and M200.
-status.atProvider.createMode <string>	# The creation mode for the MongoDB Cluster. Possibles values are Default and GeoReplica. Defaults to Default.
+status.atProvider.createMode <string>	# The creation mode for the MongoDB Cluster. Possible values are Default, GeoReplica and PointInTimeRestore. Defaults to Default. Changing this forces a new resource to be created.
+status.atProvider.customerManagedKey <object>	# A customer_managed_key block as defined below. Changing this forces a new resource to be created.
+status.atProvider.customerManagedKey.keyVaultKeyId <string>	# The ID of the key vault key used for encryption. For example: https://example-vault-name.vault.azure.net/keys/example-key-name.
+status.atProvider.customerManagedKey.userAssignedIdentityId <string>	# The ID of the User Assigned Identity that has access to the Key Vault Key.
+status.atProvider.dataApiModeEnabled <boolean>	# Is the Data API for the MongoDB Cluster enabled? Defaults to false.
 status.atProvider.highAvailabilityMode <string>	# The high availability mode for the MongoDB Cluster. Possibles values are Disabled and ZoneRedundantPreferred.
 status.atProvider.id <string>	# The ID of the MongoDB Cluster.
+status.atProvider.identity <object>	# An identity block as detailed below.
+status.atProvider.identity.identityIds <[]string>	# - A list of one or more Resource IDs for User Assigned Managed identities to assign.
+status.atProvider.identity.type <string>	# The type of managed identity to assign. Possible value is UserAssigned.
 status.atProvider.location <string>	# The supported Azure location where the MongoDB Cluster exists. Changing this forces a new resource to be created.
 status.atProvider.previewFeatures <[]string>	# The preview features that can be enabled on the MongoDB Cluster. Changing this forces a new resource to be created.
 status.atProvider.publicNetworkAccess <string>	# The Public Network Access setting for the MongoDB Cluster. Possibles values are Disabled and Enabled. Defaults to Enabled.
 status.atProvider.resourceGroupName <string>	# The name of the resource group in which to create the MongoDB Cluster. Changing this forces a new resource to be created.
+status.atProvider.restore <object>	# A restore block as defined below. Required when create_mode is set to PointInTimeRestore. Changing this forces a new resource to be created.
+status.atProvider.restore.pointInTimeUtc <string>	# The point in time (in UTC) to restore from, in ISO 8601 format (e.g., 2024-01-01T00:00:00Z). Changing this forces a new resource to be created.
+status.atProvider.restore.sourceId <string>	# The ID of the source MongoDB Cluster to restore from. Changing this forces a new resource to be created.
 status.atProvider.shardCount <number>	# The Number of shards to provision on the MongoDB Cluster. Changing this forces a new resource to be created.
 status.atProvider.sourceLocation <string>	# The location of the source MongoDB Cluster. Changing this forces a new resource to be created.
 status.atProvider.sourceServerId <string>	# The ID of the replication source MongoDB Cluster. Changing this forces a new resource to be created.
 status.atProvider.storageSizeInGb <number>	# The size of the data disk space for the MongoDB Cluster.
+status.atProvider.storageType <string>	# The storage type for the MongoDB Cluster. Possible values are PremiumSSD and PremiumSSDv2. Defaults to PremiumSSD. Changing this forces a new resource to be created.
 status.atProvider.tags <map[string]string>	# A mapping of tags to assign to the MongoDB Cluster.
 status.atProvider.version <string>	# The version for the MongoDB Cluster. Possibles values are 5.0, 6.0, 7.0 and 8.0.
 status.conditions <[]object>	# Conditions of the resource.
@@ -129,4 +165,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

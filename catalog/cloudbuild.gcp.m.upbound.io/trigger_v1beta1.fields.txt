@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=cloudbuild.gcp.m.upbound.io/v1beta1
 kind <string> enum=Trigger
 metadata.name <string> (required)
@@ -97,6 +97,16 @@ spec.forProvider.build.substitutions <map[string]string>	# Substitutions data fo
 spec.forProvider.build.tags <[]string>	# Tags for annotation of a Build. These are not docker tags.
 spec.forProvider.build.timeout <string>	# Amount of time that this build should be allowed to run, to second granularity. If this amount of time elapses, work on the build will cease and the build status will be TIMEOUT. This timeout must be equal to or greater than the sum of the timeouts for build steps within the build. The expected format is the number of seconds followed by s. Default time is ten minutes (600s).
 spec.forProvider.description <string>	# Human-readable description of the trigger.
+spec.forProvider.developerConnectEventConfig <object>	# Configuration for triggers that respond to Developer Connect events. Structure is documented below.
+spec.forProvider.developerConnectEventConfig.gitRepositoryLink <string>	# The Developer Connect Git repository link, formatted as projects/*/locations/*/connections/*/gitRepositoryLink/*.
+spec.forProvider.developerConnectEventConfig.pullRequest <object>	# Filter to match changes in pull requests. Structure is documented below.
+spec.forProvider.developerConnectEventConfig.pullRequest.branch <string>	# Regex of branches to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
+spec.forProvider.developerConnectEventConfig.pullRequest.commentControl <string>	# Configure builds to run whether a repository owner or collaborator need to comment /gcbrun. Possible values are: COMMENTS_DISABLED, COMMENTS_ENABLED, COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY.
+spec.forProvider.developerConnectEventConfig.pullRequest.invertRegex <boolean>	# Only trigger a build if the revision regex does NOT match the revision regex.
+spec.forProvider.developerConnectEventConfig.push <object>	# Filter to match changes in refs like branches and tags. Structure is documented below.
+spec.forProvider.developerConnectEventConfig.push.branch <string>	# Regex of branches to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
+spec.forProvider.developerConnectEventConfig.push.invertRegex <boolean>	# Only trigger a build if the revision regex does NOT match the revision regex.
+spec.forProvider.developerConnectEventConfig.push.tag <string>	# Regex of tags to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
 spec.forProvider.disabled <boolean>	# Whether the trigger is disabled or not. If true, the trigger will never result in a build.
 spec.forProvider.filename <string>	# Path, from the source root, to a file whose contents is used for the template. Either a filename or build template must be provided. Set this only when using trigger_template or github. When using Pub/Sub, Webhook or Manual set the file name using git_file_source instead.
 spec.forProvider.filter <string>	# A Common Expression Language string. Used only with Pub/Sub and Webhook.
@@ -108,7 +118,7 @@ spec.forProvider.gitFileSource.repoType <string>	# The type of the repo, since i
 spec.forProvider.gitFileSource.repository <string>	# The fully qualified resource name of the Repo API repository. The fully qualified resource name of the Repo API repository. If unspecified, the repo from which the trigger invocation originated is assumed to be the repo from which to read the specified path.
 spec.forProvider.gitFileSource.revision <string>	# The branch, tag, arbitrary ref, or SHA version of the repo to use when resolving the filename . This field respects the same syntax/resolution as described here: https://git-scm.com/docs/gitrevisions If unspecified, the revision from which the trigger invocation originated is assumed to be the revision from which to read the specified path.
 spec.forProvider.gitFileSource.uri <string>	# The URI of the repo . If unspecified, the repo from which the trigger invocation originated is assumed to be the repo from which to read the specified path.
-spec.forProvider.github <object>	# Describes the configuration of a trigger that creates a build whenever a GitHub event is received. One of trigger_template, github, pubsub_config or webhook_config must be provided. Structure is documented below.
+spec.forProvider.github <object>	# Describes the configuration of a trigger that creates a build whenever a GitHub event is received. Structure is documented below.
 spec.forProvider.github.enterpriseConfigResourceName <string>	# The resource name of the github enterprise config that should be applied to this installation. For example: "projects/{$projectId}/locations/{$locationId}/githubEnterpriseConfigs/{$configId}"
 spec.forProvider.github.name <string>	# Name of the repository. For example: The name for https://github.com/googlecloudplatform/cloud-builders is "cloud-builders".
 spec.forProvider.github.owner <string>	# Owner of the repository. For example: The owner for https://github.com/googlecloudplatform/cloud-builders is "googlecloudplatform".
@@ -126,7 +136,7 @@ spec.forProvider.includedFiles <[]string>	# ignoredFiles and includedFiles are f
 spec.forProvider.location <string>	# The Cloud Build location for the trigger. If not specified, "global" is used.
 spec.forProvider.name <string>	# Name of the trigger. Must be unique within the project.
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
-spec.forProvider.pubsubConfig <object>	# PubsubConfig describes the configuration of a trigger that creates a build whenever a Pub/Sub message is published. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+spec.forProvider.pubsubConfig <object>	# PubsubConfig describes the configuration of a trigger that creates a build whenever a Pub/Sub message is published. Structure is documented below.
 spec.forProvider.pubsubConfig.serviceAccountEmail <string>	# Service account that will make the push request.
 spec.forProvider.pubsubConfig.topic <string>	# The name of the topic from which this subscription is receiving messages.
 spec.forProvider.pubsubConfig.topicRef <object>	# Reference to a Topic in pubsub to populate topic.
@@ -166,7 +176,7 @@ spec.forProvider.serviceAccountSelector.namespace <string>	# Namespace for the s
 spec.forProvider.serviceAccountSelector.policy <object>	# Policies for selection.
 spec.forProvider.serviceAccountSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.serviceAccountSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.sourceToBuild <object>	# The repo and ref of the repository from which to build. This field is used only for those triggers that do not respond to SCM events. Triggers that respond to such events build source at whatever commit caused the event. This field is currently only used by Webhook, Pub/Sub, Manual, and Cron triggers. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+spec.forProvider.sourceToBuild <object>	# The repo and ref of the repository from which to build. This field is used only for those triggers that do not respond to SCM events. Triggers that respond to such events build source at whatever commit caused the event. This field is currently only used by Webhook, Pub/Sub, Manual, and Cron triggers. Structure is documented below.
 spec.forProvider.sourceToBuild.bitbucketServerConfig <string>	# The full resource name of the bitbucket server config. Format: projects/{project}/locations/{location}/bitbucketServerConfigs/{id}.
 spec.forProvider.sourceToBuild.githubEnterpriseConfig <string>	# The full resource name of the github enterprise config. Format: projects/{project}/locations/{location}/githubEnterpriseConfigs/{id}. projects/{project}/githubEnterpriseConfigs/{id}.
 spec.forProvider.sourceToBuild.ref <string>	# The branch or tag to use. Must start with "refs/" .
@@ -175,7 +185,7 @@ spec.forProvider.sourceToBuild.repository <string>	# The qualified resource name
 spec.forProvider.sourceToBuild.uri <string>	# The URI of the repo.
 spec.forProvider.substitutions <map[string]string>	# Substitutions data for Build resource.
 spec.forProvider.tags <[]string>	# Tags for annotation of a BuildTrigger
-spec.forProvider.triggerTemplate <object>	# Template describing the types of source changes to trigger a build. Branch and tag names in trigger templates are interpreted as regular expressions. Any branch or tag change that matches that regular expression will trigger a build. One of trigger_template, github, pubsub_config, webhook_config or source_to_build must be provided. Structure is documented below.
+spec.forProvider.triggerTemplate <object>	# Template describing the types of source changes to trigger a build. Branch and tag names in trigger templates are interpreted as regular expressions. Any branch or tag change that matches that regular expression will trigger a build. Structure is documented below.
 spec.forProvider.triggerTemplate.branchName <string>	# Name of the branch to build. Exactly one a of branch name, tag, or commit SHA must be provided. This field is a regular expression.
 spec.forProvider.triggerTemplate.commitSha <string>	# Explicit commit SHA to build. Exactly one of a branch name, tag, or commit SHA must be provided.
 spec.forProvider.triggerTemplate.dir <string>	# Directory, relative to the source root, in which to run the build. This must be a relative path. If a step's dir is specified and is an absolute path, this value is ignored for that step's execution.
@@ -183,7 +193,7 @@ spec.forProvider.triggerTemplate.invertRegex <boolean>	# Only trigger a build if
 spec.forProvider.triggerTemplate.projectId <string>	# ID of the project that owns the Cloud Source Repository. If omitted, the project ID requesting the build is assumed.
 spec.forProvider.triggerTemplate.repoName <string>	# Name of the Cloud Source Repository. If omitted, the name "default" is assumed.
 spec.forProvider.triggerTemplate.tagName <string>	# Name of the tag to build. Exactly one of a branch name, tag, or commit SHA must be provided. This field is a regular expression.
-spec.forProvider.webhookConfig <object>	# WebhookConfig describes the configuration of a trigger that creates a build whenever a webhook is sent to a trigger's webhook URL. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+spec.forProvider.webhookConfig <object>	# WebhookConfig describes the configuration of a trigger that creates a build whenever a webhook is sent to a trigger's webhook URL. Structure is documented below.
 spec.forProvider.webhookConfig.secret <string>	# Resource name for the secret required as a URL parameter.
 spec.forProvider.webhookConfig.secretRef <object>	# Reference to a SecretVersion in secretmanager to populate secret.
 spec.forProvider.webhookConfig.secretRef.name <string> (required)	# Name of the referenced object.
@@ -291,6 +301,16 @@ spec.initProvider.build.substitutions <map[string]string>	# Substitutions data f
 spec.initProvider.build.tags <[]string>	# Tags for annotation of a Build. These are not docker tags.
 spec.initProvider.build.timeout <string>	# Amount of time that this build should be allowed to run, to second granularity. If this amount of time elapses, work on the build will cease and the build status will be TIMEOUT. This timeout must be equal to or greater than the sum of the timeouts for build steps within the build. The expected format is the number of seconds followed by s. Default time is ten minutes (600s).
 spec.initProvider.description <string>	# Human-readable description of the trigger.
+spec.initProvider.developerConnectEventConfig <object>	# Configuration for triggers that respond to Developer Connect events. Structure is documented below.
+spec.initProvider.developerConnectEventConfig.gitRepositoryLink <string>	# The Developer Connect Git repository link, formatted as projects/*/locations/*/connections/*/gitRepositoryLink/*.
+spec.initProvider.developerConnectEventConfig.pullRequest <object>	# Filter to match changes in pull requests. Structure is documented below.
+spec.initProvider.developerConnectEventConfig.pullRequest.branch <string>	# Regex of branches to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
+spec.initProvider.developerConnectEventConfig.pullRequest.commentControl <string>	# Configure builds to run whether a repository owner or collaborator need to comment /gcbrun. Possible values are: COMMENTS_DISABLED, COMMENTS_ENABLED, COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY.
+spec.initProvider.developerConnectEventConfig.pullRequest.invertRegex <boolean>	# Only trigger a build if the revision regex does NOT match the revision regex.
+spec.initProvider.developerConnectEventConfig.push <object>	# Filter to match changes in refs like branches and tags. Structure is documented below.
+spec.initProvider.developerConnectEventConfig.push.branch <string>	# Regex of branches to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
+spec.initProvider.developerConnectEventConfig.push.invertRegex <boolean>	# Only trigger a build if the revision regex does NOT match the revision regex.
+spec.initProvider.developerConnectEventConfig.push.tag <string>	# Regex of tags to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
 spec.initProvider.disabled <boolean>	# Whether the trigger is disabled or not. If true, the trigger will never result in a build.
 spec.initProvider.filename <string>	# Path, from the source root, to a file whose contents is used for the template. Either a filename or build template must be provided. Set this only when using trigger_template or github. When using Pub/Sub, Webhook or Manual set the file name using git_file_source instead.
 spec.initProvider.filter <string>	# A Common Expression Language string. Used only with Pub/Sub and Webhook.
@@ -302,7 +322,7 @@ spec.initProvider.gitFileSource.repoType <string>	# The type of the repo, since 
 spec.initProvider.gitFileSource.repository <string>	# The fully qualified resource name of the Repo API repository. The fully qualified resource name of the Repo API repository. If unspecified, the repo from which the trigger invocation originated is assumed to be the repo from which to read the specified path.
 spec.initProvider.gitFileSource.revision <string>	# The branch, tag, arbitrary ref, or SHA version of the repo to use when resolving the filename . This field respects the same syntax/resolution as described here: https://git-scm.com/docs/gitrevisions If unspecified, the revision from which the trigger invocation originated is assumed to be the revision from which to read the specified path.
 spec.initProvider.gitFileSource.uri <string>	# The URI of the repo . If unspecified, the repo from which the trigger invocation originated is assumed to be the repo from which to read the specified path.
-spec.initProvider.github <object>	# Describes the configuration of a trigger that creates a build whenever a GitHub event is received. One of trigger_template, github, pubsub_config or webhook_config must be provided. Structure is documented below.
+spec.initProvider.github <object>	# Describes the configuration of a trigger that creates a build whenever a GitHub event is received. Structure is documented below.
 spec.initProvider.github.enterpriseConfigResourceName <string>	# The resource name of the github enterprise config that should be applied to this installation. For example: "projects/{$projectId}/locations/{$locationId}/githubEnterpriseConfigs/{$configId}"
 spec.initProvider.github.name <string>	# Name of the repository. For example: The name for https://github.com/googlecloudplatform/cloud-builders is "cloud-builders".
 spec.initProvider.github.owner <string>	# Owner of the repository. For example: The owner for https://github.com/googlecloudplatform/cloud-builders is "googlecloudplatform".
@@ -320,7 +340,7 @@ spec.initProvider.includedFiles <[]string>	# ignoredFiles and includedFiles are 
 spec.initProvider.location <string>	# The Cloud Build location for the trigger. If not specified, "global" is used.
 spec.initProvider.name <string>	# Name of the trigger. Must be unique within the project.
 spec.initProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
-spec.initProvider.pubsubConfig <object>	# PubsubConfig describes the configuration of a trigger that creates a build whenever a Pub/Sub message is published. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+spec.initProvider.pubsubConfig <object>	# PubsubConfig describes the configuration of a trigger that creates a build whenever a Pub/Sub message is published. Structure is documented below.
 spec.initProvider.pubsubConfig.serviceAccountEmail <string>	# Service account that will make the push request.
 spec.initProvider.pubsubConfig.topic <string>	# The name of the topic from which this subscription is receiving messages.
 spec.initProvider.pubsubConfig.topicRef <object>	# Reference to a Topic in pubsub to populate topic.
@@ -360,7 +380,7 @@ spec.initProvider.serviceAccountSelector.namespace <string>	# Namespace for the 
 spec.initProvider.serviceAccountSelector.policy <object>	# Policies for selection.
 spec.initProvider.serviceAccountSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.serviceAccountSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.sourceToBuild <object>	# The repo and ref of the repository from which to build. This field is used only for those triggers that do not respond to SCM events. Triggers that respond to such events build source at whatever commit caused the event. This field is currently only used by Webhook, Pub/Sub, Manual, and Cron triggers. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+spec.initProvider.sourceToBuild <object>	# The repo and ref of the repository from which to build. This field is used only for those triggers that do not respond to SCM events. Triggers that respond to such events build source at whatever commit caused the event. This field is currently only used by Webhook, Pub/Sub, Manual, and Cron triggers. Structure is documented below.
 spec.initProvider.sourceToBuild.bitbucketServerConfig <string>	# The full resource name of the bitbucket server config. Format: projects/{project}/locations/{location}/bitbucketServerConfigs/{id}.
 spec.initProvider.sourceToBuild.githubEnterpriseConfig <string>	# The full resource name of the github enterprise config. Format: projects/{project}/locations/{location}/githubEnterpriseConfigs/{id}. projects/{project}/githubEnterpriseConfigs/{id}.
 spec.initProvider.sourceToBuild.ref <string>	# The branch or tag to use. Must start with "refs/" .
@@ -369,7 +389,7 @@ spec.initProvider.sourceToBuild.repository <string>	# The qualified resource nam
 spec.initProvider.sourceToBuild.uri <string>	# The URI of the repo.
 spec.initProvider.substitutions <map[string]string>	# Substitutions data for Build resource.
 spec.initProvider.tags <[]string>	# Tags for annotation of a BuildTrigger
-spec.initProvider.triggerTemplate <object>	# Template describing the types of source changes to trigger a build. Branch and tag names in trigger templates are interpreted as regular expressions. Any branch or tag change that matches that regular expression will trigger a build. One of trigger_template, github, pubsub_config, webhook_config or source_to_build must be provided. Structure is documented below.
+spec.initProvider.triggerTemplate <object>	# Template describing the types of source changes to trigger a build. Branch and tag names in trigger templates are interpreted as regular expressions. Any branch or tag change that matches that regular expression will trigger a build. Structure is documented below.
 spec.initProvider.triggerTemplate.branchName <string>	# Name of the branch to build. Exactly one a of branch name, tag, or commit SHA must be provided. This field is a regular expression.
 spec.initProvider.triggerTemplate.commitSha <string>	# Explicit commit SHA to build. Exactly one of a branch name, tag, or commit SHA must be provided.
 spec.initProvider.triggerTemplate.dir <string>	# Directory, relative to the source root, in which to run the build. This must be a relative path. If a step's dir is specified and is an absolute path, this value is ignored for that step's execution.
@@ -377,7 +397,7 @@ spec.initProvider.triggerTemplate.invertRegex <boolean>	# Only trigger a build i
 spec.initProvider.triggerTemplate.projectId <string>	# ID of the project that owns the Cloud Source Repository. If omitted, the project ID requesting the build is assumed.
 spec.initProvider.triggerTemplate.repoName <string>	# Name of the Cloud Source Repository. If omitted, the name "default" is assumed.
 spec.initProvider.triggerTemplate.tagName <string>	# Name of the tag to build. Exactly one of a branch name, tag, or commit SHA must be provided. This field is a regular expression.
-spec.initProvider.webhookConfig <object>	# WebhookConfig describes the configuration of a trigger that creates a build whenever a webhook is sent to a trigger's webhook URL. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+spec.initProvider.webhookConfig <object>	# WebhookConfig describes the configuration of a trigger that creates a build whenever a webhook is sent to a trigger's webhook URL. Structure is documented below.
 spec.initProvider.webhookConfig.secret <string>	# Resource name for the secret required as a URL parameter.
 spec.initProvider.webhookConfig.secretRef <object>	# Reference to a SecretVersion in secretmanager to populate secret.
 spec.initProvider.webhookConfig.secretRef.name <string> (required)	# Name of the referenced object.
@@ -495,7 +515,19 @@ status.atProvider.build.substitutions <map[string]string>	# Substitutions data f
 status.atProvider.build.tags <[]string>	# Tags for annotation of a Build. These are not docker tags.
 status.atProvider.build.timeout <string>	# Amount of time that this build should be allowed to run, to second granularity. If this amount of time elapses, work on the build will cease and the build status will be TIMEOUT. This timeout must be equal to or greater than the sum of the timeouts for build steps within the build. The expected format is the number of seconds followed by s. Default time is ten minutes (600s).
 status.atProvider.createTime <string>	# Time when the trigger was created.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# Human-readable description of the trigger.
+status.atProvider.developerConnectEventConfig <object>	# Configuration for triggers that respond to Developer Connect events. Structure is documented below.
+status.atProvider.developerConnectEventConfig.gitRepositoryLink <string>	# The Developer Connect Git repository link, formatted as projects/*/locations/*/connections/*/gitRepositoryLink/*.
+status.atProvider.developerConnectEventConfig.gitRepositoryLinkType <string>	# (Output) The type of DeveloperConnect GitRepositoryLink.
+status.atProvider.developerConnectEventConfig.pullRequest <object>	# Filter to match changes in pull requests. Structure is documented below.
+status.atProvider.developerConnectEventConfig.pullRequest.branch <string>	# Regex of branches to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
+status.atProvider.developerConnectEventConfig.pullRequest.commentControl <string>	# Configure builds to run whether a repository owner or collaborator need to comment /gcbrun. Possible values are: COMMENTS_DISABLED, COMMENTS_ENABLED, COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY.
+status.atProvider.developerConnectEventConfig.pullRequest.invertRegex <boolean>	# Only trigger a build if the revision regex does NOT match the revision regex.
+status.atProvider.developerConnectEventConfig.push <object>	# Filter to match changes in refs like branches and tags. Structure is documented below.
+status.atProvider.developerConnectEventConfig.push.branch <string>	# Regex of branches to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
+status.atProvider.developerConnectEventConfig.push.invertRegex <boolean>	# Only trigger a build if the revision regex does NOT match the revision regex.
+status.atProvider.developerConnectEventConfig.push.tag <string>	# Regex of tags to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
 status.atProvider.disabled <boolean>	# Whether the trigger is disabled or not. If true, the trigger will never result in a build.
 status.atProvider.filename <string>	# Path, from the source root, to a file whose contents is used for the template. Either a filename or build template must be provided. Set this only when using trigger_template or github. When using Pub/Sub, Webhook or Manual set the file name using git_file_source instead.
 status.atProvider.filter <string>	# A Common Expression Language string. Used only with Pub/Sub and Webhook.
@@ -507,7 +539,7 @@ status.atProvider.gitFileSource.repoType <string>	# The type of the repo, since 
 status.atProvider.gitFileSource.repository <string>	# The fully qualified resource name of the Repo API repository. The fully qualified resource name of the Repo API repository. If unspecified, the repo from which the trigger invocation originated is assumed to be the repo from which to read the specified path.
 status.atProvider.gitFileSource.revision <string>	# The branch, tag, arbitrary ref, or SHA version of the repo to use when resolving the filename . This field respects the same syntax/resolution as described here: https://git-scm.com/docs/gitrevisions If unspecified, the revision from which the trigger invocation originated is assumed to be the revision from which to read the specified path.
 status.atProvider.gitFileSource.uri <string>	# The URI of the repo . If unspecified, the repo from which the trigger invocation originated is assumed to be the repo from which to read the specified path.
-status.atProvider.github <object>	# Describes the configuration of a trigger that creates a build whenever a GitHub event is received. One of trigger_template, github, pubsub_config or webhook_config must be provided. Structure is documented below.
+status.atProvider.github <object>	# Describes the configuration of a trigger that creates a build whenever a GitHub event is received. Structure is documented below.
 status.atProvider.github.enterpriseConfigResourceName <string>	# The resource name of the github enterprise config that should be applied to this installation. For example: "projects/{$projectId}/locations/{$locationId}/githubEnterpriseConfigs/{$configId}"
 status.atProvider.github.name <string>	# Name of the repository. For example: The name for https://github.com/googlecloudplatform/cloud-builders is "cloud-builders".
 status.atProvider.github.owner <string>	# Owner of the repository. For example: The owner for https://github.com/googlecloudplatform/cloud-builders is "googlecloudplatform".
@@ -526,7 +558,7 @@ status.atProvider.includedFiles <[]string>	# ignoredFiles and includedFiles are 
 status.atProvider.location <string>	# The Cloud Build location for the trigger. If not specified, "global" is used.
 status.atProvider.name <string>	# Name of the trigger. Must be unique within the project.
 status.atProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
-status.atProvider.pubsubConfig <object>	# PubsubConfig describes the configuration of a trigger that creates a build whenever a Pub/Sub message is published. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+status.atProvider.pubsubConfig <object>	# PubsubConfig describes the configuration of a trigger that creates a build whenever a Pub/Sub message is published. Structure is documented below.
 status.atProvider.pubsubConfig.serviceAccountEmail <string>	# Service account that will make the push request.
 status.atProvider.pubsubConfig.state <string>	# (Output) Potential issues with the underlying Pub/Sub subscription configuration. Only populated on get requests.
 status.atProvider.pubsubConfig.subscription <string>	# (Output) Output only. Name of the subscription.
@@ -542,7 +574,7 @@ status.atProvider.repositoryEventConfig.push.invertRegex <boolean>	# Only trigge
 status.atProvider.repositoryEventConfig.push.tag <string>	# Regex of tags to match. The syntax of the regular expressions accepted is the syntax accepted by RE2 and described at https://github.com/google/re2/wiki/Syntax
 status.atProvider.repositoryEventConfig.repository <string>	# The resource name of the Repo API resource.
 status.atProvider.serviceAccount <string>	# The service account used for all user-controlled operations including triggers.patch, triggers.run, builds.create, and builds.cancel. If no service account is set, then the standard Cloud Build service account ([PROJECT_NUM]@system.gserviceaccount.com) will be used instead. Format: projects/{PROJECT_ID}/serviceAccounts/{ACCOUNT_ID_OR_EMAIL}
-status.atProvider.sourceToBuild <object>	# The repo and ref of the repository from which to build. This field is used only for those triggers that do not respond to SCM events. Triggers that respond to such events build source at whatever commit caused the event. This field is currently only used by Webhook, Pub/Sub, Manual, and Cron triggers. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+status.atProvider.sourceToBuild <object>	# The repo and ref of the repository from which to build. This field is used only for those triggers that do not respond to SCM events. Triggers that respond to such events build source at whatever commit caused the event. This field is currently only used by Webhook, Pub/Sub, Manual, and Cron triggers. Structure is documented below.
 status.atProvider.sourceToBuild.bitbucketServerConfig <string>	# The full resource name of the bitbucket server config. Format: projects/{project}/locations/{location}/bitbucketServerConfigs/{id}.
 status.atProvider.sourceToBuild.githubEnterpriseConfig <string>	# The full resource name of the github enterprise config. Format: projects/{project}/locations/{location}/githubEnterpriseConfigs/{id}. projects/{project}/githubEnterpriseConfigs/{id}.
 status.atProvider.sourceToBuild.ref <string>	# The branch or tag to use. Must start with "refs/" .
@@ -552,7 +584,7 @@ status.atProvider.sourceToBuild.uri <string>	# The URI of the repo.
 status.atProvider.substitutions <map[string]string>	# Substitutions data for Build resource.
 status.atProvider.tags <[]string>	# Tags for annotation of a BuildTrigger
 status.atProvider.triggerId <string>	# The unique identifier for the trigger.
-status.atProvider.triggerTemplate <object>	# Template describing the types of source changes to trigger a build. Branch and tag names in trigger templates are interpreted as regular expressions. Any branch or tag change that matches that regular expression will trigger a build. One of trigger_template, github, pubsub_config, webhook_config or source_to_build must be provided. Structure is documented below.
+status.atProvider.triggerTemplate <object>	# Template describing the types of source changes to trigger a build. Branch and tag names in trigger templates are interpreted as regular expressions. Any branch or tag change that matches that regular expression will trigger a build. Structure is documented below.
 status.atProvider.triggerTemplate.branchName <string>	# Name of the branch to build. Exactly one a of branch name, tag, or commit SHA must be provided. This field is a regular expression.
 status.atProvider.triggerTemplate.commitSha <string>	# Explicit commit SHA to build. Exactly one of a branch name, tag, or commit SHA must be provided.
 status.atProvider.triggerTemplate.dir <string>	# Directory, relative to the source root, in which to run the build. This must be a relative path. If a step's dir is specified and is an absolute path, this value is ignored for that step's execution.
@@ -560,7 +592,7 @@ status.atProvider.triggerTemplate.invertRegex <boolean>	# Only trigger a build i
 status.atProvider.triggerTemplate.projectId <string>	# ID of the project that owns the Cloud Source Repository. If omitted, the project ID requesting the build is assumed.
 status.atProvider.triggerTemplate.repoName <string>	# Name of the Cloud Source Repository. If omitted, the name "default" is assumed.
 status.atProvider.triggerTemplate.tagName <string>	# Name of the tag to build. Exactly one of a branch name, tag, or commit SHA must be provided. This field is a regular expression.
-status.atProvider.webhookConfig <object>	# WebhookConfig describes the configuration of a trigger that creates a build whenever a webhook is sent to a trigger's webhook URL. One of trigger_template, github, pubsub_config webhook_config or source_to_build must be provided. Structure is documented below.
+status.atProvider.webhookConfig <object>	# WebhookConfig describes the configuration of a trigger that creates a build whenever a webhook is sent to a trigger's webhook URL. Structure is documented below.
 status.atProvider.webhookConfig.secret <string>	# Resource name for the secret required as a URL parameter.
 status.atProvider.webhookConfig.state <string>	# (Output) Potential issues with the underlying Pub/Sub subscription configuration. Only populated on get requests.
 status.conditions <[]object>	# Conditions of the resource.
@@ -570,4 +602,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

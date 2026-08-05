@@ -1,11 +1,12 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=sql.gcp.m.upbound.io/v1beta1
 kind <string> enum=User
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# UserSpec defines the desired state of User
 spec.forProvider <object> (required)
-spec.forProvider.deletionPolicy <string>	# The deletion policy for the user. Setting ABANDON allows the resource to be abandoned rather than deleted. This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles.
+spec.forProvider.databaseRoles <[]string>	# A list of database roles to be assigned to the user. This option is only available for MySQL 8+ and PostgreSQL instances. You can include predefined Cloud SQL roles, like cloudsqlsuperuser, or your own custom roles. Custom roles must be created in the database before you can assign them. You can create roles using the CREATE ROLE statement for both MySQL and PostgreSQL. Note: This property is write-only and will not be read from the API. Caution: Existing database roles will be overwriten with new values from this field.
+spec.forProvider.deletionPolicy <string>	# Defaults to "DELETE". This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles.
 spec.forProvider.host <string>	# The host the user can connect from. This is only supported for BUILT_IN users in MySQL instances. Don't set this field for PostgreSQL and SQL Server instances. Can be an IP address. Changing this forces a new resource to be created.
 spec.forProvider.instance <string>	# The name of the Cloud SQL instance. Changing this forces a new resource to be created.
 spec.forProvider.instanceRef <object>	# Reference to a DatabaseInstance in sql to populate instance.
@@ -29,12 +30,11 @@ spec.forProvider.passwordPolicy.passwordExpirationDuration <string>	# Password e
 spec.forProvider.passwordSecretRef <object>	# The password for the user. Can be updated. For Postgres instances this is a Required field, unless type is set to either CLOUD_IAM_USER or CLOUD_IAM_SERVICE_ACCOUNT. Don't set this field for CLOUD_IAM_USER and CLOUD_IAM_SERVICE_ACCOUNT user types for any Cloud SQL instance.
 spec.forProvider.passwordSecretRef.key <string> (required)
 spec.forProvider.passwordSecretRef.name <string> (required)	# Name of the secret.
-spec.forProvider.passwordWo <string>	# The password for the user. Can be updated. For Postgres instances this is a Required field, unless type is set to either CLOUD_IAM_USER or CLOUD_IAM_SERVICE_ACCOUNT. Don't set this field for CLOUD_IAM_USER and CLOUD_IAM_SERVICE_ACCOUNT user types for any Cloud SQL instance. Note: This property is write-only and will not be read from the API.
-spec.forProvider.passwordWoVersion <number>	# The version of the password_wo. For more info see updating write-only attributes.
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.forProvider.type <string>	# The user type. It determines the method to authenticate the user during login. The default is the database's built-in user type. Flags include "BUILT_IN", "CLOUD_IAM_USER", "CLOUD_IAM_SERVICE_ACCOUNT", "CLOUD_IAM_GROUP", "CLOUD_IAM_GROUP_USER" and "CLOUD_IAM_GROUP_SERVICE_ACCOUNT" for Postgres and MySQL.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
-spec.initProvider.deletionPolicy <string>	# The deletion policy for the user. Setting ABANDON allows the resource to be abandoned rather than deleted. This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles.
+spec.initProvider.databaseRoles <[]string>	# A list of database roles to be assigned to the user. This option is only available for MySQL 8+ and PostgreSQL instances. You can include predefined Cloud SQL roles, like cloudsqlsuperuser, or your own custom roles. Custom roles must be created in the database before you can assign them. You can create roles using the CREATE ROLE statement for both MySQL and PostgreSQL. Note: This property is write-only and will not be read from the API. Caution: Existing database roles will be overwriten with new values from this field.
+spec.initProvider.deletionPolicy <string>	# Defaults to "DELETE". This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles.
 spec.initProvider.host <string>	# The host the user can connect from. This is only supported for BUILT_IN users in MySQL instances. Don't set this field for PostgreSQL and SQL Server instances. Can be an IP address. Changing this forces a new resource to be created.
 spec.initProvider.instance <string>	# The name of the Cloud SQL instance. Changing this forces a new resource to be created.
 spec.initProvider.instanceRef <object>	# Reference to a DatabaseInstance in sql to populate instance.
@@ -58,8 +58,6 @@ spec.initProvider.passwordPolicy.passwordExpirationDuration <string>	# Password 
 spec.initProvider.passwordSecretRef <object>	# The password for the user. Can be updated. For Postgres instances this is a Required field, unless type is set to either CLOUD_IAM_USER or CLOUD_IAM_SERVICE_ACCOUNT. Don't set this field for CLOUD_IAM_USER and CLOUD_IAM_SERVICE_ACCOUNT user types for any Cloud SQL instance.
 spec.initProvider.passwordSecretRef.key <string> (required)
 spec.initProvider.passwordSecretRef.name <string> (required)	# Name of the secret.
-spec.initProvider.passwordWo <string>	# The password for the user. Can be updated. For Postgres instances this is a Required field, unless type is set to either CLOUD_IAM_USER or CLOUD_IAM_SERVICE_ACCOUNT. Don't set this field for CLOUD_IAM_USER and CLOUD_IAM_SERVICE_ACCOUNT user types for any Cloud SQL instance. Note: This property is write-only and will not be read from the API.
-spec.initProvider.passwordWoVersion <number>	# The version of the password_wo. For more info see updating write-only attributes.
 spec.initProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.initProvider.type <string>	# The user type. It determines the method to authenticate the user during login. The default is the database's built-in user type. Flags include "BUILT_IN", "CLOUD_IAM_USER", "CLOUD_IAM_SERVICE_ACCOUNT", "CLOUD_IAM_GROUP", "CLOUD_IAM_GROUP_USER" and "CLOUD_IAM_GROUP_SERVICE_ACCOUNT" for Postgres and MySQL.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -70,8 +68,10 @@ spec.writeConnectionSecretToRef <object>	# WriteConnectionSecretToReference spec
 spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 status <object>	# UserStatus defines the observed state of User.
 status.atProvider <object>
-status.atProvider.deletionPolicy <string>	# The deletion policy for the user. Setting ABANDON allows the resource to be abandoned rather than deleted. This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles.
+status.atProvider.databaseRoles <[]string>	# A list of database roles to be assigned to the user. This option is only available for MySQL 8+ and PostgreSQL instances. You can include predefined Cloud SQL roles, like cloudsqlsuperuser, or your own custom roles. Custom roles must be created in the database before you can assign them. You can create roles using the CREATE ROLE statement for both MySQL and PostgreSQL. Note: This property is write-only and will not be read from the API. Caution: Existing database roles will be overwriten with new values from this field.
+status.atProvider.deletionPolicy <string>	# Defaults to "DELETE". This is useful for Postgres, where users cannot be deleted from the API if they have been granted SQL roles.
 status.atProvider.host <string>	# The host the user can connect from. This is only supported for BUILT_IN users in MySQL instances. Don't set this field for PostgreSQL and SQL Server instances. Can be an IP address. Changing this forces a new resource to be created.
+status.atProvider.iamEmail <string>	# (read only) IAM email address for MySQL IAM database users.
 status.atProvider.id <string>
 status.atProvider.instance <string>	# The name of the Cloud SQL instance. Changing this forces a new resource to be created.
 status.atProvider.passwordPolicy <object>
@@ -82,8 +82,6 @@ status.atProvider.passwordPolicy.passwordExpirationDuration <string>	# Password 
 status.atProvider.passwordPolicy.status <[]object>
 status.atProvider.passwordPolicy.status[].locked <boolean>	# (read only) If true, user does not have login privileges.
 status.atProvider.passwordPolicy.status[].passwordExpirationTime <string>	# (read only) Password expiration duration with one week grace period.
-status.atProvider.passwordWo <string>	# The password for the user. Can be updated. For Postgres instances this is a Required field, unless type is set to either CLOUD_IAM_USER or CLOUD_IAM_SERVICE_ACCOUNT. Don't set this field for CLOUD_IAM_USER and CLOUD_IAM_SERVICE_ACCOUNT user types for any Cloud SQL instance. Note: This property is write-only and will not be read from the API.
-status.atProvider.passwordWoVersion <number>	# The version of the password_wo. For more info see updating write-only attributes.
 status.atProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 status.atProvider.sqlServerUserDetails <[]object>
 status.atProvider.sqlServerUserDetails[].disabled <boolean>
@@ -96,4 +94,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

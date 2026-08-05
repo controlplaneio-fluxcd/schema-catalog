@@ -1,4 +1,4 @@
-# schema source: Upbound Azure Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-azure
+# schema source: Upbound Azure Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-azure
 apiVersion <string> enum=containerservice.azure.upbound.io/v1beta2
 kind <string> enum=KubernetesCluster (cluster-scoped)
 metadata.name <string> (required)
@@ -78,7 +78,8 @@ spec.forProvider.defaultNodePool.hostEncryptionEnabled <boolean>	# Should the no
 spec.forProvider.defaultNodePool.hostGroupId <string>	# Specifies the ID of the Host Group within which this AKS Cluster should be created. Changing this forces a new resource to be created.
 spec.forProvider.defaultNodePool.kubeletConfig <object>	# A kubelet_config block as defined below. temporary_name_for_rotation must be specified when changing this block.
 spec.forProvider.defaultNodePool.kubeletConfig.allowedUnsafeSysctls <[]string>	# Specifies the allow list of unsafe sysctls command or patterns (ending in *).
-spec.forProvider.defaultNodePool.kubeletConfig.containerLogMaxLine <number>	# Specifies the maximum number of container log files that can be present for a container. must be at least 2.
+spec.forProvider.defaultNodePool.kubeletConfig.containerLogMaxFiles <number>	# Specifies the maximum number of container log files that can be present for a container. Must be at least 2.
+spec.forProvider.defaultNodePool.kubeletConfig.containerLogMaxLine <number>
 spec.forProvider.defaultNodePool.kubeletConfig.containerLogMaxSizeMb <number>	# Specifies the maximum size (e.g. 10MB) of container log file before it is rotated.
 spec.forProvider.defaultNodePool.kubeletConfig.cpuCfsQuotaEnabled <boolean>	# Is CPU CFS quota enforcement for containers enabled? Defaults to true.
 spec.forProvider.defaultNodePool.kubeletConfig.cpuCfsQuotaPeriod <string>	# Specifies the CPU CFS quota period value.
@@ -142,7 +143,7 @@ spec.forProvider.defaultNodePool.onlyCriticalAddonsEnabled <boolean>	# Enabling 
 spec.forProvider.defaultNodePool.orchestratorVersion <string>	# Version of Kubernetes used for the Agents. If not specified, the default node pool will be created with the version specified by kubernetes_version. If both are unspecified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation.
 spec.forProvider.defaultNodePool.osDiskSizeGb <number>	# The size of the OS Disk which should be used for each agent in the Node Pool. temporary_name_for_rotation must be specified when attempting a change.
 spec.forProvider.defaultNodePool.osDiskType <string>	# The type of disk which should be used for the Operating System. Possible values are Ephemeral and Managed. Defaults to Managed. temporary_name_for_rotation must be specified when attempting a change.
-spec.forProvider.defaultNodePool.osSku <string>	# Specifies the OS SKU used by the agent pool. Possible values are AzureLinux, AzureLinux3, Ubuntu, Ubuntu2204, Windows2019 and Windows2022. If not specified, the default is Ubuntu if OSType=Linux or Windows2019 if OSType=Windows. And the default Windows OSSKU will be changed to Windows2022 after Windows2019 is deprecated. Changing this from AzureLinux or Ubuntu to AzureLinux or Ubuntu will not replace the resource, otherwise temporary_name_for_rotation must be specified when attempting a change.
+spec.forProvider.defaultNodePool.osSku <string>	# Specifies the OS SKU used by the agent pool. Possible values are AzureLinux, AzureLinux3, Ubuntu, Ubuntu2204, Ubuntu2404, Windows2019 and Windows2022. If not specified, the default is Ubuntu when os_type=Linux or Windows2019 if os_type=Windows (Windows2022 Kubernetes ≥1.33). Changing between AzureLinux and Ubuntu does not replace the resource; otherwise temporary_name_for_rotation must be specified when attempting a change.
 spec.forProvider.defaultNodePool.podSubnetId <string>	# The ID of the Subnet where the pods in the default Node Pool should exist.
 spec.forProvider.defaultNodePool.podSubnetIdRef <object>	# Reference to a Subnet in network to populate podSubnetId.
 spec.forProvider.defaultNodePool.podSubnetIdRef.name <string> (required)	# Name of the referenced object.
@@ -180,7 +181,7 @@ spec.forProvider.defaultNodePool.vnetSubnetIdSelector.matchLabels <map[string]st
 spec.forProvider.defaultNodePool.vnetSubnetIdSelector.policy <object>	# Policies for selection.
 spec.forProvider.defaultNodePool.vnetSubnetIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.defaultNodePool.vnetSubnetIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.defaultNodePool.workloadRuntime <string>	# Specifies the workload runtime used by the node pool. Possible value is OCIContainer.
+spec.forProvider.defaultNodePool.workloadRuntime <string>	# Specifies the workload runtime used by the node pool. Possible values are KataVmIsolation and OCIContainer.
 spec.forProvider.defaultNodePool.zones <[]string>	# Specifies a list of Availability Zones in which this Kubernetes Cluster should be located. temporary_name_for_rotation must be specified when changing this property.
 spec.forProvider.diskEncryptionSetId <string>	# The ID of the Disk Encryption Set which should be used for the Nodes and Volumes. More information can be found in the documentation. Changing this forces a new resource to be created.
 spec.forProvider.dnsPrefix <string>	# DNS prefix specified when creating the managed cluster. Possible values must begin and end with a letter or number, contain only letters, numbers, and hyphens and be between 1 and 54 characters in length. Changing this forces a new resource to be created.
@@ -240,14 +241,14 @@ spec.forProvider.kubeletIdentity.userAssignedIdentityId <string>	# The ID of the
 spec.forProvider.kubernetesVersion <string>	# Version of Kubernetes specified when creating the AKS managed cluster. If not specified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation.
 spec.forProvider.linuxProfile <object>	# A linux_profile block as defined below.
 spec.forProvider.linuxProfile.adminUsername <string>	# The Admin Username for the Cluster. Changing this forces a new resource to be created.
-spec.forProvider.linuxProfile.sshKey <object>	# An ssh_key block as defined below. Only one is currently allowed. Changing this will update the key on all node pools. More information can be found in the documentation.
+spec.forProvider.linuxProfile.sshKey <object>	# An ssh_key block as defined below.
 spec.forProvider.linuxProfile.sshKey.keyData <string>	# The Public SSH Key used to access the cluster. Changing this forces a new resource to be created.
 spec.forProvider.localAccountDisabled <boolean>	# If true local accounts will be disabled. See the documentation for more information.
 spec.forProvider.location <string>	# The location where the Managed Kubernetes Cluster should be created. Changing this forces a new resource to be created.
 spec.forProvider.maintenanceWindow <object>	# A maintenance_window block as defined below.
 spec.forProvider.maintenanceWindow.allowed <[]object>	# One or more allowed blocks as defined below.
 spec.forProvider.maintenanceWindow.allowed[].day <string>	# A day in a week. Possible values are Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday.
-spec.forProvider.maintenanceWindow.allowed[].hours <[]number>	# An array of hour slots in a day. For example, specifying 1 will allow maintenance from 1:00am to 2:00am. Specifying 1, 2 will allow maintenance from 1:00am to 3:00m. Possible values are between 0 and 23.
+spec.forProvider.maintenanceWindow.allowed[].hours <[]number>	# An array of hour slots in a day. For example, specifying 1 will allow maintenance from 1:00am to 2:00am. Specifying 1, 2 will allow maintenance from 1:00am to 3:00am. Possible values are between 0 and 23.
 spec.forProvider.maintenanceWindow.notAllowed <[]object>	# One or more not_allowed block as defined below.
 spec.forProvider.maintenanceWindow.notAllowed[].end <string>	# The end of a time span, formatted as an RFC3339 string.
 spec.forProvider.maintenanceWindow.notAllowed[].start <string>	# The start of a time span, formatted as an RFC3339 string.
@@ -283,9 +284,9 @@ spec.forProvider.monitorMetrics <object>	# Specifies a Prometheus add-on profile
 spec.forProvider.monitorMetrics.annotationsAllowed <string>	# Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric.
 spec.forProvider.monitorMetrics.labelsAllowed <string>	# Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric.
 spec.forProvider.networkProfile <object>	# A network_profile block as defined below.
-spec.forProvider.networkProfile.advancedNetworking <object>	# An advanced_networking block as defined below. This can only be specified when network_plugin is set to azure and network_data_plane is set to cilium.
+spec.forProvider.networkProfile.advancedNetworking <object>	# An advanced_networking block as defined below.
 spec.forProvider.networkProfile.advancedNetworking.observabilityEnabled <boolean>	# Is observability enabled? Defaults to false.
-spec.forProvider.networkProfile.advancedNetworking.securityEnabled <boolean>	# Is security enabled? Defaults to false.
+spec.forProvider.networkProfile.advancedNetworking.securityEnabled <boolean>	# Is security enabled? Defaults to false. This can only be enabled (set to true) when network_plugin is set to azure and network_data_plane is set to cilium.
 spec.forProvider.networkProfile.dnsServiceIp <string>	# IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created.
 spec.forProvider.networkProfile.ipVersions <[]string>	# Specifies a list of IP versions the Kubernetes Cluster will use to assign IP addresses to its nodes and pods. Possible values are IPv4 and/or IPv6. IPv4 must always be specified. Changing this forces a new resource to be created.
 spec.forProvider.networkProfile.loadBalancerProfile <object>	# A load_balancer_profile block as defined below. This can only be specified when load_balancer_sku is set to standard. Changing this forces a new resource to be created.
@@ -302,17 +303,20 @@ spec.forProvider.networkProfile.natGatewayProfile.idleTimeoutInMinutes <number>	
 spec.forProvider.networkProfile.natGatewayProfile.managedOutboundIpCount <number>	# Count of desired managed outbound IPs for the managed nat gateway. Must be between 1 and 16 inclusive.
 spec.forProvider.networkProfile.networkDataPlane <string>	# Specifies the data plane used for building the Kubernetes network. Possible values are azure and cilium. Defaults to azure. Disabling this forces a new resource to be created.
 spec.forProvider.networkProfile.networkMode <string>	# Network mode to be used with Azure CNI. Possible values are bridge and transparent. Changing this forces a new resource to be created.
-spec.forProvider.networkProfile.networkPlugin <string>	# Network plugin to use for networking. Currently supported values are azure, kubenet and none. Changing this forces a new resource to be created.
+spec.forProvider.networkProfile.networkPlugin <string>	# Network plugin to use for networking. Currently supported values are azure, kubenet and none
 spec.forProvider.networkProfile.networkPluginMode <string>	# Specifies the network plugin mode used for building the Kubernetes network. Possible value is overlay.
 spec.forProvider.networkProfile.networkPolicy <string>	# Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are calico, azure and cilium.
 spec.forProvider.networkProfile.outboundType <string>	# The outbound (egress) routing method which should be used for this Kubernetes Cluster. Possible values are loadBalancer, userDefinedRouting, managedNATGateway, userAssignedNATGateway and none. Defaults to loadBalancer.
-spec.forProvider.networkProfile.podCidr <string>	# The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet or network_plugin_mode is set to overlay. Changing this forces a new resource to be created.
-spec.forProvider.networkProfile.podCidrs <[]string>	# A list of CIDRs to use for pod IP addresses. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected. Changing this forces a new resource to be created.
+spec.forProvider.networkProfile.podCidr <string>	# The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet or network_plugin_mode is set to overlay.
+spec.forProvider.networkProfile.podCidrs <[]string>	# A list of CIDRs to use for pod IP addresses. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected.
 spec.forProvider.networkProfile.serviceCidr <string>	# The Network Range used by the Kubernetes service. Changing this forces a new resource to be created.
 spec.forProvider.networkProfile.serviceCidrs <[]string>	# A list of CIDRs to use for Kubernetes services. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected. Changing this forces a new resource to be created.
 spec.forProvider.nodeOsUpgradeChannel <string>	# The upgrade channel for this Kubernetes Cluster Nodes' OS Image. Possible values are Unmanaged, SecurityPatch, NodeImage and None. Defaults to NodeImage.
+spec.forProvider.nodeProvisioningProfile <object>	# A node_provisioning_profile block as defined below.
+spec.forProvider.nodeProvisioningProfile.defaultNodePools <string>	# Specifies whether default node pools should be provisioned automatically. Possible values are Auto and None. Defaults to Auto. At least one of mode or default_node_pools must be specified.
+spec.forProvider.nodeProvisioningProfile.mode <string>	# Specifies the provisioning mode for node pools created in this cluster. Possible values are Auto and Manual. Defaults to Manual. At least one of mode or default_node_pools must be specified.
 spec.forProvider.nodeResourceGroup <string>	# The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster.
-spec.forProvider.oidcIssuerEnabled <boolean>	# Enable or Disable the OIDC issuer URL
+spec.forProvider.oidcIssuerEnabled <boolean>	# Whether to enable the OIDC issuer feature.
 spec.forProvider.omsAgent <object>	# An oms_agent block as defined below.
 spec.forProvider.omsAgent.logAnalyticsWorkspaceId <string>	# The ID of the Log Analytics Workspace which the OMS Agent should send data to.
 spec.forProvider.omsAgent.msiAuthForMonitoringEnabled <boolean>	# Is managed identity authentication for monitoring enabled?
@@ -355,7 +359,7 @@ spec.forProvider.serviceMeshProfile.certificateAuthority.rootCertObjectName <str
 spec.forProvider.serviceMeshProfile.externalIngressGatewayEnabled <boolean>	# Is Istio External Ingress Gateway enabled?
 spec.forProvider.serviceMeshProfile.internalIngressGatewayEnabled <boolean>	# Is Istio Internal Ingress Gateway enabled?
 spec.forProvider.serviceMeshProfile.mode <string>	# The mode of the service mesh. Possible value is Istio.
-spec.forProvider.serviceMeshProfile.revisions <[]string>	# Specify 1 or 2 Istio control plane revisions for managing minor upgrades using the canary upgrade process. For example, create the resource with revisions set to ["asm-1-25"], or leave it empty (the revisions will only be known after apply). To start the canary upgrade, change revisions to ["asm-1-25", "asm-1-26"]. To roll back the canary upgrade, revert to ["asm-1-25"]. To confirm the upgrade, change to ["asm-1-26"].
+spec.forProvider.serviceMeshProfile.revisions <[]string>	# Specify 1 or 2 Istio control plane revisions for managing minor upgrades using the canary upgrade process. For example, create the resource with revisions set to ["asm-1-27"], or leave it empty (the revisions will only be known after apply). To start the canary upgrade, change revisions to ["asm-1-27", "asm-1-28"]. To roll back the canary upgrade, revert to ["asm-1-27"]. To confirm the upgrade, change to ["asm-1-28"].
 spec.forProvider.servicePrincipal <object>	# A service_principal block as documented below. One of either identity or service_principal must be specified.
 spec.forProvider.servicePrincipal.clientId <string>	# The Client ID for the Service Principal.
 spec.forProvider.servicePrincipal.clientSecretSecretRef <object>	# The Client Secret for the Service Principal.
@@ -464,7 +468,8 @@ spec.initProvider.defaultNodePool.hostEncryptionEnabled <boolean>	# Should the n
 spec.initProvider.defaultNodePool.hostGroupId <string>	# Specifies the ID of the Host Group within which this AKS Cluster should be created. Changing this forces a new resource to be created.
 spec.initProvider.defaultNodePool.kubeletConfig <object>	# A kubelet_config block as defined below. temporary_name_for_rotation must be specified when changing this block.
 spec.initProvider.defaultNodePool.kubeletConfig.allowedUnsafeSysctls <[]string>	# Specifies the allow list of unsafe sysctls command or patterns (ending in *).
-spec.initProvider.defaultNodePool.kubeletConfig.containerLogMaxLine <number>	# Specifies the maximum number of container log files that can be present for a container. must be at least 2.
+spec.initProvider.defaultNodePool.kubeletConfig.containerLogMaxFiles <number>	# Specifies the maximum number of container log files that can be present for a container. Must be at least 2.
+spec.initProvider.defaultNodePool.kubeletConfig.containerLogMaxLine <number>
 spec.initProvider.defaultNodePool.kubeletConfig.containerLogMaxSizeMb <number>	# Specifies the maximum size (e.g. 10MB) of container log file before it is rotated.
 spec.initProvider.defaultNodePool.kubeletConfig.cpuCfsQuotaEnabled <boolean>	# Is CPU CFS quota enforcement for containers enabled? Defaults to true.
 spec.initProvider.defaultNodePool.kubeletConfig.cpuCfsQuotaPeriod <string>	# Specifies the CPU CFS quota period value.
@@ -528,7 +533,7 @@ spec.initProvider.defaultNodePool.onlyCriticalAddonsEnabled <boolean>	# Enabling
 spec.initProvider.defaultNodePool.orchestratorVersion <string>	# Version of Kubernetes used for the Agents. If not specified, the default node pool will be created with the version specified by kubernetes_version. If both are unspecified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation.
 spec.initProvider.defaultNodePool.osDiskSizeGb <number>	# The size of the OS Disk which should be used for each agent in the Node Pool. temporary_name_for_rotation must be specified when attempting a change.
 spec.initProvider.defaultNodePool.osDiskType <string>	# The type of disk which should be used for the Operating System. Possible values are Ephemeral and Managed. Defaults to Managed. temporary_name_for_rotation must be specified when attempting a change.
-spec.initProvider.defaultNodePool.osSku <string>	# Specifies the OS SKU used by the agent pool. Possible values are AzureLinux, AzureLinux3, Ubuntu, Ubuntu2204, Windows2019 and Windows2022. If not specified, the default is Ubuntu if OSType=Linux or Windows2019 if OSType=Windows. And the default Windows OSSKU will be changed to Windows2022 after Windows2019 is deprecated. Changing this from AzureLinux or Ubuntu to AzureLinux or Ubuntu will not replace the resource, otherwise temporary_name_for_rotation must be specified when attempting a change.
+spec.initProvider.defaultNodePool.osSku <string>	# Specifies the OS SKU used by the agent pool. Possible values are AzureLinux, AzureLinux3, Ubuntu, Ubuntu2204, Ubuntu2404, Windows2019 and Windows2022. If not specified, the default is Ubuntu when os_type=Linux or Windows2019 if os_type=Windows (Windows2022 Kubernetes ≥1.33). Changing between AzureLinux and Ubuntu does not replace the resource; otherwise temporary_name_for_rotation must be specified when attempting a change.
 spec.initProvider.defaultNodePool.podSubnetId <string>	# The ID of the Subnet where the pods in the default Node Pool should exist.
 spec.initProvider.defaultNodePool.podSubnetIdRef <object>	# Reference to a Subnet in network to populate podSubnetId.
 spec.initProvider.defaultNodePool.podSubnetIdRef.name <string> (required)	# Name of the referenced object.
@@ -566,7 +571,7 @@ spec.initProvider.defaultNodePool.vnetSubnetIdSelector.matchLabels <map[string]s
 spec.initProvider.defaultNodePool.vnetSubnetIdSelector.policy <object>	# Policies for selection.
 spec.initProvider.defaultNodePool.vnetSubnetIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.defaultNodePool.vnetSubnetIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.defaultNodePool.workloadRuntime <string>	# Specifies the workload runtime used by the node pool. Possible value is OCIContainer.
+spec.initProvider.defaultNodePool.workloadRuntime <string>	# Specifies the workload runtime used by the node pool. Possible values are KataVmIsolation and OCIContainer.
 spec.initProvider.defaultNodePool.zones <[]string>	# Specifies a list of Availability Zones in which this Kubernetes Cluster should be located. temporary_name_for_rotation must be specified when changing this property.
 spec.initProvider.diskEncryptionSetId <string>	# The ID of the Disk Encryption Set which should be used for the Nodes and Volumes. More information can be found in the documentation. Changing this forces a new resource to be created.
 spec.initProvider.dnsPrefix <string>	# DNS prefix specified when creating the managed cluster. Possible values must begin and end with a letter or number, contain only letters, numbers, and hyphens and be between 1 and 54 characters in length. Changing this forces a new resource to be created.
@@ -626,14 +631,14 @@ spec.initProvider.kubeletIdentity.userAssignedIdentityId <string>	# The ID of th
 spec.initProvider.kubernetesVersion <string>	# Version of Kubernetes specified when creating the AKS managed cluster. If not specified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation.
 spec.initProvider.linuxProfile <object>	# A linux_profile block as defined below.
 spec.initProvider.linuxProfile.adminUsername <string>	# The Admin Username for the Cluster. Changing this forces a new resource to be created.
-spec.initProvider.linuxProfile.sshKey <object>	# An ssh_key block as defined below. Only one is currently allowed. Changing this will update the key on all node pools. More information can be found in the documentation.
+spec.initProvider.linuxProfile.sshKey <object>	# An ssh_key block as defined below.
 spec.initProvider.linuxProfile.sshKey.keyData <string>	# The Public SSH Key used to access the cluster. Changing this forces a new resource to be created.
 spec.initProvider.localAccountDisabled <boolean>	# If true local accounts will be disabled. See the documentation for more information.
 spec.initProvider.location <string>	# The location where the Managed Kubernetes Cluster should be created. Changing this forces a new resource to be created.
 spec.initProvider.maintenanceWindow <object>	# A maintenance_window block as defined below.
 spec.initProvider.maintenanceWindow.allowed <[]object>	# One or more allowed blocks as defined below.
 spec.initProvider.maintenanceWindow.allowed[].day <string>	# A day in a week. Possible values are Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday.
-spec.initProvider.maintenanceWindow.allowed[].hours <[]number>	# An array of hour slots in a day. For example, specifying 1 will allow maintenance from 1:00am to 2:00am. Specifying 1, 2 will allow maintenance from 1:00am to 3:00m. Possible values are between 0 and 23.
+spec.initProvider.maintenanceWindow.allowed[].hours <[]number>	# An array of hour slots in a day. For example, specifying 1 will allow maintenance from 1:00am to 2:00am. Specifying 1, 2 will allow maintenance from 1:00am to 3:00am. Possible values are between 0 and 23.
 spec.initProvider.maintenanceWindow.notAllowed <[]object>	# One or more not_allowed block as defined below.
 spec.initProvider.maintenanceWindow.notAllowed[].end <string>	# The end of a time span, formatted as an RFC3339 string.
 spec.initProvider.maintenanceWindow.notAllowed[].start <string>	# The start of a time span, formatted as an RFC3339 string.
@@ -669,9 +674,9 @@ spec.initProvider.monitorMetrics <object>	# Specifies a Prometheus add-on profil
 spec.initProvider.monitorMetrics.annotationsAllowed <string>	# Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric.
 spec.initProvider.monitorMetrics.labelsAllowed <string>	# Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric.
 spec.initProvider.networkProfile <object>	# A network_profile block as defined below.
-spec.initProvider.networkProfile.advancedNetworking <object>	# An advanced_networking block as defined below. This can only be specified when network_plugin is set to azure and network_data_plane is set to cilium.
+spec.initProvider.networkProfile.advancedNetworking <object>	# An advanced_networking block as defined below.
 spec.initProvider.networkProfile.advancedNetworking.observabilityEnabled <boolean>	# Is observability enabled? Defaults to false.
-spec.initProvider.networkProfile.advancedNetworking.securityEnabled <boolean>	# Is security enabled? Defaults to false.
+spec.initProvider.networkProfile.advancedNetworking.securityEnabled <boolean>	# Is security enabled? Defaults to false. This can only be enabled (set to true) when network_plugin is set to azure and network_data_plane is set to cilium.
 spec.initProvider.networkProfile.dnsServiceIp <string>	# IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created.
 spec.initProvider.networkProfile.ipVersions <[]string>	# Specifies a list of IP versions the Kubernetes Cluster will use to assign IP addresses to its nodes and pods. Possible values are IPv4 and/or IPv6. IPv4 must always be specified. Changing this forces a new resource to be created.
 spec.initProvider.networkProfile.loadBalancerProfile <object>	# A load_balancer_profile block as defined below. This can only be specified when load_balancer_sku is set to standard. Changing this forces a new resource to be created.
@@ -688,17 +693,20 @@ spec.initProvider.networkProfile.natGatewayProfile.idleTimeoutInMinutes <number>
 spec.initProvider.networkProfile.natGatewayProfile.managedOutboundIpCount <number>	# Count of desired managed outbound IPs for the managed nat gateway. Must be between 1 and 16 inclusive.
 spec.initProvider.networkProfile.networkDataPlane <string>	# Specifies the data plane used for building the Kubernetes network. Possible values are azure and cilium. Defaults to azure. Disabling this forces a new resource to be created.
 spec.initProvider.networkProfile.networkMode <string>	# Network mode to be used with Azure CNI. Possible values are bridge and transparent. Changing this forces a new resource to be created.
-spec.initProvider.networkProfile.networkPlugin <string>	# Network plugin to use for networking. Currently supported values are azure, kubenet and none. Changing this forces a new resource to be created.
+spec.initProvider.networkProfile.networkPlugin <string>	# Network plugin to use for networking. Currently supported values are azure, kubenet and none
 spec.initProvider.networkProfile.networkPluginMode <string>	# Specifies the network plugin mode used for building the Kubernetes network. Possible value is overlay.
 spec.initProvider.networkProfile.networkPolicy <string>	# Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are calico, azure and cilium.
 spec.initProvider.networkProfile.outboundType <string>	# The outbound (egress) routing method which should be used for this Kubernetes Cluster. Possible values are loadBalancer, userDefinedRouting, managedNATGateway, userAssignedNATGateway and none. Defaults to loadBalancer.
-spec.initProvider.networkProfile.podCidr <string>	# The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet or network_plugin_mode is set to overlay. Changing this forces a new resource to be created.
-spec.initProvider.networkProfile.podCidrs <[]string>	# A list of CIDRs to use for pod IP addresses. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected. Changing this forces a new resource to be created.
+spec.initProvider.networkProfile.podCidr <string>	# The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet or network_plugin_mode is set to overlay.
+spec.initProvider.networkProfile.podCidrs <[]string>	# A list of CIDRs to use for pod IP addresses. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected.
 spec.initProvider.networkProfile.serviceCidr <string>	# The Network Range used by the Kubernetes service. Changing this forces a new resource to be created.
 spec.initProvider.networkProfile.serviceCidrs <[]string>	# A list of CIDRs to use for Kubernetes services. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected. Changing this forces a new resource to be created.
 spec.initProvider.nodeOsUpgradeChannel <string>	# The upgrade channel for this Kubernetes Cluster Nodes' OS Image. Possible values are Unmanaged, SecurityPatch, NodeImage and None. Defaults to NodeImage.
+spec.initProvider.nodeProvisioningProfile <object>	# A node_provisioning_profile block as defined below.
+spec.initProvider.nodeProvisioningProfile.defaultNodePools <string>	# Specifies whether default node pools should be provisioned automatically. Possible values are Auto and None. Defaults to Auto. At least one of mode or default_node_pools must be specified.
+spec.initProvider.nodeProvisioningProfile.mode <string>	# Specifies the provisioning mode for node pools created in this cluster. Possible values are Auto and Manual. Defaults to Manual. At least one of mode or default_node_pools must be specified.
 spec.initProvider.nodeResourceGroup <string>	# The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster.
-spec.initProvider.oidcIssuerEnabled <boolean>	# Enable or Disable the OIDC issuer URL
+spec.initProvider.oidcIssuerEnabled <boolean>	# Whether to enable the OIDC issuer feature.
 spec.initProvider.omsAgent <object>	# An oms_agent block as defined below.
 spec.initProvider.omsAgent.logAnalyticsWorkspaceId <string>	# The ID of the Log Analytics Workspace which the OMS Agent should send data to.
 spec.initProvider.omsAgent.msiAuthForMonitoringEnabled <boolean>	# Is managed identity authentication for monitoring enabled?
@@ -729,7 +737,7 @@ spec.initProvider.serviceMeshProfile.certificateAuthority.rootCertObjectName <st
 spec.initProvider.serviceMeshProfile.externalIngressGatewayEnabled <boolean>	# Is Istio External Ingress Gateway enabled?
 spec.initProvider.serviceMeshProfile.internalIngressGatewayEnabled <boolean>	# Is Istio Internal Ingress Gateway enabled?
 spec.initProvider.serviceMeshProfile.mode <string>	# The mode of the service mesh. Possible value is Istio.
-spec.initProvider.serviceMeshProfile.revisions <[]string>	# Specify 1 or 2 Istio control plane revisions for managing minor upgrades using the canary upgrade process. For example, create the resource with revisions set to ["asm-1-25"], or leave it empty (the revisions will only be known after apply). To start the canary upgrade, change revisions to ["asm-1-25", "asm-1-26"]. To roll back the canary upgrade, revert to ["asm-1-25"]. To confirm the upgrade, change to ["asm-1-26"].
+spec.initProvider.serviceMeshProfile.revisions <[]string>	# Specify 1 or 2 Istio control plane revisions for managing minor upgrades using the canary upgrade process. For example, create the resource with revisions set to ["asm-1-27"], or leave it empty (the revisions will only be known after apply). To start the canary upgrade, change revisions to ["asm-1-27", "asm-1-28"]. To roll back the canary upgrade, revert to ["asm-1-27"]. To confirm the upgrade, change to ["asm-1-28"].
 spec.initProvider.servicePrincipal <object>	# A service_principal block as documented below. One of either identity or service_principal must be specified.
 spec.initProvider.servicePrincipal.clientId <string>	# The Client ID for the Service Principal.
 spec.initProvider.servicePrincipal.clientSecretSecretRef <object> (required)	# The Client Secret for the Service Principal.
@@ -831,7 +839,8 @@ status.atProvider.defaultNodePool.hostEncryptionEnabled <boolean>	# Should the n
 status.atProvider.defaultNodePool.hostGroupId <string>	# Specifies the ID of the Host Group within which this AKS Cluster should be created. Changing this forces a new resource to be created.
 status.atProvider.defaultNodePool.kubeletConfig <object>	# A kubelet_config block as defined below. temporary_name_for_rotation must be specified when changing this block.
 status.atProvider.defaultNodePool.kubeletConfig.allowedUnsafeSysctls <[]string>	# Specifies the allow list of unsafe sysctls command or patterns (ending in *).
-status.atProvider.defaultNodePool.kubeletConfig.containerLogMaxLine <number>	# Specifies the maximum number of container log files that can be present for a container. must be at least 2.
+status.atProvider.defaultNodePool.kubeletConfig.containerLogMaxFiles <number>	# Specifies the maximum number of container log files that can be present for a container. Must be at least 2.
+status.atProvider.defaultNodePool.kubeletConfig.containerLogMaxLine <number>
 status.atProvider.defaultNodePool.kubeletConfig.containerLogMaxSizeMb <number>	# Specifies the maximum size (e.g. 10MB) of container log file before it is rotated.
 status.atProvider.defaultNodePool.kubeletConfig.cpuCfsQuotaEnabled <boolean>	# Is CPU CFS quota enforcement for containers enabled? Defaults to true.
 status.atProvider.defaultNodePool.kubeletConfig.cpuCfsQuotaPeriod <string>	# Specifies the CPU CFS quota period value.
@@ -895,7 +904,7 @@ status.atProvider.defaultNodePool.onlyCriticalAddonsEnabled <boolean>	# Enabling
 status.atProvider.defaultNodePool.orchestratorVersion <string>	# Version of Kubernetes used for the Agents. If not specified, the default node pool will be created with the version specified by kubernetes_version. If both are unspecified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation.
 status.atProvider.defaultNodePool.osDiskSizeGb <number>	# The size of the OS Disk which should be used for each agent in the Node Pool. temporary_name_for_rotation must be specified when attempting a change.
 status.atProvider.defaultNodePool.osDiskType <string>	# The type of disk which should be used for the Operating System. Possible values are Ephemeral and Managed. Defaults to Managed. temporary_name_for_rotation must be specified when attempting a change.
-status.atProvider.defaultNodePool.osSku <string>	# Specifies the OS SKU used by the agent pool. Possible values are AzureLinux, AzureLinux3, Ubuntu, Ubuntu2204, Windows2019 and Windows2022. If not specified, the default is Ubuntu if OSType=Linux or Windows2019 if OSType=Windows. And the default Windows OSSKU will be changed to Windows2022 after Windows2019 is deprecated. Changing this from AzureLinux or Ubuntu to AzureLinux or Ubuntu will not replace the resource, otherwise temporary_name_for_rotation must be specified when attempting a change.
+status.atProvider.defaultNodePool.osSku <string>	# Specifies the OS SKU used by the agent pool. Possible values are AzureLinux, AzureLinux3, Ubuntu, Ubuntu2204, Ubuntu2404, Windows2019 and Windows2022. If not specified, the default is Ubuntu when os_type=Linux or Windows2019 if os_type=Windows (Windows2022 Kubernetes ≥1.33). Changing between AzureLinux and Ubuntu does not replace the resource; otherwise temporary_name_for_rotation must be specified when attempting a change.
 status.atProvider.defaultNodePool.podSubnetId <string>	# The ID of the Subnet where the pods in the default Node Pool should exist.
 status.atProvider.defaultNodePool.proximityPlacementGroupId <string>	# The ID of the Proximity Placement Group. Changing this forces a new resource to be created.
 status.atProvider.defaultNodePool.scaleDownMode <string>	# Specifies the autoscaling behaviour of the Kubernetes Cluster. Allowed values are Delete and Deallocate. Defaults to Delete.
@@ -911,7 +920,7 @@ status.atProvider.defaultNodePool.upgradeSettings.nodeSoakDurationInMinutes <num
 status.atProvider.defaultNodePool.upgradeSettings.undrainableNodeBehavior <string>	# Specifies the action when a node is undrainable during upgrade. Possible values are Cordon and Schedule. Unsetting this after configuring it will force a new resource to be created.
 status.atProvider.defaultNodePool.vmSize <string>	# The size of the Virtual Machine, such as Standard_DS2_v2. temporary_name_for_rotation must be specified when attempting a resize.
 status.atProvider.defaultNodePool.vnetSubnetId <string>	# The ID of a Subnet where the Kubernetes Node Pool should exist.
-status.atProvider.defaultNodePool.workloadRuntime <string>	# Specifies the workload runtime used by the node pool. Possible value is OCIContainer.
+status.atProvider.defaultNodePool.workloadRuntime <string>	# Specifies the workload runtime used by the node pool. Possible values are KataVmIsolation and OCIContainer.
 status.atProvider.defaultNodePool.zones <[]string>	# Specifies a list of Availability Zones in which this Kubernetes Cluster should be located. temporary_name_for_rotation must be specified when changing this property.
 status.atProvider.diskEncryptionSetId <string>	# The ID of the Disk Encryption Set which should be used for the Nodes and Volumes. More information can be found in the documentation. Changing this forces a new resource to be created.
 status.atProvider.dnsPrefix <string>	# DNS prefix specified when creating the managed cluster. Possible values must begin and end with a letter or number, contain only letters, numbers, and hyphens and be between 1 and 54 characters in length. Changing this forces a new resource to be created.
@@ -959,14 +968,14 @@ status.atProvider.kubeletIdentity.userAssignedIdentityId <string>	# The ID of th
 status.atProvider.kubernetesVersion <string>	# Version of Kubernetes specified when creating the AKS managed cluster. If not specified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation.
 status.atProvider.linuxProfile <object>	# A linux_profile block as defined below.
 status.atProvider.linuxProfile.adminUsername <string>	# The Admin Username for the Cluster. Changing this forces a new resource to be created.
-status.atProvider.linuxProfile.sshKey <object>	# An ssh_key block as defined below. Only one is currently allowed. Changing this will update the key on all node pools. More information can be found in the documentation.
+status.atProvider.linuxProfile.sshKey <object>	# An ssh_key block as defined below.
 status.atProvider.linuxProfile.sshKey.keyData <string>	# The Public SSH Key used to access the cluster. Changing this forces a new resource to be created.
 status.atProvider.localAccountDisabled <boolean>	# If true local accounts will be disabled. See the documentation for more information.
 status.atProvider.location <string>	# The location where the Managed Kubernetes Cluster should be created. Changing this forces a new resource to be created.
 status.atProvider.maintenanceWindow <object>	# A maintenance_window block as defined below.
 status.atProvider.maintenanceWindow.allowed <[]object>	# One or more allowed blocks as defined below.
 status.atProvider.maintenanceWindow.allowed[].day <string>	# A day in a week. Possible values are Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday.
-status.atProvider.maintenanceWindow.allowed[].hours <[]number>	# An array of hour slots in a day. For example, specifying 1 will allow maintenance from 1:00am to 2:00am. Specifying 1, 2 will allow maintenance from 1:00am to 3:00m. Possible values are between 0 and 23.
+status.atProvider.maintenanceWindow.allowed[].hours <[]number>	# An array of hour slots in a day. For example, specifying 1 will allow maintenance from 1:00am to 2:00am. Specifying 1, 2 will allow maintenance from 1:00am to 3:00am. Possible values are between 0 and 23.
 status.atProvider.maintenanceWindow.notAllowed <[]object>	# One or more not_allowed block as defined below.
 status.atProvider.maintenanceWindow.notAllowed[].end <string>	# The end of a time span, formatted as an RFC3339 string.
 status.atProvider.maintenanceWindow.notAllowed[].start <string>	# The start of a time span, formatted as an RFC3339 string.
@@ -1002,9 +1011,9 @@ status.atProvider.monitorMetrics <object>	# Specifies a Prometheus add-on profil
 status.atProvider.monitorMetrics.annotationsAllowed <string>	# Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric.
 status.atProvider.monitorMetrics.labelsAllowed <string>	# Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric.
 status.atProvider.networkProfile <object>	# A network_profile block as defined below.
-status.atProvider.networkProfile.advancedNetworking <object>	# An advanced_networking block as defined below. This can only be specified when network_plugin is set to azure and network_data_plane is set to cilium.
+status.atProvider.networkProfile.advancedNetworking <object>	# An advanced_networking block as defined below.
 status.atProvider.networkProfile.advancedNetworking.observabilityEnabled <boolean>	# Is observability enabled? Defaults to false.
-status.atProvider.networkProfile.advancedNetworking.securityEnabled <boolean>	# Is security enabled? Defaults to false.
+status.atProvider.networkProfile.advancedNetworking.securityEnabled <boolean>	# Is security enabled? Defaults to false. This can only be enabled (set to true) when network_plugin is set to azure and network_data_plane is set to cilium.
 status.atProvider.networkProfile.dnsServiceIp <string>	# IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created.
 status.atProvider.networkProfile.ipVersions <[]string>	# Specifies a list of IP versions the Kubernetes Cluster will use to assign IP addresses to its nodes and pods. Possible values are IPv4 and/or IPv6. IPv4 must always be specified. Changing this forces a new resource to be created.
 status.atProvider.networkProfile.loadBalancerProfile <object>	# A load_balancer_profile block as defined below. This can only be specified when load_balancer_sku is set to standard. Changing this forces a new resource to be created.
@@ -1023,18 +1032,21 @@ status.atProvider.networkProfile.natGatewayProfile.idleTimeoutInMinutes <number>
 status.atProvider.networkProfile.natGatewayProfile.managedOutboundIpCount <number>	# Count of desired managed outbound IPs for the managed nat gateway. Must be between 1 and 16 inclusive.
 status.atProvider.networkProfile.networkDataPlane <string>	# Specifies the data plane used for building the Kubernetes network. Possible values are azure and cilium. Defaults to azure. Disabling this forces a new resource to be created.
 status.atProvider.networkProfile.networkMode <string>	# Network mode to be used with Azure CNI. Possible values are bridge and transparent. Changing this forces a new resource to be created.
-status.atProvider.networkProfile.networkPlugin <string>	# Network plugin to use for networking. Currently supported values are azure, kubenet and none. Changing this forces a new resource to be created.
+status.atProvider.networkProfile.networkPlugin <string>	# Network plugin to use for networking. Currently supported values are azure, kubenet and none
 status.atProvider.networkProfile.networkPluginMode <string>	# Specifies the network plugin mode used for building the Kubernetes network. Possible value is overlay.
 status.atProvider.networkProfile.networkPolicy <string>	# Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are calico, azure and cilium.
 status.atProvider.networkProfile.outboundType <string>	# The outbound (egress) routing method which should be used for this Kubernetes Cluster. Possible values are loadBalancer, userDefinedRouting, managedNATGateway, userAssignedNATGateway and none. Defaults to loadBalancer.
-status.atProvider.networkProfile.podCidr <string>	# The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet or network_plugin_mode is set to overlay. Changing this forces a new resource to be created.
-status.atProvider.networkProfile.podCidrs <[]string>	# A list of CIDRs to use for pod IP addresses. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected. Changing this forces a new resource to be created.
+status.atProvider.networkProfile.podCidr <string>	# The CIDR to use for pod IP addresses. This field can only be set when network_plugin is set to kubenet or network_plugin_mode is set to overlay.
+status.atProvider.networkProfile.podCidrs <[]string>	# A list of CIDRs to use for pod IP addresses. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected.
 status.atProvider.networkProfile.serviceCidr <string>	# The Network Range used by the Kubernetes service. Changing this forces a new resource to be created.
 status.atProvider.networkProfile.serviceCidrs <[]string>	# A list of CIDRs to use for Kubernetes services. For single-stack networking a single IPv4 CIDR is expected. For dual-stack networking an IPv4 and IPv6 CIDR are expected. Changing this forces a new resource to be created.
 status.atProvider.nodeOsUpgradeChannel <string>	# The upgrade channel for this Kubernetes Cluster Nodes' OS Image. Possible values are Unmanaged, SecurityPatch, NodeImage and None. Defaults to NodeImage.
+status.atProvider.nodeProvisioningProfile <object>	# A node_provisioning_profile block as defined below.
+status.atProvider.nodeProvisioningProfile.defaultNodePools <string>	# Specifies whether default node pools should be provisioned automatically. Possible values are Auto and None. Defaults to Auto. At least one of mode or default_node_pools must be specified.
+status.atProvider.nodeProvisioningProfile.mode <string>	# Specifies the provisioning mode for node pools created in this cluster. Possible values are Auto and Manual. Defaults to Manual. At least one of mode or default_node_pools must be specified.
 status.atProvider.nodeResourceGroup <string>	# The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster.
 status.atProvider.nodeResourceGroupId <string>	# The ID of the Resource Group containing the resources for this Managed Kubernetes Cluster.
-status.atProvider.oidcIssuerEnabled <boolean>	# Enable or Disable the OIDC issuer URL
+status.atProvider.oidcIssuerEnabled <boolean>	# Whether to enable the OIDC issuer feature.
 status.atProvider.oidcIssuerUrl <string>	# The OIDC issuer URL that is associated with the cluster.
 status.atProvider.omsAgent <object>	# An oms_agent block as defined below.
 status.atProvider.omsAgent.logAnalyticsWorkspaceId <string>	# The ID of the Log Analytics Workspace which the OMS Agent should send data to.
@@ -1062,7 +1074,7 @@ status.atProvider.serviceMeshProfile.certificateAuthority.rootCertObjectName <st
 status.atProvider.serviceMeshProfile.externalIngressGatewayEnabled <boolean>	# Is Istio External Ingress Gateway enabled?
 status.atProvider.serviceMeshProfile.internalIngressGatewayEnabled <boolean>	# Is Istio Internal Ingress Gateway enabled?
 status.atProvider.serviceMeshProfile.mode <string>	# The mode of the service mesh. Possible value is Istio.
-status.atProvider.serviceMeshProfile.revisions <[]string>	# Specify 1 or 2 Istio control plane revisions for managing minor upgrades using the canary upgrade process. For example, create the resource with revisions set to ["asm-1-25"], or leave it empty (the revisions will only be known after apply). To start the canary upgrade, change revisions to ["asm-1-25", "asm-1-26"]. To roll back the canary upgrade, revert to ["asm-1-25"]. To confirm the upgrade, change to ["asm-1-26"].
+status.atProvider.serviceMeshProfile.revisions <[]string>	# Specify 1 or 2 Istio control plane revisions for managing minor upgrades using the canary upgrade process. For example, create the resource with revisions set to ["asm-1-27"], or leave it empty (the revisions will only be known after apply). To start the canary upgrade, change revisions to ["asm-1-27", "asm-1-28"]. To roll back the canary upgrade, revert to ["asm-1-27"]. To confirm the upgrade, change to ["asm-1-28"].
 status.atProvider.servicePrincipal <object>	# A service_principal block as documented below. One of either identity or service_principal must be specified.
 status.atProvider.servicePrincipal.clientId <string>	# The Client ID for the Service Principal.
 status.atProvider.skuTier <string>	# The SKU Tier that should be used for this Kubernetes Cluster. Possible values are Free, Standard (which includes the Uptime SLA) and Premium. Defaults to Free.
@@ -1100,4 +1112,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.
