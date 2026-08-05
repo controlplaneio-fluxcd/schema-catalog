@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=redis.gcp.m.upbound.io/v1beta1
 kind <string> enum=Instance
 metadata.name <string> (required)
@@ -36,6 +36,7 @@ spec.forProvider.customerManagedKeySelector.namespace <string>	# Namespace for t
 spec.forProvider.customerManagedKeySelector.policy <object>	# Policies for selection.
 spec.forProvider.customerManagedKeySelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.customerManagedKeySelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.deletionProtection <boolean>	# When the field is set to false, deleting the instance is allowed.
 spec.forProvider.displayName <string>	# An arbitrary and optional user-provided name for the instance.
 spec.forProvider.labels <map[string]string>	# Resource labels to represent user provided metadata. Note: This field is non-authoritative, and will only manage the labels present in your configuration. Please refer to the field effective_labels for all of the labels present on the resource.
 spec.forProvider.locationId <string>	# The zone where the instance will be provisioned. If not provided, the service will choose a zone for the instance. For STANDARD_HA tier, instances will be created across two zones for protection against zonal failures. If [alternativeLocationId] is also provided, it must be different from [locationId].
@@ -96,6 +97,7 @@ spec.initProvider.customerManagedKeySelector.namespace <string>	# Namespace for 
 spec.initProvider.customerManagedKeySelector.policy <object>	# Policies for selection.
 spec.initProvider.customerManagedKeySelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.customerManagedKeySelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.deletionProtection <boolean>	# When the field is set to false, deleting the instance is allowed.
 spec.initProvider.displayName <string>	# An arbitrary and optional user-provided name for the instance.
 spec.initProvider.labels <map[string]string>	# Resource labels to represent user provided metadata. Note: This field is non-authoritative, and will only manage the labels present in your configuration. Please refer to the field effective_labels for all of the labels present on the resource.
 spec.initProvider.locationId <string>	# The zone where the instance will be provisioned. If not provided, the service will choose a zone for the instance. For STANDARD_HA tier, instances will be created across two zones for protection against zonal failures. If [alternativeLocationId] is also provided, it must be different from [locationId].
@@ -138,6 +140,8 @@ status.atProvider.connectMode <string>	# The connection mode of the Redis instan
 status.atProvider.createTime <string>	# The time the instance was created in RFC3339 UTC "Zulu" format, accurate to nanoseconds.
 status.atProvider.currentLocationId <string>	# The current zone where the Redis endpoint is placed. For Basic Tier instances, this will always be the same as the [locationId] provided by the user at creation time. For Standard Tier instances, this can be either [locationId] or [alternativeLocationId] and can change after a failover event.
 status.atProvider.customerManagedKey <string>	# Optional. The KMS key reference that you want to use to encrypt the data at rest for this Redis instance. If this is provided, CMEK is enabled.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
+status.atProvider.deletionProtection <boolean>	# When the field is set to false, deleting the instance is allowed.
 status.atProvider.displayName <string>	# An arbitrary and optional user-provided name for the instance.
 status.atProvider.effectiveLabels <map[string]string>
 status.atProvider.effectiveReservedIpRange <string>	# The CIDR range of internal addresses that are reserved for this instance. If not provided, the service will choose an unused /29 block, for example, 10.0.0.0/29 or 192.168.0.0/29. Ranges must be unique and non-overlapping with existing subnets in an authorized network.
@@ -199,4 +203,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

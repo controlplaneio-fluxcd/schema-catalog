@@ -1,4 +1,4 @@
-# schema source: Upbound Azure Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-azure
+# schema source: Upbound Azure Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-azure
 apiVersion <string> enum=network.azure.m.upbound.io/v1beta1
 kind <string> enum=VirtualNetworkGateway
 metadata.name <string> (required)
@@ -6,6 +6,7 @@ metadata.namespace <string> (required)
 spec <object> (required)	# VirtualNetworkGatewaySpec defines the desired state of VirtualNetworkGateway
 spec.forProvider <object> (required)
 spec.forProvider.activeActive <boolean>	# If true, an active-active Virtual Network Gateway will be created. An active-active gateway requires a HighPerformance or an UltraPerformance SKU. If false, an active-standby gateway will be created. Defaults to false.
+spec.forProvider.bgpEnabled <boolean>	# If true, BGP (Border Gateway Protocol) will be enabled for this Virtual Network Gateway. Defaults to false.
 spec.forProvider.bgpRouteTranslationForNatEnabled <boolean>	# Is BGP Route Translation for NAT enabled? Defaults to false.
 spec.forProvider.bgpSettings <object>	# A bgp_settings block which is documented below. In this block the BGP specific settings can be defined.
 spec.forProvider.bgpSettings.asn <number>	# The Autonomous System Number (ASN) to use as part of the BGP.
@@ -18,7 +19,7 @@ spec.forProvider.customRoute.addressPrefixes <[]string>	# A list of address bloc
 spec.forProvider.defaultLocalNetworkGatewayId <string>	# The ID of the local network gateway through which outbound Internet traffic from the virtual network in which the gateway is created will be routed (forced tunnelling). Refer to the Azure documentation on forced tunnelling. If not specified, forced tunnelling is disabled.
 spec.forProvider.dnsForwardingEnabled <boolean>	# Is DNS forwarding enabled?
 spec.forProvider.edgeZone <string>	# Specifies the Edge Zone within the Azure Region where this Virtual Network Gateway should exist. Changing this forces a new Virtual Network Gateway to be created.
-spec.forProvider.enableBgp <boolean>	# If true, BGP (Border Gateway Protocol) will be enabled for this Virtual Network Gateway. Defaults to false.
+spec.forProvider.enableBgp <boolean>
 spec.forProvider.generation <string>	# The Generation of the Virtual Network gateway. Possible values include Generation1, Generation2 or None. Changing this forces a new resource to be created.
 spec.forProvider.ipConfiguration <[]object>	# One or more (up to 3) ip_configuration blocks documented below. Changing this forces a new resource to be created. An active-standby gateway requires exactly one ip_configuration block, an active-active gateway requires exactly two ip_configuration blocks whereas an active-active zone redundant gateway with P2S configuration requires exactly three ip_configuration blocks.
 spec.forProvider.ipConfiguration[].name <string>	# A user-defined name of the IP configuration. Defaults to vnetGatewayConfig.
@@ -53,6 +54,8 @@ spec.forProvider.ipConfiguration[].subnetIdSelector.policy.resolution <string> e
 spec.forProvider.ipConfiguration[].subnetIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.ipSecReplayProtectionEnabled <boolean>	# Is IP Sec Replay Protection enabled? Defaults to true.
 spec.forProvider.location <string>	# The location/region where the Virtual Network Gateway is located. Changing this forces a new resource to be created.
+spec.forProvider.maximumScaleUnit <number>	# The maximum scale unit for the Virtual Network Gateway, possible values are 1 through 40.
+spec.forProvider.minimumScaleUnit <number>	# The minimum scale unit for the Virtual Network Gateway, possible values are 1 through 40.
 spec.forProvider.policyGroup <[]object>	# One or more policy_group blocks as defined below.
 spec.forProvider.policyGroup[].isDefault <boolean>	# Is this a Default Virtual Network Gateway Policy Group? Defaults to false.
 spec.forProvider.policyGroup[].name <string>	# The name of the Virtual Network Gateway Policy Group.
@@ -77,7 +80,7 @@ spec.forProvider.resourceGroupNameSelector.namespace <string>	# Namespace for th
 spec.forProvider.resourceGroupNameSelector.policy <object>	# Policies for selection.
 spec.forProvider.resourceGroupNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.resourceGroupNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.sku <string>	# Configuration of the size and capacity of the virtual network gateway. Valid options are Basic, Standard, HighPerformance, UltraPerformance, ErGw1AZ, ErGw2AZ, ErGw3AZ, VpnGw1, VpnGw2, VpnGw3, VpnGw4,VpnGw5, VpnGw1AZ, VpnGw2AZ, VpnGw3AZ,VpnGw4AZ and VpnGw5AZ and depend on the type, vpn_type and generation arguments. A PolicyBased gateway only supports the Basic SKU. Further, the UltraPerformance SKU is only supported by an ExpressRoute gateway.
+spec.forProvider.sku <string>	# Configuration of the size and capacity of the virtual network gateway. Valid options are Basic, Standard, HighPerformance, UltraPerformance, ErGwScale, ErGw1AZ, ErGw2AZ, ErGw3AZ, VpnGw1, VpnGw2, VpnGw3, VpnGw4,VpnGw5, VpnGw1AZ, VpnGw2AZ, VpnGw3AZ,VpnGw4AZ and VpnGw5AZ and depend on the type, vpn_type and generation arguments. A PolicyBased gateway only supports the Basic SKU. Further, the UltraPerformance and ErGwScale SKU is only supported by an ExpressRoute gateway.
 spec.forProvider.tags <map[string]string>	# A mapping of tags to assign to the resource.
 spec.forProvider.type <string>	# The type of the Virtual Network Gateway. Valid options are Vpn or ExpressRoute. Changing the type forces a new resource to be created.
 spec.forProvider.virtualWanTrafficEnabled <boolean>	# Is remote vnet traffic that is used to configure this gateway to accept traffic from remote Virtual WAN networks enabled? Defaults to false.
@@ -102,7 +105,9 @@ spec.forProvider.vpnClientConfiguration.radiusServer[].secretSecretRef <object>	
 spec.forProvider.vpnClientConfiguration.radiusServer[].secretSecretRef.key <string> (required)
 spec.forProvider.vpnClientConfiguration.radiusServer[].secretSecretRef.name <string> (required)	# Name of the secret.
 spec.forProvider.vpnClientConfiguration.radiusServerAddress <string>	# The address of the Radius server.
-spec.forProvider.vpnClientConfiguration.radiusServerSecret <string>	# The secret used by the Radius server.
+spec.forProvider.vpnClientConfiguration.radiusServerSecretSecretRef <object>	# The secret used by the Radius server.
+spec.forProvider.vpnClientConfiguration.radiusServerSecretSecretRef.key <string> (required)
+spec.forProvider.vpnClientConfiguration.radiusServerSecretSecretRef.name <string> (required)	# Name of the secret.
 spec.forProvider.vpnClientConfiguration.revokedCertificate <[]object>	# One or more revoked_certificate blocks which are defined below.
 spec.forProvider.vpnClientConfiguration.revokedCertificate[].name <string>	# The name of the Virtual Network Gateway Client Connection.
 spec.forProvider.vpnClientConfiguration.revokedCertificate[].thumbprint <string>	# Specifies the public data of the certificate.
@@ -118,6 +123,7 @@ spec.forProvider.vpnClientConfiguration.vpnClientProtocols <[]string>	# List of 
 spec.forProvider.vpnType <string>	# The routing type of the Virtual Network Gateway. Valid options are RouteBased or PolicyBased. Defaults to RouteBased. Changing this forces a new resource to be created.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.activeActive <boolean>	# If true, an active-active Virtual Network Gateway will be created. An active-active gateway requires a HighPerformance or an UltraPerformance SKU. If false, an active-standby gateway will be created. Defaults to false.
+spec.initProvider.bgpEnabled <boolean>	# If true, BGP (Border Gateway Protocol) will be enabled for this Virtual Network Gateway. Defaults to false.
 spec.initProvider.bgpRouteTranslationForNatEnabled <boolean>	# Is BGP Route Translation for NAT enabled? Defaults to false.
 spec.initProvider.bgpSettings <object>	# A bgp_settings block which is documented below. In this block the BGP specific settings can be defined.
 spec.initProvider.bgpSettings.asn <number>	# The Autonomous System Number (ASN) to use as part of the BGP.
@@ -130,7 +136,7 @@ spec.initProvider.customRoute.addressPrefixes <[]string>	# A list of address blo
 spec.initProvider.defaultLocalNetworkGatewayId <string>	# The ID of the local network gateway through which outbound Internet traffic from the virtual network in which the gateway is created will be routed (forced tunnelling). Refer to the Azure documentation on forced tunnelling. If not specified, forced tunnelling is disabled.
 spec.initProvider.dnsForwardingEnabled <boolean>	# Is DNS forwarding enabled?
 spec.initProvider.edgeZone <string>	# Specifies the Edge Zone within the Azure Region where this Virtual Network Gateway should exist. Changing this forces a new Virtual Network Gateway to be created.
-spec.initProvider.enableBgp <boolean>	# If true, BGP (Border Gateway Protocol) will be enabled for this Virtual Network Gateway. Defaults to false.
+spec.initProvider.enableBgp <boolean>
 spec.initProvider.generation <string>	# The Generation of the Virtual Network gateway. Possible values include Generation1, Generation2 or None. Changing this forces a new resource to be created.
 spec.initProvider.ipConfiguration <[]object>	# One or more (up to 3) ip_configuration blocks documented below. Changing this forces a new resource to be created. An active-standby gateway requires exactly one ip_configuration block, an active-active gateway requires exactly two ip_configuration blocks whereas an active-active zone redundant gateway with P2S configuration requires exactly three ip_configuration blocks.
 spec.initProvider.ipConfiguration[].name <string>	# A user-defined name of the IP configuration. Defaults to vnetGatewayConfig.
@@ -165,6 +171,8 @@ spec.initProvider.ipConfiguration[].subnetIdSelector.policy.resolution <string> 
 spec.initProvider.ipConfiguration[].subnetIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.ipSecReplayProtectionEnabled <boolean>	# Is IP Sec Replay Protection enabled? Defaults to true.
 spec.initProvider.location <string>	# The location/region where the Virtual Network Gateway is located. Changing this forces a new resource to be created.
+spec.initProvider.maximumScaleUnit <number>	# The maximum scale unit for the Virtual Network Gateway, possible values are 1 through 40.
+spec.initProvider.minimumScaleUnit <number>	# The minimum scale unit for the Virtual Network Gateway, possible values are 1 through 40.
 spec.initProvider.policyGroup <[]object>	# One or more policy_group blocks as defined below.
 spec.initProvider.policyGroup[].isDefault <boolean>	# Is this a Default Virtual Network Gateway Policy Group? Defaults to false.
 spec.initProvider.policyGroup[].name <string>	# The name of the Virtual Network Gateway Policy Group.
@@ -175,7 +183,7 @@ spec.initProvider.policyGroup[].policyMember[].value <string>	# The value of att
 spec.initProvider.policyGroup[].priority <number>	# The priority for the Virtual Network Gateway Policy Group. Defaults to 0.
 spec.initProvider.privateIpAddressEnabled <boolean>	# Should private IP be enabled on this gateway for connections? Changing this forces a new resource to be created.
 spec.initProvider.remoteVnetTrafficEnabled <boolean>	# Is remote vnet traffic that is used to configure this gateway to accept traffic from other Azure Virtual Networks enabled? Defaults to false.
-spec.initProvider.sku <string>	# Configuration of the size and capacity of the virtual network gateway. Valid options are Basic, Standard, HighPerformance, UltraPerformance, ErGw1AZ, ErGw2AZ, ErGw3AZ, VpnGw1, VpnGw2, VpnGw3, VpnGw4,VpnGw5, VpnGw1AZ, VpnGw2AZ, VpnGw3AZ,VpnGw4AZ and VpnGw5AZ and depend on the type, vpn_type and generation arguments. A PolicyBased gateway only supports the Basic SKU. Further, the UltraPerformance SKU is only supported by an ExpressRoute gateway.
+spec.initProvider.sku <string>	# Configuration of the size and capacity of the virtual network gateway. Valid options are Basic, Standard, HighPerformance, UltraPerformance, ErGwScale, ErGw1AZ, ErGw2AZ, ErGw3AZ, VpnGw1, VpnGw2, VpnGw3, VpnGw4,VpnGw5, VpnGw1AZ, VpnGw2AZ, VpnGw3AZ,VpnGw4AZ and VpnGw5AZ and depend on the type, vpn_type and generation arguments. A PolicyBased gateway only supports the Basic SKU. Further, the UltraPerformance and ErGwScale SKU is only supported by an ExpressRoute gateway.
 spec.initProvider.tags <map[string]string>	# A mapping of tags to assign to the resource.
 spec.initProvider.type <string>	# The type of the Virtual Network Gateway. Valid options are Vpn or ExpressRoute. Changing the type forces a new resource to be created.
 spec.initProvider.virtualWanTrafficEnabled <boolean>	# Is remote vnet traffic that is used to configure this gateway to accept traffic from remote Virtual WAN networks enabled? Defaults to false.
@@ -200,7 +208,9 @@ spec.initProvider.vpnClientConfiguration.radiusServer[].secretSecretRef <object>
 spec.initProvider.vpnClientConfiguration.radiusServer[].secretSecretRef.key <string> (required)
 spec.initProvider.vpnClientConfiguration.radiusServer[].secretSecretRef.name <string> (required)	# Name of the secret.
 spec.initProvider.vpnClientConfiguration.radiusServerAddress <string>	# The address of the Radius server.
-spec.initProvider.vpnClientConfiguration.radiusServerSecret <string>	# The secret used by the Radius server.
+spec.initProvider.vpnClientConfiguration.radiusServerSecretSecretRef <object>	# The secret used by the Radius server.
+spec.initProvider.vpnClientConfiguration.radiusServerSecretSecretRef.key <string> (required)
+spec.initProvider.vpnClientConfiguration.radiusServerSecretSecretRef.name <string> (required)	# Name of the secret.
 spec.initProvider.vpnClientConfiguration.revokedCertificate <[]object>	# One or more revoked_certificate blocks which are defined below.
 spec.initProvider.vpnClientConfiguration.revokedCertificate[].name <string>	# The name of the Virtual Network Gateway Client Connection.
 spec.initProvider.vpnClientConfiguration.revokedCertificate[].thumbprint <string>	# Specifies the public data of the certificate.
@@ -223,6 +233,7 @@ spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 status <object>	# VirtualNetworkGatewayStatus defines the observed state of VirtualNetworkGateway.
 status.atProvider <object>
 status.atProvider.activeActive <boolean>	# If true, an active-active Virtual Network Gateway will be created. An active-active gateway requires a HighPerformance or an UltraPerformance SKU. If false, an active-standby gateway will be created. Defaults to false.
+status.atProvider.bgpEnabled <boolean>	# If true, BGP (Border Gateway Protocol) will be enabled for this Virtual Network Gateway. Defaults to false.
 status.atProvider.bgpRouteTranslationForNatEnabled <boolean>	# Is BGP Route Translation for NAT enabled? Defaults to false.
 status.atProvider.bgpSettings <object>	# A bgp_settings block which is documented below. In this block the BGP specific settings can be defined.
 status.atProvider.bgpSettings.asn <number>	# The Autonomous System Number (ASN) to use as part of the BGP.
@@ -237,7 +248,7 @@ status.atProvider.customRoute.addressPrefixes <[]string>	# A list of address blo
 status.atProvider.defaultLocalNetworkGatewayId <string>	# The ID of the local network gateway through which outbound Internet traffic from the virtual network in which the gateway is created will be routed (forced tunnelling). Refer to the Azure documentation on forced tunnelling. If not specified, forced tunnelling is disabled.
 status.atProvider.dnsForwardingEnabled <boolean>	# Is DNS forwarding enabled?
 status.atProvider.edgeZone <string>	# Specifies the Edge Zone within the Azure Region where this Virtual Network Gateway should exist. Changing this forces a new Virtual Network Gateway to be created.
-status.atProvider.enableBgp <boolean>	# If true, BGP (Border Gateway Protocol) will be enabled for this Virtual Network Gateway. Defaults to false.
+status.atProvider.enableBgp <boolean>
 status.atProvider.generation <string>	# The Generation of the Virtual Network gateway. Possible values include Generation1, Generation2 or None. Changing this forces a new resource to be created.
 status.atProvider.id <string>	# The ID of the Virtual Network Gateway.
 status.atProvider.ipConfiguration <[]object>	# One or more (up to 3) ip_configuration blocks documented below. Changing this forces a new resource to be created. An active-standby gateway requires exactly one ip_configuration block, an active-active gateway requires exactly two ip_configuration blocks whereas an active-active zone redundant gateway with P2S configuration requires exactly three ip_configuration blocks.
@@ -247,6 +258,8 @@ status.atProvider.ipConfiguration[].publicIpAddressId <string>	# The ID of the p
 status.atProvider.ipConfiguration[].subnetId <string>	# The ID of the gateway subnet of a virtual network in which the virtual network gateway will be created. It is mandatory that the associated subnet is named GatewaySubnet. Therefore, each virtual network can contain at most a single Virtual Network Gateway.
 status.atProvider.ipSecReplayProtectionEnabled <boolean>	# Is IP Sec Replay Protection enabled? Defaults to true.
 status.atProvider.location <string>	# The location/region where the Virtual Network Gateway is located. Changing this forces a new resource to be created.
+status.atProvider.maximumScaleUnit <number>	# The maximum scale unit for the Virtual Network Gateway, possible values are 1 through 40.
+status.atProvider.minimumScaleUnit <number>	# The minimum scale unit for the Virtual Network Gateway, possible values are 1 through 40.
 status.atProvider.policyGroup <[]object>	# One or more policy_group blocks as defined below.
 status.atProvider.policyGroup[].isDefault <boolean>	# Is this a Default Virtual Network Gateway Policy Group? Defaults to false.
 status.atProvider.policyGroup[].name <string>	# The name of the Virtual Network Gateway Policy Group.
@@ -258,7 +271,7 @@ status.atProvider.policyGroup[].priority <number>	# The priority for the Virtual
 status.atProvider.privateIpAddressEnabled <boolean>	# Should private IP be enabled on this gateway for connections? Changing this forces a new resource to be created.
 status.atProvider.remoteVnetTrafficEnabled <boolean>	# Is remote vnet traffic that is used to configure this gateway to accept traffic from other Azure Virtual Networks enabled? Defaults to false.
 status.atProvider.resourceGroupName <string>	# The name of the resource group in which to create the Virtual Network Gateway. Changing this forces a new resource to be created.
-status.atProvider.sku <string>	# Configuration of the size and capacity of the virtual network gateway. Valid options are Basic, Standard, HighPerformance, UltraPerformance, ErGw1AZ, ErGw2AZ, ErGw3AZ, VpnGw1, VpnGw2, VpnGw3, VpnGw4,VpnGw5, VpnGw1AZ, VpnGw2AZ, VpnGw3AZ,VpnGw4AZ and VpnGw5AZ and depend on the type, vpn_type and generation arguments. A PolicyBased gateway only supports the Basic SKU. Further, the UltraPerformance SKU is only supported by an ExpressRoute gateway.
+status.atProvider.sku <string>	# Configuration of the size and capacity of the virtual network gateway. Valid options are Basic, Standard, HighPerformance, UltraPerformance, ErGwScale, ErGw1AZ, ErGw2AZ, ErGw3AZ, VpnGw1, VpnGw2, VpnGw3, VpnGw4,VpnGw5, VpnGw1AZ, VpnGw2AZ, VpnGw3AZ,VpnGw4AZ and VpnGw5AZ and depend on the type, vpn_type and generation arguments. A PolicyBased gateway only supports the Basic SKU. Further, the UltraPerformance and ErGwScale SKU is only supported by an ExpressRoute gateway.
 status.atProvider.tags <map[string]string>	# A mapping of tags to assign to the resource.
 status.atProvider.type <string>	# The type of the Virtual Network Gateway. Valid options are Vpn or ExpressRoute. Changing the type forces a new resource to be created.
 status.atProvider.virtualWanTrafficEnabled <boolean>	# Is remote vnet traffic that is used to configure this gateway to accept traffic from remote Virtual WAN networks enabled? Defaults to false.
@@ -280,7 +293,6 @@ status.atProvider.vpnClientConfiguration.radiusServer <[]object>	# One or more r
 status.atProvider.vpnClientConfiguration.radiusServer[].address <string>	# The address of the Radius Server.
 status.atProvider.vpnClientConfiguration.radiusServer[].score <number>	# The score of the Radius Server determines the priority of the server. Possible values are between 1 and 30.
 status.atProvider.vpnClientConfiguration.radiusServerAddress <string>	# The address of the Radius server.
-status.atProvider.vpnClientConfiguration.radiusServerSecret <string>	# The secret used by the Radius server.
 status.atProvider.vpnClientConfiguration.revokedCertificate <[]object>	# One or more revoked_certificate blocks which are defined below.
 status.atProvider.vpnClientConfiguration.revokedCertificate[].name <string>	# The name of the Virtual Network Gateway Client Connection.
 status.atProvider.vpnClientConfiguration.revokedCertificate[].thumbprint <string>	# Specifies the public data of the certificate.
@@ -301,4 +313,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

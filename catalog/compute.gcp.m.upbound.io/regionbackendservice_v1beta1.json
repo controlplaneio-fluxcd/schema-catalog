@@ -313,6 +313,29 @@
               "description": "Time for which instance will be drained (not accept new\nconnections, but still work to finish started).",
               "type": "number"
             },
+            "connectionTrackingPolicy": {
+              "additionalProperties": false,
+              "description": "Connection Tracking configuration for this BackendService.\nThis is available only for Layer 4 Internal Load Balancing and\nNetwork Load Balancing.\nStructure is documented below.",
+              "properties": {
+                "connectionPersistenceOnUnhealthyBackends": {
+                  "description": "Specifies connection persistence when backends are unhealthy.\nIf set to DEFAULT_FOR_PROTOCOL, the existing connections persist on\nunhealthy backends only for connection-oriented protocols (TCP and SCTP)\nand only if the Tracking Mode is PER_CONNECTION (default tracking mode)\nor the Session Affinity is configured for 5-tuple. They do not persist\nfor UDP.\nIf set to NEVER_PERSIST, after a backend becomes unhealthy, the existing\nconnections on the unhealthy backend are never persisted on the unhealthy\nbackend. They are always diverted to newly selected healthy backends\n(unless all backends are unhealthy).\nIf set to ALWAYS_PERSIST, existing connections always persist on\nunhealthy backends regardless of protocol and session affinity. It is\ngenerally not recommended to use this mode overriding the default.\nDefault value is DEFAULT_FOR_PROTOCOL.\nPossible values are: DEFAULT_FOR_PROTOCOL, NEVER_PERSIST, ALWAYS_PERSIST.",
+                  "type": "string"
+                },
+                "enableStrongAffinity": {
+                  "description": "Enable Strong Session Affinity for Network Load Balancing. This option is not available publicly.",
+                  "type": "boolean"
+                },
+                "idleTimeoutSec": {
+                  "description": "Specifies how long to keep a Connection Tracking entry while there is\nno matching traffic (in seconds).\nFor L4 ILB the minimum(default) is 10 minutes and maximum is 16 hours.\nFor NLB the minimum(default) is 60 seconds and the maximum is 16 hours.",
+                  "type": "number"
+                },
+                "trackingMode": {
+                  "description": "Specifies the key used for connection tracking. There are two options:\nPER_CONNECTION: The Connection Tracking is performed as per the\nConnection Key (default Hash Method) for the specific protocol.\nPER_SESSION: The Connection Tracking is performed as per the\nconfigured Session Affinity. It matches the configured Session Affinity.\nDefault value is PER_CONNECTION.\nPossible values are: PER_CONNECTION, PER_SESSION.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
             "consistentHash": {
               "additionalProperties": false,
               "description": "Consistent Hash-based load balancing can be used to provide soft session\naffinity based on HTTP headers, cookies or other properties. This load balancing\npolicy is applicable only for HTTP connections. The affinity to a particular\ndestination host will be lost when one or more hosts are added/removed from the\ndestination service. This field specifies parameters that control consistent\nhashing.\nThis field only applies when all of the following are true -",
@@ -399,6 +422,215 @@
                 "failoverRatio": {
                   "description": "The value of the field must be in [0, 1]. If the ratio of the healthy\nVMs in the primary backend is at or below this number, traffic arriving\nat the load-balanced IP will be directed to the failover backend.\nIn case where 'failoverRatio' is not set or all the VMs in the backup\nbackend are unhealthy, the traffic will be directed back to the primary\nbackend in the \"force\" mode, where traffic will be spread to the healthy\nVMs with the best effort, or to all VMs when no VM is healthy.\nThis field is only used with l4 load balancing.",
                   "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "haPolicy": {
+              "additionalProperties": false,
+              "description": "Configures self-managed High Availability (HA) for External and Internal Protocol Forwarding.\nThe backends of this regional backend service must only specify zonal network endpoint groups\n(NEGs) of type GCE_VM_IP. Note that haPolicy is not for load balancing, and therefore cannot\nbe specified with sessionAffinity, connectionTrackingPolicy, and failoverPolicy. haPolicy\nrequires customers to be responsible for tracking backend endpoint health and electing a\nleader among the healthy endpoints. Therefore, haPolicy cannot be specified with healthChecks.\nhaPolicy can only be specified for External Passthrough Network Load Balancers and Internal\nPassthrough Network Load Balancers.\nStructure is documented below.",
+              "properties": {
+                "fastIpMove": {
+                  "description": "Specifies whether fast IP move is enabled, and if so, the mechanism to achieve it.\nSupported values are:",
+                  "type": "string"
+                },
+                "leader": {
+                  "additionalProperties": false,
+                  "description": "Selects one of the network endpoints attached to the backend NEGs of this service as the\nactive endpoint (the leader) that receives all traffic.\nStructure is documented below.",
+                  "properties": {
+                    "backendGroup": {
+                      "description": "A fully-qualified URL of the zonal Network Endpoint Group (NEG) that the leader is\nattached to.",
+                      "type": "string"
+                    },
+                    "backendGroupRef": {
+                      "additionalProperties": false,
+                      "description": "Reference to a NetworkEndpointGroup in compute to populate backendGroup.",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the referenced object.",
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the referenced object",
+                          "type": "string"
+                        },
+                        "policy": {
+                          "additionalProperties": false,
+                          "description": "Policies for referencing.",
+                          "properties": {
+                            "resolution": {
+                              "default": "Required",
+                              "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                              "enum": [
+                                "Required",
+                                "Optional"
+                              ],
+                              "type": "string"
+                            },
+                            "resolve": {
+                              "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                              "enum": [
+                                "Always",
+                                "IfNotPresent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "backendGroupSelector": {
+                      "additionalProperties": false,
+                      "description": "Selector for a NetworkEndpointGroup in compute to populate backendGroup.",
+                      "properties": {
+                        "matchControllerRef": {
+                          "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                          "type": "boolean"
+                        },
+                        "matchLabels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "MatchLabels ensures an object with matching labels is selected.",
+                          "type": "object"
+                        },
+                        "namespace": {
+                          "description": "Namespace for the selector",
+                          "type": "string"
+                        },
+                        "policy": {
+                          "additionalProperties": false,
+                          "description": "Policies for selection.",
+                          "properties": {
+                            "resolution": {
+                              "default": "Required",
+                              "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                              "enum": [
+                                "Required",
+                                "Optional"
+                              ],
+                              "type": "string"
+                            },
+                            "resolve": {
+                              "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                              "enum": [
+                                "Always",
+                                "IfNotPresent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "networkEndpoint": {
+                      "additionalProperties": false,
+                      "description": "The network endpoint within the leader.backendGroup that is designated as the leader.\nStructure is documented below.",
+                      "properties": {
+                        "instance": {
+                          "description": "The name of the VM instance of the leader network endpoint. The instance must\nalready be attached to the NEG specified in the haPolicy.leader.backendGroup.",
+                          "type": "string"
+                        },
+                        "instanceRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a Instance in compute to populate instance.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "instanceSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a Instance in compute to populate instance.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -575,8 +807,118 @@
               "type": "object"
             },
             "network": {
-              "description": "The URL of the network to which this backend service belongs.\nThis field can only be specified when the load balancing scheme is set to INTERNAL.",
+              "description": "The URL of the network to which this backend service belongs.\nThis field must be set for Internal Passthrough Network Load Balancers when the haPolicy is enabled, and for External Passthrough Network Load Balancers when the haPolicy fastIpMove is enabled.\nThis field can only be specified when the load balancing scheme is set to INTERNAL, or when the load balancing scheme is set to EXTERNAL and haPolicy fastIpMove is enabled.\nChanges to this field force recreation of the resource.",
               "type": "string"
+            },
+            "networkPassThroughLbTrafficPolicy": {
+              "additionalProperties": false,
+              "description": "Configures traffic steering properties of internal passthrough Network Load Balancers.\nStructure is documented below.",
+              "properties": {
+                "zonalAffinity": {
+                  "additionalProperties": false,
+                  "description": "When configured, new connections are load balanced across healthy backend endpoints in the local zone.\nStructure is documented below.",
+                  "properties": {
+                    "spillover": {
+                      "description": "This field indicates whether zonal affinity is enabled or not.\nDefault value is ZONAL_AFFINITY_DISABLED.\nPossible values are: ZONAL_AFFINITY_DISABLED, ZONAL_AFFINITY_SPILL_CROSS_ZONE, ZONAL_AFFINITY_STAY_WITHIN_ZONE.",
+                      "type": "string"
+                    },
+                    "spilloverRatio": {
+                      "description": "The value of the field must be in [0, 1]. When the ratio of the count of healthy backend endpoints in a zone\nto the count of backend endpoints in that same zone is equal to or above this threshold, the load balancer\ndistributes new connections to all healthy endpoints in the local zone only. When the ratio of the count\nof healthy backend endpoints in a zone to the count of backend endpoints in that same zone is below this\nthreshold, the load balancer distributes all new connections to all healthy endpoints across all zones.",
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "networkRef": {
+              "additionalProperties": false,
+              "description": "Reference to a Network in compute to populate network.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the referenced object",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "networkSelector": {
+              "additionalProperties": false,
+              "description": "Selector for a Network in compute to populate network.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "namespace": {
+                  "description": "Namespace for the selector",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "outlierDetection": {
               "additionalProperties": false,
@@ -651,6 +993,21 @@
               },
               "type": "object"
             },
+            "params": {
+              "additionalProperties": false,
+              "description": "Additional params passed with the request, but not persisted as part of resource payload\nStructure is documented below.",
+              "properties": {
+                "resourceManagerTags": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Resource manager tags to be bound to the region backend service. Tag keys and values have the\nsame definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},\nand values are in the format tagValues/456.",
+                  "type": "object",
+                  "x-kubernetes-map-type": "granular"
+                }
+              },
+              "type": "object"
+            },
             "portName": {
               "description": "A named port on a backend instance group representing the port for\ncommunication to the backend VMs in that group. Required when the\nloadBalancingScheme is EXTERNAL, EXTERNAL_MANAGED, INTERNAL_MANAGED, or INTERNAL_SELF_MANAGED\nand the backends are instance groups. The named port must be defined on each\nbackend instance group. This parameter has no meaning if the backends are NEGs. API sets a\ndefault of \"http\" if not given.\nMust be omitted when the loadBalancingScheme is INTERNAL (Internal TCP/UDP Load Balancing).",
               "type": "string"
@@ -666,6 +1023,98 @@
             "region": {
               "description": "The Region in which the created backend service should reside.\nIf it is not provided, the provider region is used.",
               "type": "string"
+            },
+            "securityPolicy": {
+              "description": "The security policy associated with this backend service.",
+              "type": "string"
+            },
+            "securityPolicyRef": {
+              "additionalProperties": false,
+              "description": "Reference to a RegionSecurityPolicy in compute to populate securityPolicy.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the referenced object",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "securityPolicySelector": {
+              "additionalProperties": false,
+              "description": "Selector for a RegionSecurityPolicy in compute to populate securityPolicy.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "namespace": {
+                  "description": "Namespace for the selector",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "sessionAffinity": {
               "description": "Type of session affinity to use. The default is NONE. Session affinity is\nnot applicable if the protocol is UDP.\nPossible values are: NONE, CLIENT_IP, CLIENT_IP_PORT_PROTO, CLIENT_IP_PROTO, GENERATED_COOKIE, HEADER_FIELD, HTTP_COOKIE, CLIENT_IP_NO_DESTINATION, STRONG_COOKIE_AFFINITY.",
@@ -704,6 +1153,39 @@
             "timeoutSec": {
               "description": "The backend service timeout has a different meaning depending on the type of load balancer.\nFor more information see, Backend service settings.\nThe default is 30 seconds.\nThe full range of timeout values allowed goes from 1 through 2,147,483,647 seconds.",
               "type": "number"
+            },
+            "tlsSettings": {
+              "additionalProperties": false,
+              "description": "Configuration for Backend Authenticated TLS and mTLS. May only be specified when the backend protocol is SSL, HTTPS or HTTP2.\nStructure is documented below.",
+              "properties": {
+                "authenticationConfig": {
+                  "description": "Reference to the BackendAuthenticationConfig resource from the networksecurity.googleapis.com namespace.\nCan be used in authenticating TLS connections to the backend, as specified by the authenticationMode field.\nCan only be specified if authenticationMode is not NONE.",
+                  "type": "string"
+                },
+                "sni": {
+                  "description": "Server Name Indication - see RFC3546 section 3.1. If set, the load balancer sends this string as the SNI hostname in the\nTLS connection to the backend, and requires that this string match a Subject Alternative Name (SAN) in the backend's\nserver certificate. With a Regional Internet NEG backend, if the SNI is specified here, the load balancer uses it\nregardless of whether the Regional Internet NEG is specified with FQDN or IP address and port.",
+                  "type": "string"
+                },
+                "subjectAltNames": {
+                  "description": "A list of Subject Alternative Names (SANs) that the Load Balancer verifies during a TLS handshake with the backend.\nWhen the server presents its X.509 certificate to the Load Balancer, the Load Balancer inspects the certificate's SAN field,\nand requires that at least one SAN match one of the subjectAltNames in the list. This field is limited to 5 entries.\nWhen both sni and subjectAltNames are specified, the load balancer matches the backend certificate's SAN only to\nsubjectAltNames.\nStructure is documented below.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "dnsName": {
+                        "description": "The SAN specified as a DNS Name.",
+                        "type": "string"
+                      },
+                      "uniformResourceIdentifier": {
+                        "description": "The SAN specified as a URI.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             }
           },
           "required": [
@@ -1009,6 +1491,29 @@
               "description": "Time for which instance will be drained (not accept new\nconnections, but still work to finish started).",
               "type": "number"
             },
+            "connectionTrackingPolicy": {
+              "additionalProperties": false,
+              "description": "Connection Tracking configuration for this BackendService.\nThis is available only for Layer 4 Internal Load Balancing and\nNetwork Load Balancing.\nStructure is documented below.",
+              "properties": {
+                "connectionPersistenceOnUnhealthyBackends": {
+                  "description": "Specifies connection persistence when backends are unhealthy.\nIf set to DEFAULT_FOR_PROTOCOL, the existing connections persist on\nunhealthy backends only for connection-oriented protocols (TCP and SCTP)\nand only if the Tracking Mode is PER_CONNECTION (default tracking mode)\nor the Session Affinity is configured for 5-tuple. They do not persist\nfor UDP.\nIf set to NEVER_PERSIST, after a backend becomes unhealthy, the existing\nconnections on the unhealthy backend are never persisted on the unhealthy\nbackend. They are always diverted to newly selected healthy backends\n(unless all backends are unhealthy).\nIf set to ALWAYS_PERSIST, existing connections always persist on\nunhealthy backends regardless of protocol and session affinity. It is\ngenerally not recommended to use this mode overriding the default.\nDefault value is DEFAULT_FOR_PROTOCOL.\nPossible values are: DEFAULT_FOR_PROTOCOL, NEVER_PERSIST, ALWAYS_PERSIST.",
+                  "type": "string"
+                },
+                "enableStrongAffinity": {
+                  "description": "Enable Strong Session Affinity for Network Load Balancing. This option is not available publicly.",
+                  "type": "boolean"
+                },
+                "idleTimeoutSec": {
+                  "description": "Specifies how long to keep a Connection Tracking entry while there is\nno matching traffic (in seconds).\nFor L4 ILB the minimum(default) is 10 minutes and maximum is 16 hours.\nFor NLB the minimum(default) is 60 seconds and the maximum is 16 hours.",
+                  "type": "number"
+                },
+                "trackingMode": {
+                  "description": "Specifies the key used for connection tracking. There are two options:\nPER_CONNECTION: The Connection Tracking is performed as per the\nConnection Key (default Hash Method) for the specific protocol.\nPER_SESSION: The Connection Tracking is performed as per the\nconfigured Session Affinity. It matches the configured Session Affinity.\nDefault value is PER_CONNECTION.\nPossible values are: PER_CONNECTION, PER_SESSION.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
             "consistentHash": {
               "additionalProperties": false,
               "description": "Consistent Hash-based load balancing can be used to provide soft session\naffinity based on HTTP headers, cookies or other properties. This load balancing\npolicy is applicable only for HTTP connections. The affinity to a particular\ndestination host will be lost when one or more hosts are added/removed from the\ndestination service. This field specifies parameters that control consistent\nhashing.\nThis field only applies when all of the following are true -",
@@ -1095,6 +1600,215 @@
                 "failoverRatio": {
                   "description": "The value of the field must be in [0, 1]. If the ratio of the healthy\nVMs in the primary backend is at or below this number, traffic arriving\nat the load-balanced IP will be directed to the failover backend.\nIn case where 'failoverRatio' is not set or all the VMs in the backup\nbackend are unhealthy, the traffic will be directed back to the primary\nbackend in the \"force\" mode, where traffic will be spread to the healthy\nVMs with the best effort, or to all VMs when no VM is healthy.\nThis field is only used with l4 load balancing.",
                   "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "haPolicy": {
+              "additionalProperties": false,
+              "description": "Configures self-managed High Availability (HA) for External and Internal Protocol Forwarding.\nThe backends of this regional backend service must only specify zonal network endpoint groups\n(NEGs) of type GCE_VM_IP. Note that haPolicy is not for load balancing, and therefore cannot\nbe specified with sessionAffinity, connectionTrackingPolicy, and failoverPolicy. haPolicy\nrequires customers to be responsible for tracking backend endpoint health and electing a\nleader among the healthy endpoints. Therefore, haPolicy cannot be specified with healthChecks.\nhaPolicy can only be specified for External Passthrough Network Load Balancers and Internal\nPassthrough Network Load Balancers.\nStructure is documented below.",
+              "properties": {
+                "fastIpMove": {
+                  "description": "Specifies whether fast IP move is enabled, and if so, the mechanism to achieve it.\nSupported values are:",
+                  "type": "string"
+                },
+                "leader": {
+                  "additionalProperties": false,
+                  "description": "Selects one of the network endpoints attached to the backend NEGs of this service as the\nactive endpoint (the leader) that receives all traffic.\nStructure is documented below.",
+                  "properties": {
+                    "backendGroup": {
+                      "description": "A fully-qualified URL of the zonal Network Endpoint Group (NEG) that the leader is\nattached to.",
+                      "type": "string"
+                    },
+                    "backendGroupRef": {
+                      "additionalProperties": false,
+                      "description": "Reference to a NetworkEndpointGroup in compute to populate backendGroup.",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the referenced object.",
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the referenced object",
+                          "type": "string"
+                        },
+                        "policy": {
+                          "additionalProperties": false,
+                          "description": "Policies for referencing.",
+                          "properties": {
+                            "resolution": {
+                              "default": "Required",
+                              "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                              "enum": [
+                                "Required",
+                                "Optional"
+                              ],
+                              "type": "string"
+                            },
+                            "resolve": {
+                              "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                              "enum": [
+                                "Always",
+                                "IfNotPresent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "backendGroupSelector": {
+                      "additionalProperties": false,
+                      "description": "Selector for a NetworkEndpointGroup in compute to populate backendGroup.",
+                      "properties": {
+                        "matchControllerRef": {
+                          "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                          "type": "boolean"
+                        },
+                        "matchLabels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "MatchLabels ensures an object with matching labels is selected.",
+                          "type": "object"
+                        },
+                        "namespace": {
+                          "description": "Namespace for the selector",
+                          "type": "string"
+                        },
+                        "policy": {
+                          "additionalProperties": false,
+                          "description": "Policies for selection.",
+                          "properties": {
+                            "resolution": {
+                              "default": "Required",
+                              "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                              "enum": [
+                                "Required",
+                                "Optional"
+                              ],
+                              "type": "string"
+                            },
+                            "resolve": {
+                              "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                              "enum": [
+                                "Always",
+                                "IfNotPresent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "networkEndpoint": {
+                      "additionalProperties": false,
+                      "description": "The network endpoint within the leader.backendGroup that is designated as the leader.\nStructure is documented below.",
+                      "properties": {
+                        "instance": {
+                          "description": "The name of the VM instance of the leader network endpoint. The instance must\nalready be attached to the NEG specified in the haPolicy.leader.backendGroup.",
+                          "type": "string"
+                        },
+                        "instanceRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a Instance in compute to populate instance.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "instanceSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a Instance in compute to populate instance.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -1271,8 +1985,118 @@
               "type": "object"
             },
             "network": {
-              "description": "The URL of the network to which this backend service belongs.\nThis field can only be specified when the load balancing scheme is set to INTERNAL.",
+              "description": "The URL of the network to which this backend service belongs.\nThis field must be set for Internal Passthrough Network Load Balancers when the haPolicy is enabled, and for External Passthrough Network Load Balancers when the haPolicy fastIpMove is enabled.\nThis field can only be specified when the load balancing scheme is set to INTERNAL, or when the load balancing scheme is set to EXTERNAL and haPolicy fastIpMove is enabled.\nChanges to this field force recreation of the resource.",
               "type": "string"
+            },
+            "networkPassThroughLbTrafficPolicy": {
+              "additionalProperties": false,
+              "description": "Configures traffic steering properties of internal passthrough Network Load Balancers.\nStructure is documented below.",
+              "properties": {
+                "zonalAffinity": {
+                  "additionalProperties": false,
+                  "description": "When configured, new connections are load balanced across healthy backend endpoints in the local zone.\nStructure is documented below.",
+                  "properties": {
+                    "spillover": {
+                      "description": "This field indicates whether zonal affinity is enabled or not.\nDefault value is ZONAL_AFFINITY_DISABLED.\nPossible values are: ZONAL_AFFINITY_DISABLED, ZONAL_AFFINITY_SPILL_CROSS_ZONE, ZONAL_AFFINITY_STAY_WITHIN_ZONE.",
+                      "type": "string"
+                    },
+                    "spilloverRatio": {
+                      "description": "The value of the field must be in [0, 1]. When the ratio of the count of healthy backend endpoints in a zone\nto the count of backend endpoints in that same zone is equal to or above this threshold, the load balancer\ndistributes new connections to all healthy endpoints in the local zone only. When the ratio of the count\nof healthy backend endpoints in a zone to the count of backend endpoints in that same zone is below this\nthreshold, the load balancer distributes all new connections to all healthy endpoints across all zones.",
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "networkRef": {
+              "additionalProperties": false,
+              "description": "Reference to a Network in compute to populate network.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the referenced object",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "networkSelector": {
+              "additionalProperties": false,
+              "description": "Selector for a Network in compute to populate network.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "namespace": {
+                  "description": "Namespace for the selector",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "outlierDetection": {
               "additionalProperties": false,
@@ -1347,6 +2171,21 @@
               },
               "type": "object"
             },
+            "params": {
+              "additionalProperties": false,
+              "description": "Additional params passed with the request, but not persisted as part of resource payload\nStructure is documented below.",
+              "properties": {
+                "resourceManagerTags": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Resource manager tags to be bound to the region backend service. Tag keys and values have the\nsame definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},\nand values are in the format tagValues/456.",
+                  "type": "object",
+                  "x-kubernetes-map-type": "granular"
+                }
+              },
+              "type": "object"
+            },
             "portName": {
               "description": "A named port on a backend instance group representing the port for\ncommunication to the backend VMs in that group. Required when the\nloadBalancingScheme is EXTERNAL, EXTERNAL_MANAGED, INTERNAL_MANAGED, or INTERNAL_SELF_MANAGED\nand the backends are instance groups. The named port must be defined on each\nbackend instance group. This parameter has no meaning if the backends are NEGs. API sets a\ndefault of \"http\" if not given.\nMust be omitted when the loadBalancingScheme is INTERNAL (Internal TCP/UDP Load Balancing).",
               "type": "string"
@@ -1358,6 +2197,98 @@
             "protocol": {
               "description": "is set to HTTP, HTTPS, HTTP2 or H2C",
               "type": "string"
+            },
+            "securityPolicy": {
+              "description": "The security policy associated with this backend service.",
+              "type": "string"
+            },
+            "securityPolicyRef": {
+              "additionalProperties": false,
+              "description": "Reference to a RegionSecurityPolicy in compute to populate securityPolicy.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the referenced object",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "securityPolicySelector": {
+              "additionalProperties": false,
+              "description": "Selector for a RegionSecurityPolicy in compute to populate securityPolicy.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "namespace": {
+                  "description": "Namespace for the selector",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "sessionAffinity": {
               "description": "Type of session affinity to use. The default is NONE. Session affinity is\nnot applicable if the protocol is UDP.\nPossible values are: NONE, CLIENT_IP, CLIENT_IP_PORT_PROTO, CLIENT_IP_PROTO, GENERATED_COOKIE, HEADER_FIELD, HTTP_COOKIE, CLIENT_IP_NO_DESTINATION, STRONG_COOKIE_AFFINITY.",
@@ -1396,6 +2327,39 @@
             "timeoutSec": {
               "description": "The backend service timeout has a different meaning depending on the type of load balancer.\nFor more information see, Backend service settings.\nThe default is 30 seconds.\nThe full range of timeout values allowed goes from 1 through 2,147,483,647 seconds.",
               "type": "number"
+            },
+            "tlsSettings": {
+              "additionalProperties": false,
+              "description": "Configuration for Backend Authenticated TLS and mTLS. May only be specified when the backend protocol is SSL, HTTPS or HTTP2.\nStructure is documented below.",
+              "properties": {
+                "authenticationConfig": {
+                  "description": "Reference to the BackendAuthenticationConfig resource from the networksecurity.googleapis.com namespace.\nCan be used in authenticating TLS connections to the backend, as specified by the authenticationMode field.\nCan only be specified if authenticationMode is not NONE.",
+                  "type": "string"
+                },
+                "sni": {
+                  "description": "Server Name Indication - see RFC3546 section 3.1. If set, the load balancer sends this string as the SNI hostname in the\nTLS connection to the backend, and requires that this string match a Subject Alternative Name (SAN) in the backend's\nserver certificate. With a Regional Internet NEG backend, if the SNI is specified here, the load balancer uses it\nregardless of whether the Regional Internet NEG is specified with FQDN or IP address and port.",
+                  "type": "string"
+                },
+                "subjectAltNames": {
+                  "description": "A list of Subject Alternative Names (SANs) that the Load Balancer verifies during a TLS handshake with the backend.\nWhen the server presents its X.509 certificate to the Load Balancer, the Load Balancer inspects the certificate's SAN field,\nand requires that at least one SAN match one of the subjectAltNames in the list. This field is limited to 5 entries.\nWhen both sni and subjectAltNames are specified, the load balancer matches the backend certificate's SAN only to\nsubjectAltNames.\nStructure is documented below.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "dnsName": {
+                        "description": "The SAN specified as a DNS Name.",
+                        "type": "string"
+                      },
+                      "uniformResourceIdentifier": {
+                        "description": "The SAN specified as a URI.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             }
           },
           "type": "object"
@@ -1675,6 +2639,29 @@
               "description": "Time for which instance will be drained (not accept new\nconnections, but still work to finish started).",
               "type": "number"
             },
+            "connectionTrackingPolicy": {
+              "additionalProperties": false,
+              "description": "Connection Tracking configuration for this BackendService.\nThis is available only for Layer 4 Internal Load Balancing and\nNetwork Load Balancing.\nStructure is documented below.",
+              "properties": {
+                "connectionPersistenceOnUnhealthyBackends": {
+                  "description": "Specifies connection persistence when backends are unhealthy.\nIf set to DEFAULT_FOR_PROTOCOL, the existing connections persist on\nunhealthy backends only for connection-oriented protocols (TCP and SCTP)\nand only if the Tracking Mode is PER_CONNECTION (default tracking mode)\nor the Session Affinity is configured for 5-tuple. They do not persist\nfor UDP.\nIf set to NEVER_PERSIST, after a backend becomes unhealthy, the existing\nconnections on the unhealthy backend are never persisted on the unhealthy\nbackend. They are always diverted to newly selected healthy backends\n(unless all backends are unhealthy).\nIf set to ALWAYS_PERSIST, existing connections always persist on\nunhealthy backends regardless of protocol and session affinity. It is\ngenerally not recommended to use this mode overriding the default.\nDefault value is DEFAULT_FOR_PROTOCOL.\nPossible values are: DEFAULT_FOR_PROTOCOL, NEVER_PERSIST, ALWAYS_PERSIST.",
+                  "type": "string"
+                },
+                "enableStrongAffinity": {
+                  "description": "Enable Strong Session Affinity for Network Load Balancing. This option is not available publicly.",
+                  "type": "boolean"
+                },
+                "idleTimeoutSec": {
+                  "description": "Specifies how long to keep a Connection Tracking entry while there is\nno matching traffic (in seconds).\nFor L4 ILB the minimum(default) is 10 minutes and maximum is 16 hours.\nFor NLB the minimum(default) is 60 seconds and the maximum is 16 hours.",
+                  "type": "number"
+                },
+                "trackingMode": {
+                  "description": "Specifies the key used for connection tracking. There are two options:\nPER_CONNECTION: The Connection Tracking is performed as per the\nConnection Key (default Hash Method) for the specific protocol.\nPER_SESSION: The Connection Tracking is performed as per the\nconfigured Session Affinity. It matches the configured Session Affinity.\nDefault value is PER_CONNECTION.\nPossible values are: PER_CONNECTION, PER_SESSION.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
             "consistentHash": {
               "additionalProperties": false,
               "description": "Consistent Hash-based load balancing can be used to provide soft session\naffinity based on HTTP headers, cookies or other properties. This load balancing\npolicy is applicable only for HTTP connections. The affinity to a particular\ndestination host will be lost when one or more hosts are added/removed from the\ndestination service. This field specifies parameters that control consistent\nhashing.\nThis field only applies when all of the following are true -",
@@ -1742,6 +2729,10 @@
               },
               "type": "array"
             },
+            "deletionPolicy": {
+              "description": "Defaults to DELETE.\nWhen set to \"DELETE\", deleting the resource is allowed.",
+              "type": "string"
+            },
             "description": {
               "description": "An optional description of this resource.",
               "type": "string"
@@ -1776,6 +2767,39 @@
             "generatedId": {
               "description": "The unique identifier for the resource. This identifier is defined by the server.",
               "type": "number"
+            },
+            "haPolicy": {
+              "additionalProperties": false,
+              "description": "Configures self-managed High Availability (HA) for External and Internal Protocol Forwarding.\nThe backends of this regional backend service must only specify zonal network endpoint groups\n(NEGs) of type GCE_VM_IP. Note that haPolicy is not for load balancing, and therefore cannot\nbe specified with sessionAffinity, connectionTrackingPolicy, and failoverPolicy. haPolicy\nrequires customers to be responsible for tracking backend endpoint health and electing a\nleader among the healthy endpoints. Therefore, haPolicy cannot be specified with healthChecks.\nhaPolicy can only be specified for External Passthrough Network Load Balancers and Internal\nPassthrough Network Load Balancers.\nStructure is documented below.",
+              "properties": {
+                "fastIpMove": {
+                  "description": "Specifies whether fast IP move is enabled, and if so, the mechanism to achieve it.\nSupported values are:",
+                  "type": "string"
+                },
+                "leader": {
+                  "additionalProperties": false,
+                  "description": "Selects one of the network endpoints attached to the backend NEGs of this service as the\nactive endpoint (the leader) that receives all traffic.\nStructure is documented below.",
+                  "properties": {
+                    "backendGroup": {
+                      "description": "A fully-qualified URL of the zonal Network Endpoint Group (NEG) that the leader is\nattached to.",
+                      "type": "string"
+                    },
+                    "networkEndpoint": {
+                      "additionalProperties": false,
+                      "description": "The network endpoint within the leader.backendGroup that is designated as the leader.\nStructure is documented below.",
+                      "properties": {
+                        "instance": {
+                          "description": "The name of the VM instance of the leader network endpoint. The instance must\nalready be attached to the NEG specified in the haPolicy.leader.backendGroup.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "healthChecks": {
               "description": "The set of URLs to HealthCheck resources for health checking\nthis RegionBackendService. Currently at most one health\ncheck can be specified.\nA health check must be specified unless the backend service uses an internet\nor serverless NEG as a backend.",
@@ -1843,8 +2867,30 @@
               "type": "object"
             },
             "network": {
-              "description": "The URL of the network to which this backend service belongs.\nThis field can only be specified when the load balancing scheme is set to INTERNAL.",
+              "description": "The URL of the network to which this backend service belongs.\nThis field must be set for Internal Passthrough Network Load Balancers when the haPolicy is enabled, and for External Passthrough Network Load Balancers when the haPolicy fastIpMove is enabled.\nThis field can only be specified when the load balancing scheme is set to INTERNAL, or when the load balancing scheme is set to EXTERNAL and haPolicy fastIpMove is enabled.\nChanges to this field force recreation of the resource.",
               "type": "string"
+            },
+            "networkPassThroughLbTrafficPolicy": {
+              "additionalProperties": false,
+              "description": "Configures traffic steering properties of internal passthrough Network Load Balancers.\nStructure is documented below.",
+              "properties": {
+                "zonalAffinity": {
+                  "additionalProperties": false,
+                  "description": "When configured, new connections are load balanced across healthy backend endpoints in the local zone.\nStructure is documented below.",
+                  "properties": {
+                    "spillover": {
+                      "description": "This field indicates whether zonal affinity is enabled or not.\nDefault value is ZONAL_AFFINITY_DISABLED.\nPossible values are: ZONAL_AFFINITY_DISABLED, ZONAL_AFFINITY_SPILL_CROSS_ZONE, ZONAL_AFFINITY_STAY_WITHIN_ZONE.",
+                      "type": "string"
+                    },
+                    "spilloverRatio": {
+                      "description": "The value of the field must be in [0, 1]. When the ratio of the count of healthy backend endpoints in a zone\nto the count of backend endpoints in that same zone is equal to or above this threshold, the load balancer\ndistributes new connections to all healthy endpoints in the local zone only. When the ratio of the count\nof healthy backend endpoints in a zone to the count of backend endpoints in that same zone is below this\nthreshold, the load balancer distributes all new connections to all healthy endpoints across all zones.",
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "outlierDetection": {
               "additionalProperties": false,
@@ -1919,6 +2965,21 @@
               },
               "type": "object"
             },
+            "params": {
+              "additionalProperties": false,
+              "description": "Additional params passed with the request, but not persisted as part of resource payload\nStructure is documented below.",
+              "properties": {
+                "resourceManagerTags": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Resource manager tags to be bound to the region backend service. Tag keys and values have the\nsame definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},\nand values are in the format tagValues/456.",
+                  "type": "object",
+                  "x-kubernetes-map-type": "granular"
+                }
+              },
+              "type": "object"
+            },
             "portName": {
               "description": "A named port on a backend instance group representing the port for\ncommunication to the backend VMs in that group. Required when the\nloadBalancingScheme is EXTERNAL, EXTERNAL_MANAGED, INTERNAL_MANAGED, or INTERNAL_SELF_MANAGED\nand the backends are instance groups. The named port must be defined on each\nbackend instance group. This parameter has no meaning if the backends are NEGs. API sets a\ndefault of \"http\" if not given.\nMust be omitted when the loadBalancingScheme is INTERNAL (Internal TCP/UDP Load Balancing).",
               "type": "string"
@@ -1933,6 +2994,10 @@
             },
             "region": {
               "description": "The Region in which the created backend service should reside.\nIf it is not provided, the provider region is used.",
+              "type": "string"
+            },
+            "securityPolicy": {
+              "description": "The security policy associated with this backend service.",
               "type": "string"
             },
             "selfLink": {
@@ -1976,6 +3041,39 @@
             "timeoutSec": {
               "description": "The backend service timeout has a different meaning depending on the type of load balancer.\nFor more information see, Backend service settings.\nThe default is 30 seconds.\nThe full range of timeout values allowed goes from 1 through 2,147,483,647 seconds.",
               "type": "number"
+            },
+            "tlsSettings": {
+              "additionalProperties": false,
+              "description": "Configuration for Backend Authenticated TLS and mTLS. May only be specified when the backend protocol is SSL, HTTPS or HTTP2.\nStructure is documented below.",
+              "properties": {
+                "authenticationConfig": {
+                  "description": "Reference to the BackendAuthenticationConfig resource from the networksecurity.googleapis.com namespace.\nCan be used in authenticating TLS connections to the backend, as specified by the authenticationMode field.\nCan only be specified if authenticationMode is not NONE.",
+                  "type": "string"
+                },
+                "sni": {
+                  "description": "Server Name Indication - see RFC3546 section 3.1. If set, the load balancer sends this string as the SNI hostname in the\nTLS connection to the backend, and requires that this string match a Subject Alternative Name (SAN) in the backend's\nserver certificate. With a Regional Internet NEG backend, if the SNI is specified here, the load balancer uses it\nregardless of whether the Regional Internet NEG is specified with FQDN or IP address and port.",
+                  "type": "string"
+                },
+                "subjectAltNames": {
+                  "description": "A list of Subject Alternative Names (SANs) that the Load Balancer verifies during a TLS handshake with the backend.\nWhen the server presents its X.509 certificate to the Load Balancer, the Load Balancer inspects the certificate's SAN field,\nand requires that at least one SAN match one of the subjectAltNames in the list. This field is limited to 5 entries.\nWhen both sni and subjectAltNames are specified, the load balancer matches the backend certificate's SAN only to\nsubjectAltNames.\nStructure is documented below.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "dnsName": {
+                        "description": "The SAN specified as a DNS Name.",
+                        "type": "string"
+                      },
+                      "uniformResourceIdentifier": {
+                        "description": "The SAN specified as a URI.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
             }
           },
           "type": "object"
@@ -2026,6 +3124,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "lastHandledReconcileAt": {
+          "description": "LastHandledReconcileAt holds the value of the most recent\nreconcile-requested-at annotation token that the controller has\nprocessed. Users can compare this to the annotation to determine\nwhether a reconcile request has been handled.",
+          "type": "string"
         },
         "observedGeneration": {
           "description": "ObservedGeneration is the latest metadata.generation\nwhich resulted in either a ready state, or stalled due to error\nit can not recover from without human intervention.",

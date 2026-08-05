@@ -1,4 +1,4 @@
-# schema source: Elastic Cloud v3.4.1 https://github.com/elastic/cloud-on-k8s
+# schema source: Elastic Cloud v3.5.0 https://github.com/elastic/cloud-on-k8s
 apiVersion <string> enum=logstash.k8s.elastic.co/v1alpha1
 kind <string> enum=Logstash
 metadata.name <string> (required)
@@ -9,6 +9,7 @@ spec.configRef <object>	# ConfigRef contains a reference to an existing Kubernet
 spec.configRef.secretName <string>	# SecretName is the name of the secret.
 spec.count <integer> format=int32
 spec.elasticsearchRefs <[]object>	# ElasticsearchRefs are references to Elasticsearch clusters running in the same Kubernetes cluster.
+spec.elasticsearchRefs[].clientCertificateSecretName <string>	# ClientCertificateSecretName is the name of an existing Kubernetes secret containing a client certificate (tls.crt) and private key (tls.key) for client authentication to the referenced resource. This field is only relevant when the referenced Elasticsearch cluster has client authentication enabled. If not specified and the referenced resource requires client authentication, ECK will auto-generate a client certificate.
 spec.elasticsearchRefs[].clusterName <string> (required) min=1	# ClusterName is an alias for the cluster to be used to refer to the Elasticsearch cluster in Logstash configuration files, and will be used to identify "named clusters" in Logstash
 spec.elasticsearchRefs[].name <string>	# Name of an existing Kubernetes object corresponding to an Elastic resource managed by ECK.
 spec.elasticsearchRefs[].namespace <string>	# Namespace of the Kubernetes object. If empty, defaults to the current namespace.
@@ -31,7 +32,14 @@ spec.monitoring.metrics.elasticsearchRefs[].serviceName <string>	# ServiceName i
 spec.pipelines <[]object>	# Pipelines holds the Logstash Pipelines. At most one of [`Pipelines`, `PipelinesRef`] can be specified.
 spec.pipelinesRef <object>	# PipelinesRef contains a reference to an existing Kubernetes Secret holding the Logstash Pipelines. Logstash pipelines must be specified as yaml, under a single "pipelines.yml" entry. At most one of [`Pipelines`, `PipelinesRef`] can be specified.
 spec.pipelinesRef.secretName <string>	# SecretName is the name of the secret.
-spec.podTemplate <object (free-form)>	# PodTemplate provides customisation options for the Logstash pods.
+spec.podTemplate <object (free-form)>	# PodTemplate provides customization options for the Logstash pods.
+spec.resources <object>	# Resources provides a shorthand to set CPU and Memory resources on the Logstash container. When set, these values override any CPU or memory resource settings specified in the PodTemplate for the primary Logstash container. To set resources on other containers, use the PodTemplate.
+spec.resources.limits <object>	# Limits is the shorthand for the main container's CPU and memory limits.
+spec.resources.limits.cpu <int-or-string>	# CPU overrides the main container's CPU request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any CPU value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a CPU value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's CPU, including an explicit zero quantity.
+spec.resources.limits.memory <int-or-string>	# Memory overrides the main container's memory request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any memory value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a memory value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's memory, including an explicit zero quantity.
+spec.resources.requests <object>	# Requests is the shorthand for the main container's CPU and memory requests.
+spec.resources.requests.cpu <int-or-string>	# CPU overrides the main container's CPU request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any CPU value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a CPU value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's CPU, including an explicit zero quantity.
+spec.resources.requests.memory <int-or-string>	# Memory overrides the main container's memory request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any memory value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a memory value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's memory, including an explicit zero quantity.
 spec.revisionHistoryLimit <integer> format=int32	# RevisionHistoryLimit is the number of revisions to retain to allow rollback in the underlying StatefulSet.
 spec.secureSettings <[]object>	# SecureSettings is a list of references to Kubernetes Secrets containing sensitive configuration options for the Logstash. Secrets data can be then referenced in the Logstash config using the Secret's keys or as specified in `Entries` field of each SecureSetting.
 spec.secureSettings[].entries <[]object>	# Entries define how to project each key-value pair in the secret to filesystem paths. If not defined, all keys will be projected to similarly named paths in the filesystem. If defined, only the specified keys will be projected to the corresponding paths.
@@ -143,6 +151,11 @@ spec.volumeClaimTemplates[].status.modifyVolumeStatus.targetVolumeAttributesClas
 spec.volumeClaimTemplates[].status.phase <string>	# phase represents the current phase of PersistentVolumeClaim.
 status <object>	# LogstashStatus defines the observed state of Logstash
 status.availableNodes <integer> format=int32
+status.conditions <[]object>	# Conditions holds the current service state of the Logstash.
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].status <string> (required)
+status.conditions[].type <string> (required)	# ConditionType defines the condition of a resource.
 status.elasticsearchAssociationsStatus <map[string]string>	# ElasticsearchAssociationStatus is the status of any auto-linking to Elasticsearch clusters.
 status.expectedNodes <integer> format=int32
 status.health <string>

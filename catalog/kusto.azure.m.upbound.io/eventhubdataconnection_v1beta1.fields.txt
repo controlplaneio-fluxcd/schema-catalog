@@ -1,4 +1,4 @@
-# schema source: Upbound Azure Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-azure
+# schema source: Upbound Azure Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-azure
 apiVersion <string> enum=kusto.azure.m.upbound.io/v1beta1
 kind <string> enum=EventHubDataConnection
 metadata.name <string> (required)
@@ -82,6 +82,7 @@ spec.forProvider.resourceGroupNameSelector.namespace <string>	# Namespace for th
 spec.forProvider.resourceGroupNameSelector.policy <object>	# Policies for selection.
 spec.forProvider.resourceGroupNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.resourceGroupNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.retrievalStartDate <string>	# Specifies the date after which data should be retrieved from Event Hub. When defined, the data connection retrieves existing events created since the specified retrieval start date. It can only retrieve events retained by the Event Hub, based on its retention period. The value should be in RFC3339 format (e.g., 2023-06-26T12:00:00Z).
 spec.forProvider.tableName <string>	# Specifies the target table name used for the message ingestion. Table must exist before resource is created.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.compression <string>	# Specifies compression type for the connection. Allowed values: GZip and None. Defaults to None. Changing this forces a new resource to be created.
@@ -119,6 +120,7 @@ spec.initProvider.eventhubIdSelector.policy.resolve <string> enum=Always|IfNotPr
 spec.initProvider.identityId <string>	# The resource ID of a managed identity (system or user assigned) to be used to authenticate with event hub.
 spec.initProvider.location <string>	# The location where the Kusto Database should be created. Changing this forces a new resource to be created.
 spec.initProvider.mappingRuleName <string>	# Specifies the mapping rule used for the message ingestion. Mapping rule must exist before resource is created.
+spec.initProvider.retrievalStartDate <string>	# Specifies the date after which data should be retrieved from Event Hub. When defined, the data connection retrieves existing events created since the specified retrieval start date. It can only retrieve events retained by the Event Hub, based on its retention period. The value should be in RFC3339 format (e.g., 2023-06-26T12:00:00Z).
 spec.initProvider.tableName <string>	# Specifies the target table name used for the message ingestion. Table must exist before resource is created.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
 spec.providerConfigRef <object> default={"kind":"ClusterProviderConfig","name":"default"}	# ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -141,6 +143,7 @@ status.atProvider.identityId <string>	# The resource ID of a managed identity (s
 status.atProvider.location <string>	# The location where the Kusto Database should be created. Changing this forces a new resource to be created.
 status.atProvider.mappingRuleName <string>	# Specifies the mapping rule used for the message ingestion. Mapping rule must exist before resource is created.
 status.atProvider.resourceGroupName <string>	# Specifies the Resource Group where the Kusto Database should exist. Changing this forces a new resource to be created.
+status.atProvider.retrievalStartDate <string>	# Specifies the date after which data should be retrieved from Event Hub. When defined, the data connection retrieves existing events created since the specified retrieval start date. It can only retrieve events retained by the Event Hub, based on its retention period. The value should be in RFC3339 format (e.g., 2023-06-26T12:00:00Z).
 status.atProvider.tableName <string>	# Specifies the target table name used for the message ingestion. Table must exist before resource is created.
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
@@ -149,4 +152,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

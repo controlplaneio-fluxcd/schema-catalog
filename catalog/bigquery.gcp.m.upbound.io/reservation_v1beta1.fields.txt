@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=bigquery.gcp.m.upbound.io/v1beta1
 kind <string> enum=Reservation
 metadata.name <string> (required)
@@ -12,6 +12,7 @@ spec.forProvider.edition <string>	# The edition type. Valid values are STANDARD,
 spec.forProvider.ignoreIdleSlots <boolean>	# If false, any query using this reservation will use idle slots from other reservations within the same admin project. If true, a query using this reservation will execute with the slot capacity specified above at most.
 spec.forProvider.location <string>	# The geographic location where the transfer config should reside. Examples: US, EU, asia-northeast1. The default value is US.
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
+spec.forProvider.reservationGroup <string>	# The reservation group that this reservation belongs to.
 spec.forProvider.secondaryLocation <string>	# The current location of the reservation's secondary replica. This field is only set for reservations using the managed disaster recovery feature. Users can set this in create reservation calls to create a failover reservation or in update reservation calls to convert a non-failover reservation to a failover reservation(or vice versa).
 spec.forProvider.slotCapacity <number>	# Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the unit of parallelism. Queries using this reservation might use more slots during runtime if ignoreIdleSlots is set to false.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
@@ -20,6 +21,7 @@ spec.initProvider.autoscale.maxSlots <number>	# Number of slots to be scaled whe
 spec.initProvider.concurrency <number>	# Maximum number of queries that are allowed to run concurrently in this reservation. This is a soft limit due to asynchronous nature of the system and various optimizations for small queries. Default value is 0 which means that concurrency will be automatically set based on the reservation size.
 spec.initProvider.edition <string>	# The edition type. Valid values are STANDARD, ENTERPRISE, ENTERPRISE_PLUS
 spec.initProvider.ignoreIdleSlots <boolean>	# If false, any query using this reservation will use idle slots from other reservations within the same admin project. If true, a query using this reservation will execute with the slot capacity specified above at most.
+spec.initProvider.reservationGroup <string>	# The reservation group that this reservation belongs to.
 spec.initProvider.secondaryLocation <string>	# The current location of the reservation's secondary replica. This field is only set for reservations using the managed disaster recovery feature. Users can set this in create reservation calls to create a failover reservation or in update reservation calls to convert a non-failover reservation to a failover reservation(or vice versa).
 spec.initProvider.slotCapacity <number>	# Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the unit of parallelism. Queries using this reservation might use more slots during runtime if ignoreIdleSlots is set to false.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -34,6 +36,7 @@ status.atProvider.autoscale <object>	# The configuration parameters for the auto
 status.atProvider.autoscale.currentSlots <number>	# (Output) The slot capacity added to this reservation when autoscale happens. Will be between [0, max_slots].
 status.atProvider.autoscale.maxSlots <number>	# Number of slots to be scaled when needed.
 status.atProvider.concurrency <number>	# Maximum number of queries that are allowed to run concurrently in this reservation. This is a soft limit due to asynchronous nature of the system and various optimizations for small queries. Default value is 0 which means that concurrency will be automatically set based on the reservation size.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.edition <string>	# The edition type. Valid values are STANDARD, ENTERPRISE, ENTERPRISE_PLUS
 status.atProvider.id <string>	# an identifier for the resource with format projects/{{project}}/locations/{{location}}/reservations/{{name}}
 status.atProvider.ignoreIdleSlots <boolean>	# If false, any query using this reservation will use idle slots from other reservations within the same admin project. If true, a query using this reservation will execute with the slot capacity specified above at most.
@@ -47,6 +50,7 @@ status.atProvider.replicationStatus[].error[].code <number>	# (Output) The statu
 status.atProvider.replicationStatus[].error[].message <string>	# (Output) A developer-facing error message, which should be in English.
 status.atProvider.replicationStatus[].lastErrorTime <string>	# (Output) The time at which the last error was encountered while trying to replicate changes from the primary to the secondary. This field is only available if the replication has not succeeded since.
 status.atProvider.replicationStatus[].lastReplicationTime <string>	# (Output) A timestamp corresponding to the last change on the primary that was successfully replicated to the secondary.
+status.atProvider.reservationGroup <string>	# The reservation group that this reservation belongs to.
 status.atProvider.secondaryLocation <string>	# The current location of the reservation's secondary replica. This field is only set for reservations using the managed disaster recovery feature. Users can set this in create reservation calls to create a failover reservation or in update reservation calls to convert a non-failover reservation to a failover reservation(or vice versa).
 status.atProvider.slotCapacity <number>	# Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the unit of parallelism. Queries using this reservation might use more slots during runtime if ignoreIdleSlots is set to false.
 status.conditions <[]object>	# Conditions of the resource.
@@ -56,4 +60,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

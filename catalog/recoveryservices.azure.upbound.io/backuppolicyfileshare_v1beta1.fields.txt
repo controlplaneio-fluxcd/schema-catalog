@@ -1,4 +1,4 @@
-# schema source: Upbound Azure Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-azure
+# schema source: Upbound Azure Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-azure
 apiVersion <string> enum=recoveryservices.azure.upbound.io/v1beta1 (deprecated)	# This API version is deprecated. Deprecated since v2.6.0.
 kind <string> enum=BackupPolicyFileShare (cluster-scoped)
 metadata.name <string> (required)
@@ -12,6 +12,7 @@ spec.forProvider.backup[].hourly[].interval <number>	# Specifies the interval at
 spec.forProvider.backup[].hourly[].startTime <string>	# Specifies the start time of the hourly backup. The time format should be in 24-hour format. Times must be either on the hour or half hour (e.g. 12:00, 12:30, 13:00, etc.).
 spec.forProvider.backup[].hourly[].windowDuration <number>	# Species the duration of the backup window in hours. Details could be found here.
 spec.forProvider.backup[].time <string>	# The time of day to perform the backup in 24-hour format. Times must be either on the hour or half hour (e.g. 12:00, 12:30, 13:00, etc.)
+spec.forProvider.backupTier <string>	# The backup tier to use. Possible values are vault-standard and snapshot. Defaults to snapshot.
 spec.forProvider.recoveryVaultName <string>	# Specifies the name of the Recovery Services Vault to use. Changing this forces a new resource to be created.
 spec.forProvider.recoveryVaultNameRef <object>	# Reference to a Vault in recoveryservices to populate recoveryVaultName.
 spec.forProvider.recoveryVaultNameRef.name <string> (required)	# Name of the referenced object.
@@ -54,6 +55,7 @@ spec.forProvider.retentionYearly[].includeLastDays <boolean>	# Including the las
 spec.forProvider.retentionYearly[].months <[]string>	# The months of the year to retain backups of. Must be one of January, February, March, April, May, June, July, Augest, September, October, November and December.
 spec.forProvider.retentionYearly[].weekdays <[]string>	# The weekday backups to retain . Must be one of Sunday, Monday, Tuesday, Wednesday, Thursday, Friday or Saturday.
 spec.forProvider.retentionYearly[].weeks <[]string>	# The weeks of the month to retain backups of. Must be one of First, Second, Third, Fourth, Last.
+spec.forProvider.snapshotRetentionInDays <number>	# The number of days to retain the snapshots. Defaults to 0.
 spec.forProvider.timezone <string>	# Specifies the timezone. the possible values are defined here. Defaults to UTC
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.backup <[]object>	# Configures the Policy backup frequency and times as documented in the backup block below.
@@ -63,6 +65,7 @@ spec.initProvider.backup[].hourly[].interval <number>	# Specifies the interval a
 spec.initProvider.backup[].hourly[].startTime <string>	# Specifies the start time of the hourly backup. The time format should be in 24-hour format. Times must be either on the hour or half hour (e.g. 12:00, 12:30, 13:00, etc.).
 spec.initProvider.backup[].hourly[].windowDuration <number>	# Species the duration of the backup window in hours. Details could be found here.
 spec.initProvider.backup[].time <string>	# The time of day to perform the backup in 24-hour format. Times must be either on the hour or half hour (e.g. 12:00, 12:30, 13:00, etc.)
+spec.initProvider.backupTier <string>	# The backup tier to use. Possible values are vault-standard and snapshot. Defaults to snapshot.
 spec.initProvider.retentionDaily <[]object>	# Configures the policy daily retention as documented in the retention_daily block below.
 spec.initProvider.retentionDaily[].count <number>	# The number of daily backups to keep. Must be between 1 and 200 (inclusive)
 spec.initProvider.retentionMonthly <[]object>	# Configures the policy monthly retention as documented in the retention_monthly block below.
@@ -81,6 +84,7 @@ spec.initProvider.retentionYearly[].includeLastDays <boolean>	# Including the la
 spec.initProvider.retentionYearly[].months <[]string>	# The months of the year to retain backups of. Must be one of January, February, March, April, May, June, July, Augest, September, October, November and December.
 spec.initProvider.retentionYearly[].weekdays <[]string>	# The weekday backups to retain . Must be one of Sunday, Monday, Tuesday, Wednesday, Thursday, Friday or Saturday.
 spec.initProvider.retentionYearly[].weeks <[]string>	# The weeks of the month to retain backups of. Must be one of First, Second, Third, Fourth, Last.
+spec.initProvider.snapshotRetentionInDays <number>	# The number of days to retain the snapshots. Defaults to 0.
 spec.initProvider.timezone <string>	# Specifies the timezone. the possible values are defined here. Defaults to UTC
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. This field is planned to replace the DeletionPolicy field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. If both are custom, the DeletionPolicy field will be ignored. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
 spec.providerConfigRef <object> default={"name":"default"}	# ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -100,6 +104,7 @@ status.atProvider.backup[].hourly[].interval <number>	# Specifies the interval a
 status.atProvider.backup[].hourly[].startTime <string>	# Specifies the start time of the hourly backup. The time format should be in 24-hour format. Times must be either on the hour or half hour (e.g. 12:00, 12:30, 13:00, etc.).
 status.atProvider.backup[].hourly[].windowDuration <number>	# Species the duration of the backup window in hours. Details could be found here.
 status.atProvider.backup[].time <string>	# The time of day to perform the backup in 24-hour format. Times must be either on the hour or half hour (e.g. 12:00, 12:30, 13:00, etc.)
+status.atProvider.backupTier <string>	# The backup tier to use. Possible values are vault-standard and snapshot. Defaults to snapshot.
 status.atProvider.id <string>	# The ID of the Azure File Share Backup Policy.
 status.atProvider.recoveryVaultName <string>	# Specifies the name of the Recovery Services Vault to use. Changing this forces a new resource to be created.
 status.atProvider.resourceGroupName <string>	# The name of the resource group in which to create the policy. Changing this forces a new resource to be created.
@@ -121,6 +126,7 @@ status.atProvider.retentionYearly[].includeLastDays <boolean>	# Including the la
 status.atProvider.retentionYearly[].months <[]string>	# The months of the year to retain backups of. Must be one of January, February, March, April, May, June, July, Augest, September, October, November and December.
 status.atProvider.retentionYearly[].weekdays <[]string>	# The weekday backups to retain . Must be one of Sunday, Monday, Tuesday, Wednesday, Thursday, Friday or Saturday.
 status.atProvider.retentionYearly[].weeks <[]string>	# The weeks of the month to retain backups of. Must be one of First, Second, Third, Fourth, Last.
+status.atProvider.snapshotRetentionInDays <number>	# The number of days to retain the snapshots. Defaults to 0.
 status.atProvider.timezone <string>	# Specifies the timezone. the possible values are defined here. Defaults to UTC
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
@@ -129,4 +135,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

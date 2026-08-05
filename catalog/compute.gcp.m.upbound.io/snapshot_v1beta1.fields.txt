@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=compute.gcp.m.upbound.io/v1beta1
 kind <string> enum=Snapshot
 metadata.name <string> (required)
@@ -8,6 +8,8 @@ spec.forProvider <object> (required)
 spec.forProvider.chainName <string>	# Creates the new snapshot in the snapshot chain labeled with the specified name. The chain name must be 1-63 characters long and comply with RFC1035. This is an uncommon option only for advanced service owners who needs to create separate snapshot chains, for example, for chargeback tracking. When you describe your snapshot resource, this field is visible only if it has a non-empty value.
 spec.forProvider.description <string>	# An optional description of this resource.
 spec.forProvider.labels <map[string]string>	# Labels to apply to this Snapshot. Note: This field is non-authoritative, and will only manage the labels present in your configuration. Please refer to the field effective_labels for all of the labels present on the resource.
+spec.forProvider.params <object>	# Additional params passed with the request, but not persisted as part of resource payload Structure is documented below.
+spec.forProvider.params.resourceManagerTags <map[string]string>	# Resource manager tags to be bound to the snapshot. Tag keys and values have the same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/456.
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.forProvider.snapshotEncryptionKey <object>	# Encrypts the snapshot using a customer-supplied encryption key. After you encrypt a snapshot using a customer-supplied key, you must provide the same key if you use the snapshot later. For example, you must provide the encryption key when you create a disk from the encrypted snapshot in a future request. Customer-supplied encryption keys do not protect access to metadata of the snapshot. If you do not provide an encryption key when creating the snapshot, then the snapshot will be encrypted using an automatically generated key and you do not need to provide a key to use the snapshot later. Structure is documented below.
 spec.forProvider.snapshotEncryptionKey.kmsKeySelfLink <string>	# The name of the encryption key that is stored in Google Cloud KMS.
@@ -18,6 +20,7 @@ spec.forProvider.snapshotEncryptionKey.rawKeySecretRef.name <string> (required)	
 spec.forProvider.snapshotEncryptionKey.rsaEncryptedKeySecretRef <object>	# Specifies an encryption key stored in Google Cloud KMS, encoded in RFC 4648 base64 to either encrypt or decrypt this resource. Note: This property is sensitive and will not be displayed in the plan.
 spec.forProvider.snapshotEncryptionKey.rsaEncryptedKeySecretRef.key <string> (required)
 spec.forProvider.snapshotEncryptionKey.rsaEncryptedKeySecretRef.name <string> (required)	# Name of the secret.
+spec.forProvider.snapshotType <string>	# Indicates the type of the snapshot. Possible values are: ARCHIVE, STANDARD.
 spec.forProvider.sourceDisk <string>	# A reference to the disk used to create this snapshot.
 spec.forProvider.sourceDiskEncryptionKey <object>	# The customer-supplied encryption key of the source snapshot. Required if the source snapshot is protected by a customer-supplied encryption key. Structure is documented below.
 spec.forProvider.sourceDiskEncryptionKey.kmsKeySelfLink <string>	# The name of the encryption key that is stored in Google Cloud KMS.
@@ -41,12 +44,15 @@ spec.forProvider.sourceDiskSelector.namespace <string>	# Namespace for the selec
 spec.forProvider.sourceDiskSelector.policy <object>	# Policies for selection.
 spec.forProvider.sourceDiskSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.sourceDiskSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.sourceInstantSnapshot <string>	# A reference to the instant snapshot used to create this snapshot.
 spec.forProvider.storageLocations <[]string>	# Cloud Storage bucket storage location of the snapshot (regional or multi-regional).
 spec.forProvider.zone <string>	# A reference to the zone where the disk is hosted.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.chainName <string>	# Creates the new snapshot in the snapshot chain labeled with the specified name. The chain name must be 1-63 characters long and comply with RFC1035. This is an uncommon option only for advanced service owners who needs to create separate snapshot chains, for example, for chargeback tracking. When you describe your snapshot resource, this field is visible only if it has a non-empty value.
 spec.initProvider.description <string>	# An optional description of this resource.
 spec.initProvider.labels <map[string]string>	# Labels to apply to this Snapshot. Note: This field is non-authoritative, and will only manage the labels present in your configuration. Please refer to the field effective_labels for all of the labels present on the resource.
+spec.initProvider.params <object>	# Additional params passed with the request, but not persisted as part of resource payload Structure is documented below.
+spec.initProvider.params.resourceManagerTags <map[string]string>	# Resource manager tags to be bound to the snapshot. Tag keys and values have the same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/456.
 spec.initProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.initProvider.snapshotEncryptionKey <object>	# Encrypts the snapshot using a customer-supplied encryption key. After you encrypt a snapshot using a customer-supplied key, you must provide the same key if you use the snapshot later. For example, you must provide the encryption key when you create a disk from the encrypted snapshot in a future request. Customer-supplied encryption keys do not protect access to metadata of the snapshot. If you do not provide an encryption key when creating the snapshot, then the snapshot will be encrypted using an automatically generated key and you do not need to provide a key to use the snapshot later. Structure is documented below.
 spec.initProvider.snapshotEncryptionKey.kmsKeySelfLink <string>	# The name of the encryption key that is stored in Google Cloud KMS.
@@ -57,6 +63,7 @@ spec.initProvider.snapshotEncryptionKey.rawKeySecretRef.name <string> (required)
 spec.initProvider.snapshotEncryptionKey.rsaEncryptedKeySecretRef <object>	# Specifies an encryption key stored in Google Cloud KMS, encoded in RFC 4648 base64 to either encrypt or decrypt this resource. Note: This property is sensitive and will not be displayed in the plan.
 spec.initProvider.snapshotEncryptionKey.rsaEncryptedKeySecretRef.key <string> (required)
 spec.initProvider.snapshotEncryptionKey.rsaEncryptedKeySecretRef.name <string> (required)	# Name of the secret.
+spec.initProvider.snapshotType <string>	# Indicates the type of the snapshot. Possible values are: ARCHIVE, STANDARD.
 spec.initProvider.sourceDisk <string>	# A reference to the disk used to create this snapshot.
 spec.initProvider.sourceDiskEncryptionKey <object>	# The customer-supplied encryption key of the source snapshot. Required if the source snapshot is protected by a customer-supplied encryption key. Structure is documented below.
 spec.initProvider.sourceDiskEncryptionKey.kmsKeySelfLink <string>	# The name of the encryption key that is stored in Google Cloud KMS.
@@ -80,6 +87,7 @@ spec.initProvider.sourceDiskSelector.namespace <string>	# Namespace for the sele
 spec.initProvider.sourceDiskSelector.policy <object>	# Policies for selection.
 spec.initProvider.sourceDiskSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.sourceDiskSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.sourceInstantSnapshot <string>	# A reference to the instant snapshot used to create this snapshot.
 spec.initProvider.storageLocations <[]string>	# Cloud Storage bucket storage location of the snapshot (regional or multi-regional).
 spec.initProvider.zone <string>	# A reference to the zone where the disk is hosted.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -92,6 +100,7 @@ status <object>	# SnapshotStatus defines the observed state of Snapshot.
 status.atProvider <object>
 status.atProvider.chainName <string>	# Creates the new snapshot in the snapshot chain labeled with the specified name. The chain name must be 1-63 characters long and comply with RFC1035. This is an uncommon option only for advanced service owners who needs to create separate snapshot chains, for example, for chargeback tracking. When you describe your snapshot resource, this field is visible only if it has a non-empty value.
 status.atProvider.creationTimestamp <string>	# Creation timestamp in RFC3339 text format.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# An optional description of this resource.
 status.atProvider.diskSizeGb <number>	# Size of the snapshot, specified in GB.
 status.atProvider.effectiveLabels <map[string]string>
@@ -99,6 +108,8 @@ status.atProvider.id <string>	# an identifier for the resource with format proje
 status.atProvider.labelFingerprint <string>	# The fingerprint used for optimistic locking of this resource. Used internally during updates.
 status.atProvider.labels <map[string]string>	# Labels to apply to this Snapshot. Note: This field is non-authoritative, and will only manage the labels present in your configuration. Please refer to the field effective_labels for all of the labels present on the resource.
 status.atProvider.licenses <[]string>	# A list of public visible licenses that apply to this snapshot. This can be because the original image had licenses attached (such as a Windows image). snapshotEncryptionKey nested object Encrypts the snapshot using a customer-supplied encryption key.
+status.atProvider.params <object>	# Additional params passed with the request, but not persisted as part of resource payload Structure is documented below.
+status.atProvider.params.resourceManagerTags <map[string]string>	# Resource manager tags to be bound to the snapshot. Tag keys and values have the same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/456.
 status.atProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 status.atProvider.selfLink <string>	# The URI of the created resource.
 status.atProvider.snapshotEncryptionKey <object>	# Encrypts the snapshot using a customer-supplied encryption key. After you encrypt a snapshot using a customer-supplied key, you must provide the same key if you use the snapshot later. For example, you must provide the encryption key when you create a disk from the encrypted snapshot in a future request. Customer-supplied encryption keys do not protect access to metadata of the snapshot. If you do not provide an encryption key when creating the snapshot, then the snapshot will be encrypted using an automatically generated key and you do not need to provide a key to use the snapshot later. Structure is documented below.
@@ -106,10 +117,12 @@ status.atProvider.snapshotEncryptionKey.kmsKeySelfLink <string>	# The name of th
 status.atProvider.snapshotEncryptionKey.kmsKeyServiceAccount <string>	# The service account used for the encryption request for the given KMS key. If absent, the Compute Engine Service Agent service account is used.
 status.atProvider.snapshotEncryptionKey.sha256 <string>	# (Output) The RFC 4648 base64 encoded SHA-256 hash of the customer-supplied encryption key that protects this resource.
 status.atProvider.snapshotId <number>	# The unique identifier for the resource.
+status.atProvider.snapshotType <string>	# Indicates the type of the snapshot. Possible values are: ARCHIVE, STANDARD.
 status.atProvider.sourceDisk <string>	# A reference to the disk used to create this snapshot.
 status.atProvider.sourceDiskEncryptionKey <object>	# The customer-supplied encryption key of the source snapshot. Required if the source snapshot is protected by a customer-supplied encryption key. Structure is documented below.
 status.atProvider.sourceDiskEncryptionKey.kmsKeySelfLink <string>	# The name of the encryption key that is stored in Google Cloud KMS.
 status.atProvider.sourceDiskEncryptionKey.kmsKeyServiceAccount <string>	# The service account used for the encryption request for the given KMS key. If absent, the Compute Engine Service Agent service account is used.
+status.atProvider.sourceInstantSnapshot <string>	# A reference to the instant snapshot used to create this snapshot.
 status.atProvider.storageBytes <number>	# A size of the storage used by the snapshot. As snapshots share storage, this number is expected to change with snapshot creation/deletion.
 status.atProvider.storageLocations <[]string>	# Cloud Storage bucket storage location of the snapshot (regional or multi-regional).
 status.atProvider.terraformLabels <map[string]string>	# The combination of labels configured directly on the resource and default labels configured on the provider.
@@ -121,4 +134,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

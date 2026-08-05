@@ -1,13 +1,13 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=apigee.gcp.upbound.io/v1beta1
 kind <string> enum=EndpointAttachment (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# EndpointAttachmentSpec defines the desired state of EndpointAttachment
 spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
 spec.forProvider <object> (required)
-spec.forProvider.location <string>
-spec.forProvider.orgId <string> (required)
-spec.forProvider.serviceAttachment <string>
+spec.forProvider.location <string>	# The location of the endpoint attachment.
+spec.forProvider.orgId <string> (required)	# The Apigee Organization associated with the Apigee instance, in the format organizations/{{org_name}}.
+spec.forProvider.serviceAttachment <string>	# The resource URL of the service attachment in the format: projects/*/regions/*/serviceAttachments/*.
 spec.forProvider.serviceAttachmentRef <object>	# Reference to a ServiceAttachment in compute to populate serviceAttachment.
 spec.forProvider.serviceAttachmentRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.serviceAttachmentRef.policy <object>	# Policies for referencing.
@@ -20,8 +20,8 @@ spec.forProvider.serviceAttachmentSelector.policy <object>	# Policies for select
 spec.forProvider.serviceAttachmentSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.serviceAttachmentSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
-spec.initProvider.location <string>
-spec.initProvider.serviceAttachment <string>
+spec.initProvider.location <string>	# The location of the endpoint attachment.
+spec.initProvider.serviceAttachment <string>	# The resource URL of the service attachment in the format: projects/*/regions/*/serviceAttachments/*.
 spec.initProvider.serviceAttachmentRef <object>	# Reference to a ServiceAttachment in compute to populate serviceAttachment.
 spec.initProvider.serviceAttachmentRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.serviceAttachmentRef.policy <object>	# Policies for referencing.
@@ -44,13 +44,14 @@ spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the secret.
 status <object>	# EndpointAttachmentStatus defines the observed state of EndpointAttachment.
 status.atProvider <object>
-status.atProvider.connectionState <string>
-status.atProvider.host <string>
-status.atProvider.id <string>
-status.atProvider.location <string>
-status.atProvider.name <string>
-status.atProvider.orgId <string>
-status.atProvider.serviceAttachment <string>
+status.atProvider.connectionState <string>	# State of the endpoint attachment connection to the service attachment. Possible values are: CONNECTION_STATE_UNSPECIFIED, PENDING, ACCEPTED, REJECTED, CLOSED.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
+status.atProvider.host <string>	# Host that can be used in either HTTP Target Endpoint directly, or as the host in Target Server.
+status.atProvider.id <string>	# an identifier for the resource with format {{org_id}}/endpointAttachments/{{endpoint_attachment_id}}
+status.atProvider.location <string>	# The location of the endpoint attachment.
+status.atProvider.name <string>	# Name of the Endpoint Attachment in the following format: organizations/{organization}/endpointAttachments/{endpointAttachment}.
+status.atProvider.orgId <string>	# The Apigee Organization associated with the Apigee instance, in the format organizations/{{org_name}}.
+status.atProvider.serviceAttachment <string>	# The resource URL of the service attachment in the format: projects/*/regions/*/serviceAttachments/*.
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
 status.conditions[].message <string>	# A Message containing details about this condition's last transition from one status to another, if any.
@@ -58,4 +59,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

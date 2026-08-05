@@ -1,15 +1,17 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=privateca.gcp.m.upbound.io/v1beta1
 kind <string> enum=CAPool
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# CAPoolSpec defines the desired state of CAPool
 spec.forProvider <object> (required)
+spec.forProvider.encryptionSpec <object>	# Used when customer would like to encrypt data at rest. The customer-provided key will be used to encrypt the Subject, SubjectAltNames and PEM-encoded certificate fields. When unspecified, customer data will remain unencrypted. Structure is documented below.
+spec.forProvider.encryptionSpec.cloudKmsKey <string>	# The resource name for an existing Cloud KMS key in the format projects/*/locations/*/keyRings/*/cryptoKeys/*.
 spec.forProvider.issuancePolicy <object>	# The IssuancePolicy to control how Certificates will be issued from this CaPool. Structure is documented below.
 spec.forProvider.issuancePolicy.allowedIssuanceModes <object>	# IssuanceModes specifies the allowed ways in which Certificates may be requested from this CaPool. Structure is documented below.
 spec.forProvider.issuancePolicy.allowedIssuanceModes.allowConfigBasedIssuance <boolean>	# When true, allows callers to create Certificates by specifying a CertificateConfig.
 spec.forProvider.issuancePolicy.allowedIssuanceModes.allowCsrBasedIssuance <boolean>	# When true, allows callers to create Certificates by specifying a CSR.
-spec.forProvider.issuancePolicy.allowedKeyTypes <[]object>	# If any AllowedKeyType is specified, then the certificate request's public key must match one of the key types listed here. Otherwise, any key may be used. Structure is documented below.
+spec.forProvider.issuancePolicy.allowedKeyTypes <[]object>	# If any AllowedKeyType is specified, then the certificate request's public key must match one of the key types listed here. Otherwise, any key may be used. You can specify only one key type of those listed here. Structure is documented below.
 spec.forProvider.issuancePolicy.allowedKeyTypes[].ellipticCurve <object>	# Represents an allowed Elliptic Curve key type. Structure is documented below.
 spec.forProvider.issuancePolicy.allowedKeyTypes[].ellipticCurve.signatureAlgorithm <string>	# The algorithm used. Possible values are: ECDSA_P256, ECDSA_P384, EDDSA_25519.
 spec.forProvider.issuancePolicy.allowedKeyTypes[].rsa <object>	# Describes an RSA key that may be used in a Certificate issued from a CaPool. Structure is documented below.
@@ -78,11 +80,13 @@ spec.forProvider.publishingOptions.publishCaCert <boolean>	# When true, publishe
 spec.forProvider.publishingOptions.publishCrl <boolean>	# When true, publishes each CertificateAuthority's CRL and includes its URL in the "CRL Distribution Points" X.509 extension in all issued Certificates. If this is false, CRLs will not be published and the corresponding X.509 extension will not be written in issued certificates. CRLs will expire 7 days from their creation. However, we will rebuild daily. CRLs are also rebuilt shortly after a certificate is revoked.
 spec.forProvider.tier <string>	# The Tier of this CaPool. Possible values are: ENTERPRISE, DEVOPS.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
+spec.initProvider.encryptionSpec <object>	# Used when customer would like to encrypt data at rest. The customer-provided key will be used to encrypt the Subject, SubjectAltNames and PEM-encoded certificate fields. When unspecified, customer data will remain unencrypted. Structure is documented below.
+spec.initProvider.encryptionSpec.cloudKmsKey <string>	# The resource name for an existing Cloud KMS key in the format projects/*/locations/*/keyRings/*/cryptoKeys/*.
 spec.initProvider.issuancePolicy <object>	# The IssuancePolicy to control how Certificates will be issued from this CaPool. Structure is documented below.
 spec.initProvider.issuancePolicy.allowedIssuanceModes <object>	# IssuanceModes specifies the allowed ways in which Certificates may be requested from this CaPool. Structure is documented below.
 spec.initProvider.issuancePolicy.allowedIssuanceModes.allowConfigBasedIssuance <boolean>	# When true, allows callers to create Certificates by specifying a CertificateConfig.
 spec.initProvider.issuancePolicy.allowedIssuanceModes.allowCsrBasedIssuance <boolean>	# When true, allows callers to create Certificates by specifying a CSR.
-spec.initProvider.issuancePolicy.allowedKeyTypes <[]object>	# If any AllowedKeyType is specified, then the certificate request's public key must match one of the key types listed here. Otherwise, any key may be used. Structure is documented below.
+spec.initProvider.issuancePolicy.allowedKeyTypes <[]object>	# If any AllowedKeyType is specified, then the certificate request's public key must match one of the key types listed here. Otherwise, any key may be used. You can specify only one key type of those listed here. Structure is documented below.
 spec.initProvider.issuancePolicy.allowedKeyTypes[].ellipticCurve <object>	# Represents an allowed Elliptic Curve key type. Structure is documented below.
 spec.initProvider.issuancePolicy.allowedKeyTypes[].ellipticCurve.signatureAlgorithm <string>	# The algorithm used. Possible values are: ECDSA_P256, ECDSA_P384, EDDSA_25519.
 spec.initProvider.issuancePolicy.allowedKeyTypes[].rsa <object>	# Describes an RSA key that may be used in a Certificate issued from a CaPool. Structure is documented below.
@@ -156,13 +160,16 @@ spec.writeConnectionSecretToRef <object>	# WriteConnectionSecretToReference spec
 spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 status <object>	# CAPoolStatus defines the observed state of CAPool.
 status.atProvider <object>
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.effectiveLabels <map[string]string>	# for all of the labels present on the resource.
+status.atProvider.encryptionSpec <object>	# Used when customer would like to encrypt data at rest. The customer-provided key will be used to encrypt the Subject, SubjectAltNames and PEM-encoded certificate fields. When unspecified, customer data will remain unencrypted. Structure is documented below.
+status.atProvider.encryptionSpec.cloudKmsKey <string>	# The resource name for an existing Cloud KMS key in the format projects/*/locations/*/keyRings/*/cryptoKeys/*.
 status.atProvider.id <string>	# an identifier for the resource with format projects/{{project}}/locations/{{location}}/caPools/{{name}}
 status.atProvider.issuancePolicy <object>	# The IssuancePolicy to control how Certificates will be issued from this CaPool. Structure is documented below.
 status.atProvider.issuancePolicy.allowedIssuanceModes <object>	# IssuanceModes specifies the allowed ways in which Certificates may be requested from this CaPool. Structure is documented below.
 status.atProvider.issuancePolicy.allowedIssuanceModes.allowConfigBasedIssuance <boolean>	# When true, allows callers to create Certificates by specifying a CertificateConfig.
 status.atProvider.issuancePolicy.allowedIssuanceModes.allowCsrBasedIssuance <boolean>	# When true, allows callers to create Certificates by specifying a CSR.
-status.atProvider.issuancePolicy.allowedKeyTypes <[]object>	# If any AllowedKeyType is specified, then the certificate request's public key must match one of the key types listed here. Otherwise, any key may be used. Structure is documented below.
+status.atProvider.issuancePolicy.allowedKeyTypes <[]object>	# If any AllowedKeyType is specified, then the certificate request's public key must match one of the key types listed here. Otherwise, any key may be used. You can specify only one key type of those listed here. Structure is documented below.
 status.atProvider.issuancePolicy.allowedKeyTypes[].ellipticCurve <object>	# Represents an allowed Elliptic Curve key type. Structure is documented below.
 status.atProvider.issuancePolicy.allowedKeyTypes[].ellipticCurve.signatureAlgorithm <string>	# The algorithm used. Possible values are: ECDSA_P256, ECDSA_P384, EDDSA_25519.
 status.atProvider.issuancePolicy.allowedKeyTypes[].rsa <object>	# Describes an RSA key that may be used in a Certificate issued from a CaPool. Structure is documented below.
@@ -238,4 +245,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

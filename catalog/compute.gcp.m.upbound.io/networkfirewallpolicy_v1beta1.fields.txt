@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=compute.gcp.m.upbound.io/v1beta1
 kind <string> enum=NetworkFirewallPolicy
 metadata.name <string> (required)
@@ -6,9 +6,11 @@ metadata.namespace <string> (required)
 spec <object> (required)	# NetworkFirewallPolicySpec defines the desired state of NetworkFirewallPolicy
 spec.forProvider <object> (required)
 spec.forProvider.description <string>	# An optional description of this resource. Provide this property when you create the resource.
+spec.forProvider.policyType <string>	# Policy type is used to determine which resources (networks) the policy can be associated with. A policy can be associated with a network only if the network has the matching policyType in its network profile. Different policy types may support some of the Firewall Rules features. Possible values are: VPC_POLICY.
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.description <string>	# An optional description of this resource. Provide this property when you create the resource.
+spec.initProvider.policyType <string>	# Policy type is used to determine which resources (networks) the policy can be associated with. A policy can be associated with a network only if the network has the matching policyType in its network profile. Different policy types may support some of the Firewall Rules features. Possible values are: VPC_POLICY.
 spec.initProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
 spec.providerConfigRef <object> default={"kind":"ClusterProviderConfig","name":"default"}	# ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -19,10 +21,12 @@ spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 status <object>	# NetworkFirewallPolicyStatus defines the observed state of NetworkFirewallPolicy.
 status.atProvider <object>
 status.atProvider.creationTimestamp <string>	# Creation timestamp in RFC3339 text format.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# An optional description of this resource. Provide this property when you create the resource.
 status.atProvider.fingerprint <string>	# Fingerprint of the resource. This field is used internally during updates of this resource.
 status.atProvider.id <string>	# an identifier for the resource with format projects/{{project}}/global/firewallPolicies/{{name}}
 status.atProvider.networkFirewallPolicyId <string>	# The unique identifier for the resource. This identifier is defined by the server.
+status.atProvider.policyType <string>	# Policy type is used to determine which resources (networks) the policy can be associated with. A policy can be associated with a network only if the network has the matching policyType in its network profile. Different policy types may support some of the Firewall Rules features. Possible values are: VPC_POLICY.
 status.atProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 status.atProvider.ruleTupleCount <number>	# Total count of all firewall policy rule tuples. A firewall policy can not exceed a set number of tuples.
 status.atProvider.selfLink <string>	# Server-defined URL for the resource.
@@ -34,4 +38,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

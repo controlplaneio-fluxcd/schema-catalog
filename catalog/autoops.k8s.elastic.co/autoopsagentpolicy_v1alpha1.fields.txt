@@ -1,4 +1,4 @@
-# schema source: Elastic Cloud v3.4.1 https://github.com/elastic/cloud-on-k8s
+# schema source: Elastic Cloud v3.5.0 https://github.com/elastic/cloud-on-k8s
 apiVersion <string> enum=autoops.k8s.elastic.co/v1alpha1
 kind <string> enum=AutoOpsAgentPolicy
 metadata.name <string> (required)
@@ -6,6 +6,9 @@ metadata.namespace <string> (required)
 spec <object>
 spec.autoOpsRef <object>	# AutoOpsRef defines a reference to a secret containing connection details for AutoOps via Cloud Connect.
 spec.autoOpsRef.secretName <string>	# SecretName references a Secret containing connection details for external AutoOps. Required when connecting via Cloud Connect. The secret must contain: - `cloud-connected-mode-api-key`: Cloud Connected Mode API key - `autoops-otel-url`: AutoOps OpenTelemetry endpoint URL - `autoops-token`: AutoOps authentication token - `cloud-connected-mode-api-url`: (optional) Cloud Connected Mode API URL This field cannot be used in combination with `name`.
+spec.config <object (free-form)>	# Config holds additional OpenTelemetry collector configuration for the AutoOps agent. User-supplied settings are merged between the operator baseline defaults and the operator-owned mandatory settings, which always take final precedence. This allows tuning knobs such as the sending_queue sizing, appending custom metricbeat modules, or defining additional exporters and pipelines. Supplying at least one autoops_es module replaces the operator's built-in modules entirely, giving full control over which metricsets are collected and at what period. Elasticsearch connection details (hosts, SSL), OTLP endpoint and authorization, and the healthcheck extension are always injected by the operator and cannot be overridden. At most one of [`config`, `configRef`] can be specified.
+spec.configRef <object>	# ConfigRef references a Kubernetes Secret holding the AutoOps agent configuration under the `autoops_es.yml` key. Applies the same merge semantics as `config`. At most one of [`config`, `configRef`] can be specified.
+spec.configRef.secretName <string>	# SecretName is the name of the secret.
 spec.image <string>	# Image is the AutoOps Agent Docker image to deploy.
 spec.namespaceSelector <object>	# NamespaceSelector is a namespace selector for the resources to be configured. Any Elasticsearch instances that belong to the selected namespaces will be configured to send data to AutoOps.
 spec.namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -13,17 +16,29 @@ spec.namespaceSelector.matchExpressions[].key <string> (required)	# key is the l
 spec.namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
 spec.namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
-spec.podTemplate <object (free-form)>	# PodTemplate provides customisation options (labels, annotations, affinity rules, resource requests, and so on) for the Agent pods
+spec.podTemplate <object (free-form)>	# PodTemplate provides customization options (labels, annotations, affinity rules, resource requests, and so on) for the Agent pods
 spec.resourceSelector <object>	# ResourceSelector is a label selector for the resources to be configured. Any Elasticsearch instances that match the selector will be configured to send data to AutoOps.
 spec.resourceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
 spec.resourceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
 spec.resourceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
 spec.resourceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.resourceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.resources <object>	# Resources provides a shorthand to set CPU and Memory resources on the AutoOps Agent container. When set, these values override any CPU or memory resource settings specified in the PodTemplate for the primary AutoOps Agent container. To set resources on other containers, use the PodTemplate.
+spec.resources.limits <object>	# Limits is the shorthand for the main container's CPU and memory limits.
+spec.resources.limits.cpu <int-or-string>	# CPU overrides the main container's CPU request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any CPU value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a CPU value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's CPU, including an explicit zero quantity.
+spec.resources.limits.memory <int-or-string>	# Memory overrides the main container's memory request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any memory value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a memory value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's memory, including an explicit zero quantity.
+spec.resources.requests <object>	# Requests is the shorthand for the main container's CPU and memory requests.
+spec.resources.requests.cpu <int-or-string>	# CPU overrides the main container's CPU request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any CPU value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a CPU value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's CPU, including an explicit zero quantity.
+spec.resources.requests.memory <int-or-string>	# Memory overrides the main container's memory request/limit when the parent Resources is merged into a PodTemplate. A nil value means "do not override": any memory value already set on the main container in the PodTemplate is passed through unchanged. Setting this field to nil does not unset a memory value present in the PodTemplate; to remove it, edit the PodTemplate's container resources. A non-nil value wins over the PodTemplate's memory, including an explicit zero quantity.
 spec.revisionHistoryLimit <integer> format=int32	# RevisionHistoryLimit is the number of revisions to retain to allow rollback in the underlying Deployment.
 spec.serviceAccountName <string>	# ServiceAccountName is used to check access to Elasticsearch resources in different namespaces. Can only be used if ECK is enforcing RBAC on references (--enforce-rbac-on-refs flag). The service account must have "get" permission on elasticsearch.k8s.elastic.co/elasticsearches in the target namespaces.
 spec.version <string> (required)	# Version of the AutoOpsAgentPolicy.
 status <object>
+status.conditions <[]object>	# Conditions holds the current service state of the deployment.
+status.conditions[].lastTransitionTime <string> format=date-time
+status.conditions[].message <string>
+status.conditions[].status <string> (required)
+status.conditions[].type <string> (required)	# ConditionType defines the condition of a resource.
 status.details <map[string]object>	# Details contains lightweight per-resource details.
 status.details.<key>.error <string>	# Error contains the error message when the resource is in an error state. Only populated when Phase is "Error".
 status.details.<key>.message <string>	# Message provides a human-readable explanation of the current phase. Only populated for non-ready states to provide context about why the resource is not ready.

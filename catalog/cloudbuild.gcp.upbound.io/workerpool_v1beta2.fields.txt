@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=cloudbuild.gcp.upbound.io/v1beta2
 kind <string> enum=WorkerPool (cluster-scoped)
 metadata.name <string> (required)
@@ -28,6 +28,7 @@ spec.forProvider.privateServiceConnect.routeAllTraffic <boolean>
 spec.forProvider.project <string>	# The project for the resource
 spec.forProvider.workerConfig <object>	# Configuration to be used for a creating workers in the WorkerPool. Structure is documented below.
 spec.forProvider.workerConfig.diskSizeGb <number>	# Size of the disk attached to the worker, in GB. See diskSizeGb. Specify a value of up to 1000. If 0 is specified, Cloud Build will use a standard disk size.
+spec.forProvider.workerConfig.enableNestedVirtualization <boolean>	# Enable nested virtualization on the worker, if supported by the machine type. See Worker pool config file. If left blank, Cloud Build will set this to false.
 spec.forProvider.workerConfig.machineType <string>	# Machine type of a worker, such as n1-standard-1. See machineType. If left blank, Cloud Build will use n1-standard-1.
 spec.forProvider.workerConfig.noExternalIp <boolean>	# If true, workers are created without any public address, which prevents network egress to public IPs.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
@@ -53,6 +54,7 @@ spec.initProvider.privateServiceConnect.routeAllTraffic <boolean>
 spec.initProvider.project <string>	# The project for the resource
 spec.initProvider.workerConfig <object>	# Configuration to be used for a creating workers in the WorkerPool. Structure is documented below.
 spec.initProvider.workerConfig.diskSizeGb <number>	# Size of the disk attached to the worker, in GB. See diskSizeGb. Specify a value of up to 1000. If 0 is specified, Cloud Build will use a standard disk size.
+spec.initProvider.workerConfig.enableNestedVirtualization <boolean>	# Enable nested virtualization on the worker, if supported by the machine type. See Worker pool config file. If left blank, Cloud Build will set this to false.
 spec.initProvider.workerConfig.machineType <string>	# Machine type of a worker, such as n1-standard-1. See machineType. If left blank, Cloud Build will use n1-standard-1.
 spec.initProvider.workerConfig.noExternalIp <boolean>	# If true, workers are created without any public address, which prevents network egress to public IPs.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. This field is planned to replace the DeletionPolicy field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. If both are custom, the DeletionPolicy field will be ignored. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -69,6 +71,7 @@ status.atProvider <object>
 status.atProvider.annotations <map[string]string>
 status.atProvider.createTime <string>	# Output only. Time at which the request to create the WorkerPool was received.
 status.atProvider.deleteTime <string>	# Output only. Time at which the request to delete the WorkerPool was received.
+status.atProvider.deletionPolicy <string>	# Defaults to "DELETE". When set to "DELETE", deleting the resource is allowed.
 status.atProvider.displayName <string>	# User-defined name of the WorkerPool.
 status.atProvider.effectiveAnnotations <map[string]string>
 status.atProvider.id <string>	# an identifier for the resource with format projects/{{project}}/locations/{{location}}/workerPools/{{name}}
@@ -85,6 +88,7 @@ status.atProvider.uid <string>	# an identifier for the resource with format proj
 status.atProvider.updateTime <string>	# Output only. Time at which the request to update the WorkerPool was received.
 status.atProvider.workerConfig <object>	# Configuration to be used for a creating workers in the WorkerPool. Structure is documented below.
 status.atProvider.workerConfig.diskSizeGb <number>	# Size of the disk attached to the worker, in GB. See diskSizeGb. Specify a value of up to 1000. If 0 is specified, Cloud Build will use a standard disk size.
+status.atProvider.workerConfig.enableNestedVirtualization <boolean>	# Enable nested virtualization on the worker, if supported by the machine type. See Worker pool config file. If left blank, Cloud Build will set this to false.
 status.atProvider.workerConfig.machineType <string>	# Machine type of a worker, such as n1-standard-1. See machineType. If left blank, Cloud Build will use n1-standard-1.
 status.atProvider.workerConfig.noExternalIp <boolean>	# If true, workers are created without any public address, which prevents network egress to public IPs.
 status.conditions <[]object>	# Conditions of the resource.
@@ -94,4 +98,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

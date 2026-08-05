@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=compute.gcp.m.upbound.io/v1beta1
 kind <string> enum=ServiceAttachment
 metadata.name <string> (required)
@@ -8,6 +8,7 @@ spec.forProvider <object> (required)
 spec.forProvider.connectionPreference <string>	# The connection preference to use for this service attachment. Valid values include "ACCEPT_AUTOMATIC", "ACCEPT_MANUAL".
 spec.forProvider.consumerAcceptLists <[]object>	# An array of projects that are allowed to connect to this service attachment. Structure is documented below.
 spec.forProvider.consumerAcceptLists[].connectionLimit <number>	# The number of consumer forwarding rules the consumer project can create.
+spec.forProvider.consumerAcceptLists[].endpointUrl <string>	# The endpoint that is allowed to connect to this service attachment. Only one of project_id_or_num, network_url and endpoint_url may be set.
 spec.forProvider.consumerAcceptLists[].networkUrl <string>	# The network that is allowed to connect to this service attachment. Only one of project_id_or_num and network_url may be set.
 spec.forProvider.consumerAcceptLists[].networkUrlRef <object>	# Reference to a Network in compute to populate networkUrl.
 spec.forProvider.consumerAcceptLists[].networkUrlRef.name <string> (required)	# Name of the referenced object.
@@ -46,6 +47,7 @@ spec.forProvider.propagatedConnectionLimit <number>	# The number of consumer spo
 spec.forProvider.reconcileConnections <boolean>	# This flag determines whether a consumer accept/reject list change can reconcile the statuses of existing ACCEPTED or REJECTED PSC endpoints. If false, connection policy update will only affect existing PENDING PSC endpoints. Existing ACCEPTED/REJECTED endpoints will remain untouched regardless how the connection policy is modified . If true, update will affect both PENDING and ACCEPTED/REJECTED PSC endpoints. For example, an ACCEPTED PSC endpoint will be moved to REJECTED if its project is added to the reject list.
 spec.forProvider.region <string> (required)	# URL of the region where the resource resides.
 spec.forProvider.sendPropagatedConnectionLimitIfZero <boolean>	# Controls the behavior of propagated_connection_limit. When false, setting propagated_connection_limit to zero causes the provider to use to the API's default value. When true, the provider will set propagated_connection_limit to zero. Defaults to false.
+spec.forProvider.showNatIps <boolean>	# NOTE: This field is temporarily non-functional due to an underlying API issue. Any value provided here will be ignored until the API issue is resolved, expected around 2026-03. [If true, show NAT IPs of all connected endpoints.]
 spec.forProvider.targetService <string>	# The URL of a service serving the endpoint identified by this service attachment.
 spec.forProvider.targetServiceRef <object>	# Reference to a ForwardingRule in compute to populate targetService.
 spec.forProvider.targetServiceRef.name <string> (required)	# Name of the referenced object.
@@ -64,6 +66,7 @@ spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the
 spec.initProvider.connectionPreference <string>	# The connection preference to use for this service attachment. Valid values include "ACCEPT_AUTOMATIC", "ACCEPT_MANUAL".
 spec.initProvider.consumerAcceptLists <[]object>	# An array of projects that are allowed to connect to this service attachment. Structure is documented below.
 spec.initProvider.consumerAcceptLists[].connectionLimit <number>	# The number of consumer forwarding rules the consumer project can create.
+spec.initProvider.consumerAcceptLists[].endpointUrl <string>	# The endpoint that is allowed to connect to this service attachment. Only one of project_id_or_num, network_url and endpoint_url may be set.
 spec.initProvider.consumerAcceptLists[].networkUrl <string>	# The network that is allowed to connect to this service attachment. Only one of project_id_or_num and network_url may be set.
 spec.initProvider.consumerAcceptLists[].networkUrlRef <object>	# Reference to a Network in compute to populate networkUrl.
 spec.initProvider.consumerAcceptLists[].networkUrlRef.name <string> (required)	# Name of the referenced object.
@@ -101,6 +104,7 @@ spec.initProvider.project <string>	# The ID of the project in which the resource
 spec.initProvider.propagatedConnectionLimit <number>	# The number of consumer spokes that connected Private Service Connect endpoints can be propagated to through Network Connectivity Center. This limit lets the service producer limit how many propagated Private Service Connect connections can be established to this service attachment from a single consumer. If the connection preference of the service attachment is ACCEPT_MANUAL, the limit applies to each project or network that is listed in the consumer accept list. If the connection preference of the service attachment is ACCEPT_AUTOMATIC, the limit applies to each project that contains a connected endpoint. If unspecified, the default propagated connection limit is 250. To explicitly send a zero value, set send_propagated_connection_limit_if_zero = true.
 spec.initProvider.reconcileConnections <boolean>	# This flag determines whether a consumer accept/reject list change can reconcile the statuses of existing ACCEPTED or REJECTED PSC endpoints. If false, connection policy update will only affect existing PENDING PSC endpoints. Existing ACCEPTED/REJECTED endpoints will remain untouched regardless how the connection policy is modified . If true, update will affect both PENDING and ACCEPTED/REJECTED PSC endpoints. For example, an ACCEPTED PSC endpoint will be moved to REJECTED if its project is added to the reject list.
 spec.initProvider.sendPropagatedConnectionLimitIfZero <boolean>	# Controls the behavior of propagated_connection_limit. When false, setting propagated_connection_limit to zero causes the provider to use to the API's default value. When true, the provider will set propagated_connection_limit to zero. Defaults to false.
+spec.initProvider.showNatIps <boolean>	# NOTE: This field is temporarily non-functional due to an underlying API issue. Any value provided here will be ignored until the API issue is resolved, expected around 2026-03. [If true, show NAT IPs of all connected endpoints.]
 spec.initProvider.targetService <string>	# The URL of a service serving the endpoint identified by this service attachment.
 spec.initProvider.targetServiceRef <object>	# Reference to a ForwardingRule in compute to populate targetService.
 spec.initProvider.targetServiceRef.name <string> (required)	# Name of the referenced object.
@@ -126,15 +130,18 @@ status.atProvider <object>
 status.atProvider.connectedEndpoints <[]object>	# An array of the consumer forwarding rules connected to this service attachment. Structure is documented below.
 status.atProvider.connectedEndpoints[].consumerNetwork <string>	# (Output) The url of the consumer network.
 status.atProvider.connectedEndpoints[].endpoint <string>	# (Output) The URL of the consumer forwarding rule.
+status.atProvider.connectedEndpoints[].natIps <[]string>	# (Output) NOTE: This field is temporarily non-functional due to an underlying API issue. Any value provided here will be ignored until the API issue is resolved, expected around 2026-03. 'The nat IPs of the connected endpoint.'
 status.atProvider.connectedEndpoints[].propagatedConnectionCount <number>	# (Output) The number of consumer Network Connectivity Center spokes that the connected Private Service Connect endpoint has propagated to.
 status.atProvider.connectedEndpoints[].pscConnectionId <string>	# (Output) The PSC connection id of the connected endpoint.
 status.atProvider.connectedEndpoints[].status <string>	# (Output) The status of the connection from the consumer forwarding rule to this service attachment.
 status.atProvider.connectionPreference <string>	# The connection preference to use for this service attachment. Valid values include "ACCEPT_AUTOMATIC", "ACCEPT_MANUAL".
 status.atProvider.consumerAcceptLists <[]object>	# An array of projects that are allowed to connect to this service attachment. Structure is documented below.
 status.atProvider.consumerAcceptLists[].connectionLimit <number>	# The number of consumer forwarding rules the consumer project can create.
+status.atProvider.consumerAcceptLists[].endpointUrl <string>	# The endpoint that is allowed to connect to this service attachment. Only one of project_id_or_num, network_url and endpoint_url may be set.
 status.atProvider.consumerAcceptLists[].networkUrl <string>	# The network that is allowed to connect to this service attachment. Only one of project_id_or_num and network_url may be set.
 status.atProvider.consumerAcceptLists[].projectIdOrNum <string>	# A project that is allowed to connect to this service attachment. Only one of project_id_or_num and network_url may be set.
 status.atProvider.consumerRejectLists <[]string>	# An array of projects that are not allowed to connect to this service attachment.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# An optional description of this resource.
 status.atProvider.domainNames <[]string>	# If specified, the domain name will be used during the integration between the PSC connected endpoints and the Cloud DNS. For example, this is a valid domain name: "p.mycompany.com.". Current max number of domain names supported is 1.
 status.atProvider.enableProxyProtocol <boolean>	# If true, enable the proxy protocol which is for supplying client TCP/IP address data in TCP connections that traverse proxies on their way to destination servers.
@@ -143,10 +150,14 @@ status.atProvider.id <string>	# an identifier for the resource with format proje
 status.atProvider.natSubnets <[]string>	# An array of subnets that is provided for NAT in this service attachment.
 status.atProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 status.atProvider.propagatedConnectionLimit <number>	# The number of consumer spokes that connected Private Service Connect endpoints can be propagated to through Network Connectivity Center. This limit lets the service producer limit how many propagated Private Service Connect connections can be established to this service attachment from a single consumer. If the connection preference of the service attachment is ACCEPT_MANUAL, the limit applies to each project or network that is listed in the consumer accept list. If the connection preference of the service attachment is ACCEPT_AUTOMATIC, the limit applies to each project that contains a connected endpoint. If unspecified, the default propagated connection limit is 250. To explicitly send a zero value, set send_propagated_connection_limit_if_zero = true.
+status.atProvider.pscServiceAttachmentId <[]object>	# An 128-bit global unique ID of the PSC service attachment. Structure is documented below.
+status.atProvider.pscServiceAttachmentId[].high <string>	# (Output) The high 64 bits of the PSC service attachment ID.
+status.atProvider.pscServiceAttachmentId[].low <string>	# (Output) The low 64 bits of the PSC service attachment ID.
 status.atProvider.reconcileConnections <boolean>	# This flag determines whether a consumer accept/reject list change can reconcile the statuses of existing ACCEPTED or REJECTED PSC endpoints. If false, connection policy update will only affect existing PENDING PSC endpoints. Existing ACCEPTED/REJECTED endpoints will remain untouched regardless how the connection policy is modified . If true, update will affect both PENDING and ACCEPTED/REJECTED PSC endpoints. For example, an ACCEPTED PSC endpoint will be moved to REJECTED if its project is added to the reject list.
 status.atProvider.region <string>	# URL of the region where the resource resides.
 status.atProvider.selfLink <string>	# The URI of the created resource.
 status.atProvider.sendPropagatedConnectionLimitIfZero <boolean>	# Controls the behavior of propagated_connection_limit. When false, setting propagated_connection_limit to zero causes the provider to use to the API's default value. When true, the provider will set propagated_connection_limit to zero. Defaults to false.
+status.atProvider.showNatIps <boolean>	# NOTE: This field is temporarily non-functional due to an underlying API issue. Any value provided here will be ignored until the API issue is resolved, expected around 2026-03. [If true, show NAT IPs of all connected endpoints.]
 status.atProvider.targetService <string>	# The URL of a service serving the endpoint identified by this service attachment.
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
@@ -155,4 +166,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

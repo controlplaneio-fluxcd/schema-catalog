@@ -28,10 +28,6 @@
         "forProvider": {
           "additionalProperties": false,
           "properties": {
-            "allowFewerZonesDeployment": {
-              "description": "Allows customers to specify if they are okay with deploying a multi-zone\ncluster in less than 3 zones. Once set, if there is a zonal outage during\nthe cluster creation, the cluster will only be deployed in 2 zones, and\nstay within the 2 zones for its lifecycle.",
-              "type": "boolean"
-            },
             "authorizationMode": {
               "description": "Optional. The authorization mode of the Redis cluster. If not provided, auth feature is disabled for the cluster.\nDefault value is AUTH_MODE_DISABLED.\nPossible values are: AUTH_MODE_UNSPECIFIED, AUTH_MODE_IAM_AUTH, AUTH_MODE_DISABLED.",
               "type": "string"
@@ -204,6 +200,14 @@
               "description": "The KMS key used to encrypt the at-rest data of the cluster.",
               "type": "string"
             },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Resource labels to represent user provided metadata.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
             "maintenancePolicy": {
               "additionalProperties": false,
               "description": "Maintenance policy for a cluster\nStructure is documented below.",
@@ -248,6 +252,10 @@
               },
               "type": "object"
             },
+            "maintenanceVersion": {
+              "description": "This field can be used to trigger self service update to indicate the desired maintenance version. The input to this field can be determined by the available_maintenance_versions field.\nNote: This field can only be specified when updating an existing cluster to a newer version. Downgrades are currently not supported!",
+              "type": "string"
+            },
             "managedBackupSource": {
               "additionalProperties": false,
               "description": "Backups that generated and managed by memorystore.\nStructure is documented below.",
@@ -260,7 +268,7 @@
               "type": "object"
             },
             "nodeType": {
-              "description": "The nodeType for the Redis cluster.\nIf not provided, REDIS_HIGHMEM_MEDIUM will be used as default\nPossible values are: REDIS_SHARED_CORE_NANO, REDIS_HIGHMEM_MEDIUM, REDIS_HIGHMEM_XLARGE, REDIS_STANDARD_SMALL.",
+              "description": "The nodeType for the Redis cluster.\nIf not provided, REDIS_HIGHMEM_MEDIUM will be used as default\nPossible values are: REDIS_SHARED_CORE_NANO, REDIS_HIGHMEM_MEDIUM, REDIS_HIGHCPU_MEDIUM, REDIS_STANDARD_LARGE, REDIS_HIGHMEM_XLARGE, REDIS_HIGHMEM_2XLARGE, REDIS_STANDARD_SMALL.",
               "type": "string"
             },
             "persistenceConfig": {
@@ -414,6 +422,94 @@
               "description": "Optional. The number of replica nodes per shard.",
               "type": "number"
             },
+            "serverCaMode": {
+              "description": "The serverCaMode for the TLS enabled Redis cluster.\nIf not provided, SERVER_CA_MODE_GOOGLE_MANAGED_PER_INSTANCE_CA will be used as default\nPossible values are: SERVER_CA_MODE_GOOGLE_MANAGED_PER_INSTANCE_CA, SERVER_CA_MODE_GOOGLE_MANAGED_SHARED_CA, SERVER_CA_MODE_CUSTOMER_MANAGED_CAS_CA, SERVER_CA_MODE_UNSPECIFIED.",
+              "type": "string"
+            },
+            "serverCaPool": {
+              "description": "The resource name of the server CA pool for an instance with SERVER_CA_MODE_CUSTOMER_MANAGED_CAS_CA\nas the server_ca_mode.\nFormat: projects/{project}/locations/{region}/caPools/{caPoolId}",
+              "type": "string"
+            },
+            "serverCaPoolRef": {
+              "additionalProperties": false,
+              "description": "Reference to a CAPool in privateca to populate serverCaPool.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "serverCaPoolSelector": {
+              "additionalProperties": false,
+              "description": "Selector for a CAPool in privateca to populate serverCaPool.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
             "shardCount": {
               "description": "Required. Number of shards for the Redis cluster.",
               "type": "number"
@@ -447,10 +543,6 @@
           "additionalProperties": false,
           "description": "THIS IS A BETA FIELD. It will be honored\nunless the Management Policies feature flag is disabled.\nInitProvider holds the same fields as ForProvider, with the exception\nof Identifier and other resource reference fields. The fields that are\nin InitProvider are merged into ForProvider when the resource is created.\nThe same fields are also added to the terraform ignore_changes hook, to\navoid updating them after creation. This is useful for fields that are\nrequired on creation, but we do not desire to update them after creation,\nfor example because of an external controller is managing them, like an\nautoscaler.",
           "properties": {
-            "allowFewerZonesDeployment": {
-              "description": "Allows customers to specify if they are okay with deploying a multi-zone\ncluster in less than 3 zones. Once set, if there is a zonal outage during\nthe cluster creation, the cluster will only be deployed in 2 zones, and\nstay within the 2 zones for its lifecycle.",
-              "type": "boolean"
-            },
             "authorizationMode": {
               "description": "Optional. The authorization mode of the Redis cluster. If not provided, auth feature is disabled for the cluster.\nDefault value is AUTH_MODE_DISABLED.\nPossible values are: AUTH_MODE_UNSPECIFIED, AUTH_MODE_IAM_AUTH, AUTH_MODE_DISABLED.",
               "type": "string"
@@ -623,6 +715,14 @@
               "description": "The KMS key used to encrypt the at-rest data of the cluster.",
               "type": "string"
             },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Resource labels to represent user provided metadata.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
             "maintenancePolicy": {
               "additionalProperties": false,
               "description": "Maintenance policy for a cluster\nStructure is documented below.",
@@ -667,6 +767,10 @@
               },
               "type": "object"
             },
+            "maintenanceVersion": {
+              "description": "This field can be used to trigger self service update to indicate the desired maintenance version. The input to this field can be determined by the available_maintenance_versions field.\nNote: This field can only be specified when updating an existing cluster to a newer version. Downgrades are currently not supported!",
+              "type": "string"
+            },
             "managedBackupSource": {
               "additionalProperties": false,
               "description": "Backups that generated and managed by memorystore.\nStructure is documented below.",
@@ -679,7 +783,7 @@
               "type": "object"
             },
             "nodeType": {
-              "description": "The nodeType for the Redis cluster.\nIf not provided, REDIS_HIGHMEM_MEDIUM will be used as default\nPossible values are: REDIS_SHARED_CORE_NANO, REDIS_HIGHMEM_MEDIUM, REDIS_HIGHMEM_XLARGE, REDIS_STANDARD_SMALL.",
+              "description": "The nodeType for the Redis cluster.\nIf not provided, REDIS_HIGHMEM_MEDIUM will be used as default\nPossible values are: REDIS_SHARED_CORE_NANO, REDIS_HIGHMEM_MEDIUM, REDIS_HIGHCPU_MEDIUM, REDIS_STANDARD_LARGE, REDIS_HIGHMEM_XLARGE, REDIS_HIGHMEM_2XLARGE, REDIS_STANDARD_SMALL.",
               "type": "string"
             },
             "persistenceConfig": {
@@ -828,6 +932,94 @@
             "replicaCount": {
               "description": "Optional. The number of replica nodes per shard.",
               "type": "number"
+            },
+            "serverCaMode": {
+              "description": "The serverCaMode for the TLS enabled Redis cluster.\nIf not provided, SERVER_CA_MODE_GOOGLE_MANAGED_PER_INSTANCE_CA will be used as default\nPossible values are: SERVER_CA_MODE_GOOGLE_MANAGED_PER_INSTANCE_CA, SERVER_CA_MODE_GOOGLE_MANAGED_SHARED_CA, SERVER_CA_MODE_CUSTOMER_MANAGED_CAS_CA, SERVER_CA_MODE_UNSPECIFIED.",
+              "type": "string"
+            },
+            "serverCaPool": {
+              "description": "The resource name of the server CA pool for an instance with SERVER_CA_MODE_CUSTOMER_MANAGED_CAS_CA\nas the server_ca_mode.\nFormat: projects/{project}/locations/{region}/caPools/{caPoolId}",
+              "type": "string"
+            },
+            "serverCaPoolRef": {
+              "additionalProperties": false,
+              "description": "Reference to a CAPool in privateca to populate serverCaPool.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced object.",
+                  "type": "string"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for referencing.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "serverCaPoolSelector": {
+              "additionalProperties": false,
+              "description": "Selector for a CAPool in privateca to populate serverCaPool.",
+              "properties": {
+                "matchControllerRef": {
+                  "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                  "type": "boolean"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "MatchLabels ensures an object with matching labels is selected.",
+                  "type": "object"
+                },
+                "policy": {
+                  "additionalProperties": false,
+                  "description": "Policies for selection.",
+                  "properties": {
+                    "resolution": {
+                      "default": "Required",
+                      "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                      "enum": [
+                        "Required",
+                        "Optional"
+                      ],
+                      "type": "string"
+                    },
+                    "resolve": {
+                      "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                      "enum": [
+                        "Always",
+                        "IfNotPresent"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
             },
             "shardCount": {
               "description": "Required. Number of shards for the Redis cluster.",
@@ -953,10 +1145,6 @@
         "atProvider": {
           "additionalProperties": false,
           "properties": {
-            "allowFewerZonesDeployment": {
-              "description": "Allows customers to specify if they are okay with deploying a multi-zone\ncluster in less than 3 zones. Once set, if there is a zonal outage during\nthe cluster creation, the cluster will only be deployed in 2 zones, and\nstay within the 2 zones for its lifecycle.",
-              "type": "boolean"
-            },
             "authorizationMode": {
               "description": "Optional. The authorization mode of the Redis cluster. If not provided, auth feature is disabled for the cluster.\nDefault value is AUTH_MODE_DISABLED.\nPossible values are: AUTH_MODE_UNSPECIFIED, AUTH_MODE_IAM_AUTH, AUTH_MODE_DISABLED.",
               "type": "string"
@@ -989,6 +1177,13 @@
                 }
               },
               "type": "object"
+            },
+            "availableMaintenanceVersions": {
+              "description": "This field is used to determine the available maintenance versions for the self service update.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             },
             "backupCollection": {
               "description": "The backup collection full resource name.\nExample: projects/{project}/locations/{location}/backupCollections/{collection}",
@@ -1092,6 +1287,10 @@
               },
               "type": "object"
             },
+            "deletionPolicy": {
+              "description": "Defaults to DELETE.\nWhen set to \"DELETE\", deleting the resource is allowed.",
+              "type": "string"
+            },
             "deletionProtectionEnabled": {
               "description": "Optional. Indicates if the cluster is deletion protected or not.\nIf the value if set to true, any delete cluster operation will fail.\nDefault value is true.",
               "type": "boolean"
@@ -1125,6 +1324,17 @@
               },
               "type": "array"
             },
+            "effectiveLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
+            "effectiveMaintenanceVersion": {
+              "description": "This field represents the actual maintenance version of the cluster.",
+              "type": "string"
+            },
             "gcsSource": {
               "additionalProperties": false,
               "description": "Backups stored in Cloud Storage buckets. The Cloud Storage buckets need to be the same region as the clusters.\nStructure is documented below.",
@@ -1147,6 +1357,14 @@
             "kmsKey": {
               "description": "The KMS key used to encrypt the at-rest data of the cluster.",
               "type": "string"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Resource labels to represent user provided metadata.\nNote: This field is non-authoritative, and will only manage the labels present in your configuration.\nPlease refer to the field effective_labels for all of the labels present on the resource.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
             },
             "maintenancePolicy": {
               "additionalProperties": false,
@@ -1226,6 +1444,10 @@
               },
               "type": "array"
             },
+            "maintenanceVersion": {
+              "description": "This field can be used to trigger self service update to indicate the desired maintenance version. The input to this field can be determined by the available_maintenance_versions field.\nNote: This field can only be specified when updating an existing cluster to a newer version. Downgrades are currently not supported!",
+              "type": "string"
+            },
             "managedBackupSource": {
               "additionalProperties": false,
               "description": "Backups that generated and managed by memorystore.\nStructure is documented below.",
@@ -1265,7 +1487,7 @@
               "type": "array"
             },
             "nodeType": {
-              "description": "The nodeType for the Redis cluster.\nIf not provided, REDIS_HIGHMEM_MEDIUM will be used as default\nPossible values are: REDIS_SHARED_CORE_NANO, REDIS_HIGHMEM_MEDIUM, REDIS_HIGHMEM_XLARGE, REDIS_STANDARD_SMALL.",
+              "description": "The nodeType for the Redis cluster.\nIf not provided, REDIS_HIGHMEM_MEDIUM will be used as default\nPossible values are: REDIS_SHARED_CORE_NANO, REDIS_HIGHMEM_MEDIUM, REDIS_HIGHCPU_MEDIUM, REDIS_STANDARD_LARGE, REDIS_HIGHMEM_XLARGE, REDIS_HIGHMEM_2XLARGE, REDIS_STANDARD_SMALL.",
               "type": "string"
             },
             "persistenceConfig": {
@@ -1391,6 +1613,14 @@
               "description": "Optional. The number of replica nodes per shard.",
               "type": "number"
             },
+            "serverCaMode": {
+              "description": "The serverCaMode for the TLS enabled Redis cluster.\nIf not provided, SERVER_CA_MODE_GOOGLE_MANAGED_PER_INSTANCE_CA will be used as default\nPossible values are: SERVER_CA_MODE_GOOGLE_MANAGED_PER_INSTANCE_CA, SERVER_CA_MODE_GOOGLE_MANAGED_SHARED_CA, SERVER_CA_MODE_CUSTOMER_MANAGED_CAS_CA, SERVER_CA_MODE_UNSPECIFIED.",
+              "type": "string"
+            },
+            "serverCaPool": {
+              "description": "The resource name of the server CA pool for an instance with SERVER_CA_MODE_CUSTOMER_MANAGED_CAS_CA\nas the server_ca_mode.\nFormat: projects/{project}/locations/{region}/caPools/{caPoolId}",
+              "type": "string"
+            },
             "shardCount": {
               "description": "Required. Number of shards for the Redis cluster.",
               "type": "number"
@@ -1427,6 +1657,14 @@
                 "type": "object"
               },
               "type": "array"
+            },
+            "terraformLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "The combination of labels configured directly on the resource\nand default labels configured on the provider.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
             },
             "transitEncryptionMode": {
               "description": "Optional. The in-transit encryption for the Redis cluster.\nIf not provided, encryption is disabled for the cluster.\nDefault value is TRANSIT_ENCRYPTION_MODE_DISABLED.\nPossible values are: TRANSIT_ENCRYPTION_MODE_UNSPECIFIED, TRANSIT_ENCRYPTION_MODE_DISABLED, TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION.",
@@ -1500,6 +1738,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "lastHandledReconcileAt": {
+          "description": "LastHandledReconcileAt holds the value of the most recent\nreconcile-requested-at annotation token that the controller has\nprocessed. Users can compare this to the annotation to determine\nwhether a reconcile request has been handled.",
+          "type": "string"
         },
         "observedGeneration": {
           "description": "ObservedGeneration is the latest metadata.generation\nwhich resulted in either a ready state, or stalled due to error\nit can not recover from without human intervention.",

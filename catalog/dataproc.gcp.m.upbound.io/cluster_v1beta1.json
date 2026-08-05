@@ -70,6 +70,14 @@
                                   "additionalProperties": false,
                                   "description": "Disk Config",
                                   "properties": {
+                                    "bootDiskProvisionedIops": {
+                                      "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                                      "type": "number"
+                                    },
+                                    "bootDiskProvisionedThroughput": {
+                                      "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                                      "type": "number"
+                                    },
                                     "bootDiskSizeGb": {
                                       "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                                       "type": "number"
@@ -128,6 +136,9 @@
                   "description": "The tier of the cluster.",
                   "type": "string"
                 },
+                "clusterType": {
+                  "type": "string"
+                },
                 "dataprocMetricConfig": {
                   "additionalProperties": false,
                   "description": "The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.\nStructure defined below.",
@@ -178,6 +189,10 @@
                     }
                   },
                   "type": "object"
+                },
+                "engine": {
+                  "description": "The cluster engine.",
+                  "type": "string"
                 },
                 "gceClusterConfig": {
                   "additionalProperties": false,
@@ -243,6 +258,14 @@
                         }
                       },
                       "type": "object"
+                    },
+                    "resourceManagerTags": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "A map of resource manager tags to add to all instances.\nKeys must be in the format tagKeys/{tag_key_id} and values in the format tagValues/{tag_value_id}\n(see Secure tags).",
+                      "type": "object",
+                      "x-kubernetes-map-type": "granular"
                     },
                     "serviceAccount": {
                       "description": "The service account to be used by the Node VMs.\nIf not specified, the \"default\" service account is used.",
@@ -408,8 +431,16 @@
                       "description": "The time when cluster will be auto-deleted.\nA timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.\nExample: \"2014-10-02T15:01:23.045123456Z\".",
                       "type": "string"
                     },
+                    "autoStopTime": {
+                      "description": "The time when cluster will be auto-stopped.\nA timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.\nExample: \"2014-10-02T15:01:23.045123456Z\".",
+                      "type": "string"
+                    },
                     "idleDeleteTtl": {
-                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be deleted. Valid range: [10m, 14d].",
+                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be deleted. Valid range: [300s, 1209600s].",
+                      "type": "string"
+                    },
+                    "idleStopTtl": {
+                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be stopped. Valid range: [10m, 14d].",
                       "type": "string"
                     }
                   },
@@ -441,6 +472,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -463,6 +502,34 @@
                     "imageUri": {
                       "description": "The URI for the image to use for this worker.  See the guide\nfor more information.",
                       "type": "string"
+                    },
+                    "instanceFlexibilityPolicy": {
+                      "additionalProperties": false,
+                      "description": "Instance flexibility Policy allowing a mixture of VM shapes.",
+                      "properties": {
+                        "instanceSelectionList": {
+                          "description": "List of instance selection options that the group will use when creating new VMs.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineTypes": {
+                                "description": "Full machine-type names, e.g. \"n1-standard-16\".",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "rank": {
+                                "description": "Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
                     "machineType": {
                       "description": "The name of a Google Compute Engine machine type\nto create for the master. If not specified, GCP will default to a predetermined\ncomputed value (currently n1-standard-4).",
@@ -498,6 +565,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -721,6 +796,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -743,6 +826,34 @@
                     "imageUri": {
                       "description": "The URI for the image to use for this worker.  See the guide\nfor more information.",
                       "type": "string"
+                    },
+                    "instanceFlexibilityPolicy": {
+                      "additionalProperties": false,
+                      "description": "Instance flexibility Policy allowing a mixture of VM shapes.",
+                      "properties": {
+                        "instanceSelectionList": {
+                          "description": "List of instance selection options that the group will use when creating new VMs.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineTypes": {
+                                "description": "Full machine-type names, e.g. \"n1-standard-16\".",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "rank": {
+                                "description": "Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
                     "machineType": {
                       "description": "The name of a Google Compute Engine machine type\nto create for the worker nodes. If not specified, GCP will default to a predetermined\ncomputed value (currently n1-standard-4).",
@@ -1012,6 +1123,14 @@
                                   "additionalProperties": false,
                                   "description": "Disk Config",
                                   "properties": {
+                                    "bootDiskProvisionedIops": {
+                                      "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                                      "type": "number"
+                                    },
+                                    "bootDiskProvisionedThroughput": {
+                                      "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                                      "type": "number"
+                                    },
                                     "bootDiskSizeGb": {
                                       "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                                       "type": "number"
@@ -1070,6 +1189,9 @@
                   "description": "The tier of the cluster.",
                   "type": "string"
                 },
+                "clusterType": {
+                  "type": "string"
+                },
                 "dataprocMetricConfig": {
                   "additionalProperties": false,
                   "description": "The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.\nStructure defined below.",
@@ -1120,6 +1242,10 @@
                     }
                   },
                   "type": "object"
+                },
+                "engine": {
+                  "description": "The cluster engine.",
+                  "type": "string"
                 },
                 "gceClusterConfig": {
                   "additionalProperties": false,
@@ -1185,6 +1311,14 @@
                         }
                       },
                       "type": "object"
+                    },
+                    "resourceManagerTags": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "A map of resource manager tags to add to all instances.\nKeys must be in the format tagKeys/{tag_key_id} and values in the format tagValues/{tag_value_id}\n(see Secure tags).",
+                      "type": "object",
+                      "x-kubernetes-map-type": "granular"
                     },
                     "serviceAccount": {
                       "description": "The service account to be used by the Node VMs.\nIf not specified, the \"default\" service account is used.",
@@ -1350,8 +1484,16 @@
                       "description": "The time when cluster will be auto-deleted.\nA timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.\nExample: \"2014-10-02T15:01:23.045123456Z\".",
                       "type": "string"
                     },
+                    "autoStopTime": {
+                      "description": "The time when cluster will be auto-stopped.\nA timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.\nExample: \"2014-10-02T15:01:23.045123456Z\".",
+                      "type": "string"
+                    },
                     "idleDeleteTtl": {
-                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be deleted. Valid range: [10m, 14d].",
+                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be deleted. Valid range: [300s, 1209600s].",
+                      "type": "string"
+                    },
+                    "idleStopTtl": {
+                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be stopped. Valid range: [10m, 14d].",
                       "type": "string"
                     }
                   },
@@ -1383,6 +1525,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -1405,6 +1555,34 @@
                     "imageUri": {
                       "description": "The URI for the image to use for this worker.  See the guide\nfor more information.",
                       "type": "string"
+                    },
+                    "instanceFlexibilityPolicy": {
+                      "additionalProperties": false,
+                      "description": "Instance flexibility Policy allowing a mixture of VM shapes.",
+                      "properties": {
+                        "instanceSelectionList": {
+                          "description": "List of instance selection options that the group will use when creating new VMs.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineTypes": {
+                                "description": "Full machine-type names, e.g. \"n1-standard-16\".",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "rank": {
+                                "description": "Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
                     "machineType": {
                       "description": "The name of a Google Compute Engine machine type\nto create for the master. If not specified, GCP will default to a predetermined\ncomputed value (currently n1-standard-4).",
@@ -1440,6 +1618,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -1663,6 +1849,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -1685,6 +1879,34 @@
                     "imageUri": {
                       "description": "The URI for the image to use for this worker.  See the guide\nfor more information.",
                       "type": "string"
+                    },
+                    "instanceFlexibilityPolicy": {
+                      "additionalProperties": false,
+                      "description": "Instance flexibility Policy allowing a mixture of VM shapes.",
+                      "properties": {
+                        "instanceSelectionList": {
+                          "description": "List of instance selection options that the group will use when creating new VMs.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineTypes": {
+                                "description": "Full machine-type names, e.g. \"n1-standard-16\".",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "rank": {
+                                "description": "Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
                     "machineType": {
                       "description": "The name of a Google Compute Engine machine type\nto create for the worker nodes. If not specified, GCP will default to a predetermined\ncomputed value (currently n1-standard-4).",
@@ -2029,6 +2251,14 @@
                                   "additionalProperties": false,
                                   "description": "Disk Config",
                                   "properties": {
+                                    "bootDiskProvisionedIops": {
+                                      "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                                      "type": "number"
+                                    },
+                                    "bootDiskProvisionedThroughput": {
+                                      "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                                      "type": "number"
+                                    },
                                     "bootDiskSizeGb": {
                                       "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                                       "type": "number"
@@ -2098,6 +2328,9 @@
                   "description": "The tier of the cluster.",
                   "type": "string"
                 },
+                "clusterType": {
+                  "type": "string"
+                },
                 "dataprocMetricConfig": {
                   "additionalProperties": false,
                   "description": "The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.\nStructure defined below.",
@@ -2156,6 +2389,10 @@
                     }
                   },
                   "type": "object"
+                },
+                "engine": {
+                  "description": "The cluster engine.",
+                  "type": "string"
                 },
                 "gceClusterConfig": {
                   "additionalProperties": false,
@@ -2221,6 +2458,14 @@
                         }
                       },
                       "type": "object"
+                    },
+                    "resourceManagerTags": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "A map of resource manager tags to add to all instances.\nKeys must be in the format tagKeys/{tag_key_id} and values in the format tagValues/{tag_value_id}\n(see Secure tags).",
+                      "type": "object",
+                      "x-kubernetes-map-type": "granular"
                     },
                     "serviceAccount": {
                       "description": "The service account to be used by the Node VMs.\nIf not specified, the \"default\" service account is used.",
@@ -2298,12 +2543,20 @@
                       "description": "The time when cluster will be auto-deleted.\nA timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.\nExample: \"2014-10-02T15:01:23.045123456Z\".",
                       "type": "string"
                     },
+                    "autoStopTime": {
+                      "description": "The time when cluster will be auto-stopped.\nA timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.\nExample: \"2014-10-02T15:01:23.045123456Z\".",
+                      "type": "string"
+                    },
                     "idleDeleteTtl": {
-                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be deleted. Valid range: [10m, 14d].",
+                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be deleted. Valid range: [300s, 1209600s].",
                       "type": "string"
                     },
                     "idleStartTime": {
                       "description": "Time when the cluster became idle\n(most recent job finished) and became eligible for deletion due to idleness.",
+                      "type": "string"
+                    },
+                    "idleStopTtl": {
+                      "description": "The duration to keep the cluster alive while idling\n(no jobs running). After this TTL, the cluster will be stopped. Valid range: [10m, 14d].",
                       "type": "string"
                     }
                   },
@@ -2335,6 +2588,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -2357,6 +2618,50 @@
                     "imageUri": {
                       "description": "The URI for the image to use for this worker.  See the guide\nfor more information.",
                       "type": "string"
+                    },
+                    "instanceFlexibilityPolicy": {
+                      "additionalProperties": false,
+                      "description": "Instance flexibility Policy allowing a mixture of VM shapes.",
+                      "properties": {
+                        "instanceSelectionList": {
+                          "description": "List of instance selection options that the group will use when creating new VMs.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineTypes": {
+                                "description": "Full machine-type names, e.g. \"n1-standard-16\".",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "rank": {
+                                "description": "Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "instanceSelectionResults": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineType": {
+                                "description": "The name of a Compute Engine machine type.",
+                                "type": "string"
+                              },
+                              "vmCount": {
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
                     "instanceNames": {
                       "description": "List of worker instance names which have been assigned\nto the cluster.",
@@ -2399,6 +2704,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -2652,6 +2965,14 @@
                       "additionalProperties": false,
                       "description": "Disk Config",
                       "properties": {
+                        "bootDiskProvisionedIops": {
+                          "description": "Indicates how many IOPS to provision for the disk. This sets the number of I/O operations per second that the disk can handle.",
+                          "type": "number"
+                        },
+                        "bootDiskProvisionedThroughput": {
+                          "description": "Indicates how much throughput to provision for the disk. This sets the number of throughput mb per second that the disk can handle.",
+                          "type": "number"
+                        },
                         "bootDiskSizeGb": {
                           "description": "Size of the primary disk attached to each node, specified\nin GB. The primary disk contains the boot volume and system libraries, and the\nsmallest allowed disk size is 10GB. GCP will default to a predetermined\ncomputed value if not set (currently 500GB). Note: If SSDs are not\nattached, it also contains the HDFS data blocks and Hadoop working directories.",
                           "type": "number"
@@ -2674,6 +2995,50 @@
                     "imageUri": {
                       "description": "The URI for the image to use for this worker.  See the guide\nfor more information.",
                       "type": "string"
+                    },
+                    "instanceFlexibilityPolicy": {
+                      "additionalProperties": false,
+                      "description": "Instance flexibility Policy allowing a mixture of VM shapes.",
+                      "properties": {
+                        "instanceSelectionList": {
+                          "description": "List of instance selection options that the group will use when creating new VMs.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineTypes": {
+                                "description": "Full machine-type names, e.g. \"n1-standard-16\".",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "rank": {
+                                "description": "Preference of this instance selection. A lower number means higher preference. Dataproc will first try to create a VM based on the machine-type with priority rank and fallback to next rank based on availability. Machine types and instance selections with the same priority have the same preference.",
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "instanceSelectionResults": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "machineType": {
+                                "description": "The name of a Compute Engine machine type.",
+                                "type": "string"
+                              },
+                              "vmCount": {
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
                     "instanceNames": {
                       "description": "List of worker instance names which have been assigned\nto the cluster.",
@@ -2703,6 +3068,10 @@
                 }
               },
               "type": "object"
+            },
+            "deletionPolicy": {
+              "description": "Defaults to \"DELETE\".\nWhen set to \"DELETE\", deleting the resource is allowed.",
+              "type": "string"
             },
             "effectiveLabels": {
               "additionalProperties": {
@@ -2960,6 +3329,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "lastHandledReconcileAt": {
+          "description": "LastHandledReconcileAt holds the value of the most recent\nreconcile-requested-at annotation token that the controller has\nprocessed. Users can compare this to the annotation to determine\nwhether a reconcile request has been handled.",
+          "type": "string"
         },
         "observedGeneration": {
           "description": "ObservedGeneration is the latest metadata.generation\nwhich resulted in either a ready state, or stalled due to error\nit can not recover from without human intervention.",

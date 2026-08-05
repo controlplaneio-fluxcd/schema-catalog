@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=alloydb.gcp.upbound.io/v1beta2
 kind <string> enum=Instance (cluster-scoped)
 metadata.name <string> (required)
@@ -24,6 +24,9 @@ spec.forProvider.clusterSelector.matchLabels <map[string]string>	# MatchLabels e
 spec.forProvider.clusterSelector.policy <object>	# Policies for selection.
 spec.forProvider.clusterSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.clusterSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.connectionPoolConfig <object>	# Configuration for Managed Connection Pool. Structure is documented below.
+spec.forProvider.connectionPoolConfig.enabled <boolean>	# Whether to enabled Managed Connection Pool.
+spec.forProvider.connectionPoolConfig.flags <map[string]string>	# Flags for configuring managed connection pooling when it is enabled. These flags will only be set if connection_pool_config.enabled is true. Please see https://cloud.google.com/alloydb/docs/configure-managed-connection-pooling#configuration-options for a comprehensive list of flags that can be set. For example, "connection-pooling-pool-mode" would be "pool_mode".
 spec.forProvider.databaseFlags <map[string]string>	# Database flags. Set at instance level. * They are copied from primary instance on read instance creation. * Read instances can set new or override existing flags that are relevant for reads, e.g. for enabling columnar cache on a read instance. Flags set on read instance may or may not be present on primary.
 spec.forProvider.displayName <string>	# User-settable and human-readable display name for the Instance.
 spec.forProvider.gceZone <string>	# The Compute Engine zone that the instance should serve from, per https://cloud.google.com/compute/docs/regions-zones This can ONLY be specified for ZONAL instances. If present for a REGIONAL instance, an error will be thrown. If this is absent for a ZONAL instance, instance is created in a random zone with available capacity.
@@ -71,6 +74,9 @@ spec.initProvider.clientConnectionConfig <object>	# Client connection specific c
 spec.initProvider.clientConnectionConfig.requireConnectors <boolean>	# Configuration to enforce connectors only (ex: AuthProxy) connections to the database.
 spec.initProvider.clientConnectionConfig.sslConfig <object>	# SSL config option for this instance. Structure is documented below.
 spec.initProvider.clientConnectionConfig.sslConfig.sslMode <string>	# SSL mode. Specifies client-server SSL/TLS connection behavior. Possible values are: ENCRYPTED_ONLY, ALLOW_UNENCRYPTED_AND_ENCRYPTED.
+spec.initProvider.connectionPoolConfig <object>	# Configuration for Managed Connection Pool. Structure is documented below.
+spec.initProvider.connectionPoolConfig.enabled <boolean>	# Whether to enabled Managed Connection Pool.
+spec.initProvider.connectionPoolConfig.flags <map[string]string>	# Flags for configuring managed connection pooling when it is enabled. These flags will only be set if connection_pool_config.enabled is true. Please see https://cloud.google.com/alloydb/docs/configure-managed-connection-pooling#configuration-options for a comprehensive list of flags that can be set. For example, "connection-pooling-pool-mode" would be "pool_mode".
 spec.initProvider.databaseFlags <map[string]string>	# Database flags. Set at instance level. * They are copied from primary instance on read instance creation. * Read instances can set new or override existing flags that are relevant for reads, e.g. for enabling columnar cache on a read instance. Flags set on read instance may or may not be present on primary.
 spec.initProvider.displayName <string>	# User-settable and human-readable display name for the Instance.
 spec.initProvider.gceZone <string>	# The Compute Engine zone that the instance should serve from, per https://cloud.google.com/compute/docs/regions-zones This can ONLY be specified for ZONAL instances. If present for a REGIONAL instance, an error will be thrown. If this is absent for a ZONAL instance, instance is created in a random zone with available capacity.
@@ -129,8 +135,13 @@ status.atProvider.clientConnectionConfig.requireConnectors <boolean>	# Configura
 status.atProvider.clientConnectionConfig.sslConfig <object>	# SSL config option for this instance. Structure is documented below.
 status.atProvider.clientConnectionConfig.sslConfig.sslMode <string>	# SSL mode. Specifies client-server SSL/TLS connection behavior. Possible values are: ENCRYPTED_ONLY, ALLOW_UNENCRYPTED_AND_ENCRYPTED.
 status.atProvider.cluster <string>	# Identifies the alloydb cluster. Must be in the format 'projects/{project}/locations/{location}/clusters/{cluster_id}'
+status.atProvider.connectionPoolConfig <object>	# Configuration for Managed Connection Pool. Structure is documented below.
+status.atProvider.connectionPoolConfig.enabled <boolean>	# Whether to enabled Managed Connection Pool.
+status.atProvider.connectionPoolConfig.flags <map[string]string>	# Flags for configuring managed connection pooling when it is enabled. These flags will only be set if connection_pool_config.enabled is true. Please see https://cloud.google.com/alloydb/docs/configure-managed-connection-pooling#configuration-options for a comprehensive list of flags that can be set. For example, "connection-pooling-pool-mode" would be "pool_mode".
+status.atProvider.connectionPoolConfig.poolerCount <number>	# (Output) The number of running poolers per instance.
 status.atProvider.createTime <string>	# Time the Instance was created in UTC.
 status.atProvider.databaseFlags <map[string]string>	# Database flags. Set at instance level. * They are copied from primary instance on read instance creation. * Read instances can set new or override existing flags that are relevant for reads, e.g. for enabling columnar cache on a read instance. Flags set on read instance may or may not be present on primary.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.displayName <string>	# User-settable and human-readable display name for the Instance.
 status.atProvider.effectiveAnnotations <map[string]string>
 status.atProvider.effectiveLabels <map[string]string>
@@ -182,4 +193,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

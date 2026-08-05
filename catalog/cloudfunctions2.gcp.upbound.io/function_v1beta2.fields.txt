@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=cloudfunctions2.gcp.upbound.io/v1beta2
 kind <string> enum=Function (cluster-scoped)
 metadata.name <string> (required)
@@ -131,10 +131,15 @@ spec.forProvider.labels <map[string]string>	# A set of key/value label pairs ass
 spec.forProvider.location <string> (required)	# The location of this cloud function.
 spec.forProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.forProvider.serviceConfig <object>	# Describes the Service being deployed. Structure is documented below.
-spec.forProvider.serviceConfig.allTrafficOnLatestRevision <boolean>	# Whether 100% of traffic is routed to the latest revision. Defaults to true.
+spec.forProvider.serviceConfig.allTrafficOnLatestRevision <boolean>	# Whether 100% of traffic is routed to the latest revision. Defaults to true. When false, GCF honors the existing traffic configuration of the underlying Cloud Run service. If that configuration is set to route to LATEST (the default), the new deployment will become LATEST and intercept the traffic. To prevent traffic from shifting, you must manually pin the existing service to a specific revision name in Cloud Run before deploying.
 spec.forProvider.serviceConfig.availableCpu <string>	# The number of CPUs used in a single container instance. Default value is calculated from available memory.
 spec.forProvider.serviceConfig.availableMemory <string>	# The amount of memory available for a function. Defaults to 256M. Supported units are k, M, G, Mi, Gi. If no unit is supplied the value is interpreted as bytes.
 spec.forProvider.serviceConfig.binaryAuthorizationPolicy <string>	# The binary authorization policy to be checked when deploying the Cloud Run service.
+spec.forProvider.serviceConfig.directVpcEgress <string>	# Egress settings for direct VPC. If not provided, it defaults to VPC_EGRESS_PRIVATE_RANGES_ONLY. Possible values are: VPC_EGRESS_ALL_TRAFFIC, VPC_EGRESS_PRIVATE_RANGES_ONLY.
+spec.forProvider.serviceConfig.directVpcNetworkInterface <[]object>	# The Direct VPC network interface for the Cloud Function. Currently only a single Direct VPC is supported. Structure is documented below.
+spec.forProvider.serviceConfig.directVpcNetworkInterface[].network <string>	# The name of the VPC network to which the function will be connected. Specify either a VPC network or a subnet, or both. If you specify only a network, the subnet uses the same name as the network.
+spec.forProvider.serviceConfig.directVpcNetworkInterface[].subnetwork <string>	# The name of the VPC subnetwork that the Cloud Function resource will get IPs from. Specify either a VPC network or a subnet, or both. If both network and subnetwork are specified, the given VPC subnetwork must belong to the given VPC network. If subnetwork is not specified, the subnetwork with the same name with the network will be used.
+spec.forProvider.serviceConfig.directVpcNetworkInterface[].tags <[]string>	# Network tags applied to this Cloud Function resource.
 spec.forProvider.serviceConfig.environmentVariables <map[string]string>	# Environment variables that shall be available during function execution.
 spec.forProvider.serviceConfig.ingressSettings <string>	# Available ingress settings. Defaults to "ALLOW_ALL" if unspecified. Default value is ALLOW_ALL. Possible values are: ALLOW_ALL, ALLOW_INTERNAL_ONLY, ALLOW_INTERNAL_AND_GCLB.
 spec.forProvider.serviceConfig.maxInstanceCount <number>	# The limit on the maximum number of function instances that may coexist at a given time.
@@ -174,7 +179,6 @@ spec.forProvider.serviceConfig.secretVolumes[].secretSelector.policy.resolve <st
 spec.forProvider.serviceConfig.secretVolumes[].versions <[]object>	# List of secret versions to mount for this secret. If empty, the latest version of the secret will be made available in a file named after the secret under the mount point.' Structure is documented below.
 spec.forProvider.serviceConfig.secretVolumes[].versions[].path <string>	# Relative path of the file under the mount path where the secret value for this version will be fetched and made available. For example, setting the mountPath as '/etc/secrets' and path as secret_foo would mount the secret value file at /etc/secrets/secret_foo.
 spec.forProvider.serviceConfig.secretVolumes[].versions[].version <string>	# Version of the secret (version number or the string 'latest'). It is preferable to use latest version with secret volumes as secret value changes are reflected immediately.
-spec.forProvider.serviceConfig.service <string>	# Name of the service associated with a Function.
 spec.forProvider.serviceConfig.serviceAccountEmail <string>	# The email of the service account for this function.
 spec.forProvider.serviceConfig.serviceAccountEmailRef <object>	# Reference to a ServiceAccount in cloudplatform to populate serviceAccountEmail.
 spec.forProvider.serviceConfig.serviceAccountEmailRef.name <string> (required)	# Name of the referenced object.
@@ -316,10 +320,15 @@ spec.initProvider.kmsKeyName <string>	# Resource name of a KMS crypto key (manag
 spec.initProvider.labels <map[string]string>	# A set of key/value label pairs associated with this Cloud Function.
 spec.initProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 spec.initProvider.serviceConfig <object>	# Describes the Service being deployed. Structure is documented below.
-spec.initProvider.serviceConfig.allTrafficOnLatestRevision <boolean>	# Whether 100% of traffic is routed to the latest revision. Defaults to true.
+spec.initProvider.serviceConfig.allTrafficOnLatestRevision <boolean>	# Whether 100% of traffic is routed to the latest revision. Defaults to true. When false, GCF honors the existing traffic configuration of the underlying Cloud Run service. If that configuration is set to route to LATEST (the default), the new deployment will become LATEST and intercept the traffic. To prevent traffic from shifting, you must manually pin the existing service to a specific revision name in Cloud Run before deploying.
 spec.initProvider.serviceConfig.availableCpu <string>	# The number of CPUs used in a single container instance. Default value is calculated from available memory.
 spec.initProvider.serviceConfig.availableMemory <string>	# The amount of memory available for a function. Defaults to 256M. Supported units are k, M, G, Mi, Gi. If no unit is supplied the value is interpreted as bytes.
 spec.initProvider.serviceConfig.binaryAuthorizationPolicy <string>	# The binary authorization policy to be checked when deploying the Cloud Run service.
+spec.initProvider.serviceConfig.directVpcEgress <string>	# Egress settings for direct VPC. If not provided, it defaults to VPC_EGRESS_PRIVATE_RANGES_ONLY. Possible values are: VPC_EGRESS_ALL_TRAFFIC, VPC_EGRESS_PRIVATE_RANGES_ONLY.
+spec.initProvider.serviceConfig.directVpcNetworkInterface <[]object>	# The Direct VPC network interface for the Cloud Function. Currently only a single Direct VPC is supported. Structure is documented below.
+spec.initProvider.serviceConfig.directVpcNetworkInterface[].network <string>	# The name of the VPC network to which the function will be connected. Specify either a VPC network or a subnet, or both. If you specify only a network, the subnet uses the same name as the network.
+spec.initProvider.serviceConfig.directVpcNetworkInterface[].subnetwork <string>	# The name of the VPC subnetwork that the Cloud Function resource will get IPs from. Specify either a VPC network or a subnet, or both. If both network and subnetwork are specified, the given VPC subnetwork must belong to the given VPC network. If subnetwork is not specified, the subnetwork with the same name with the network will be used.
+spec.initProvider.serviceConfig.directVpcNetworkInterface[].tags <[]string>	# Network tags applied to this Cloud Function resource.
 spec.initProvider.serviceConfig.environmentVariables <map[string]string>	# Environment variables that shall be available during function execution.
 spec.initProvider.serviceConfig.ingressSettings <string>	# Available ingress settings. Defaults to "ALLOW_ALL" if unspecified. Default value is ALLOW_ALL. Possible values are: ALLOW_ALL, ALLOW_INTERNAL_ONLY, ALLOW_INTERNAL_AND_GCLB.
 spec.initProvider.serviceConfig.maxInstanceCount <number>	# The limit on the maximum number of function instances that may coexist at a given time.
@@ -359,7 +368,6 @@ spec.initProvider.serviceConfig.secretVolumes[].secretSelector.policy.resolve <s
 spec.initProvider.serviceConfig.secretVolumes[].versions <[]object>	# List of secret versions to mount for this secret. If empty, the latest version of the secret will be made available in a file named after the secret under the mount point.' Structure is documented below.
 spec.initProvider.serviceConfig.secretVolumes[].versions[].path <string>	# Relative path of the file under the mount path where the secret value for this version will be fetched and made available. For example, setting the mountPath as '/etc/secrets' and path as secret_foo would mount the secret value file at /etc/secrets/secret_foo.
 spec.initProvider.serviceConfig.secretVolumes[].versions[].version <string>	# Version of the secret (version number or the string 'latest'). It is preferable to use latest version with secret volumes as secret value changes are reflected immediately.
-spec.initProvider.serviceConfig.service <string>	# Name of the service associated with a Function.
 spec.initProvider.serviceConfig.serviceAccountEmail <string>	# The email of the service account for this function.
 spec.initProvider.serviceConfig.serviceAccountEmailRef <object>	# Reference to a ServiceAccount in cloudplatform to populate serviceAccountEmail.
 spec.initProvider.serviceConfig.serviceAccountEmailRef.name <string> (required)	# Name of the referenced object.
@@ -410,6 +418,7 @@ status.atProvider.buildConfig.source.storageSource.bucket <string>	# Google Clou
 status.atProvider.buildConfig.source.storageSource.generation <number>	# Google Cloud Storage generation for the object. If the generation is omitted, the latest generation will be used.
 status.atProvider.buildConfig.source.storageSource.object <string>	# Google Cloud Storage object containing the source.
 status.atProvider.buildConfig.workerPool <string>	# Name of the Cloud Build Custom Worker Pool that should be used to build the function.
+status.atProvider.deletionPolicy <string>	# Defaults to DELETE. When set to "DELETE", deleting the resource is allowed.
 status.atProvider.description <string>	# User-provided description of a function.
 status.atProvider.effectiveLabels <map[string]string>	# for all of the labels present on the resource.
 status.atProvider.environment <string>	# The environment the function is hosted on.
@@ -430,10 +439,15 @@ status.atProvider.labels <map[string]string>	# A set of key/value label pairs as
 status.atProvider.location <string>	# The location of this cloud function.
 status.atProvider.project <string>	# The ID of the project in which the resource belongs. If it is not provided, the provider project is used.
 status.atProvider.serviceConfig <object>	# Describes the Service being deployed. Structure is documented below.
-status.atProvider.serviceConfig.allTrafficOnLatestRevision <boolean>	# Whether 100% of traffic is routed to the latest revision. Defaults to true.
+status.atProvider.serviceConfig.allTrafficOnLatestRevision <boolean>	# Whether 100% of traffic is routed to the latest revision. Defaults to true. When false, GCF honors the existing traffic configuration of the underlying Cloud Run service. If that configuration is set to route to LATEST (the default), the new deployment will become LATEST and intercept the traffic. To prevent traffic from shifting, you must manually pin the existing service to a specific revision name in Cloud Run before deploying.
 status.atProvider.serviceConfig.availableCpu <string>	# The number of CPUs used in a single container instance. Default value is calculated from available memory.
 status.atProvider.serviceConfig.availableMemory <string>	# The amount of memory available for a function. Defaults to 256M. Supported units are k, M, G, Mi, Gi. If no unit is supplied the value is interpreted as bytes.
 status.atProvider.serviceConfig.binaryAuthorizationPolicy <string>	# The binary authorization policy to be checked when deploying the Cloud Run service.
+status.atProvider.serviceConfig.directVpcEgress <string>	# Egress settings for direct VPC. If not provided, it defaults to VPC_EGRESS_PRIVATE_RANGES_ONLY. Possible values are: VPC_EGRESS_ALL_TRAFFIC, VPC_EGRESS_PRIVATE_RANGES_ONLY.
+status.atProvider.serviceConfig.directVpcNetworkInterface <[]object>	# The Direct VPC network interface for the Cloud Function. Currently only a single Direct VPC is supported. Structure is documented below.
+status.atProvider.serviceConfig.directVpcNetworkInterface[].network <string>	# The name of the VPC network to which the function will be connected. Specify either a VPC network or a subnet, or both. If you specify only a network, the subnet uses the same name as the network.
+status.atProvider.serviceConfig.directVpcNetworkInterface[].subnetwork <string>	# The name of the VPC subnetwork that the Cloud Function resource will get IPs from. Specify either a VPC network or a subnet, or both. If both network and subnetwork are specified, the given VPC subnetwork must belong to the given VPC network. If subnetwork is not specified, the subnetwork with the same name with the network will be used.
+status.atProvider.serviceConfig.directVpcNetworkInterface[].tags <[]string>	# Network tags applied to this Cloud Function resource.
 status.atProvider.serviceConfig.environmentVariables <map[string]string>	# Environment variables that shall be available during function execution.
 status.atProvider.serviceConfig.gcfUri <string>	# (Output) URIs of the Service deployed
 status.atProvider.serviceConfig.ingressSettings <string>	# Available ingress settings. Defaults to "ALLOW_ALL" if unspecified. Default value is ALLOW_ALL. Possible values are: ALLOW_ALL, ALLOW_INTERNAL_ONLY, ALLOW_INTERNAL_AND_GCLB.
@@ -452,7 +466,7 @@ status.atProvider.serviceConfig.secretVolumes[].secret <string>	# Name of the se
 status.atProvider.serviceConfig.secretVolumes[].versions <[]object>	# List of secret versions to mount for this secret. If empty, the latest version of the secret will be made available in a file named after the secret under the mount point.' Structure is documented below.
 status.atProvider.serviceConfig.secretVolumes[].versions[].path <string>	# Relative path of the file under the mount path where the secret value for this version will be fetched and made available. For example, setting the mountPath as '/etc/secrets' and path as secret_foo would mount the secret value file at /etc/secrets/secret_foo.
 status.atProvider.serviceConfig.secretVolumes[].versions[].version <string>	# Version of the secret (version number or the string 'latest'). It is preferable to use latest version with secret volumes as secret value changes are reflected immediately.
-status.atProvider.serviceConfig.service <string>	# Name of the service associated with a Function.
+status.atProvider.serviceConfig.service <string>	# (Output) Name of the service associated with a Function.
 status.atProvider.serviceConfig.serviceAccountEmail <string>	# The email of the service account for this function.
 status.atProvider.serviceConfig.timeoutSeconds <number>	# The function execution timeout. Execution is considered failed and can be terminated if the function is not completed at the end of the timeout period. Defaults to 60 seconds.
 status.atProvider.serviceConfig.uri <string>	# (Output) URI of the Service deployed.
@@ -469,4 +483,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.
