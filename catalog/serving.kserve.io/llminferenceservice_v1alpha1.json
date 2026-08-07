@@ -12548,6 +12548,12 @@
             "route": {
               "additionalProperties": false,
               "properties": {
+                "group": {
+                  "maxLength": 63,
+                  "minLength": 1,
+                  "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
+                  "type": "string"
+                },
                 "http": {
                   "additionalProperties": false,
                   "properties": {
@@ -12668,7 +12674,13 @@
                                                 },
                                                 "maxItems": 64,
                                                 "type": "array",
-                                                "x-kubernetes-list-type": "set"
+                                                "x-kubernetes-list-type": "set",
+                                                "x-kubernetes-validations": [
+                                                  {
+                                                    "message": "AllowHeaders cannot contain '*' alongside other methods",
+                                                    "rule": "!('*' in self && self.size() > 1)"
+                                                  }
+                                                ]
                                               },
                                               "allowMethods": {
                                                 "items": {
@@ -12700,7 +12712,7 @@
                                                 "items": {
                                                   "maxLength": 253,
                                                   "minLength": 1,
-                                                  "pattern": "(^\\*$)|(^([a-zA-Z][a-zA-Z0-9+\\-.]+):\\/\\/([^:/?#]+)(:([0-9]{1,5}))?$)",
+                                                  "pattern": "(^\\*$)|(^(http(s)?):\\/\\/(((\\*\\.)?([a-zA-Z0-9\\-]+\\.)*[a-zA-Z0-9-]+|\\*)(:([0-9]{1,5}))?)$)",
                                                   "type": "string"
                                                 },
                                                 "maxItems": 64,
@@ -13122,7 +13134,10 @@
                                                 "default": 302,
                                                 "enum": [
                                                   301,
-                                                  302
+                                                  302,
+                                                  303,
+                                                  307,
+                                                  308
                                                 ],
                                                 "type": "integer"
                                               }
@@ -13208,7 +13223,8 @@
                                               "RequestMirror",
                                               "RequestRedirect",
                                               "URLRewrite",
-                                              "ExtensionRef"
+                                              "ExtensionRef",
+                                              "CORS"
                                             ],
                                             "type": "string"
                                           },
@@ -13273,6 +13289,14 @@
                                         "type": "object",
                                         "x-kubernetes-validations": [
                                           {
+                                            "message": "filter.cors must be nil if the filter.type is not CORS",
+                                            "rule": "!(has(self.cors) && self.type != 'CORS')"
+                                          },
+                                          {
+                                            "message": "filter.cors must be specified for CORS filter.type",
+                                            "rule": "!(!has(self.cors) && self.type == 'CORS')"
+                                          },
+                                          {
                                             "message": "filter.requestHeaderModifier must be nil if the filter.type is not RequestHeaderModifier",
                                             "rule": "!(has(self.requestHeaderModifier) && self.type != 'RequestHeaderModifier')"
                                           },
@@ -13329,6 +13353,10 @@
                                         {
                                           "message": "May specify either httpRouteFilterRequestRedirect or httpRouteFilterRequestRewrite, but not both",
                                           "rule": "!(self.exists(f, f.type == 'RequestRedirect') && self.exists(f, f.type == 'URLRewrite'))"
+                                        },
+                                        {
+                                          "message": "CORS filter cannot be repeated",
+                                          "rule": "self.filter(f, f.type == 'CORS').size() <= 1"
                                         },
                                         {
                                           "message": "RequestHeaderModifier filter cannot be repeated",
@@ -13420,7 +13448,13 @@
                                           },
                                           "maxItems": 64,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "set"
+                                          "x-kubernetes-list-type": "set",
+                                          "x-kubernetes-validations": [
+                                            {
+                                              "message": "AllowHeaders cannot contain '*' alongside other methods",
+                                              "rule": "!('*' in self && self.size() > 1)"
+                                            }
+                                          ]
                                         },
                                         "allowMethods": {
                                           "items": {
@@ -13452,7 +13486,7 @@
                                           "items": {
                                             "maxLength": 253,
                                             "minLength": 1,
-                                            "pattern": "(^\\*$)|(^([a-zA-Z][a-zA-Z0-9+\\-.]+):\\/\\/([^:/?#]+)(:([0-9]{1,5}))?$)",
+                                            "pattern": "(^\\*$)|(^(http(s)?):\\/\\/(((\\*\\.)?([a-zA-Z0-9\\-]+\\.)*[a-zA-Z0-9-]+|\\*)(:([0-9]{1,5}))?)$)",
                                             "type": "string"
                                           },
                                           "maxItems": 64,
@@ -13874,7 +13908,10 @@
                                           "default": 302,
                                           "enum": [
                                             301,
-                                            302
+                                            302,
+                                            303,
+                                            307,
+                                            308
                                           ],
                                           "type": "integer"
                                         }
@@ -13960,7 +13997,8 @@
                                         "RequestMirror",
                                         "RequestRedirect",
                                         "URLRewrite",
-                                        "ExtensionRef"
+                                        "ExtensionRef",
+                                        "CORS"
                                       ],
                                       "type": "string"
                                     },
@@ -14025,6 +14063,14 @@
                                   "type": "object",
                                   "x-kubernetes-validations": [
                                     {
+                                      "message": "filter.cors must be nil if the filter.type is not CORS",
+                                      "rule": "!(has(self.cors) && self.type != 'CORS')"
+                                    },
+                                    {
+                                      "message": "filter.cors must be specified for CORS filter.type",
+                                      "rule": "!(!has(self.cors) && self.type == 'CORS')"
+                                    },
+                                    {
                                       "message": "filter.requestHeaderModifier must be nil if the filter.type is not RequestHeaderModifier",
                                       "rule": "!(has(self.requestHeaderModifier) && self.type != 'RequestHeaderModifier')"
                                     },
@@ -14081,6 +14127,10 @@
                                   {
                                     "message": "May specify either httpRouteFilterRequestRedirect or httpRouteFilterRequestRewrite, but not both",
                                     "rule": "!(self.exists(f, f.type == 'RequestRedirect') && self.exists(f, f.type == 'URLRewrite'))"
+                                  },
+                                  {
+                                    "message": "CORS filter cannot be repeated",
+                                    "rule": "self.filter(f, f.type == 'CORS').size() <= 1"
                                   },
                                   {
                                     "message": "RequestHeaderModifier filter cannot be repeated",
@@ -14348,6 +14398,10 @@
                                   {
                                     "message": "AbsoluteTimeout must be specified when cookie lifetimeType is Permanent",
                                     "rule": "!has(self.cookieConfig) || !has(self.cookieConfig.lifetimeType) || self.cookieConfig.lifetimeType != 'Permanent' || has(self.absoluteTimeout)"
+                                  },
+                                  {
+                                    "message": "cookieConfig can only be set with type Cookie",
+                                    "rule": "!has(self.cookieConfig) || self.type == 'Cookie'"
                                   }
                                 ]
                               },
@@ -14397,6 +14451,7 @@
                             ]
                           },
                           "maxItems": 16,
+                          "minItems": 1,
                           "type": "array",
                           "x-kubernetes-list-type": "atomic",
                           "x-kubernetes-validations": [
@@ -14418,6 +14473,12 @@
                     }
                   },
                   "type": "object"
+                },
+                "weight": {
+                  "format": "int32",
+                  "maximum": 1000000,
+                  "minimum": 0,
+                  "type": "integer"
                 }
               },
               "type": "object"
@@ -14488,7 +14549,6 @@
                           "additionalProperties": false,
                           "properties": {
                             "failureMode": {
-                              "default": "FailClose",
                               "enum": [
                                 "FailOpen",
                                 "FailClose"
@@ -14496,13 +14556,11 @@
                               "type": "string"
                             },
                             "group": {
-                              "default": "",
                               "maxLength": 253,
                               "pattern": "^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
                               "type": "string"
                             },
                             "kind": {
-                              "default": "Service",
                               "maxLength": 63,
                               "minLength": 1,
                               "pattern": "^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$",
@@ -14521,6 +14579,7 @@
                             }
                           },
                           "required": [
+                            "failureMode",
                             "name"
                           ],
                           "type": "object"
@@ -14529,20 +14588,16 @@
                           "additionalProperties": {
                             "maxLength": 63,
                             "minLength": 0,
-                            "pattern": "^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$",
                             "type": "string"
                           },
                           "type": "object"
                         },
                         "targetPortNumber": {
                           "format": "int32",
-                          "maximum": 65535,
-                          "minimum": 1,
                           "type": "integer"
                         }
                       },
                       "required": [
-                        "extensionRef",
                         "selector",
                         "targetPortNumber"
                       ],
@@ -26861,6 +26916,24 @@
                 "name"
               ],
               "x-kubernetes-list-type": "map"
+            }
+          },
+          "type": "object"
+        },
+        "tracing": {
+          "additionalProperties": false,
+          "properties": {
+            "exporter": {
+              "type": "string"
+            },
+            "exporterEndpoint": {
+              "type": "string"
+            },
+            "sampler": {
+              "type": "string"
+            },
+            "samplerArg": {
+              "type": "string"
             }
           },
           "type": "object"
