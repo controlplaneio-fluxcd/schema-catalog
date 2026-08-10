@@ -215,7 +215,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.18.2 | 19 | 2026-08-01 |
 | [Karpenter](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter` | v1.14.0 | 4 | 2026-07-11 |
 | [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.14.0 | 1 | 2026-07-18 |
-| [Karpenter Azure](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-azure` | v1.14.1 | 2 | 2026-08-08 |
+| [Karpenter Azure](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-azure` | v1.14.2 | 2 | 2026-08-10 |
 | [Karpenter Cluster API](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-cluster-api` | v0.2.0 | 1 | 2026-07-09 |
 | [Karpenter IBM Cloud](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-ibm-cloud` | v1.0.5 | 1 | 2026-07-14 |
 | [KEDA](https://schemas.fluxoperator.dev/p/keda) | `keda` | v2.20.2 | 6 | 2026-08-01 |
