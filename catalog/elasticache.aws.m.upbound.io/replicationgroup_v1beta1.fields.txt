@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=elasticache.aws.m.upbound.io/v1beta1
 kind <string> enum=ReplicationGroup
 metadata.name <string> (required)
@@ -17,6 +17,7 @@ spec.forProvider.automaticFailoverEnabled <boolean>	# Specifies whether a read-o
 spec.forProvider.clusterMode <string>	# Specifies whether cluster mode is enabled or disabled. Valid values are enabled or disabled or compatible
 spec.forProvider.dataTieringEnabled <boolean>	# Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to true when using r6gd nodes.
 spec.forProvider.description <string>	# User-created description for the replication group. Must not be empty.
+spec.forProvider.durability <string>	# Specifies the durability mode for the replication group. Valid values are default, async, sync, or disabled. Requires cluster mode enabled and Valkey 9.0 or higher.
 spec.forProvider.engine <string>	# Name of the cache engine to be used for the clusters in this replication group. Valid values are redis or valkey. Default is redis.
 spec.forProvider.engineVersion <string>	# Version number of the cache engine to be used for the cache clusters in this replication group. If the version is 7 or higher, the major and minor version should be set, e.g., 7.2. If the version is 6, the major and minor version can be set, e.g., 6.2, or the minor version can be unspecified which will use the latest version at creation time, e.g., 6.x. Otherwise, specify the full version desired, e.g., 5.0.6. The actual engine version used is returned in the attribute engine_version_actual, see Attribute Reference below.
 spec.forProvider.finalSnapshotIdentifier <string>	# The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
@@ -62,7 +63,7 @@ spec.forProvider.nodeGroupConfiguration[].nodeGroupId <string>	# ID for the node
 spec.forProvider.nodeGroupConfiguration[].primaryAvailabilityZone <string>	# Availability zone for the primary node.
 spec.forProvider.nodeGroupConfiguration[].primaryOutpostArn <string>	# ARN of the Outpost for the primary node.
 spec.forProvider.nodeGroupConfiguration[].replicaAvailabilityZones <[]string>	# List of availability zones for the replica nodes.
-spec.forProvider.nodeGroupConfiguration[].replicaCount <number>	# Number of replica nodes in this node group.
+spec.forProvider.nodeGroupConfiguration[].replicaCount <number>	# Number of replica nodes in this node group. Default AWS limit is 5. Higher values may be available with a quota increase.
 spec.forProvider.nodeGroupConfiguration[].replicaOutpostArns <[]string>	# List of ARNs of the Outposts for the replica nodes.
 spec.forProvider.nodeGroupConfiguration[].slots <string>	# Keyspace for this node group. Format is start-end (e.g., 0-5460). For Redis (cluster mode disabled) replication groups, this value is ignored.
 spec.forProvider.nodeType <string>	# Instance class to be used. See AWS documentation for information on supported node types and guidance on selecting node types. Required unless global_replication_group_id is set. Cannot be set if global_replication_group_id is set.
@@ -73,7 +74,7 @@ spec.forProvider.parameterGroupName <string>	# Name of the parameter group to as
 spec.forProvider.port <number>	# Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 spec.forProvider.preferredCacheClusterAzs <[]string>	# List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
-spec.forProvider.replicasPerNodeGroup <number>	# Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Valid values are 0 to 5. Conflicts with num_cache_clusters. Can only be set if num_node_groups is set.
+spec.forProvider.replicasPerNodeGroup <number>	# Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Default AWS limit is 5. Higher values may be available with a quota increase. Conflicts with num_cache_clusters. Can only be set if num_node_groups is set.
 spec.forProvider.securityGroupIdRefs <[]object>	# References to SecurityGroup in ec2 to populate securityGroupIds.
 spec.forProvider.securityGroupIdRefs[].name <string> (required)	# Name of the referenced object.
 spec.forProvider.securityGroupIdRefs[].namespace <string>	# Namespace of the referenced object
@@ -123,6 +124,7 @@ spec.initProvider.automaticFailoverEnabled <boolean>	# Specifies whether a read-
 spec.initProvider.clusterMode <string>	# Specifies whether cluster mode is enabled or disabled. Valid values are enabled or disabled or compatible
 spec.initProvider.dataTieringEnabled <boolean>	# Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to true when using r6gd nodes.
 spec.initProvider.description <string>	# User-created description for the replication group. Must not be empty.
+spec.initProvider.durability <string>	# Specifies the durability mode for the replication group. Valid values are default, async, sync, or disabled. Requires cluster mode enabled and Valkey 9.0 or higher.
 spec.initProvider.engine <string>	# Name of the cache engine to be used for the clusters in this replication group. Valid values are redis or valkey. Default is redis.
 spec.initProvider.engineVersion <string>	# Version number of the cache engine to be used for the cache clusters in this replication group. If the version is 7 or higher, the major and minor version should be set, e.g., 7.2. If the version is 6, the major and minor version can be set, e.g., 6.2, or the minor version can be unspecified which will use the latest version at creation time, e.g., 6.x. Otherwise, specify the full version desired, e.g., 5.0.6. The actual engine version used is returned in the attribute engine_version_actual, see Attribute Reference below.
 spec.initProvider.finalSnapshotIdentifier <string>	# The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
@@ -168,7 +170,7 @@ spec.initProvider.nodeGroupConfiguration[].nodeGroupId <string>	# ID for the nod
 spec.initProvider.nodeGroupConfiguration[].primaryAvailabilityZone <string>	# Availability zone for the primary node.
 spec.initProvider.nodeGroupConfiguration[].primaryOutpostArn <string>	# ARN of the Outpost for the primary node.
 spec.initProvider.nodeGroupConfiguration[].replicaAvailabilityZones <[]string>	# List of availability zones for the replica nodes.
-spec.initProvider.nodeGroupConfiguration[].replicaCount <number>	# Number of replica nodes in this node group.
+spec.initProvider.nodeGroupConfiguration[].replicaCount <number>	# Number of replica nodes in this node group. Default AWS limit is 5. Higher values may be available with a quota increase.
 spec.initProvider.nodeGroupConfiguration[].replicaOutpostArns <[]string>	# List of ARNs of the Outposts for the replica nodes.
 spec.initProvider.nodeGroupConfiguration[].slots <string>	# Keyspace for this node group. Format is start-end (e.g., 0-5460). For Redis (cluster mode disabled) replication groups, this value is ignored.
 spec.initProvider.nodeType <string>	# Instance class to be used. See AWS documentation for information on supported node types and guidance on selecting node types. Required unless global_replication_group_id is set. Cannot be set if global_replication_group_id is set.
@@ -178,7 +180,7 @@ spec.initProvider.numNodeGroups <number>	# Number of node groups (shards) for th
 spec.initProvider.parameterGroupName <string>	# Name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used. To enable "cluster mode", i.e., data sharding, use a parameter group that has the parameter cluster-enabled set to true.
 spec.initProvider.port <number>	# Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 spec.initProvider.preferredCacheClusterAzs <[]string>	# List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
-spec.initProvider.replicasPerNodeGroup <number>	# Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Valid values are 0 to 5. Conflicts with num_cache_clusters. Can only be set if num_node_groups is set.
+spec.initProvider.replicasPerNodeGroup <number>	# Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Default AWS limit is 5. Higher values may be available with a quota increase. Conflicts with num_cache_clusters. Can only be set if num_node_groups is set.
 spec.initProvider.securityGroupIdRefs <[]object>	# References to SecurityGroup in ec2 to populate securityGroupIds.
 spec.initProvider.securityGroupIdRefs[].name <string> (required)	# Name of the referenced object.
 spec.initProvider.securityGroupIdRefs[].namespace <string>	# Namespace of the referenced object
@@ -235,6 +237,7 @@ status.atProvider.clusterMode <string>	# Specifies whether cluster mode is enabl
 status.atProvider.configurationEndpointAddress <string>	# Address of the replication group configuration endpoint when cluster mode is enabled.
 status.atProvider.dataTieringEnabled <boolean>	# Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to true when using r6gd nodes.
 status.atProvider.description <string>	# User-created description for the replication group. Must not be empty.
+status.atProvider.durability <string>	# Specifies the durability mode for the replication group. Valid values are default, async, sync, or disabled. Requires cluster mode enabled and Valkey 9.0 or higher.
 status.atProvider.engine <string>	# Name of the cache engine to be used for the clusters in this replication group. Valid values are redis or valkey. Default is redis.
 status.atProvider.engineVersion <string>	# Version number of the cache engine to be used for the cache clusters in this replication group. If the version is 7 or higher, the major and minor version should be set, e.g., 7.2. If the version is 6, the major and minor version can be set, e.g., 6.2, or the minor version can be unspecified which will use the latest version at creation time, e.g., 6.x. Otherwise, specify the full version desired, e.g., 5.0.6. The actual engine version used is returned in the attribute engine_version_actual, see Attribute Reference below.
 status.atProvider.engineVersionActual <string>	# Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.
@@ -257,7 +260,7 @@ status.atProvider.nodeGroupConfiguration[].nodeGroupId <string>	# ID for the nod
 status.atProvider.nodeGroupConfiguration[].primaryAvailabilityZone <string>	# Availability zone for the primary node.
 status.atProvider.nodeGroupConfiguration[].primaryOutpostArn <string>	# ARN of the Outpost for the primary node.
 status.atProvider.nodeGroupConfiguration[].replicaAvailabilityZones <[]string>	# List of availability zones for the replica nodes.
-status.atProvider.nodeGroupConfiguration[].replicaCount <number>	# Number of replica nodes in this node group.
+status.atProvider.nodeGroupConfiguration[].replicaCount <number>	# Number of replica nodes in this node group. Default AWS limit is 5. Higher values may be available with a quota increase.
 status.atProvider.nodeGroupConfiguration[].replicaOutpostArns <[]string>	# List of ARNs of the Outposts for the replica nodes.
 status.atProvider.nodeGroupConfiguration[].slots <string>	# Keyspace for this node group. Format is start-end (e.g., 0-5460). For Redis (cluster mode disabled) replication groups, this value is ignored.
 status.atProvider.nodeType <string>	# Instance class to be used. See AWS documentation for information on supported node types and guidance on selecting node types. Required unless global_replication_group_id is set. Cannot be set if global_replication_group_id is set.
@@ -270,7 +273,7 @@ status.atProvider.preferredCacheClusterAzs <[]string>	# List of EC2 availability
 status.atProvider.primaryEndpointAddress <string>	# (Redis only) Address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
 status.atProvider.readerEndpointAddress <string>	# (Redis only) Address of the endpoint for the reader node in the replication group, if the cluster mode is disabled.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
-status.atProvider.replicasPerNodeGroup <number>	# Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Valid values are 0 to 5. Conflicts with num_cache_clusters. Can only be set if num_node_groups is set.
+status.atProvider.replicasPerNodeGroup <number>	# Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Default AWS limit is 5. Higher values may be available with a quota increase. Conflicts with num_cache_clusters. Can only be set if num_node_groups is set.
 status.atProvider.securityGroupIds <[]string>	# IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 status.atProvider.securityGroupNames <[]string>	# Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 status.atProvider.snapshotArns <[]string>	# List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
@@ -290,4 +293,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

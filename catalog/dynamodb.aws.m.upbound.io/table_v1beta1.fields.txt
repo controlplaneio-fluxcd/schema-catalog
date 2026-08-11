@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=dynamodb.aws.m.upbound.io/v1beta1
 kind <string> enum=Table
 metadata.name <string> (required)
@@ -75,6 +75,7 @@ spec.forProvider.replica[].kmsKeyArnSelector.policy.resolve <string> enum=Always
 spec.forProvider.replica[].pointInTimeRecovery <boolean>	# Whether to enable Point In Time Recovery for the replica. Default is false.
 spec.forProvider.replica[].propagateTags <boolean>	# Whether to propagate the global table's tags to a replica. Default is false. Changes to tags only move in one direction: from global (source) to replica. Tag drift on a replica will not trigger an update. Tag changes on the global table are propagated to replicas. Changing from true to false on a subsequent apply leaves replica tags as-is and no longer manages them.
 spec.forProvider.replica[].regionName <string>	# Region name of the replica.
+spec.forProvider.restoreBackupArn <string>	# ARN of backup to restore.
 spec.forProvider.restoreDateTime <string>	# Time of the point-in-time recovery point to restore.
 spec.forProvider.restoreSourceName <string>	# Name of the table to restore. Must match the name of an existing table.
 spec.forProvider.restoreSourceTableArn <string>	# ARN of the source table to restore. Must be supplied for cross-region restores.
@@ -176,6 +177,7 @@ spec.initProvider.replica[].kmsKeyArnSelector.policy.resolve <string> enum=Alway
 spec.initProvider.replica[].pointInTimeRecovery <boolean>	# Whether to enable Point In Time Recovery for the replica. Default is false.
 spec.initProvider.replica[].propagateTags <boolean>	# Whether to propagate the global table's tags to a replica. Default is false. Changes to tags only move in one direction: from global (source) to replica. Tag drift on a replica will not trigger an update. Tag changes on the global table are propagated to replicas. Changing from true to false on a subsequent apply leaves replica tags as-is and no longer manages them.
 spec.initProvider.replica[].regionName <string>	# Region name of the replica.
+spec.initProvider.restoreBackupArn <string>	# ARN of backup to restore.
 spec.initProvider.restoreDateTime <string>	# Time of the point-in-time recovery point to restore.
 spec.initProvider.restoreSourceName <string>	# Name of the table to restore. Must match the name of an existing table.
 spec.initProvider.restoreSourceTableArn <string>	# ARN of the source table to restore. Must be supplied for cross-region restores.
@@ -276,7 +278,10 @@ status.atProvider.replica[].pointInTimeRecovery <boolean>	# Whether to enable Po
 status.atProvider.replica[].propagateTags <boolean>	# Whether to propagate the global table's tags to a replica. Default is false. Changes to tags only move in one direction: from global (source) to replica. Tag drift on a replica will not trigger an update. Tag changes on the global table are propagated to replicas. Changing from true to false on a subsequent apply leaves replica tags as-is and no longer manages them.
 status.atProvider.replica[].regionName <string>	# Region name of the replica.
 status.atProvider.replica[].streamArn <string>	# ARN of the Table Stream. Only available when stream_enabled = true
+status.atProvider.replica[].streamEnabled <boolean>	# Whether Streams are enabled.
 status.atProvider.replica[].streamLabel <string>	# Timestamp, in ISO 8601 format, for this stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when stream_enabled = true.
+status.atProvider.replica[].streamViewType <string>	# When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are KEYS_ONLY, NEW_IMAGE, OLD_IMAGE, NEW_AND_OLD_IMAGES. Only valid when stream_enabled is true.
+status.atProvider.restoreBackupArn <string>	# ARN of backup to restore.
 status.atProvider.restoreDateTime <string>	# Time of the point-in-time recovery point to restore.
 status.atProvider.restoreSourceName <string>	# Name of the table to restore. Must match the name of an existing table.
 status.atProvider.restoreSourceTableArn <string>	# ARN of the source table to restore. Must be supplied for cross-region restores.
@@ -305,4 +310,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.
