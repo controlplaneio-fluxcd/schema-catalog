@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=kafka.aws.upbound.io/v1beta1
 kind <string> enum=Replicator (cluster-scoped)
 metadata.name <string> (required)
@@ -45,9 +45,22 @@ spec.forProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.matchLabels <map[str
 spec.forProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.policy <object>	# Policies for selection.
 spec.forProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.logDelivery <object>	# Configuration block for delivering replicator logs to customer destinations. Detailed below.
+spec.forProvider.logDelivery.replicatorLogDelivery <object>	# Configuration block for replicator log delivery. Detailed below.
+spec.forProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs <object>	# Configuration block for replicator log delivery to Amazon CloudWatch Logs. Detailed below.
+spec.forProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs.enabled <boolean>	# Boolean whether to enable log delivery to CloudWatch Logs.
+spec.forProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs.logGroup <string>	# Name of CloudWatch Logs log group. Required if enabled is true. If enabled is false, this value must not be set.
+spec.forProvider.logDelivery.replicatorLogDelivery.firehose <object>	# Configuration block for replicator log delivery to Amazon Data Firehose. Detailed below.
+spec.forProvider.logDelivery.replicatorLogDelivery.firehose.deliveryStream <string>	# Name of the Firehose delivery stream. Required if enabled is true. If enabled is false, this value must not be set.
+spec.forProvider.logDelivery.replicatorLogDelivery.firehose.enabled <boolean>	# Boolean whether to enable log delivery to Firehose.
+spec.forProvider.logDelivery.replicatorLogDelivery.s3 <object>	# Configuration block for replicator log delivery to Amazon S3. Detailed below.
+spec.forProvider.logDelivery.replicatorLogDelivery.s3.bucket <string>	# Name of the S3 bucket. Required if enabled is true. If enabled is false, this value must not be set.
+spec.forProvider.logDelivery.replicatorLogDelivery.s3.enabled <boolean>	# Boolean whether to enable log delivery to S3.
+spec.forProvider.logDelivery.replicatorLogDelivery.s3.prefix <string>	# Prefix to use when storing replicator logs in S3. If enabled is false, this value must not be set.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 spec.forProvider.replicationInfoList <object>	# A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 spec.forProvider.replicationInfoList.consumerGroupReplication <[]object>	# Configuration relating to consumer group replication.
+spec.forProvider.replicationInfoList.consumerGroupReplication[].consumerGroupOffsetSyncMode <string>	# Consumer group offset synchronization mode. Valid values are LEGACY and ENHANCED. With LEGACY, offsets are synchronized when producers write to the source cluster. With ENHANCED, consumer offsets are synchronized regardless of producer location. ENHANCED requires a corresponding replicator that replicates data from the target cluster to the source cluster and requires topic_name_configuration.type to be set to IDENTICAL. Defaults to LEGACY. Changing this value will force a new resource.
 spec.forProvider.replicationInfoList.consumerGroupReplication[].consumerGroupsToExclude <[]string>	# List of regular expression patterns indicating the consumer groups that should not be replicated.
 spec.forProvider.replicationInfoList.consumerGroupReplication[].consumerGroupsToReplicate <[]string>	# List of regular expression patterns indicating the consumer groups to copy.
 spec.forProvider.replicationInfoList.consumerGroupReplication[].detectAndCopyNewConsumerGroups <boolean>	# Whether to periodically check for new consumer groups.
@@ -142,8 +155,21 @@ spec.initProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.matchLabels <map[st
 spec.initProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.policy <object>	# Policies for selection.
 spec.initProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.kafkaCluster[].vpcConfig.subnetIdsSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.logDelivery <object>	# Configuration block for delivering replicator logs to customer destinations. Detailed below.
+spec.initProvider.logDelivery.replicatorLogDelivery <object>	# Configuration block for replicator log delivery. Detailed below.
+spec.initProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs <object>	# Configuration block for replicator log delivery to Amazon CloudWatch Logs. Detailed below.
+spec.initProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs.enabled <boolean>	# Boolean whether to enable log delivery to CloudWatch Logs.
+spec.initProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs.logGroup <string>	# Name of CloudWatch Logs log group. Required if enabled is true. If enabled is false, this value must not be set.
+spec.initProvider.logDelivery.replicatorLogDelivery.firehose <object>	# Configuration block for replicator log delivery to Amazon Data Firehose. Detailed below.
+spec.initProvider.logDelivery.replicatorLogDelivery.firehose.deliveryStream <string>	# Name of the Firehose delivery stream. Required if enabled is true. If enabled is false, this value must not be set.
+spec.initProvider.logDelivery.replicatorLogDelivery.firehose.enabled <boolean>	# Boolean whether to enable log delivery to Firehose.
+spec.initProvider.logDelivery.replicatorLogDelivery.s3 <object>	# Configuration block for replicator log delivery to Amazon S3. Detailed below.
+spec.initProvider.logDelivery.replicatorLogDelivery.s3.bucket <string>	# Name of the S3 bucket. Required if enabled is true. If enabled is false, this value must not be set.
+spec.initProvider.logDelivery.replicatorLogDelivery.s3.enabled <boolean>	# Boolean whether to enable log delivery to S3.
+spec.initProvider.logDelivery.replicatorLogDelivery.s3.prefix <string>	# Prefix to use when storing replicator logs in S3. If enabled is false, this value must not be set.
 spec.initProvider.replicationInfoList <object>	# A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 spec.initProvider.replicationInfoList.consumerGroupReplication <[]object>	# Configuration relating to consumer group replication.
+spec.initProvider.replicationInfoList.consumerGroupReplication[].consumerGroupOffsetSyncMode <string>	# Consumer group offset synchronization mode. Valid values are LEGACY and ENHANCED. With LEGACY, offsets are synchronized when producers write to the source cluster. With ENHANCED, consumer offsets are synchronized regardless of producer location. ENHANCED requires a corresponding replicator that replicates data from the target cluster to the source cluster and requires topic_name_configuration.type to be set to IDENTICAL. Defaults to LEGACY. Changing this value will force a new resource.
 spec.initProvider.replicationInfoList.consumerGroupReplication[].consumerGroupsToExclude <[]string>	# List of regular expression patterns indicating the consumer groups that should not be replicated.
 spec.initProvider.replicationInfoList.consumerGroupReplication[].consumerGroupsToReplicate <[]string>	# List of regular expression patterns indicating the consumer groups to copy.
 spec.initProvider.replicationInfoList.consumerGroupReplication[].detectAndCopyNewConsumerGroups <boolean>	# Whether to periodically check for new consumer groups.
@@ -218,9 +244,22 @@ status.atProvider.kafkaCluster[].amazonMskCluster.mskClusterArn <string>	# The A
 status.atProvider.kafkaCluster[].vpcConfig <object>	# Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.
 status.atProvider.kafkaCluster[].vpcConfig.securityGroupsIds <[]string>	# The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.
 status.atProvider.kafkaCluster[].vpcConfig.subnetIds <[]string>	# The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.
+status.atProvider.logDelivery <object>	# Configuration block for delivering replicator logs to customer destinations. Detailed below.
+status.atProvider.logDelivery.replicatorLogDelivery <object>	# Configuration block for replicator log delivery. Detailed below.
+status.atProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs <object>	# Configuration block for replicator log delivery to Amazon CloudWatch Logs. Detailed below.
+status.atProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs.enabled <boolean>	# Boolean whether to enable log delivery to CloudWatch Logs.
+status.atProvider.logDelivery.replicatorLogDelivery.cloudwatchLogs.logGroup <string>	# Name of CloudWatch Logs log group. Required if enabled is true. If enabled is false, this value must not be set.
+status.atProvider.logDelivery.replicatorLogDelivery.firehose <object>	# Configuration block for replicator log delivery to Amazon Data Firehose. Detailed below.
+status.atProvider.logDelivery.replicatorLogDelivery.firehose.deliveryStream <string>	# Name of the Firehose delivery stream. Required if enabled is true. If enabled is false, this value must not be set.
+status.atProvider.logDelivery.replicatorLogDelivery.firehose.enabled <boolean>	# Boolean whether to enable log delivery to Firehose.
+status.atProvider.logDelivery.replicatorLogDelivery.s3 <object>	# Configuration block for replicator log delivery to Amazon S3. Detailed below.
+status.atProvider.logDelivery.replicatorLogDelivery.s3.bucket <string>	# Name of the S3 bucket. Required if enabled is true. If enabled is false, this value must not be set.
+status.atProvider.logDelivery.replicatorLogDelivery.s3.enabled <boolean>	# Boolean whether to enable log delivery to S3.
+status.atProvider.logDelivery.replicatorLogDelivery.s3.prefix <string>	# Prefix to use when storing replicator logs in S3. If enabled is false, this value must not be set.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.replicationInfoList <object>	# A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 status.atProvider.replicationInfoList.consumerGroupReplication <[]object>	# Configuration relating to consumer group replication.
+status.atProvider.replicationInfoList.consumerGroupReplication[].consumerGroupOffsetSyncMode <string>	# Consumer group offset synchronization mode. Valid values are LEGACY and ENHANCED. With LEGACY, offsets are synchronized when producers write to the source cluster. With ENHANCED, consumer offsets are synchronized regardless of producer location. ENHANCED requires a corresponding replicator that replicates data from the target cluster to the source cluster and requires topic_name_configuration.type to be set to IDENTICAL. Defaults to LEGACY. Changing this value will force a new resource.
 status.atProvider.replicationInfoList.consumerGroupReplication[].consumerGroupsToExclude <[]string>	# List of regular expression patterns indicating the consumer groups that should not be replicated.
 status.atProvider.replicationInfoList.consumerGroupReplication[].consumerGroupsToReplicate <[]string>	# List of regular expression patterns indicating the consumer groups to copy.
 status.atProvider.replicationInfoList.consumerGroupReplication[].detectAndCopyNewConsumerGroups <boolean>	# Whether to periodically check for new consumer groups.
@@ -251,4 +290,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

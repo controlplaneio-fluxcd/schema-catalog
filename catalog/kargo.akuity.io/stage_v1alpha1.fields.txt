@@ -1,4 +1,4 @@
-# schema source: Kargo v1.11.0 https://github.com/akuity/kargo
+# schema source: Kargo v1.11.1 https://github.com/akuity/kargo
 apiVersion <string> enum=kargo.akuity.io/v1alpha1
 kind <string> enum=Stage
 metadata.name <string> (required)
@@ -182,6 +182,14 @@ status.currentPromotion.status.stepExecutionMetadata[].finishedAt <string> forma
 status.currentPromotion.status.stepExecutionMetadata[].message <string>	# Message is a display message about the step, including any errors.
 status.currentPromotion.status.stepExecutionMetadata[].startedAt <string> format=date-time	# StartedAt is the time at which the first attempt to execute the step began.
 status.currentPromotion.status.stepExecutionMetadata[].status <string>	# Status is the high-level outcome of the step.
+status.effectiveAutoPromotionHolds <map[string]object>	# EffectiveAutoPromotionHolds is the set of auto-promotion holds in effect right now. It is recomputed every reconciliation from AutoPromotionHolds plus the newest in-flight Promotions, and unlike AutoPromotionHolds is not durable. Clients should read this map to reflect current hold state.
+status.effectiveAutoPromotionHolds.<key>.actor <string>	# Actor identifies the user who triggered the hold.
+status.effectiveAutoPromotionHolds.<key>.createdAt <string> format=date-time	# CreatedAt is the creation timestamp of the Promotion that established this hold.
+status.effectiveAutoPromotionHolds.<key>.freightName <string> (required)	# FreightName is the name of the Freight selected when the hold was created.
+status.effectiveAutoPromotionHolds.<key>.origin <object> (required)	# Origin describes the FreightOrigin pinned by this hold. It matches the enclosing map key.
+status.effectiveAutoPromotionHolds.<key>.origin.kind <string> (required) enum=Warehouse	# Kind is the kind of resource from which Freight may have originated. At present, this can only be "Warehouse".
+status.effectiveAutoPromotionHolds.<key>.origin.name <string> (required)	# Name is the name of the resource of the kind indicated by the Kind field from which Freight may originate.
+status.effectiveAutoPromotionHolds.<key>.promotionName <string>	# PromotionName is the name of the Promotion that established this hold. Stored here as a paper trail that survives Promotion garbage collection.
 status.freightHistory <[]object>	# FreightHistory is a list of recent Freight selections that were deployed to the Stage. By default, the last ten Freight selections are stored. The first item in the list is the most recent Freight selection and currently deployed to the Stage, subsequent items are older selections.
 status.freightHistory[].id <string> (required)	# ID is a unique and deterministically calculated identifier for the FreightCollection. It is updated on each use of the UpdateOrPush method.
 status.freightHistory[].items <map[string]object>	# Freight is a map of FreightReference objects, indexed by their Warehouse origin.

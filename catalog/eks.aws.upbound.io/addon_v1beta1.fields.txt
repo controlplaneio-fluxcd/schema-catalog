@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=eks.aws.upbound.io/v1beta1
 kind <string> enum=Addon (cluster-scoped)
 metadata.name <string> (required)
@@ -19,7 +19,9 @@ spec.forProvider.clusterNameSelector.matchLabels <map[string]string>	# MatchLabe
 spec.forProvider.clusterNameSelector.policy <object>	# Policies for selection.
 spec.forProvider.clusterNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.clusterNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.configurationValues <string>	# custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from describe-addon-configuration.
+spec.forProvider.configurationValues <string>	# Custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from describe-addon-configuration.
+spec.forProvider.namespaceConfig <object>	# Namespace configuration for the add-on. See namespace_config below for details.
+spec.forProvider.namespaceConfig.namespace <string>	# Name of the Kubernetes namespace to install the add-on in. Once you install an add-on in a specific namespace, you must remove and re-create the add-on to change its namespace. For more details see the Custom namespace for add-ons.
 spec.forProvider.podIdentityAssociation <[]object>	# Configuration block with EKS Pod Identity association settings. See pod_identity_association below for details.
 spec.forProvider.podIdentityAssociation[].roleArn <string>	# The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
 spec.forProvider.podIdentityAssociation[].serviceAccount <string>	# The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
@@ -55,7 +57,9 @@ spec.initProvider.clusterNameSelector.matchLabels <map[string]string>	# MatchLab
 spec.initProvider.clusterNameSelector.policy <object>	# Policies for selection.
 spec.initProvider.clusterNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.clusterNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.configurationValues <string>	# custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from describe-addon-configuration.
+spec.initProvider.configurationValues <string>	# Custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from describe-addon-configuration.
+spec.initProvider.namespaceConfig <object>	# Namespace configuration for the add-on. See namespace_config below for details.
+spec.initProvider.namespaceConfig.namespace <string>	# Name of the Kubernetes namespace to install the add-on in. Once you install an add-on in a specific namespace, you must remove and re-create the add-on to change its namespace. For more details see the Custom namespace for add-ons.
 spec.initProvider.podIdentityAssociation <[]object>	# Configuration block with EKS Pod Identity association settings. See pod_identity_association below for details.
 spec.initProvider.podIdentityAssociation[].roleArn <string>	# The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
 spec.initProvider.podIdentityAssociation[].serviceAccount <string>	# The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
@@ -90,10 +94,12 @@ status.atProvider.addonName <string>	# Name of the EKS add-on. The name must mat
 status.atProvider.addonVersion <string>	# The version of the EKS add-on. The version must match one of the versions returned by describe-addon-versions.
 status.atProvider.arn <string>	# Amazon Resource Name (ARN) of the EKS add-on.
 status.atProvider.clusterName <string>	# Name of the EKS Cluster.
-status.atProvider.configurationValues <string>	# custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from describe-addon-configuration.
+status.atProvider.configurationValues <string>	# Custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from describe-addon-configuration.
 status.atProvider.createdAt <string>	# Date and time in RFC3339 format that the EKS add-on was created.
 status.atProvider.id <string>	# EKS Cluster name and EKS Addon name separated by a colon (:).
 status.atProvider.modifiedAt <string>	# Date and time in RFC3339 format that the EKS add-on was updated.
+status.atProvider.namespaceConfig <object>	# Namespace configuration for the add-on. See namespace_config below for details.
+status.atProvider.namespaceConfig.namespace <string>	# Name of the Kubernetes namespace to install the add-on in. Once you install an add-on in a specific namespace, you must remove and re-create the add-on to change its namespace. For more details see the Custom namespace for add-ons.
 status.atProvider.podIdentityAssociation <[]object>	# Configuration block with EKS Pod Identity association settings. See pod_identity_association below for details.
 status.atProvider.podIdentityAssociation[].roleArn <string>	# The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
 status.atProvider.podIdentityAssociation[].serviceAccount <string>	# The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
@@ -111,4 +117,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

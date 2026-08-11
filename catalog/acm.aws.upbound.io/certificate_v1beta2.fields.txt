@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=acm.aws.upbound.io/v1beta2
 kind <string> enum=Certificate (cluster-scoped)
 metadata.name <string> (required)
@@ -25,10 +25,12 @@ spec.forProvider.keyAlgorithm <string>	# Specifies the algorithm of the public a
 spec.forProvider.options <object>	# Configuration block used to set certificate options. Detailed below.
 spec.forProvider.options.certificateTransparencyLoggingPreference <string>	# Whether certificate details should be added to a certificate transparency log. Valid values are ENABLED or DISABLED. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 spec.forProvider.options.export <string>	# Whether the certificate can be exported. Valid values are ENABLED or DISABLED (default). Note Issuing an exportable certificate is subject to additional charges. See AWS Certificate Manager pricing for more details.
-spec.forProvider.privateKeySecretRef <object>	# Certificate's PEM-formatted private key
+spec.forProvider.privateKeySecretRef <object>	# Certificate's PEM-formatted private key. Conflicts with private_key_wo.
 spec.forProvider.privateKeySecretRef.key <string> (required)	# The key to select.
 spec.forProvider.privateKeySecretRef.name <string> (required)	# Name of the secret.
 spec.forProvider.privateKeySecretRef.namespace <string> (required)	# Namespace of the secret.
+spec.forProvider.privateKeyWo <string>	# Certificate's PEM-formatted private key. Conflicts with private_key. Must be used together with private_key_wo_version.
+spec.forProvider.privateKeyWoVersion <number>	# Used together with private_key_wo to trigger an update. Increment this value when an update to private_key_wo is required.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 spec.forProvider.subjectAlternativeNames <[]string>	# Set of domains that should be SANs in the issued certificate.
 spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
@@ -57,10 +59,12 @@ spec.initProvider.keyAlgorithm <string>	# Specifies the algorithm of the public 
 spec.initProvider.options <object>	# Configuration block used to set certificate options. Detailed below.
 spec.initProvider.options.certificateTransparencyLoggingPreference <string>	# Whether certificate details should be added to a certificate transparency log. Valid values are ENABLED or DISABLED. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 spec.initProvider.options.export <string>	# Whether the certificate can be exported. Valid values are ENABLED or DISABLED (default). Note Issuing an exportable certificate is subject to additional charges. See AWS Certificate Manager pricing for more details.
-spec.initProvider.privateKeySecretRef <object>	# Certificate's PEM-formatted private key
+spec.initProvider.privateKeySecretRef <object>	# Certificate's PEM-formatted private key. Conflicts with private_key_wo.
 spec.initProvider.privateKeySecretRef.key <string> (required)	# The key to select.
 spec.initProvider.privateKeySecretRef.name <string> (required)	# Name of the secret.
 spec.initProvider.privateKeySecretRef.namespace <string> (required)	# Namespace of the secret.
+spec.initProvider.privateKeyWo <string>	# Certificate's PEM-formatted private key. Conflicts with private_key. Must be used together with private_key_wo_version.
+spec.initProvider.privateKeyWoVersion <number>	# Used together with private_key_wo to trigger an update. Increment this value when an update to private_key_wo is required.
 spec.initProvider.subjectAlternativeNames <[]string>	# Set of domains that should be SANs in the issued certificate.
 spec.initProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.initProvider.validationMethod <string>	# Which method to use for validation. DNS or EMAIL are valid.
@@ -97,6 +101,8 @@ status.atProvider.options <object>	# Configuration block used to set certificate
 status.atProvider.options.certificateTransparencyLoggingPreference <string>	# Whether certificate details should be added to a certificate transparency log. Valid values are ENABLED or DISABLED. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 status.atProvider.options.export <string>	# Whether the certificate can be exported. Valid values are ENABLED or DISABLED (default). Note Issuing an exportable certificate is subject to additional charges. See AWS Certificate Manager pricing for more details.
 status.atProvider.pendingRenewal <boolean>	# true if a Private certificate eligible for managed renewal is within the early_renewal_duration period.
+status.atProvider.privateKeyWo <string>	# Certificate's PEM-formatted private key. Conflicts with private_key. Must be used together with private_key_wo_version.
+status.atProvider.privateKeyWoVersion <number>	# Used together with private_key_wo to trigger an update. Increment this value when an update to private_key_wo is required.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.renewalEligibility <string>	# Whether the certificate is eligible for managed renewal.
 status.atProvider.renewalSummary <[]object>	# Contains information about the status of ACM's managed renewal for the certificate.
@@ -120,4 +126,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=rds.aws.m.upbound.io/v1beta1
 kind <string> enum=Cluster
 metadata.name <string> (required)
@@ -9,7 +9,8 @@ spec.forProvider.allocatedStorage <number>	# The amount of storage in gibibytes 
 spec.forProvider.allowMajorVersionUpgrade <boolean>	# Enable to allow major engine version upgrades when changing engine versions. Defaults to false.
 spec.forProvider.applyImmediately <boolean>	# Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is false. See Amazon RDS Documentation for more information.
 spec.forProvider.autoGeneratePassword <boolean>	# If true, the password will be auto-generated and stored in the Secret referenced by the masterPasswordSecretRef field.
-spec.forProvider.availabilityZones <[]string>	# List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. We recommend specifying 3 AZs or using the if necessary. A maximum of 3 AZs can be configured.
+spec.forProvider.autoMinorVersionUpgrade <boolean>	# Whether to apply minor engine upgrades automatically to the DB cluster during the maintenance window. Defaults to true.
+spec.forProvider.availabilityZones <[]string>	# List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. We recommend specifying 3 AZs or using the if necessary. A maximum of 3 AZs can be configured. Note: Multi-AZ DB clusters require exactly 3 Availability Zones in the DB subnet group. Aurora DB clusters can operate with fewer AZs, but RDS will still automatically assign 3 AZs as described above.
 spec.forProvider.backtrackWindow <number>	# Target backtrack window, in seconds. Only available for aurora and aurora-mysql engines currently. To disable backtracking, set this value to 0. Defaults to 0. Must be between 0 and 259200 (72 hours)
 spec.forProvider.backupRetentionPeriod <number>	# Days to retain backups for. Default 1
 spec.forProvider.caCertificateIdentifier <string>	# The CA certificate identifier to use for the DB cluster's server certificate.
@@ -133,6 +134,19 @@ spec.forProvider.monitoringRoleArnSelector.policy.resolve <string> enum=Always|I
 spec.forProvider.networkType <string>	# Network type of the cluster. Valid values: IPV4, DUAL.
 spec.forProvider.performanceInsightsEnabled <boolean>	# Enables Performance Insights.
 spec.forProvider.performanceInsightsKmsKeyId <string>	# Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (aws/rds).
+spec.forProvider.performanceInsightsKmsKeyIdRef <object>	# Reference to a Key in kms to populate performanceInsightsKmsKeyId.
+spec.forProvider.performanceInsightsKmsKeyIdRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.performanceInsightsKmsKeyIdRef.namespace <string>	# Namespace of the referenced object
+spec.forProvider.performanceInsightsKmsKeyIdRef.policy <object>	# Policies for referencing.
+spec.forProvider.performanceInsightsKmsKeyIdRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.performanceInsightsKmsKeyIdRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.performanceInsightsKmsKeyIdSelector <object>	# Selector for a Key in kms to populate performanceInsightsKmsKeyId.
+spec.forProvider.performanceInsightsKmsKeyIdSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.performanceInsightsKmsKeyIdSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.performanceInsightsKmsKeyIdSelector.namespace <string>	# Namespace for the selector
+spec.forProvider.performanceInsightsKmsKeyIdSelector.policy <object>	# Policies for selection.
+spec.forProvider.performanceInsightsKmsKeyIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.performanceInsightsKmsKeyIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.performanceInsightsRetentionPeriod <number>	# Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are 7, month * 31 (where month is a number of months from 1-23), and 731. See here for more information on retention periods.
 spec.forProvider.port <number>	# Port on which the DB accepts connections.
 spec.forProvider.preferredBackupWindow <string>	# Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. 04:00-09:00.
@@ -192,7 +206,7 @@ spec.forProvider.skipFinalSnapshot <boolean>	# Determines whether a final DB sna
 spec.forProvider.snapshotIdentifier <string>	# Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Conflicts with global_cluster_identifier. Clusters cannot be restored from snapshot and joined to an existing global cluster in a single operation. See the AWS documentation or the Global Cluster Restored From Snapshot example for instructions on building a global cluster starting with a snapshot.
 spec.forProvider.sourceRegion <string>	# The source region for an encrypted replica DB cluster.
 spec.forProvider.storageEncrypted <boolean>	# Specifies whether the DB cluster is encrypted. The default is false for provisioned engine_mode and true for serverless engine_mode. When restoring an unencrypted snapshot_identifier, the kms_key_id argument must be provided to encrypt the restored cluster.
-spec.forProvider.storageType <string>	# (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, storage_type modifications can be done in-place. For Multi-AZ DB Clusters, the iops argument must also be set. Valid values are: "", aurora-iopt1 (Aurora DB Clusters); io1, io2 (Multi-AZ DB Clusters). Default: "" (Aurora DB Clusters); io1 (Multi-AZ DB Clusters).
+spec.forProvider.storageType <string>	# (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, storage_type modifications can be done in-place. For Multi-AZ DB Clusters, the iops argument must also be set. Valid values are: "", aurora-iopt1 (Aurora DB Clusters); io1, io2, gp3 (Multi-AZ DB Clusters). Default: "" (Aurora DB Clusters); io1 (Multi-AZ DB Clusters).
 spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.forProvider.vpcSecurityGroupIdRefs <[]object>	# References to SecurityGroup in ec2 to populate vpcSecurityGroupIds.
 spec.forProvider.vpcSecurityGroupIdRefs[].name <string> (required)	# Name of the referenced object.
@@ -212,7 +226,8 @@ spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the
 spec.initProvider.allocatedStorage <number>	# The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
 spec.initProvider.allowMajorVersionUpgrade <boolean>	# Enable to allow major engine version upgrades when changing engine versions. Defaults to false.
 spec.initProvider.applyImmediately <boolean>	# Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is false. See Amazon RDS Documentation for more information.
-spec.initProvider.availabilityZones <[]string>	# List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. We recommend specifying 3 AZs or using the if necessary. A maximum of 3 AZs can be configured.
+spec.initProvider.autoMinorVersionUpgrade <boolean>	# Whether to apply minor engine upgrades automatically to the DB cluster during the maintenance window. Defaults to true.
+spec.initProvider.availabilityZones <[]string>	# List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. We recommend specifying 3 AZs or using the if necessary. A maximum of 3 AZs can be configured. Note: Multi-AZ DB clusters require exactly 3 Availability Zones in the DB subnet group. Aurora DB clusters can operate with fewer AZs, but RDS will still automatically assign 3 AZs as described above.
 spec.initProvider.backtrackWindow <number>	# Target backtrack window, in seconds. Only available for aurora and aurora-mysql engines currently. To disable backtracking, set this value to 0. Defaults to 0. Must be between 0 and 259200 (72 hours)
 spec.initProvider.backupRetentionPeriod <number>	# Days to retain backups for. Default 1
 spec.initProvider.caCertificateIdentifier <string>	# The CA certificate identifier to use for the DB cluster's server certificate.
@@ -336,6 +351,19 @@ spec.initProvider.monitoringRoleArnSelector.policy.resolve <string> enum=Always|
 spec.initProvider.networkType <string>	# Network type of the cluster. Valid values: IPV4, DUAL.
 spec.initProvider.performanceInsightsEnabled <boolean>	# Enables Performance Insights.
 spec.initProvider.performanceInsightsKmsKeyId <string>	# Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (aws/rds).
+spec.initProvider.performanceInsightsKmsKeyIdRef <object>	# Reference to a Key in kms to populate performanceInsightsKmsKeyId.
+spec.initProvider.performanceInsightsKmsKeyIdRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.performanceInsightsKmsKeyIdRef.namespace <string>	# Namespace of the referenced object
+spec.initProvider.performanceInsightsKmsKeyIdRef.policy <object>	# Policies for referencing.
+spec.initProvider.performanceInsightsKmsKeyIdRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.performanceInsightsKmsKeyIdRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.performanceInsightsKmsKeyIdSelector <object>	# Selector for a Key in kms to populate performanceInsightsKmsKeyId.
+spec.initProvider.performanceInsightsKmsKeyIdSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.performanceInsightsKmsKeyIdSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.performanceInsightsKmsKeyIdSelector.namespace <string>	# Namespace for the selector
+spec.initProvider.performanceInsightsKmsKeyIdSelector.policy <object>	# Policies for selection.
+spec.initProvider.performanceInsightsKmsKeyIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.performanceInsightsKmsKeyIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.performanceInsightsRetentionPeriod <number>	# Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are 7, month * 31 (where month is a number of months from 1-23), and 731. See here for more information on retention periods.
 spec.initProvider.port <number>	# Port on which the DB accepts connections.
 spec.initProvider.preferredBackupWindow <string>	# Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. 04:00-09:00.
@@ -394,7 +422,7 @@ spec.initProvider.skipFinalSnapshot <boolean>	# Determines whether a final DB sn
 spec.initProvider.snapshotIdentifier <string>	# Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Conflicts with global_cluster_identifier. Clusters cannot be restored from snapshot and joined to an existing global cluster in a single operation. See the AWS documentation or the Global Cluster Restored From Snapshot example for instructions on building a global cluster starting with a snapshot.
 spec.initProvider.sourceRegion <string>	# The source region for an encrypted replica DB cluster.
 spec.initProvider.storageEncrypted <boolean>	# Specifies whether the DB cluster is encrypted. The default is false for provisioned engine_mode and true for serverless engine_mode. When restoring an unencrypted snapshot_identifier, the kms_key_id argument must be provided to encrypt the restored cluster.
-spec.initProvider.storageType <string>	# (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, storage_type modifications can be done in-place. For Multi-AZ DB Clusters, the iops argument must also be set. Valid values are: "", aurora-iopt1 (Aurora DB Clusters); io1, io2 (Multi-AZ DB Clusters). Default: "" (Aurora DB Clusters); io1 (Multi-AZ DB Clusters).
+spec.initProvider.storageType <string>	# (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, storage_type modifications can be done in-place. For Multi-AZ DB Clusters, the iops argument must also be set. Valid values are: "", aurora-iopt1 (Aurora DB Clusters); io1, io2, gp3 (Multi-AZ DB Clusters). Default: "" (Aurora DB Clusters); io1 (Multi-AZ DB Clusters).
 spec.initProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.initProvider.vpcSecurityGroupIdRefs <[]object>	# References to SecurityGroup in ec2 to populate vpcSecurityGroupIds.
 spec.initProvider.vpcSecurityGroupIdRefs[].name <string> (required)	# Name of the referenced object.
@@ -422,7 +450,8 @@ status.atProvider.allocatedStorage <number>	# The amount of storage in gibibytes
 status.atProvider.allowMajorVersionUpgrade <boolean>	# Enable to allow major engine version upgrades when changing engine versions. Defaults to false.
 status.atProvider.applyImmediately <boolean>	# Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is false. See Amazon RDS Documentation for more information.
 status.atProvider.arn <string>	# Amazon Resource Name (ARN) of cluster
-status.atProvider.availabilityZones <[]string>	# List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. We recommend specifying 3 AZs or using the if necessary. A maximum of 3 AZs can be configured.
+status.atProvider.autoMinorVersionUpgrade <boolean>	# Whether to apply minor engine upgrades automatically to the DB cluster during the maintenance window. Defaults to true.
+status.atProvider.availabilityZones <[]string>	# List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. We recommend specifying 3 AZs or using the if necessary. A maximum of 3 AZs can be configured. Note: Multi-AZ DB clusters require exactly 3 Availability Zones in the DB subnet group. Aurora DB clusters can operate with fewer AZs, but RDS will still automatically assign 3 AZs as described above.
 status.atProvider.backtrackWindow <number>	# Target backtrack window, in seconds. Only available for aurora and aurora-mysql engines currently. To disable backtracking, set this value to 0. Defaults to 0. Must be between 0 and 259200 (72 hours)
 status.atProvider.backupRetentionPeriod <number>	# Days to retain backups for. Default 1
 status.atProvider.caCertificateIdentifier <string>	# The CA certificate identifier to use for the DB cluster's server certificate.
@@ -507,7 +536,7 @@ status.atProvider.skipFinalSnapshot <boolean>	# Determines whether a final DB sn
 status.atProvider.snapshotIdentifier <string>	# Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Conflicts with global_cluster_identifier. Clusters cannot be restored from snapshot and joined to an existing global cluster in a single operation. See the AWS documentation or the Global Cluster Restored From Snapshot example for instructions on building a global cluster starting with a snapshot.
 status.atProvider.sourceRegion <string>	# The source region for an encrypted replica DB cluster.
 status.atProvider.storageEncrypted <boolean>	# Specifies whether the DB cluster is encrypted. The default is false for provisioned engine_mode and true for serverless engine_mode. When restoring an unencrypted snapshot_identifier, the kms_key_id argument must be provided to encrypt the restored cluster.
-status.atProvider.storageType <string>	# (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, storage_type modifications can be done in-place. For Multi-AZ DB Clusters, the iops argument must also be set. Valid values are: "", aurora-iopt1 (Aurora DB Clusters); io1, io2 (Multi-AZ DB Clusters). Default: "" (Aurora DB Clusters); io1 (Multi-AZ DB Clusters).
+status.atProvider.storageType <string>	# (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, storage_type modifications can be done in-place. For Multi-AZ DB Clusters, the iops argument must also be set. Valid values are: "", aurora-iopt1 (Aurora DB Clusters); io1, io2, gp3 (Multi-AZ DB Clusters). Default: "" (Aurora DB Clusters); io1 (Multi-AZ DB Clusters).
 status.atProvider.tags <map[string]string>	# Key-value map of resource tags.
 status.atProvider.tagsAll <map[string]string>	# Map of tags assigned to the resource, including those inherited from the provider default_tags configuration block.
 status.atProvider.upgradeRolloutOrder <string>	# Order in which the clusters are upgraded (first, second, last). See the AWS documentation for details.
@@ -519,4 +548,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.

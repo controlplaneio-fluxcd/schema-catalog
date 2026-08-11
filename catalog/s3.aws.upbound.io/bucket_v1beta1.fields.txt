@@ -1,15 +1,17 @@
-# schema source: Upbound AWS Provider v2.6.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=s3.aws.upbound.io/v1beta1 (deprecated)	# This API version is deprecated. Deprecated since v2.6.0.
 kind <string> enum=Bucket (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# BucketSpec defines the desired state of Bucket
 spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
 spec.forProvider <object> (required)
+spec.forProvider.bucketNamespace <string>	# Namespace for the bucket. Determines bucket naming scope. Valid values: account-regional, global. Defaults to global (AWS).
 spec.forProvider.forceDestroy <boolean>	# Boolean that indicates all objects (including any locked objects) should be deleted from the bucket when the bucket is destroyed so that the bucket can be destroyed without error. These objects are not recoverable. This only deletes objects when the bucket is destroyed, not when setting this parameter to true. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work.
 spec.forProvider.objectLockEnabled <boolean>	# Indicates whether this bucket has an Object Lock configuration enabled. Valid values are true or false. This argument is not supported in all regions or partitions.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
+spec.initProvider.bucketNamespace <string>	# Namespace for the bucket. Determines bucket naming scope. Valid values: account-regional, global. Defaults to global (AWS).
 spec.initProvider.forceDestroy <boolean>	# Boolean that indicates all objects (including any locked objects) should be deleted from the bucket when the bucket is destroyed so that the bucket can be destroyed without error. These objects are not recoverable. This only deletes objects when the bucket is destroyed, not when setting this parameter to true. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work.
 spec.initProvider.objectLockEnabled <boolean>	# Indicates whether this bucket has an Object Lock configuration enabled. Valid values are true or false. This argument is not supported in all regions or partitions.
 spec.initProvider.tags <map[string]string>	# Key-value map of resource tags.
@@ -28,6 +30,7 @@ status.atProvider.accelerationStatus <string>	# Sets the accelerate configuratio
 status.atProvider.acl <string>	# The canned ACL to apply. Valid values are private, public-read, public-read-write, aws-exec-read, authenticated-read, and log-delivery-write. Defaults to private. Conflicts with grant. Use the resource aws_s3_bucket_acl instead.
 status.atProvider.arn <string>	# ARN of the bucket. Will be of format arn:aws:s3:::bucketname.
 status.atProvider.bucketDomainName <string>	# Bucket domain name. Will be of format bucketname.s3.amazonaws.com.
+status.atProvider.bucketNamespace <string>	# Namespace for the bucket. Determines bucket naming scope. Valid values: account-regional, global. Defaults to global (AWS).
 status.atProvider.bucketRegion <string>	# AWS region this bucket resides in.
 status.atProvider.bucketRegionalDomainName <string>	# The bucket region-specific domain name. The bucket domain name including the region name. Please refer to the S3 endpoints reference for format. Note: AWS CloudFront allows specifying an S3 region-specific endpoint when creating an S3 origin. This will prevent redirect issues from CloudFront to the S3 Origin URL. For more information, see the Virtual Hosted-Style Requests for Other Regions section in the AWS S3 User Guide.
 status.atProvider.corsRule <[]object>	# Rule of Cross-Origin Resource Sharing. See CORS rule below for details. Use the resource aws_s3_bucket_cors_configuration instead.
@@ -129,4 +132,5 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string> (required)	# A Reason for this condition's last transition from one status to another.
 status.conditions[].status <string> (required)	# Status of this condition; is it currently True, False, or Unknown?
 status.conditions[].type <string> (required)	# Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+status.lastHandledReconcileAt <string>	# LastHandledReconcileAt holds the value of the most recent reconcile-requested-at annotation token that the controller has processed. Users can compare this to the annotation to determine whether a reconcile request has been handled.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest metadata.generation which resulted in either a ready state, or stalled due to error it can not recover from without human intervention.
