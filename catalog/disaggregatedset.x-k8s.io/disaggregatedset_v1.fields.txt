@@ -1,9 +1,12 @@
-# schema source: LeaderWorkerSet v0.9.0 https://github.com/kubernetes-sigs/lws
+# schema source: LeaderWorkerSet v0.10.0 https://github.com/kubernetes-sigs/lws
 apiVersion <string> enum=disaggregatedset.x-k8s.io/v1
 kind <string> enum=DisaggregatedSet
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# spec defines the desired state of DisaggregatedSet
+spec.placementPolicy <object>	# PlacementPolicy controls how a slice's roles are co-located and how the DisaggregatedSet's slices are spread across topology domains. When set, the controller injects pod affinity and anti-affinity into the managed LeaderWorkerSet pod templates. Placement is applied when a LeaderWorkerSet is created, so changing it takes effect on the next rollout.
+spec.placementPolicy.topology <string>	# Topology is the node-label key that defines a domain, used as the affinity topologyKey. Required when Type is not None.
+spec.placementPolicy.type <string> enum=None|ExclusiveSlice|ExclusiveTopology default="None"	# Type selects the placement guarantee. Defaults to None.
 spec.roles <[]object> (required) min=2 max=10	# Roles defines the list of roles (at least 2 required). Each role has a unique name and its own configuration.
 spec.roles[].metadata <object>	# metadata of the LWS created from this template.
 spec.roles[].metadata.annotations <map[string]string>
@@ -12,6 +15,8 @@ spec.roles[].metadata.labels <map[string]string>
 spec.roles[].metadata.name <string>
 spec.roles[].metadata.namespace <string>
 spec.roles[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Name is the unique identifier for this role.
+spec.roles[].scaling <object>	# Scaling configures how replicas are determined. Omit for inline Static scaling (default). When set to External, the DisaggregatedSet controller auto-creates a DisaggregatedSetRoleScaler and reads its spec.replicas.
+spec.roles[].scaling.mode <string> enum=Static|External default="Static"	# Mode controls the source of the replica count. Static (default) uses inline spec.replicas; External uses the auto-created scaler CR.
 spec.roles[].spec <object>	# spec defines the behavior of an LWS.
 spec.roles[].spec.leaderWorkerTemplate <object> (required)	# leaderWorkerTemplate defines the template for leader/worker pods
 spec.roles[].spec.leaderWorkerTemplate.leaderTemplate <object>	# leaderTemplate defines the pod template for leader pods.
@@ -2238,7 +2243,7 @@ spec.roles[].spec.leaderWorkerTemplate.workerTemplate.spec.volumes[].vsphereVolu
 spec.roles[].spec.leaderWorkerTemplate.workerTemplate.spec.volumes[].vsphereVolume.volumePath <string> (required)	# volumePath is the path that identifies vSphere volume vmdk
 spec.roles[].spec.networkConfig <object>	# networkConfig defines the network configuration of the group
 spec.roles[].spec.networkConfig.subdomainPolicy <string> (required) enum=Shared|UniquePerReplica	# subdomainPolicy determines the policy that will be used when creating the headless service, defaults to shared
-spec.roles[].spec.replicas <integer> default=1 format=int32	# replicas is the number of leader-workers groups. A scale subresource is available to enable HPA. The selector for HPA will be that of the leader pod, and so practically HPA will be looking up the leader pod metrics. Note that the leader pod could aggregate metrics from the rest of the group and expose them as a summary custom metric representing the whole group. On scale down, the leader pod as well as the workers statefulset will be deleted. Default to 1.
+spec.roles[].spec.replicas <integer> default=1 format=int32 min=0 max=1000000	# replicas is the number of leader-workers groups. A scale subresource is available to enable HPA. The selector for HPA will be that of the leader pod, and so practically HPA will be looking up the leader pod metrics. Note that the leader pod could aggregate metrics from the rest of the group and expose them as a summary custom metric representing the whole group. On scale down, the leader pod as well as the workers statefulset will be deleted. Default to 1.
 spec.roles[].spec.rolloutStrategy <object>	# rolloutStrategy defines the strategy that will be applied to update replicas when a revision is made to the leaderWorkerTemplate.
 spec.roles[].spec.rolloutStrategy.rollingUpdateConfiguration <object>	# rollingUpdateConfiguration defines the parameters to be used when type is RollingUpdateStrategyType.
 spec.roles[].spec.rolloutStrategy.rollingUpdateConfiguration.maxSurge <int-or-string> default=0	# maxSurge is the maximum number of replicas that can be scheduled above the original number of replicas. Value can be an absolute number (ex: 5) or a percentage of total replicas at the start of the update (ex: 10%). Absolute number is calculated from percentage by rounding up. By default, a value of 0 is used. Example: when this is set to 30%, the new replicas can be scaled up by 30% immediately when the rolling update starts. Once old replicas have been deleted, new replicas can be scaled up further, ensuring that total number of replicas running at any time during the update is at most 130% of original replicas. When rolling update completes, replicas will fall back to the original replicas.
@@ -2246,6 +2251,7 @@ spec.roles[].spec.rolloutStrategy.rollingUpdateConfiguration.maxUnavailable <int
 spec.roles[].spec.rolloutStrategy.rollingUpdateConfiguration.partition <integer> default=0 format=int32	# partition indicates the ordinal at which the lws should be partitioned for updates. During a rolling update, all the groups from ordinal Partition to Replicas-1 will be updated. The groups from 0 to Partition-1 will not be updated. This is helpful in incremental rollout strategies like canary deployments or interactive rollout strategies for multiple replicas like xPyD deployments. Once partition field and maxSurge field both set, the bursted replicas will keep remaining until the rolling update is completely done and the partition field is reset to 0. This is as expected to reduce the reconciling complexity. The default value is 0.
 spec.roles[].spec.rolloutStrategy.type <string> (required) enum=RollingUpdate default="RollingUpdate"	# type defines the rollout strategy, it can only be “RollingUpdate” for now.
 spec.roles[].spec.startupPolicy <string> enum=LeaderCreated|LeaderReady default="LeaderCreated"	# startupPolicy determines the startup policy for the worker statefulset.
+spec.slices <integer> default=1 format=int32 min=1 max=100	# Slices is the number of independent copies of the whole role topology. Each slice is a complete set of all roles that rolls out independently. Changing Slices scales copies up or down and does not trigger a rollout.
 status <object>	# status defines the observed state of DisaggregatedSet
 status.conditions <[]object>	# conditions represent the current state of the DisaggregatedSet resource. Each condition has a unique type and reflects the status of a specific aspect of the resource. Standard condition types include: - "Available": the resource is fully functional - "Progressing": the resource is being created or updated - "Degraded": the resource failed to reach or maintain its desired state The status of each condition is one of True, False, or Unknown.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.

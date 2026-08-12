@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-118-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C805-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-634%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-118-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C806-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-636%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -115,7 +115,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS EFS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-efs` | v1.5.0 | 3 | 2026-08-05 |
 | [AWS EKS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eks` | v1.19.0 | 8 | 2026-08-08 |
 | [AWS Elastic Load Balancing v2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elbv2` | v1.6.0 | 4 | 2026-08-05 |
-| [AWS ElastiCache Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elasticache` | v1.6.0 | 9 | 2026-08-05 |
+| [AWS ElastiCache Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elasticache` | v1.7.0 | 9 | 2026-08-12 |
 | [AWS EventBridge Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eventbridge` | v1.5.0 | 4 | 2026-08-05 |
 | [AWS IAM Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-iam` | v1.8.0 | 7 | 2026-08-05 |
 | [AWS Kinesis Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kinesis` | v1.4.0 | 1 | 2026-08-05 |
@@ -135,18 +135,18 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Azure Service Operator](https://schemas.fluxoperator.dev/p/azure-service-operator) | `azure-service-operator` | v2.20.0 | 1324 | 2026-07-09 |
 | [Capsule](https://schemas.fluxoperator.dev/p/capsule) | `capsule` | v0.13.11 | 12 | 2026-07-29 |
 | [Cert Manager](https://schemas.fluxoperator.dev/p/cert-manager) | `cert-manager` | v1.21.1 | 6 | 2026-07-30 |
-| [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.13.4 | 36 | 2026-07-16 |
+| [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.14.0 | 36 | 2026-08-12 |
 | [Cluster API Add-on Provider Helm](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-addon-provider-helm` | v0.6.4 | 2 | 2026-07-09 |
 | [Cluster API AWS](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-aws` | v2.13.0 | 37 | 2026-07-30 |
 | [Cluster API Azure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-azure` | v1.26.0 | 25 | 2026-07-09 |
-| [Cluster API GCP](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-gcp` | v1.13.0 | 13 | 2026-07-30 |
+| [Cluster API GCP](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-gcp` | v1.13.1 | 13 | 2026-08-12 |
 | [Cluster API Hetzner](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-hetzner` | v1.1.8 | 11 | 2026-08-04 |
 | [Cluster API k0smotron Bootstrap](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-bootstrap` | v2.1.0 | 6 | 2026-08-06 |
 | [Cluster API k0smotron Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-control-plane` | v2.1.0 | 12 | 2026-08-06 |
 | [Cluster API k0smotron Infrastructure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-infrastructure` | v2.1.0 | 10 | 2026-08-06 |
 | [Cluster API Metal3](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-metal3` | v1.13.2 | 18 | 2026-07-23 |
 | [Cluster API Nutanix](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-nutanix` | v1.10.3 | 8 | 2026-07-15 |
-| [Cluster API OpenStack](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-openstack` | v0.14.6 | 7 | 2026-07-09 |
+| [Cluster API OpenStack](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-openstack` | v0.14.7 | 7 | 2026-08-12 |
 | [Cluster API Operator](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-operator` | v0.28.0 | 7 | 2026-07-18 |
 | [Cluster API RKE2 Bootstrap](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-bootstrap` | v0.25.0 | 4 | 2026-07-09 |
 | [Cluster API RKE2 Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-control-plane` | v0.25.0 | 4 | 2026-07-09 |
@@ -172,7 +172,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Upbound AWS Provider](https://schemas.fluxoperator.dev/p/provider-upjet-aws) | `provider-upjet-aws` | v2.7.0 | 2386 | 2026-08-11 |
 | [Upbound Azure Provider](https://schemas.fluxoperator.dev/p/provider-upjet-azure) | `provider-upjet-azure` | v2.7.0 | 1805 | 2026-08-05 |
 | [Upbound GCP Provider](https://schemas.fluxoperator.dev/p/provider-upjet-gcp) | `provider-upjet-gcp` | v3.0.0 | 823 | 2026-08-05 |
-| [Vault Secrets Operator](https://schemas.fluxoperator.dev/p/vault-secrets-operator) | `vault-secrets-operator` | v1.5.0 | 10 | 2026-07-24 |
+| [Vault Secrets Operator](https://schemas.fluxoperator.dev/p/vault-secrets-operator) | `vault-secrets-operator` | v1.5.1 | 10 | 2026-08-12 |
 
 ### Runtime
 
@@ -226,7 +226,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.19.0 | 22 | 2026-07-23 |
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.3 | 54 | 2026-08-11 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
-| [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v0.9.0 | 2 | 2026-07-09 |
+| [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v0.10.0 | 3 | 2026-08-12 |
 | [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.8.1 | 19 | 2026-08-04 |
 | [MetalLB](https://schemas.fluxoperator.dev/p/metallb) | `metallb` | v0.16.0 | 10 | 2026-07-09 |
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.19.0 | 2 | 2026-07-11 |
@@ -246,7 +246,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.5.0 | 3 | 2026-08-05 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.11 | 3 | 2026-07-14 |
 | [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.9.1 | 5 | 2026-07-18 |
-| [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.0.8 | 8 | 2026-07-23 |
+| [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.1.0 | 8 | 2026-08-12 |
 | [CloudNativePG](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `cloudnative-pg` | v1.30.0 | 11 | 2026-07-09 |
 | [Crunchy Postgres Operator](https://schemas.fluxoperator.dev/p/crunchy-postgres-operator) | `crunchy-postgres-operator` | v6.0.2 | 4 | 2026-07-09 |
 | [Dapr](https://schemas.fluxoperator.dev/p/dapr) | `dapr` | v1.18.2 | 8 | 2026-07-23 |
@@ -272,11 +272,11 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NATS](https://schemas.fluxoperator.dev/p/nats) | `nats` | v0.23.0 | 8 | 2026-07-09 |
 | [OpenFeature Operator](https://schemas.fluxoperator.dev/p/open-feature-operator) | `open-feature-operator` | v0.9.2 | 9 | 2026-07-09 |
 | [OpenKruise](https://schemas.fluxoperator.dev/p/openkruise) | `openkruise` | v1.8.5 | 19 | 2026-08-11 |
-| [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq-cluster-operator) | `rabbitmq-cluster-operator` | v2.22.3 | 1 | 2026-07-18 |
+| [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq-cluster-operator) | `rabbitmq-cluster-operator` | v2.22.4 | 1 | 2026-08-12 |
 | [Rancher Fleet](https://schemas.fluxoperator.dev/p/rancher-fleet) | `rancher-fleet` | v0.16.0 | 14 | 2026-07-23 |
 | [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.26.0 | 4 | 2026-07-16 |
 | [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 5.6.0 | 1 | 2026-08-06 |
-| [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.0 | 11 | 2026-07-09 |
+| [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.1 | 11 | 2026-08-12 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
 | [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.20.8 | 8 | 2026-08-06 |
 | [Spark Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `spark-operator` | v2.5.2 | 3 | 2026-08-01 |
@@ -294,7 +294,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Grafana Operator](https://schemas.fluxoperator.dev/p/grafana-operator) | `grafana-operator` | v5.24.0 | 13 | 2026-07-09 |
 | [Jaeger Operator](https://schemas.fluxoperator.dev/p/jaeger-operator) | `jaeger-operator` | v1.65.0 | 1 | 2026-07-09 |
 | [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.31.0 | 3 | 2026-07-16 |
-| [Logging Operator](https://schemas.fluxoperator.dev/p/logging-operator) | `logging-operator` | 6.7.0 | 21 | 2026-07-09 |
+| [Logging Operator](https://schemas.fluxoperator.dev/p/logging-operator) | `logging-operator` | 6.8.0 | 21 | 2026-08-12 |
 | [Loki Operator](https://schemas.fluxoperator.dev/p/loki-operator) | `loki-operator` | v0.10.2 | 9 | 2026-07-09 |
 | [OpenSearch Operator](https://schemas.fluxoperator.dev/p/opensearch-operator) | `opensearch-operator` | 3.0.2 | 20 | 2026-07-09 |
 | [OpenTelemetry Operator](https://schemas.fluxoperator.dev/p/opentelemetry) | `opentelemetry` | v0.156.0 | 5 | 2026-07-15 |

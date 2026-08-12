@@ -1,0 +1,18 @@
+# schema source: LeaderWorkerSet v0.10.0 https://github.com/kubernetes-sigs/lws
+apiVersion <string> enum=disaggregatedset.x-k8s.io/v1
+kind <string> enum=DisaggregatedSetRoleScaler
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# spec defines the desired state of DisaggregatedSetRoleScaler
+spec.replicas <integer> (required) default=0 format=int32 min=0	# Replicas is the desired replica count for the role. The controller seeds this at scaler creation — 1 for a fresh role (0 would deadlock vanilla HPA in ScalingDisabled), or the LWS's current replica count for a Static→External flip so the role does not silently drain to zero. External autoscalers overwrite it on their first tick. Non-pointer with a default because kube-apiserver's CRD /scale handler extracts .spec.replicas at read time and errors ("the spec replicas field does not exist") when the JSONPath resolves to nothing. HPA reads /scale before its first write; a missing field would deadlock the loop.
+status <object>	# status defines the observed state of DisaggregatedSetRoleScaler
+status.conditions <[]object>	# Conditions expose scaler-level state (Ready).
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation the status reflects.
+status.replicas <integer> format=int32	# Replicas is the observed replica count for this role — LWS groups (== leader pods), aggregated across all revisions currently present. Read by HPA as the "current" count for its ratio math.
+status.selector <string>	# Selector is a label selector (in string form) matching one pod per LWS group (the leader), across all revisions: disaggregatedset.x-k8s.io/name=<ds>,disaggregatedset.x-k8s.io/role=<role>,leaderworkerset.sigs.k8s.io/worker-index=0 Leader-only so HPA's per-pod-metric averaging divides by group count (matching spec.replicas that HPA writes), keeping the ratio math consistent for leaderWorkerTemplate.size > 1. Aggregate across revisions so HPA observes the serving fleet during a rolling update.

@@ -1,4 +1,4 @@
-# schema source: Cluster API v1.13.4 https://github.com/kubernetes-sigs/cluster-api
+# schema source: Cluster API v1.14.0 https://github.com/kubernetes-sigs/cluster-api
 apiVersion <string> enum=controlplane.cluster.x-k8s.io/v1beta1 (deprecated)
 kind <string> enum=KubeadmControlPlane
 metadata.name <string> (required)
@@ -180,6 +180,7 @@ spec.kubeadmConfigSpec.diskSetup.partitions[].tableType <string> enum=mbr|gpt	# 
 spec.kubeadmConfigSpec.files <[]object> max=200	# files specifies extra files to be passed to user_data upon creation.
 spec.kubeadmConfigSpec.files[].append <boolean>	# append specifies whether to append Content to existing file if Path exists.
 spec.kubeadmConfigSpec.files[].content <string> min=1 max=10240	# content is the actual content of the file.
+spec.kubeadmConfigSpec.files[].contentFormat <string> enum=Raw|Template	# contentFormat specifies how to interpret content after it is resolved (inline or from contentFrom). When set to "Template", content is rendered as a Go text/template. Available template variables: - .controlPlane.version: the Kubernetes version of the control plane (e.g. "v1.35.0"). Only set when the cluster has a control plane reference that exposes spec.version. When set to "Raw" or omitted, content is used verbatim.
 spec.kubeadmConfigSpec.files[].contentFrom <object>	# contentFrom is a referenced source of content to populate the file.
 spec.kubeadmConfigSpec.files[].contentFrom.secret <object> (required)	# secret represents a secret that should populate this file.
 spec.kubeadmConfigSpec.files[].contentFrom.secret.key <string> (required) min=1 max=256	# key is the key in the secret's data map for this value.
@@ -369,3 +370,6 @@ status.v1beta2.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-
 status.v1beta2.readyReplicas <integer> format=int32	# readyReplicas is the number of ready replicas for this KubeadmControlPlane. A machine is considered ready when Machine's Ready condition is true.
 status.v1beta2.upToDateReplicas <integer> format=int32	# upToDateReplicas is the number of up-to-date replicas targeted by this KubeadmControlPlane. A machine is considered up-to-date when Machine's UpToDate condition is true.
 status.version <string> min=1 max=256	# version represents the minimum Kubernetes version for the control plane machines in the cluster.
+status.versions <[]object> min=1 max=100	# versions is the aggregated Kubernetes versions in this KubeadmControlPlane.
+status.versions[].replicas <integer> format=int32 min=1	# replicas is the number of replicas at this version.
+status.versions[].version <string> (required) min=1 max=256	# version is the Kubernetes version.

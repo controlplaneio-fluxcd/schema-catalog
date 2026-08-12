@@ -1,4 +1,4 @@
-# schema source: AWS ElastiCache Controller v1.6.0 https://github.com/aws-controllers-k8s/elasticache-controller
+# schema source: AWS ElastiCache Controller v1.7.0 https://github.com/aws-controllers-k8s/elasticache-controller
 apiVersion <string> enum=elasticache.services.k8s.aws/v1alpha1
 kind <string> enum=ReplicationGroup
 metadata.name <string> (required)
@@ -53,6 +53,10 @@ spec.nodeGroupConfiguration[].replicaCount <integer> format=int64
 spec.nodeGroupConfiguration[].replicaOutpostARNs <[]string>
 spec.nodeGroupConfiguration[].slots <string>
 spec.notificationTopicARN <string>	# The Amazon Resource Name (ARN) of the Amazon Simple Notification Service (SNS) topic to which notifications are sent. The Amazon SNS topic owner must be the same as the cluster owner.
+spec.notificationTopicRef <object>	# AWSResourceReferenceWrapper provides a wrapper around *AWSResourceReference type to provide more user friendly syntax for references using 'from' field Ex: APIIDRef: from: name: my-api
+spec.notificationTopicRef.from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.notificationTopicRef.from.name <string>
+spec.notificationTopicRef.from.namespace <string>
 spec.numNodeGroups <integer> format=int64	# An optional parameter that specifies the number of node groups (shards) for this Valkey or Redis OSS (cluster mode enabled) replication group. For Valkey or Redis OSS (cluster mode disabled) either omit this parameter or set it to 1. Default: 1
 spec.port <integer> format=int64	# The port number on which each member of the replication group accepts connections.
 spec.preferredCacheClusterAZs <[]string>	# A list of EC2 Availability Zones in which the replication group's clusters are created. The order of the Availability Zones in the list is the order in which clusters are allocated. The primary cluster is created in the first AZ in the list. This parameter is not used if there is more than one node group (shard). You should use NodeGroupConfiguration instead. If you are creating your replication group in an Amazon VPC (recommended), you can only locate clusters in Availability Zones associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of NumCacheClusters. Default: system chosen Availability Zones.
@@ -66,7 +70,11 @@ spec.securityGroupRefs[].from <object>	# AWSResourceReference provides all the v
 spec.securityGroupRefs[].from.name <string>
 spec.securityGroupRefs[].from.namespace <string>
 spec.snapshotARNs <[]string>	# A list of Amazon Resource Names (ARN) that uniquely identify the Valkey or Redis OSS RDB snapshot files stored in Amazon S3. The snapshot files are used to populate the new replication group. The Amazon S3 object name in the ARN cannot contain any commas. The new replication group will have the number of node groups (console: shards) specified by the parameter NumNodeGroups or the number of node groups configured by NodeGroupConfiguration regardless of the number of ARNs specified here. Example of an Amazon S3 ARN: arn:aws:s3:::my_bucket/snapshot1.rdb
-spec.snapshotName <string>	# The name of a snapshot from which to restore data into the new replication group. The snapshot status changes to restoring while the new replication group is being created.
+spec.snapshotName <string> (immutable)	# The name of a snapshot from which to restore data into the new replication group. The snapshot status changes to restoring while the new replication group is being created.
+spec.snapshotRef <object>	# AWSResourceReferenceWrapper provides a wrapper around *AWSResourceReference type to provide more user friendly syntax for references using 'from' field Ex: APIIDRef: from: name: my-api
+spec.snapshotRef.from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.snapshotRef.from.name <string>
+spec.snapshotRef.from.namespace <string>
 spec.snapshotRetentionLimit <integer> format=int64	# The number of days for which ElastiCache retains automatic snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, a snapshot that was taken today is retained for 5 days before being deleted. Default: 0 (i.e., automatic backups are disabled for this cluster).
 spec.snapshotWindow <string>	# The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard). Example: 05:00-09:00 If you do not specify this parameter, ElastiCache automatically chooses an appropriate time range.
 spec.tags <[]object>	# A list of tags to be added to this resource. Tags are comma-separated key,value pairs (e.g. Key=myKey, Value=myKeyValue. You can include multiple tags as shown following: Key=myKey, Value=myKeyValue Key=mySecondKey, Value=mySecondKeyValue. Tags on replication groups will be replicated to all nodes.
@@ -74,6 +82,10 @@ spec.tags[].key <string>
 spec.tags[].value <string>
 spec.transitEncryptionEnabled <boolean>	# A flag that enables in-transit encryption when set to true. This parameter is valid only if the Engine parameter is redis, the EngineVersion parameter is 3.2.6, 4.x or later, and the cluster is being created in an Amazon VPC. If you enable in-transit encryption, you must also specify a value for CacheSubnetGroup. Required: Only available when creating a replication group in an Amazon VPC using Redis OSS version 3.2.6, 4.x or later. Default: false For HIPAA compliance, you must specify TransitEncryptionEnabled as true, an AuthToken, and a CacheSubnetGroup.
 spec.userGroupIDs <[]string>	# The user group to associate with the replication group.
+spec.userGroupRefs <[]object>
+spec.userGroupRefs[].from <object>	# AWSResourceReference provides all the values necessary to reference another k8s resource for finding the identifier(Id/ARN/Name)
+spec.userGroupRefs[].from.name <string>
+spec.userGroupRefs[].from.namespace <string>
 status <object>	# ReplicationGroupStatus defines the observed state of ReplicationGroup
 status.ackResourceMetadata <object>	# All CRs managed by ACK have a common `Status.ACKResourceMetadata` member that is used to contain resource sync state, account ownership, constructed ARN for the resource
 status.ackResourceMetadata.arn <string>	# ARN is the Amazon Resource Name for the resource. This is a globally-unique identifier and is set only by the ACK service controller once the controller has orchestrated the creation of the resource OR when it has verified that an "adopted" resource (a resource where the ARN annotation was set by the Kubernetes user on the CR) exists and matches the supplied CR's Spec field values. https://github.com/aws/aws-controllers-k8s/issues/270

@@ -1,4 +1,4 @@
-# schema source: Argo Workflows v4.0.8 https://github.com/argoproj/argo-workflows
+# schema source: Argo Workflows v4.1.0 https://github.com/argoproj/argo-workflows
 apiVersion <string> enum=argoproj.io/v1alpha1
 kind <string> enum=WorkflowTaskSet
 metadata.name <string> (required)
@@ -215,6 +215,7 @@ spec.tasks.<key>.archiveLocation.http.auth.oauth2.tokenURLSecret.optional <boole
 spec.tasks.<key>.archiveLocation.http.headers <[]object>
 spec.tasks.<key>.archiveLocation.http.headers[].name <string> (required)
 spec.tasks.<key>.archiveLocation.http.headers[].value <string> (required)
+spec.tasks.<key>.archiveLocation.http.saveStreamViaFile <boolean>
 spec.tasks.<key>.archiveLocation.http.url <string> (required)
 spec.tasks.<key>.archiveLocation.oss <object>
 spec.tasks.<key>.archiveLocation.oss.accessKeySecret <object>
@@ -246,6 +247,7 @@ spec.tasks.<key>.archiveLocation.s3.accessKeySecret <object>
 spec.tasks.<key>.archiveLocation.s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.archiveLocation.s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.archiveLocation.s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.archiveLocation.s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.archiveLocation.s3.bucket <string>
 spec.tasks.<key>.archiveLocation.s3.caSecret <object>
 spec.tasks.<key>.archiveLocation.s3.caSecret.key <string> (required)
@@ -290,6 +292,11 @@ spec.tasks.<key>.container.env[].valueFrom.configMapKeyRef.optional <boolean>
 spec.tasks.<key>.container.env[].valueFrom.fieldRef <object>
 spec.tasks.<key>.container.env[].valueFrom.fieldRef.apiVersion <string>
 spec.tasks.<key>.container.env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.tasks.<key>.container.env[].valueFrom.fileKeyRef <object>
+spec.tasks.<key>.container.env[].valueFrom.fileKeyRef.key <string> (required)
+spec.tasks.<key>.container.env[].valueFrom.fileKeyRef.optional <boolean> default=false
+spec.tasks.<key>.container.env[].valueFrom.fileKeyRef.path <string> (required)
+spec.tasks.<key>.container.env[].valueFrom.fileKeyRef.volumeName <string> (required)
 spec.tasks.<key>.container.env[].valueFrom.resourceFieldRef <object>
 spec.tasks.<key>.container.env[].valueFrom.resourceFieldRef.containerName <string>
 spec.tasks.<key>.container.env[].valueFrom.resourceFieldRef.divisor <int-or-string>
@@ -405,6 +412,11 @@ spec.tasks.<key>.container.resources.claims[].request <string>
 spec.tasks.<key>.container.resources.limits <object (free-form)>
 spec.tasks.<key>.container.resources.requests <object (free-form)>
 spec.tasks.<key>.container.restartPolicy <string>
+spec.tasks.<key>.container.restartPolicyRules <[]object>
+spec.tasks.<key>.container.restartPolicyRules[].action <string> (required)
+spec.tasks.<key>.container.restartPolicyRules[].exitCodes <object>
+spec.tasks.<key>.container.restartPolicyRules[].exitCodes.operator <string> (required)
+spec.tasks.<key>.container.restartPolicyRules[].exitCodes.values <[]integer>
 spec.tasks.<key>.container.securityContext <object>
 spec.tasks.<key>.container.securityContext.allowPrivilegeEscalation <boolean>
 spec.tasks.<key>.container.securityContext.appArmorProfile <object>
@@ -488,6 +500,11 @@ spec.tasks.<key>.containerSet.containers[].env[].valueFrom.configMapKeyRef.optio
 spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fieldRef <object>
 spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fieldRef.apiVersion <string>
 spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fileKeyRef <object>
+spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fileKeyRef.key <string> (required)
+spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fileKeyRef.optional <boolean> default=false
+spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fileKeyRef.path <string> (required)
+spec.tasks.<key>.containerSet.containers[].env[].valueFrom.fileKeyRef.volumeName <string> (required)
 spec.tasks.<key>.containerSet.containers[].env[].valueFrom.resourceFieldRef <object>
 spec.tasks.<key>.containerSet.containers[].env[].valueFrom.resourceFieldRef.containerName <string>
 spec.tasks.<key>.containerSet.containers[].env[].valueFrom.resourceFieldRef.divisor <int-or-string>
@@ -603,6 +620,11 @@ spec.tasks.<key>.containerSet.containers[].resources.claims[].request <string>
 spec.tasks.<key>.containerSet.containers[].resources.limits <object (free-form)>
 spec.tasks.<key>.containerSet.containers[].resources.requests <object (free-form)>
 spec.tasks.<key>.containerSet.containers[].restartPolicy <string>
+spec.tasks.<key>.containerSet.containers[].restartPolicyRules <[]object>
+spec.tasks.<key>.containerSet.containers[].restartPolicyRules[].action <string> (required)
+spec.tasks.<key>.containerSet.containers[].restartPolicyRules[].exitCodes <object>
+spec.tasks.<key>.containerSet.containers[].restartPolicyRules[].exitCodes.operator <string> (required)
+spec.tasks.<key>.containerSet.containers[].restartPolicyRules[].exitCodes.values <[]integer>
 spec.tasks.<key>.containerSet.containers[].securityContext <object>
 spec.tasks.<key>.containerSet.containers[].securityContext.allowPrivilegeEscalation <boolean>
 spec.tasks.<key>.containerSet.containers[].securityContext.appArmorProfile <object>
@@ -813,6 +835,7 @@ spec.tasks.<key>.dag.tasks[].arguments.artifacts[].http.auth.oauth2.tokenURLSecr
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].http.headers <[]object>
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].http.headers[].name <string> (required)
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].http.headers[].value <string> (required)
+spec.tasks.<key>.dag.tasks[].arguments.artifacts[].http.saveStreamViaFile <boolean>
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].http.url <string> (required)
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -849,6 +872,7 @@ spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.accessKeySecret <object>
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.bucket <string>
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.caSecret <object>
 spec.tasks.<key>.dag.tasks[].arguments.artifacts[].s3.caSecret.key <string> (required)
@@ -1032,6 +1056,7 @@ spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].http.auth.oauth2.
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].http.headers <[]object>
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].http.headers[].name <string> (required)
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].http.headers[].value <string> (required)
+spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].http.saveStreamViaFile <boolean>
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].http.url <string> (required)
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -1068,6 +1093,7 @@ spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.accessKeySecre
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.bucket <string>
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.caSecret <object>
 spec.tasks.<key>.dag.tasks[].hooks.<key>.arguments.artifacts[].s3.caSecret.key <string> (required)
@@ -1268,6 +1294,7 @@ spec.tasks.<key>.data.source.artifactPaths.http.auth.oauth2.tokenURLSecret.optio
 spec.tasks.<key>.data.source.artifactPaths.http.headers <[]object>
 spec.tasks.<key>.data.source.artifactPaths.http.headers[].name <string> (required)
 spec.tasks.<key>.data.source.artifactPaths.http.headers[].value <string> (required)
+spec.tasks.<key>.data.source.artifactPaths.http.saveStreamViaFile <boolean>
 spec.tasks.<key>.data.source.artifactPaths.http.url <string> (required)
 spec.tasks.<key>.data.source.artifactPaths.mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.data.source.artifactPaths.name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -1304,6 +1331,7 @@ spec.tasks.<key>.data.source.artifactPaths.s3.accessKeySecret <object>
 spec.tasks.<key>.data.source.artifactPaths.s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.data.source.artifactPaths.s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.data.source.artifactPaths.s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.data.source.artifactPaths.s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.data.source.artifactPaths.s3.bucket <string>
 spec.tasks.<key>.data.source.artifactPaths.s3.caSecret <object>
 spec.tasks.<key>.data.source.artifactPaths.s3.caSecret.key <string> (required)
@@ -1373,6 +1401,11 @@ spec.tasks.<key>.initContainers[].env[].valueFrom.configMapKeyRef.optional <bool
 spec.tasks.<key>.initContainers[].env[].valueFrom.fieldRef <object>
 spec.tasks.<key>.initContainers[].env[].valueFrom.fieldRef.apiVersion <string>
 spec.tasks.<key>.initContainers[].env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.tasks.<key>.initContainers[].env[].valueFrom.fileKeyRef <object>
+spec.tasks.<key>.initContainers[].env[].valueFrom.fileKeyRef.key <string> (required)
+spec.tasks.<key>.initContainers[].env[].valueFrom.fileKeyRef.optional <boolean> default=false
+spec.tasks.<key>.initContainers[].env[].valueFrom.fileKeyRef.path <string> (required)
+spec.tasks.<key>.initContainers[].env[].valueFrom.fileKeyRef.volumeName <string> (required)
 spec.tasks.<key>.initContainers[].env[].valueFrom.resourceFieldRef <object>
 spec.tasks.<key>.initContainers[].env[].valueFrom.resourceFieldRef.containerName <string>
 spec.tasks.<key>.initContainers[].env[].valueFrom.resourceFieldRef.divisor <int-or-string>
@@ -1489,6 +1522,11 @@ spec.tasks.<key>.initContainers[].resources.claims[].request <string>
 spec.tasks.<key>.initContainers[].resources.limits <object (free-form)>
 spec.tasks.<key>.initContainers[].resources.requests <object (free-form)>
 spec.tasks.<key>.initContainers[].restartPolicy <string>
+spec.tasks.<key>.initContainers[].restartPolicyRules <[]object>
+spec.tasks.<key>.initContainers[].restartPolicyRules[].action <string> (required)
+spec.tasks.<key>.initContainers[].restartPolicyRules[].exitCodes <object>
+spec.tasks.<key>.initContainers[].restartPolicyRules[].exitCodes.operator <string> (required)
+spec.tasks.<key>.initContainers[].restartPolicyRules[].exitCodes.values <[]integer>
 spec.tasks.<key>.initContainers[].securityContext <object>
 spec.tasks.<key>.initContainers[].securityContext.allowPrivilegeEscalation <boolean>
 spec.tasks.<key>.initContainers[].securityContext.appArmorProfile <object>
@@ -1683,6 +1721,7 @@ spec.tasks.<key>.inputs.artifacts[].http.auth.oauth2.tokenURLSecret.optional <bo
 spec.tasks.<key>.inputs.artifacts[].http.headers <[]object>
 spec.tasks.<key>.inputs.artifacts[].http.headers[].name <string> (required)
 spec.tasks.<key>.inputs.artifacts[].http.headers[].value <string> (required)
+spec.tasks.<key>.inputs.artifacts[].http.saveStreamViaFile <boolean>
 spec.tasks.<key>.inputs.artifacts[].http.url <string> (required)
 spec.tasks.<key>.inputs.artifacts[].mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.inputs.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -1719,6 +1758,7 @@ spec.tasks.<key>.inputs.artifacts[].s3.accessKeySecret <object>
 spec.tasks.<key>.inputs.artifacts[].s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.inputs.artifacts[].s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.inputs.artifacts[].s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.inputs.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.inputs.artifacts[].s3.bucket <string>
 spec.tasks.<key>.inputs.artifacts[].s3.caSecret <object>
 spec.tasks.<key>.inputs.artifacts[].s3.caSecret.key <string> (required)
@@ -1924,6 +1964,7 @@ spec.tasks.<key>.outputs.artifacts[].http.auth.oauth2.tokenURLSecret.optional <b
 spec.tasks.<key>.outputs.artifacts[].http.headers <[]object>
 spec.tasks.<key>.outputs.artifacts[].http.headers[].name <string> (required)
 spec.tasks.<key>.outputs.artifacts[].http.headers[].value <string> (required)
+spec.tasks.<key>.outputs.artifacts[].http.saveStreamViaFile <boolean>
 spec.tasks.<key>.outputs.artifacts[].http.url <string> (required)
 spec.tasks.<key>.outputs.artifacts[].mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.outputs.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -1960,6 +2001,7 @@ spec.tasks.<key>.outputs.artifacts[].s3.accessKeySecret <object>
 spec.tasks.<key>.outputs.artifacts[].s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.outputs.artifacts[].s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.outputs.artifacts[].s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.outputs.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.outputs.artifacts[].s3.bucket <string>
 spec.tasks.<key>.outputs.artifacts[].s3.caSecret <object>
 spec.tasks.<key>.outputs.artifacts[].s3.caSecret.key <string> (required)
@@ -2013,7 +2055,14 @@ spec.tasks.<key>.outputs.parameters[].valueFrom.path <string>
 spec.tasks.<key>.outputs.parameters[].valueFrom.supplied <object (free-form)>
 spec.tasks.<key>.outputs.result <string>
 spec.tasks.<key>.parallelism <integer> format=int64 min=1
+spec.tasks.<key>.pendingTimeout <string>
 spec.tasks.<key>.plugin <object (free-form)>
+spec.tasks.<key>.podResources <object>
+spec.tasks.<key>.podResources.claims <[]object>
+spec.tasks.<key>.podResources.claims[].name <string> (required)
+spec.tasks.<key>.podResources.claims[].request <string>
+spec.tasks.<key>.podResources.limits <object (free-form)>
+spec.tasks.<key>.podResources.requests <object (free-form)>
 spec.tasks.<key>.podSpecPatch <string>
 spec.tasks.<key>.priorityClassName <string>
 spec.tasks.<key>.resource <object>
@@ -2148,6 +2197,7 @@ spec.tasks.<key>.resource.manifestFrom.artifact.http.auth.oauth2.tokenURLSecret.
 spec.tasks.<key>.resource.manifestFrom.artifact.http.headers <[]object>
 spec.tasks.<key>.resource.manifestFrom.artifact.http.headers[].name <string> (required)
 spec.tasks.<key>.resource.manifestFrom.artifact.http.headers[].value <string> (required)
+spec.tasks.<key>.resource.manifestFrom.artifact.http.saveStreamViaFile <boolean>
 spec.tasks.<key>.resource.manifestFrom.artifact.http.url <string> (required)
 spec.tasks.<key>.resource.manifestFrom.artifact.mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.resource.manifestFrom.artifact.name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -2184,6 +2234,7 @@ spec.tasks.<key>.resource.manifestFrom.artifact.s3.accessKeySecret <object>
 spec.tasks.<key>.resource.manifestFrom.artifact.s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.resource.manifestFrom.artifact.s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.resource.manifestFrom.artifact.s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.resource.manifestFrom.artifact.s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.resource.manifestFrom.artifact.s3.bucket <string>
 spec.tasks.<key>.resource.manifestFrom.artifact.s3.caSecret <object>
 spec.tasks.<key>.resource.manifestFrom.artifact.s3.caSecret.key <string> (required)
@@ -2217,6 +2268,10 @@ spec.tasks.<key>.resource.manifestFrom.artifact.subPath <string>
 spec.tasks.<key>.resource.mergeStrategy <string> enum=strategic|merge|json
 spec.tasks.<key>.resource.setOwnerReference <boolean>
 spec.tasks.<key>.resource.successCondition <string>
+spec.tasks.<key>.resourceClaims <[]object>
+spec.tasks.<key>.resourceClaims[].name <string> (required)
+spec.tasks.<key>.resourceClaims[].resourceClaimName <string>
+spec.tasks.<key>.resourceClaims[].resourceClaimTemplateName <string>
 spec.tasks.<key>.retryStrategy <object>
 spec.tasks.<key>.retryStrategy.affinity <object>
 spec.tasks.<key>.retryStrategy.affinity.nodeAntiAffinity <object (free-form)>
@@ -2243,6 +2298,11 @@ spec.tasks.<key>.script.env[].valueFrom.configMapKeyRef.optional <boolean>
 spec.tasks.<key>.script.env[].valueFrom.fieldRef <object>
 spec.tasks.<key>.script.env[].valueFrom.fieldRef.apiVersion <string>
 spec.tasks.<key>.script.env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.tasks.<key>.script.env[].valueFrom.fileKeyRef <object>
+spec.tasks.<key>.script.env[].valueFrom.fileKeyRef.key <string> (required)
+spec.tasks.<key>.script.env[].valueFrom.fileKeyRef.optional <boolean> default=false
+spec.tasks.<key>.script.env[].valueFrom.fileKeyRef.path <string> (required)
+spec.tasks.<key>.script.env[].valueFrom.fileKeyRef.volumeName <string> (required)
 spec.tasks.<key>.script.env[].valueFrom.resourceFieldRef <object>
 spec.tasks.<key>.script.env[].valueFrom.resourceFieldRef.containerName <string>
 spec.tasks.<key>.script.env[].valueFrom.resourceFieldRef.divisor <int-or-string>
@@ -2358,6 +2418,11 @@ spec.tasks.<key>.script.resources.claims[].request <string>
 spec.tasks.<key>.script.resources.limits <object (free-form)>
 spec.tasks.<key>.script.resources.requests <object (free-form)>
 spec.tasks.<key>.script.restartPolicy <string>
+spec.tasks.<key>.script.restartPolicyRules <[]object>
+spec.tasks.<key>.script.restartPolicyRules[].action <string> (required)
+spec.tasks.<key>.script.restartPolicyRules[].exitCodes <object>
+spec.tasks.<key>.script.restartPolicyRules[].exitCodes.operator <string> (required)
+spec.tasks.<key>.script.restartPolicyRules[].exitCodes.values <[]integer>
 spec.tasks.<key>.script.securityContext <object>
 spec.tasks.<key>.script.securityContext.allowPrivilegeEscalation <boolean>
 spec.tasks.<key>.script.securityContext.appArmorProfile <object>
@@ -2469,6 +2534,11 @@ spec.tasks.<key>.sidecars[].env[].valueFrom.configMapKeyRef.optional <boolean>
 spec.tasks.<key>.sidecars[].env[].valueFrom.fieldRef <object>
 spec.tasks.<key>.sidecars[].env[].valueFrom.fieldRef.apiVersion <string>
 spec.tasks.<key>.sidecars[].env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.tasks.<key>.sidecars[].env[].valueFrom.fileKeyRef <object>
+spec.tasks.<key>.sidecars[].env[].valueFrom.fileKeyRef.key <string> (required)
+spec.tasks.<key>.sidecars[].env[].valueFrom.fileKeyRef.optional <boolean> default=false
+spec.tasks.<key>.sidecars[].env[].valueFrom.fileKeyRef.path <string> (required)
+spec.tasks.<key>.sidecars[].env[].valueFrom.fileKeyRef.volumeName <string> (required)
 spec.tasks.<key>.sidecars[].env[].valueFrom.resourceFieldRef <object>
 spec.tasks.<key>.sidecars[].env[].valueFrom.resourceFieldRef.containerName <string>
 spec.tasks.<key>.sidecars[].env[].valueFrom.resourceFieldRef.divisor <int-or-string>
@@ -2585,6 +2655,11 @@ spec.tasks.<key>.sidecars[].resources.claims[].request <string>
 spec.tasks.<key>.sidecars[].resources.limits <object (free-form)>
 spec.tasks.<key>.sidecars[].resources.requests <object (free-form)>
 spec.tasks.<key>.sidecars[].restartPolicy <string>
+spec.tasks.<key>.sidecars[].restartPolicyRules <[]object>
+spec.tasks.<key>.sidecars[].restartPolicyRules[].action <string> (required)
+spec.tasks.<key>.sidecars[].restartPolicyRules[].exitCodes <object>
+spec.tasks.<key>.sidecars[].restartPolicyRules[].exitCodes.operator <string> (required)
+spec.tasks.<key>.sidecars[].restartPolicyRules[].exitCodes.values <[]integer>
 spec.tasks.<key>.sidecars[].securityContext <object>
 spec.tasks.<key>.sidecars[].securityContext.allowPrivilegeEscalation <boolean>
 spec.tasks.<key>.sidecars[].securityContext.appArmorProfile <object>
@@ -2781,6 +2856,7 @@ spec.tasks.<key>.steps[].steps[].arguments.artifacts[].http.auth.oauth2.tokenURL
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].http.headers <[]object>
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].http.headers[].name <string> (required)
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].http.headers[].value <string> (required)
+spec.tasks.<key>.steps[].steps[].arguments.artifacts[].http.saveStreamViaFile <boolean>
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].http.url <string> (required)
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -2817,6 +2893,7 @@ spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.accessKeySecret <objec
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.bucket <string>
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.caSecret <object>
 spec.tasks.<key>.steps[].steps[].arguments.artifacts[].s3.caSecret.key <string> (required)
@@ -2998,6 +3075,7 @@ spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].http.auth.oau
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].http.headers <[]object>
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].http.headers[].name <string> (required)
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].http.headers[].value <string> (required)
+spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].http.saveStreamViaFile <boolean>
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].http.url <string> (required)
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].mode <integer> format=int32 min=0 max=511
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"
@@ -3034,6 +3112,7 @@ spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.accessKeyS
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.accessKeySecret.key <string> (required)
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.accessKeySecret.name <string> default=""
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.accessKeySecret.optional <boolean>
+spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.bucket <string>
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.caSecret <object>
 spec.tasks.<key>.steps[].steps[].hooks.<key>.arguments.artifacts[].s3.caSecret.key <string> (required)
@@ -3317,6 +3396,14 @@ spec.tasks.<key>.volumes[].projected.sources[].downwardAPI.items[].resourceField
 spec.tasks.<key>.volumes[].projected.sources[].downwardAPI.items[].resourceFieldRef.containerName <string>
 spec.tasks.<key>.volumes[].projected.sources[].downwardAPI.items[].resourceFieldRef.divisor <int-or-string>
 spec.tasks.<key>.volumes[].projected.sources[].downwardAPI.items[].resourceFieldRef.resource <string> (required)
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate <object>
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.certificateChainPath <string>
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.credentialBundlePath <string>
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.keyPath <string>
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.keyType <string> (required)
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.maxExpirationSeconds <integer> format=int32
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.signerName <string> (required)
+spec.tasks.<key>.volumes[].projected.sources[].podCertificate.userAnnotations <map[string]string>
 spec.tasks.<key>.volumes[].projected.sources[].secret <object>
 spec.tasks.<key>.volumes[].projected.sources[].secret.items <[]object>
 spec.tasks.<key>.volumes[].projected.sources[].secret.items[].key <string> (required)
@@ -3507,6 +3594,7 @@ status.nodes.<key>.outputs.artifacts[].http.auth.oauth2.tokenURLSecret.optional 
 status.nodes.<key>.outputs.artifacts[].http.headers <[]object>	# Headers are an optional list of headers to send with HTTP requests for artifacts
 status.nodes.<key>.outputs.artifacts[].http.headers[].name <string> (required)	# Name is the header name
 status.nodes.<key>.outputs.artifacts[].http.headers[].value <string> (required)	# Value is the literal value to use for the header
+status.nodes.<key>.outputs.artifacts[].http.saveStreamViaFile <boolean>	# SaveStreamViaFile buffers a streamed upload to a temporary file before sending it, so a 307/308 redirect (e.g. webHDFS) can be followed by re-sending the body. When false (the default) SaveStream sends the reader directly and cannot follow such a redirect, since a one-shot reader cannot be replayed.
 status.nodes.<key>.outputs.artifacts[].http.url <string> (required)	# URL of the artifact
 status.nodes.<key>.outputs.artifacts[].mode <integer> format=int32 min=0 max=511	# mode bits to use on this file, must be a value between 0 and 0777. Set when loading input artifacts. It is recommended to set the mode value to ensure the artifact has the expected permissions in your container.
 status.nodes.<key>.outputs.artifacts[].name <string> (required) pattern="^[-a-zA-Z0-9_{}.]+$"	# name of the artifact. must be unique within a template's inputs/outputs.
@@ -3543,6 +3631,7 @@ status.nodes.<key>.outputs.artifacts[].s3.accessKeySecret <object>	# AccessKeySe
 status.nodes.<key>.outputs.artifacts[].s3.accessKeySecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 status.nodes.<key>.outputs.artifacts[].s3.accessKeySecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 status.nodes.<key>.outputs.artifacts[].s3.accessKeySecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+status.nodes.<key>.outputs.artifacts[].s3.addressingStyle <string> enum=|path|virtual-hosted	# AddressingStyle defines how buckets are addressed by the S3 client. This is required for some S3-compatible providers that only support virtual-hosted-style bucket addressing. Valid values are: - "" (default, auto-detect) - "path" - "virtual-hosted"
 status.nodes.<key>.outputs.artifacts[].s3.bucket <string>	# Bucket is the name of the bucket
 status.nodes.<key>.outputs.artifacts[].s3.caSecret <object>	# CASecret specifies the secret that contains the CA, used to verify the TLS connection
 status.nodes.<key>.outputs.artifacts[].s3.caSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
