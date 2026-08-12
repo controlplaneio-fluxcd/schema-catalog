@@ -1,11 +1,11 @@
-# schema source: Cluster API v1.13.4 https://github.com/kubernetes-sigs/cluster-api
+# schema source: Cluster API v1.14.0 https://github.com/kubernetes-sigs/cluster-api
 apiVersion <string> enum=cluster.x-k8s.io/v1beta1 (deprecated)
 kind <string> enum=MachineSet
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# spec is the desired state of MachineSet.
 spec.clusterName <string> (required) min=1 max=63	# clusterName is the name of the Cluster this object belongs to.
-spec.deletePolicy <string> enum=Random|Newest|Oldest	# deletePolicy defines the policy used to identify nodes to delete when downscaling. Defaults to "Random". Valid values are "Random, "Newest", "Oldest"
+spec.deletePolicy <string> enum=Random|Newest|Oldest	# deletePolicy defines the policy used to identify nodes to delete when downscaling. Defaults to "Random". Valid values are "Random", "Newest", "Oldest"
 spec.machineNamingStrategy <object>	# machineNamingStrategy allows changing the naming pattern used when creating Machines. Note: InfraMachines & BootstrapConfigs will use the same name as the corresponding Machines.
 spec.machineNamingStrategy.template <string> min=1 max=256	# template defines the template to use for generating the names of the Machine objects. If not defined, it will fallback to `{{ .machineSet.name }}-{{ .random }}`. If the generated name string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. Length of the template string must not exceed 256 characters. The template allows the following variables `.cluster.name`, `.machineSet.name` and `.random`. The variable `.cluster.name` retrieves the name of the cluster object that owns the Machines being created. The variable `.machineSet.name` retrieves the name of the MachineSet object that owns the Machines being created. The variable `.random` is substituted with random alphanumeric string, without vowels, of length 5. This variable is required part of the template. If not provided, validation will fail.
 spec.minReadySeconds <integer> format=int32	# minReadySeconds is the minimum number of seconds for which a Node for a newly created machine should be ready before considering the replica available. Defaults to 0 (machine will be considered available as soon as the Node is ready)
@@ -81,3 +81,6 @@ status.v1beta2.conditions[].status <string> (required) enum=True|False|Unknown	#
 status.v1beta2.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.v1beta2.readyReplicas <integer> format=int32	# readyReplicas is the number of ready replicas for this MachineSet. A machine is considered ready when Machine's Ready condition is true.
 status.v1beta2.upToDateReplicas <integer> format=int32	# upToDateReplicas is the number of up-to-date replicas for this MachineSet. A machine is considered up-to-date when Machine's UpToDate condition is true.
+status.versions <[]object> min=1 max=100	# versions is the aggregated Kubernetes versions in this MachineSet.
+status.versions[].replicas <integer> format=int32 min=1	# replicas is the number of replicas at this version.
+status.versions[].version <string> (required) min=1 max=256	# version is the Kubernetes version.

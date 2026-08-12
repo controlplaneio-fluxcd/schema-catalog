@@ -16,6 +16,27 @@
       "additionalProperties": false,
       "description": "spec defines the desired state of DisaggregatedSet",
       "properties": {
+        "placementPolicy": {
+          "additionalProperties": false,
+          "description": "PlacementPolicy controls how a slice's roles are co-located and how the\nDisaggregatedSet's slices are spread across topology domains. When set, the\ncontroller injects pod affinity and anti-affinity into the managed\nLeaderWorkerSet pod templates. Placement is applied when a LeaderWorkerSet is\ncreated, so changing it takes effect on the next rollout.",
+          "properties": {
+            "topology": {
+              "description": "Topology is the node-label key that defines a domain, used as the affinity\ntopologyKey. Required when Type is not None.",
+              "type": "string"
+            },
+            "type": {
+              "default": "None",
+              "description": "Type selects the placement guarantee. Defaults to None.",
+              "enum": [
+                "None",
+                "ExclusiveSlice",
+                "ExclusiveTopology"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "roles": {
           "description": "Roles defines the list of roles (at least 2 required).\nEach role has a unique name and its own configuration.",
           "items": {
@@ -59,6 +80,22 @@
                 "minLength": 1,
                 "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
                 "type": "string"
+              },
+              "scaling": {
+                "additionalProperties": false,
+                "description": "Scaling configures how replicas are determined. Omit for inline Static\nscaling (default). When set to External, the DisaggregatedSet controller\nauto-creates a DisaggregatedSetRoleScaler and reads its spec.replicas.",
+                "properties": {
+                  "mode": {
+                    "default": "Static",
+                    "description": "Mode controls the source of the replica count. Static (default) uses\ninline spec.replicas; External uses the auto-created scaler CR.",
+                    "enum": [
+                      "Static",
+                      "External"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "type": "object"
               },
               "spec": {
                 "additionalProperties": false,
@@ -14884,6 +14921,8 @@
                     "default": 1,
                     "description": "replicas is the number of leader-workers groups. A scale subresource is available to enable HPA. The\nselector for HPA will be that of the leader pod, and so practically HPA will be looking up the\nleader pod metrics. Note that the leader pod could aggregate metrics from\nthe rest of the group and expose them as a summary custom metric representing the whole\ngroup.\nOn scale down, the leader pod as well as the workers statefulset will be deleted.\nDefault to 1.",
                     "format": "int32",
+                    "maximum": 1000000,
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "rolloutStrategy": {
@@ -14969,6 +15008,14 @@
             "name"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "slices": {
+          "default": 1,
+          "description": "Slices is the number of independent copies of the whole role topology.\nEach slice is a complete set of all roles that rolls out independently.\nChanging Slices scales copies up or down and does not trigger a rollout.",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
         }
       },
       "required": [
@@ -14977,8 +15024,8 @@
       "type": "object",
       "x-kubernetes-validations": [
         {
-          "message": "replicas must be zero for all roles or non-zero for all roles",
-          "rule": "self.roles.all(r, !has(r.spec.replicas) || r.spec.replicas == 0) || self.roles.all(r, has(r.spec.replicas) && r.spec.replicas > 0)"
+          "message": "replicas must be zero for all non-External roles or non-zero for all non-External roles",
+          "rule": "self.roles.filter(r, !has(r.scaling) || r.scaling.mode != 'External').all(r, !has(r.spec.replicas) || r.spec.replicas == 0) || self.roles.filter(r, !has(r.scaling) || r.scaling.mode != 'External').all(r, has(r.spec.replicas) && r.spec.replicas > 0)"
         }
       ]
     },
