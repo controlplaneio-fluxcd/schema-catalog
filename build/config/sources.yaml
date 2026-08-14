@@ -280,7 +280,10 @@ sources:
     url: https://github.com/kubeflow/trainer
     extract: crd
     input:
-      crdDir: charts/kubeflow-trainer/crds
+      # The chart's CRDs are Helm-templated and do not parse as YAML; the
+      # kustomize base ships the same CRDs untemplated and upstream keeps the
+      # two in parity (kubeflow/trainer#3883).
+      crdDir: manifests/base/crds
 
   - name: kubeflow-pipelines
     alias: Kubeflow Pipelines
@@ -1628,12 +1631,16 @@ sources:
     alias: Kubewarden
     category: "Provisioning"
     cncf: sandbox
-    url: https://github.com/kubewarden/kubewarden-controller
+    url: https://github.com/kubewarden/adm-controller
     extract: crd
     input:
-      # Target the chart templates/crds subdir to avoid vendored PolicyReport
-      # CRDs one level up.
-      crdDir: charts/kubewarden-crds/templates/crds
+      crdDir: charts/admission-controller/templates/crds
+      # The chart vendors the PolicyReport CRDs alongside its own, wrapped in
+      # Helm conditionals that are not valid YAML. Keep only the
+      # policies.kubewarden.io files.
+      exclude:
+        - clusterpolicyreports.yaml
+        - policyreports.yaml
 
   - name: kyverno
     alias: Kyverno
