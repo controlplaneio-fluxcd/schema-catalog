@@ -1,0 +1,38 @@
+# schema source: Longhorn v1.12.1 https://github.com/longhorn/longhorn
+apiVersion <string> enum=longhorn.io/v1beta2
+kind <string> enum=ShardGroup
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# ShardGroupSpec defines the desired state of the Longhorn ShardGroup
+spec.creationSize <integer> format=int64	# CreationSize is the volume size in bytes when the lvstore is first created. The lvstore metadata region is sized from it and never grows, so in-place expansion is limited to EcLvstoreMaxGrowthFactor (10x) of this size. Zero means the lvstore does not exist yet; the creation cap applies instead. Immutable once set.
+spec.dataChunks <integer> min=1	# DataChunks is the k parameter of the EC array. Immutable after creation.
+spec.nodeID <string>	# NodeID identifies the node hosting the long-lived ShardGroup process that owns the EC volume's bdev_ec, lvol store, head lvol, and NVMe-oF export. It is typically equal to Engine.Spec.NodeID for engine-process co-location. The Volume controller is the sole writer and sets this field at first attach. NodeID is NOT cleared on volume detach (the ShardGroup process keeps running across detach to preserve the lvstore and head lvol on the encoded shard blocks for fast re-attach); it only changes on engine-node failover or volume deletion.
+spec.parityChunks <integer> min=1	# ParityChunks is the m parameter of the EC array. The ShardGroup tolerates up to m simultaneous shard failures. Immutable after creation.
+spec.stripSizeKB <integer> min=4 max=1024	# StripSizeKB is the EC chunk size in KiB. Must be a power of two in the range [4, 1024]. Immutable after creation.
+spec.volumeName <string>	# VolumeName is the name of the owning Volume CR. Immutable after creation.
+status <object>	# ShardGroupStatus defines the observed state of the Longhorn ShardGroup
+status.conditions <[]object>	# Conditions holds the latest observations of the ShardGroup's state, such as a degraded read that returned EIO.
+status.conditions[].lastProbeTime <string>	# Last time we probed the condition.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.ecShardAddressMap <map[string]string>	# ECShardAddressMap maps shard slot index (as string) to the NVMe-oF address ("ip:port") of each healthy shard instance (ShardStateNormal with a non-empty StorageIP and Port). It is the base-bdev list for the ShardGroup process's EC array, and acts as the readiness gate (together with every Shard CR being in ShardStateNormal) before the ShardGroup process is provisioned.
+status.evictingSlots <[]integer>	# EvictingSlots is the ordered list of slot indices currently in the eviction pipeline (old Shard CR deleted, replacement not yet rebuilt). Tracked in status so VolumeEvictionController can observe progress without annotation parsing.
+status.failedCount <integer>	# FailedCount is the number of slots currently in the failed state. Slots being replaced (ShardStateReplacing) are not counted; an active rebuild is tracked separately via RebuildInProgress.
+status.growInProgress <boolean>	# GrowInProgress indicates whether a capacity expansion is currently running.
+status.headLvolUUID <string>	# HeadLvolUUID is the UUID of the head lvol on the ShardGroup-process-owned lvol store. Surfaced for observability and debugging only.
+status.instanceManagerName <string>	# InstanceManagerName is the InstanceManager currently hosting the ShardGroup process, set during provisioning and cleared on teardown. During a re-bind to a new node it may still reference the previous InstanceManager until teardown completes, so consumers must validate it against Spec.NodeID before trusting the endpoint above.
+status.intentionalDeleteSlots <[]integer>	# IntentionalDeleteSlots is the list of slot indices whose old Shard CR was deleted intentionally (admin kubectl delete, eviction, drain). The replacement Shard CR's failure-recovery debounce is bypassed for these slots so the replace+rebuild sequence runs immediately rather than after the full replica-replenishment-wait-interval. Cleared once the replacement reaches ShardStateNormal with StorageIP set, and defensively cleared on ShardGroup process re-bind.
+status.lvstoreUUID <string>	# LvstoreUUID is reserved for the UUID of the lvol store created on bdev_ec inside the ShardGroup process. It is currently unpopulated: the ShardGroup instance does not surface the lvstore UUID over the instance-manager proto yet. Kept for forward-compatible observability; not on the engine data path.
+status.nqn <string>	# NQN is the NVMe-oF subsystem NQN of the ShardGroup process's exposed head lvol.
+status.ownerID <string>	# OwnerID is the ID of the node that owns this ShardGroup.
+status.port <integer> format=int32	# Port is the NVMe-oF port allocated for the ShardGroup process's exposed head lvol.
+status.processState <string>	# ProcessState is the runtime state of the ShardGroup process owned by this CR.
+status.rebuildInProgress <boolean>	# RebuildInProgress indicates whether a background shard rebuild is currently running.
+status.scrubInProgress <boolean>	# ScrubInProgress indicates whether a background scrub is currently running.
+status.shardRefs <[]string>	# ShardRefs is an ordered list of Shard CR names, where the list index equals the EC slot index.
+status.state <string> enum=healthy|degraded|offline|rebuilding|growing|	# State is the aggregate health state of the EC array.
+status.storageIP <string>	# StorageIP is the storage-network IP of the InstanceManager pod hosting the ShardGroup process. Combined with Port and NQN, it forms the NVMe-oF endpoint that an EC volume's engine attaches to.
+status.wibDirtyRegion <integer>	# WIBDirtyRegion is the number of dirty WIB regions reported by the EC bdev.
