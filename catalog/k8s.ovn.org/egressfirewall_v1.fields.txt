@@ -1,0 +1,23 @@
+# schema source: OVN-Kubernetes v1.3.0 https://github.com/ovn-kubernetes/ovn-kubernetes
+apiVersion <string> enum=k8s.ovn.org/v1
+kind <string> enum=EgressFirewall
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Specification of the desired behavior of EgressFirewall.
+spec.egress <[]object> (required)	# a collection of egress firewall rule objects
+spec.egress[].ports <[]object>	# ports specify what ports and protocols the rule applies to
+spec.egress[].ports[].port <integer> (required) format=int32 min=1 max=65535	# port that the traffic must match
+spec.egress[].ports[].protocol <string> (required) pattern="^TCP|UDP|SCTP$"	# protocol (tcp, udp, sctp) that the traffic must match.
+spec.egress[].to <object> (required)	# to is the target that traffic is allowed/denied to
+spec.egress[].to.cidrSelector <string>	# cidrSelector is the CIDR range to allow/deny traffic to. If this is set, dnsName and nodeSelector must be unset.
+spec.egress[].to.dnsName <string> pattern="^(\\*\\.)?([A-Za-z0-9-]+\\.)*[A-Za-z0-9-]+\\.?$"	# dnsName is the domain name to allow/deny traffic to. If this is set, cidrSelector and nodeSelector must be unset. For a wildcard DNS name, the '*' will match only one label. Additionally, only a single '*' can be used at the beginning of the wildcard DNS name. For example, '*.example.com' will match 'sub1.example.com' but won't match 'sub2.sub1.example.com'.
+spec.egress[].to.nodeSelector <object>	# nodeSelector will allow/deny traffic to the Kubernetes node IP of selected nodes. If this is set, cidrSelector and DNSName must be unset.
+spec.egress[].to.nodeSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.egress[].to.nodeSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.egress[].to.nodeSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.egress[].to.nodeSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.egress[].to.nodeSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.egress[].type <string> (required) pattern="^Allow|Deny$"	# type marks this as an "Allow" or "Deny" rule
+status <object>	# Observed status of EgressFirewall
+status.messages <[]string>
+status.status <string>
