@@ -1,4 +1,4 @@
-# schema source: Kubeflow Trainer v2.2.1 https://github.com/kubeflow/trainer
+# schema source: Kubeflow Trainer v2.3.0 https://github.com/kubeflow/trainer
 apiVersion <string> enum=trainer.kubeflow.org/v1alpha1
 kind <string> enum=TrainingRuntime
 metadata.name <string> (required)
@@ -14,7 +14,11 @@ spec.mlPolicy.mpi.numProcPerNode <integer> default=1 format=int32	# numProcPerNo
 spec.mlPolicy.mpi.runLauncherAsNode <boolean> default=false	# runLauncherAsNode defines whether to run training process on the launcher Job. Defaults to false.
 spec.mlPolicy.mpi.sshAuthMountPath <string> default="/root/.ssh" max=4096	# sshAuthMountPath is the directory where SSH keys are mounted. Defaults to /root/.ssh.
 spec.mlPolicy.numNodes <integer> format=int32	# numNodes is the number of training nodes. Defaults to 1.
-spec.mlPolicy.torch <object (free-form)>	# torch defines the configuration for the PyTorch runtime.
+spec.mlPolicy.torch <object>	# torch defines the configuration for the PyTorch runtime.
+spec.mlPolicy.torch.envInjection <object>	# envInjection configures which additional containers should receive the PET_* environment variables. By default, the PET_* variables are injected only into the main "node" container. Use this field to also inject them into selected sidecar or init containers. For torchtune, envInjection targets still receive PET_MASTER_ADDR and PET_MASTER_PORT even though the main trainer container uses command-line rendezvous instead. Defaults to empty (main container only).
+spec.mlPolicy.torch.envInjection.targets <[]object> max=16	# targets defines which replicated job containers receive PET_* env injection. The item limit keeps runtime validation bounded while allowing common multi-job runtimes to target their auxiliary containers.
+spec.mlPolicy.torch.envInjection.targets[].containerNames <[]string> (required) min=1 max=8	# containerNames lists the container names within the target job that should receive PET_* envs. The item limit keeps admission checks small while covering typical preflight and sidecar use cases.
+spec.mlPolicy.torch.envInjection.targets[].jobName <string> (required) min=1 max=253	# jobName is the name of the target replicated job (e.g. "node"). Using "jobName" rather than "replicatedJobName" keeps the API future-proof for other CRD types (LWS, Grove, Slurm, etc.).
 spec.mlPolicy.xgboost <object (free-form)>	# xgboost defines the configuration for the XGBoost Runtime.
 spec.podGroupPolicy <object>	# podGroupPolicy defines the configuration for the PodGroup to enable gang-scheduling via supported plugins.
 spec.podGroupPolicy.coscheduling <object>	# coscheduling plugin from the Kubernetes scheduler-plugins for gang-scheduling.
@@ -39,7 +43,7 @@ spec.template.spec.failurePolicy <object> (immutable)	# failurePolicy configures
 spec.template.spec.failurePolicy.maxRestarts <integer> format=int32	# maxRestarts defines the limit on the number of JobSet restarts. If the restart strategy "InPlaceRestart" is used, this field also defines the limit on the number of container restarts of any child container. This is required to handle the edge case in which a container keeps failing too fast to complete a JobSet restart.
 spec.template.spec.failurePolicy.restartStrategy <string> enum=Recreate|BlockingRecreate|InPlaceRestart default="Recreate"	# restartStrategy defines the strategy to use when restarting the JobSet. Defaults to Recreate.
 spec.template.spec.failurePolicy.rules <[]object>	# rules is a list of failure policy rules for this JobSet. For a given Job failure, the rules will be evaluated in order, and only the first matching rule will be executed. If no matching rule is found, the RestartJobSet action is applied.
-spec.template.spec.failurePolicy.rules[].action <string> (required) enum=FailJobSet|RestartJobSet|RestartJobSetAndIgnoreMaxRestarts	# action to take if the rule is matched.
+spec.template.spec.failurePolicy.rules[].action <string> (required) enum=FailJobSet|RestartJobSet|RestartJobSetAndIgnoreMaxRestarts|RestartJob|RestartJobAndIgnoreMaxRestarts	# action to take if the rule is matched. Valid values are FailJobSet, RestartJobSet, RestartJobSetAndIgnoreMaxRestarts, RestartJob, RestartJobAndIgnoreMaxRestarts.
 spec.template.spec.failurePolicy.rules[].name <string> (required)	# name of the failure policy rule. The name is defaulted to 'failurePolicyRuleN' where N is the index of the failure policy rule. The name must match the regular expression "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$".
 spec.template.spec.failurePolicy.rules[].onJobFailureMessagePatterns <[]string>	# onJobFailureMessagePatterns is a requirement on the job failure messages. The requirement is satisfied if at least one pattern (regex) matches the job failure message. An empty list matches any job failure message. The syntax of the regular expressions accepted is the same general syntax used by Perl, Python, and other languages. More precisely, it is the syntax accepted by RE2 and described at https://golang.org/s/re2syntax, except for \C. For an overview of the syntax, see https://pkg.go.dev/regexp/syntax.
 spec.template.spec.failurePolicy.rules[].onJobFailureReasons <[]string>	# onJobFailureReasons is a list of job failures reasons. The requirement is satisfied if at least one reason matches the list. An empty list matches any job failure reason.

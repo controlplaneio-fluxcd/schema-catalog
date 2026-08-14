@@ -1,4 +1,4 @@
-# schema source: Kubeflow Trainer v2.2.1 https://github.com/kubeflow/trainer
+# schema source: Kubeflow Trainer v2.3.0 https://github.com/kubeflow/trainer
 apiVersion <string> enum=trainer.kubeflow.org/v1alpha1
 kind <string> enum=TrainJob
 metadata.name <string> (required)
@@ -33,7 +33,7 @@ spec.initializer.dataset.env[].valueFrom.secretKeyRef.name <string> default=""	#
 spec.initializer.dataset.env[].valueFrom.secretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
 spec.initializer.dataset.secretRef <object>	# secretRef is the reference to the secret with credentials to download dataset. Secret must be created in the TrainJob's namespace.
 spec.initializer.dataset.secretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.initializer.dataset.storageUri <string> max=2048	# storageUri is the URI for the dataset provider.
+spec.initializer.dataset.storageUri <string> max=2048	# storageUri is the URI for the dataset provider. If set, it may be empty, or it must be a valid URI format (e.g., s3://bucket/path, gs://bucket/path).
 spec.initializer.model <object>	# model defines the configuration for the pre-trained model initialization
 spec.initializer.model.env <[]object> max=128	# env is the list of environment variables to set in the model initializer container. These values will be merged with the TrainingRuntime's model initializer environments.
 spec.initializer.model.env[].name <string> (required)	# Name of the environment variable. May consist of any printable ASCII characters except '='.
@@ -61,7 +61,7 @@ spec.initializer.model.env[].valueFrom.secretKeyRef.name <string> default=""	# N
 spec.initializer.model.env[].valueFrom.secretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
 spec.initializer.model.secretRef <object>	# secretRef is the reference to the secret with credentials to download model. Secret must be created in the TrainJob's namespace.
 spec.initializer.model.secretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.initializer.model.storageUri <string> max=2048	# storageUri is the URI for the model provider.
+spec.initializer.model.storageUri <string> max=2048	# storageUri is the URI for the model provider. If set, it may be empty, or it must be a valid URI format (e.g., s3://bucket/path, gs://bucket/path).
 spec.managedBy <string> default="trainer.kubeflow.org/trainjob-controller" max=253 (immutable)	# managedBy is used to indicate the controller or entity that manages a TrainJob. The value must be either an empty, `trainer.kubeflow.org/trainjob-controller` or `kueue.x-k8s.io/multikueue`. The built-in TrainJob controller reconciles TrainJob which don't have this field at all or the field value is the reserved string `trainer.kubeflow.org/trainjob-controller`, but delegates reconciling TrainJobs with a 'kueue.x-k8s.io/multikueue' to the Kueue. The field is immutable.
 spec.runtimePatches <[]object> max=16	# runtimePatches defines custom patches applied to the TrainJob's Runtime. Patches are keyed by manager to provide clear ownership and avoid conflicts between controllers.
 spec.runtimePatches[].manager <string> (required) min=1 max=253 (immutable)	# manager indicates who owns this patch entry. It can be set by the user, external controllers, or admission webhooks to track ownership and avoid conflicts. For example, Kueue sets this field to "kueue.x-k8s.io/manager".
@@ -346,6 +346,7 @@ spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].templat
 spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.securityContext.windowsOptions.hostProcess <boolean>	# HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
 spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.securityContext.windowsOptions.runAsUserName <string>	# The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
 spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.serviceAccountName <string> max=253 (immutable)	# serviceAccountName patches the service account for the Pods in the target job templates.
+spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.terminationGracePeriodSeconds <integer> format=int64 min=0 (immutable)	# terminationGracePeriodSeconds patches the termination grace period for Pods in the target job templates.
 spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.tolerations <[]object> max=128	# tolerations patches the Pod's tolerations.
 spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.tolerations[].effect <string>	# Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
 spec.runtimePatches[].trainingRuntimeSpec.template.spec.replicatedJobs[].template.spec.template.spec.tolerations[].key <string>	# Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.
