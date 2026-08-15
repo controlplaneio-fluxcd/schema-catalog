@@ -334,6 +334,7 @@
                   "envoy.filters.http.health_check",
                   "envoy.filters.http.fault",
                   "envoy.filters.http.cors",
+                  "envoy.filters.http.csrf",
                   "envoy.filters.http.header_mutation",
                   "envoy.filters.http.ext_authz",
                   "envoy.filters.http.api_key_auth",
@@ -366,6 +367,7 @@
                   "envoy.filters.http.health_check",
                   "envoy.filters.http.fault",
                   "envoy.filters.http.cors",
+                  "envoy.filters.http.csrf",
                   "envoy.filters.http.header_mutation",
                   "envoy.filters.http.ext_authz",
                   "envoy.filters.http.api_key_auth",
@@ -398,6 +400,7 @@
                   "envoy.filters.http.health_check",
                   "envoy.filters.http.fault",
                   "envoy.filters.http.cors",
+                  "envoy.filters.http.csrf",
                   "envoy.filters.http.header_mutation",
                   "envoy.filters.http.ext_authz",
                   "envoy.filters.http.api_key_auth",
@@ -638,7 +641,9 @@
                   "debug",
                   "info",
                   "warn",
-                  "error"
+                  "error",
+                  "off",
+                  "critical"
                 ],
                 "type": "string"
               },
@@ -660,8 +665,62 @@
           ],
           "type": "string"
         },
+        "mergeBackends": {
+          "additionalProperties": false,
+          "description": "MergeBackends configures cluster deduplication: routes that reference the same backend\nshare a single Envoy cluster instead of Envoy Gateway generating one cluster per route\nrule. This reduces xDS size, active health-check traffic, and stats cardinality, and\nimproves upstream connection pooling.\n\nDisabled when unset; specifying this field at all (even without further configuration)\nenables it. Mutually exclusive with MergeGateways.",
+          "properties": {
+            "selector": {
+              "additionalProperties": false,
+              "description": "Selector restricts cluster deduplication to backends whose target Service, ServiceImport,\nor Backend resource matches this label selector. When unset, every otherwise-eligible\nbackend is merged. Use this to opt individual backends into deduplication gradually\ninstead of enabling it for every backend at once.",
+              "properties": {
+                "matchExpressions": {
+                  "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                    "properties": {
+                      "key": {
+                        "description": "key is the label key that the selector applies to.",
+                        "type": "string"
+                      },
+                      "operator": {
+                        "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                        "type": "string"
+                      },
+                      "values": {
+                        "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "operator"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
+                },
+                "matchLabels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                  "type": "object"
+                }
+              },
+              "type": "object",
+              "x-kubernetes-map-type": "atomic"
+            }
+          },
+          "type": "object"
+        },
         "mergeGateways": {
-          "description": "MergeGateways defines if Gateway resources should be merged onto the same Envoy Proxy Infrastructure.\nSetting this field to true would merge all Gateway Listeners under the parent Gateway Class.\nThis means that the port, protocol and hostname tuple must be unique for every listener.\nIf a duplicate listener is detected, the newer listener (based on timestamp) will be rejected and its status will be updated with a \"Accepted=False\" condition.",
+          "description": "MergeGateways defines if Gateway resources should be merged onto the same Envoy Proxy Infrastructure.\nSetting this field to true would merge all Gateway Listeners under the parent Gateway Class.\nThis means that the port, protocol and hostname tuple must be unique for every listener.\nIf a duplicate listener is detected, the newer listener (based on timestamp) will be rejected and its status will be updated with a \"Accepted=False\" condition.\n\nMutually exclusive with MergeBackends.",
           "type": "boolean"
         },
         "mergeType": {
@@ -674,7 +733,7 @@
           "type": "string"
         },
         "preserveRouteOrder": {
-          "description": "PreserveRouteOrder determines if the order of matching for HTTPRoutes is determined by Gateway-API\nspecification (https://gateway-api.sigs.k8s.io/reference/1.4/spec/#httprouterule)\nor preserves the order defined by users in the HTTPRoute's HTTPRouteRule list.\nDefault: False",
+          "description": "PreserveRouteOrder determines if the order of matching for HTTPRoutes is determined by Gateway-API\nspecification (https://gateway-api.sigs.k8s.io/reference/api-spec/main/spec/#httprouterule)\nor preserves the order defined by users in the HTTPRoute's HTTPRouteRule list.\nDefault: False",
           "type": "boolean"
         },
         "provider": {
@@ -8383,7 +8442,7 @@
                 },
                 "envoyHpa": {
                   "additionalProperties": false,
-                  "description": "EnvoyHpa defines the Horizontal Pod Autoscaler settings for Envoy Proxy Deployment.",
+                  "description": "EnvoyHpa defines the Horizontal Pod Autoscaler settings for Envoy Proxy Deployment.\nIf the HPA is set, the Replicas field from EnvoyDeployment will be ignored, and the\nnumber of replicas is solely managed by the HPA. Use MinReplicas to control the\nlower bound of the replica count instead.",
                   "properties": {
                     "behavior": {
                       "additionalProperties": false,
@@ -9249,7 +9308,7 @@
               ]
             },
             "type": {
-              "description": "Type is the type of resource provider to use. A resource provider provides\ninfrastructure resources for running the data plane, e.g. Envoy proxy, and\noptional auxiliary control planes. Supported types are \"Kubernetes\"and \"Host\".",
+              "description": "Type is the type of resource provider to use. A resource provider provides\ninfrastructure resources for running the data plane, e.g. Envoy proxy, and\noptional auxiliary control planes. Supported types are \"Kubernetes\" and \"Host\".",
               "enum": [
                 "Kubernetes",
                 "Host"
@@ -9272,6 +9331,11 @@
           "properties": {
             "drainTimeout": {
               "description": "DrainTimeout defines the graceful drain timeout. This should be less than the pod's terminationGracePeriodSeconds.\nIf unspecified, defaults to 60 seconds.",
+              "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+              "type": "string"
+            },
+            "healthCheckFailureDelay": {
+              "description": "HealthCheckFailureDelay defines the delay before failing health checks during the graceful drain process.\nIf unspecified, defaults to 0 seconds.",
               "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
               "type": "string"
             },
@@ -9687,6 +9751,78 @@
                                               },
                                               "type": "object"
                                             },
+                                            "healthCheckLog": {
+                                              "additionalProperties": false,
+                                              "description": "HealthCheckLog defines health check event logging configuration for this cluster.\nWhen set, HC probe outcomes are logged to the configured sinks.\nTakes precedence over the gateway-level EnvoyProxy.spec.telemetry.healthCheckLog.",
+                                              "properties": {
+                                                "matches": {
+                                                  "description": "Matches defines which health check probe outcomes produce a log entry.\nWhen omitted or empty, all events are logged.\n\nEach value must be unique. Multiple values are ORed. If any failure type is\nspecified then a success type must also be specified, and vice versa.",
+                                                  "items": {
+                                                    "description": "ProxyHealthCheckLogEventType specifies which health check probe outcomes produce a log entry.",
+                                                    "enum": [
+                                                      "Failure",
+                                                      "FailureSeriesStart",
+                                                      "Success",
+                                                      "HealthyTransition"
+                                                    ],
+                                                    "type": "string"
+                                                  },
+                                                  "maxItems": 4,
+                                                  "type": "array",
+                                                  "x-kubernetes-list-type": "set",
+                                                  "x-kubernetes-validations": [
+                                                    {
+                                                      "message": "a failure type and a success type must both be specified together",
+                                                      "rule": "self.exists(e, e == 'Failure' || e == 'FailureSeriesStart') == self.exists(e, e == 'Success' || e == 'HealthyTransition')"
+                                                    }
+                                                  ]
+                                                },
+                                                "sinks": {
+                                                  "description": "Sinks defines where health check events are written.\nWhen omitted, events are written to /dev/stdout.",
+                                                  "items": {
+                                                    "additionalProperties": false,
+                                                    "description": "ProxyHealthCheckLogSink defines a destination for health check event logs.",
+                                                    "properties": {
+                                                      "file": {
+                                                        "additionalProperties": false,
+                                                        "description": "File defines the file sink configuration.\nRequired when type is File.",
+                                                        "properties": {
+                                                          "path": {
+                                                            "description": "Path specifies the file path for health check event output.\nUse /dev/stdout to write to standard output.",
+                                                            "minLength": 1,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "path"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "type": {
+                                                        "description": "Type defines the type of sink.",
+                                                        "enum": [
+                                                          "File"
+                                                        ],
+                                                        "type": "string"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "type"
+                                                    ],
+                                                    "type": "object",
+                                                    "x-kubernetes-validations": [
+                                                      {
+                                                        "message": "If ProxyHealthCheckLogSink type is File, file field needs to be set.",
+                                                        "rule": "self.type == 'File' ? has(self.file) : !has(self.file)"
+                                                      }
+                                                    ]
+                                                  },
+                                                  "maxItems": 1,
+                                                  "type": "array"
+                                                }
+                                              },
+                                              "type": "object"
+                                            },
                                             "healthyThreshold": {
                                               "default": 1,
                                               "description": "HealthyThreshold defines the number of healthy health checks required before a backend host is marked healthy.",
@@ -9764,6 +9900,7 @@
                                                 },
                                                 "method": {
                                                   "description": "Method defines the HTTP method used for health checking.\nDefaults to GET",
+                                                  "maxLength": 16,
                                                   "type": "string"
                                                 },
                                                 "path": {
@@ -9771,6 +9908,53 @@
                                                   "maxLength": 1024,
                                                   "minLength": 1,
                                                   "type": "string"
+                                                },
+                                                "requestBody": {
+                                                  "additionalProperties": false,
+                                                  "description": "RequestBody defines the HTTP request body payload sent during health checking.",
+                                                  "properties": {
+                                                    "binary": {
+                                                      "description": "Binary payload base64 encoded.",
+                                                      "format": "byte",
+                                                      "type": "string"
+                                                    },
+                                                    "text": {
+                                                      "description": "Text payload in plain text.",
+                                                      "type": "string"
+                                                    },
+                                                    "type": {
+                                                      "allOf": [
+                                                        {
+                                                          "enum": [
+                                                            "Text",
+                                                            "Binary"
+                                                          ]
+                                                        },
+                                                        {
+                                                          "enum": [
+                                                            "Text",
+                                                            "Binary"
+                                                          ]
+                                                        }
+                                                      ],
+                                                      "description": "Type defines the type of the payload.",
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "type"
+                                                  ],
+                                                  "type": "object",
+                                                  "x-kubernetes-validations": [
+                                                    {
+                                                      "message": "If payload type is Text, text field needs to be set.",
+                                                      "rule": "self.type == 'Text' ? has(self.text) : !has(self.text)"
+                                                    },
+                                                    {
+                                                      "message": "If payload type is Binary, binary field needs to be set.",
+                                                      "rule": "self.type == 'Binary' ? has(self.binary) : !has(self.binary)"
+                                                    }
+                                                  ]
                                                 },
                                                 "retriableStatuses": {
                                                   "description": "RetriableStatuses defines a list of HTTP response statuses considered retriable.\nResponses matching these statuses count towards the unhealthy threshold but\ndo not result in the host being considered immediately unhealthy.\nThe expected statuses take precedence for any range overlaps with this field.",
@@ -9786,7 +9970,13 @@
                                               "required": [
                                                 "path"
                                               ],
-                                              "type": "object"
+                                              "type": "object",
+                                              "x-kubernetes-validations": [
+                                                {
+                                                  "message": "The requestBody field can only be set when method is POST or PUT.",
+                                                  "rule": "!has(self.requestBody) || (has(self.method) && self.method.upperAscii() in ['POST','PUT'])"
+                                                }
+                                              ]
                                             },
                                             "initialJitter": {
                                               "description": "InitialJitter defines the maximum time Envoy will wait before the first health check.\nEnvoy will randomly select a value between 0 and the initial jitter value.",
@@ -10143,6 +10333,38 @@
                                                 "type": "string"
                                               },
                                               "type": "array"
+                                            },
+                                            "outOfBand": {
+                                              "additionalProperties": false,
+                                              "description": "OutOfBand enables out-of-band ORCA load reporting. When set, Envoy opens a\nserver-streaming gRPC connection to each endpoint's\nxds.service.orca.v3.OpenRcaService/StreamCoreMetrics and pulls load\nreports periodically, instead of relying on in-band ORCA metrics\ncarried in response headers/trailers.\n\nThe backend must implement OpenRcaService for this to take effect.",
+                                              "properties": {
+                                                "authority": {
+                                                  "description": "Authority overrides the :authority header on the OutOfBand gRPC stream.\nIf unset, Envoy uses the endpoint hostname, then the dialed address, then\nthe cluster name.",
+                                                  "maxLength": 259,
+                                                  "minLength": 1,
+                                                  "pattern": "^[^\\x00\\n\\r]*$",
+                                                  "type": "string"
+                                                },
+                                                "port": {
+                                                  "description": "Port overrides the port used for the OutOfBand reporting connection, e.g. to\nreach a separate reporting sidecar. Defaults to the endpoint's port.",
+                                                  "format": "int32",
+                                                  "maximum": 65535,
+                                                  "minimum": 1,
+                                                  "type": "integer"
+                                                },
+                                                "reportingPeriod": {
+                                                  "description": "ReportingPeriod is how often Envoy requests load reports from the server.\nMust be greater than 0. Defaults to 10s.",
+                                                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+                                                  "type": "string",
+                                                  "x-kubernetes-validations": [
+                                                    {
+                                                      "message": "reportingPeriod must be greater than 0",
+                                                      "rule": "duration(self) > duration('0s')"
+                                                    }
+                                                  ]
+                                                }
+                                              },
+                                              "type": "object"
                                             },
                                             "weightExpirationPeriod": {
                                               "description": "If a given endpoint has not reported load metrics in this long, stop using the reported weight. Defaults to 3m.",
@@ -11066,6 +11288,78 @@
                                               },
                                               "type": "object"
                                             },
+                                            "healthCheckLog": {
+                                              "additionalProperties": false,
+                                              "description": "HealthCheckLog defines health check event logging configuration for this cluster.\nWhen set, HC probe outcomes are logged to the configured sinks.\nTakes precedence over the gateway-level EnvoyProxy.spec.telemetry.healthCheckLog.",
+                                              "properties": {
+                                                "matches": {
+                                                  "description": "Matches defines which health check probe outcomes produce a log entry.\nWhen omitted or empty, all events are logged.\n\nEach value must be unique. Multiple values are ORed. If any failure type is\nspecified then a success type must also be specified, and vice versa.",
+                                                  "items": {
+                                                    "description": "ProxyHealthCheckLogEventType specifies which health check probe outcomes produce a log entry.",
+                                                    "enum": [
+                                                      "Failure",
+                                                      "FailureSeriesStart",
+                                                      "Success",
+                                                      "HealthyTransition"
+                                                    ],
+                                                    "type": "string"
+                                                  },
+                                                  "maxItems": 4,
+                                                  "type": "array",
+                                                  "x-kubernetes-list-type": "set",
+                                                  "x-kubernetes-validations": [
+                                                    {
+                                                      "message": "a failure type and a success type must both be specified together",
+                                                      "rule": "self.exists(e, e == 'Failure' || e == 'FailureSeriesStart') == self.exists(e, e == 'Success' || e == 'HealthyTransition')"
+                                                    }
+                                                  ]
+                                                },
+                                                "sinks": {
+                                                  "description": "Sinks defines where health check events are written.\nWhen omitted, events are written to /dev/stdout.",
+                                                  "items": {
+                                                    "additionalProperties": false,
+                                                    "description": "ProxyHealthCheckLogSink defines a destination for health check event logs.",
+                                                    "properties": {
+                                                      "file": {
+                                                        "additionalProperties": false,
+                                                        "description": "File defines the file sink configuration.\nRequired when type is File.",
+                                                        "properties": {
+                                                          "path": {
+                                                            "description": "Path specifies the file path for health check event output.\nUse /dev/stdout to write to standard output.",
+                                                            "minLength": 1,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "path"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "type": {
+                                                        "description": "Type defines the type of sink.",
+                                                        "enum": [
+                                                          "File"
+                                                        ],
+                                                        "type": "string"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "type"
+                                                    ],
+                                                    "type": "object",
+                                                    "x-kubernetes-validations": [
+                                                      {
+                                                        "message": "If ProxyHealthCheckLogSink type is File, file field needs to be set.",
+                                                        "rule": "self.type == 'File' ? has(self.file) : !has(self.file)"
+                                                      }
+                                                    ]
+                                                  },
+                                                  "maxItems": 1,
+                                                  "type": "array"
+                                                }
+                                              },
+                                              "type": "object"
+                                            },
                                             "healthyThreshold": {
                                               "default": 1,
                                               "description": "HealthyThreshold defines the number of healthy health checks required before a backend host is marked healthy.",
@@ -11143,6 +11437,7 @@
                                                 },
                                                 "method": {
                                                   "description": "Method defines the HTTP method used for health checking.\nDefaults to GET",
+                                                  "maxLength": 16,
                                                   "type": "string"
                                                 },
                                                 "path": {
@@ -11150,6 +11445,53 @@
                                                   "maxLength": 1024,
                                                   "minLength": 1,
                                                   "type": "string"
+                                                },
+                                                "requestBody": {
+                                                  "additionalProperties": false,
+                                                  "description": "RequestBody defines the HTTP request body payload sent during health checking.",
+                                                  "properties": {
+                                                    "binary": {
+                                                      "description": "Binary payload base64 encoded.",
+                                                      "format": "byte",
+                                                      "type": "string"
+                                                    },
+                                                    "text": {
+                                                      "description": "Text payload in plain text.",
+                                                      "type": "string"
+                                                    },
+                                                    "type": {
+                                                      "allOf": [
+                                                        {
+                                                          "enum": [
+                                                            "Text",
+                                                            "Binary"
+                                                          ]
+                                                        },
+                                                        {
+                                                          "enum": [
+                                                            "Text",
+                                                            "Binary"
+                                                          ]
+                                                        }
+                                                      ],
+                                                      "description": "Type defines the type of the payload.",
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "type"
+                                                  ],
+                                                  "type": "object",
+                                                  "x-kubernetes-validations": [
+                                                    {
+                                                      "message": "If payload type is Text, text field needs to be set.",
+                                                      "rule": "self.type == 'Text' ? has(self.text) : !has(self.text)"
+                                                    },
+                                                    {
+                                                      "message": "If payload type is Binary, binary field needs to be set.",
+                                                      "rule": "self.type == 'Binary' ? has(self.binary) : !has(self.binary)"
+                                                    }
+                                                  ]
                                                 },
                                                 "retriableStatuses": {
                                                   "description": "RetriableStatuses defines a list of HTTP response statuses considered retriable.\nResponses matching these statuses count towards the unhealthy threshold but\ndo not result in the host being considered immediately unhealthy.\nThe expected statuses take precedence for any range overlaps with this field.",
@@ -11165,7 +11507,13 @@
                                               "required": [
                                                 "path"
                                               ],
-                                              "type": "object"
+                                              "type": "object",
+                                              "x-kubernetes-validations": [
+                                                {
+                                                  "message": "The requestBody field can only be set when method is POST or PUT.",
+                                                  "rule": "!has(self.requestBody) || (has(self.method) && self.method.upperAscii() in ['POST','PUT'])"
+                                                }
+                                              ]
                                             },
                                             "initialJitter": {
                                               "description": "InitialJitter defines the maximum time Envoy will wait before the first health check.\nEnvoy will randomly select a value between 0 and the initial jitter value.",
@@ -11522,6 +11870,38 @@
                                                 "type": "string"
                                               },
                                               "type": "array"
+                                            },
+                                            "outOfBand": {
+                                              "additionalProperties": false,
+                                              "description": "OutOfBand enables out-of-band ORCA load reporting. When set, Envoy opens a\nserver-streaming gRPC connection to each endpoint's\nxds.service.orca.v3.OpenRcaService/StreamCoreMetrics and pulls load\nreports periodically, instead of relying on in-band ORCA metrics\ncarried in response headers/trailers.\n\nThe backend must implement OpenRcaService for this to take effect.",
+                                              "properties": {
+                                                "authority": {
+                                                  "description": "Authority overrides the :authority header on the OutOfBand gRPC stream.\nIf unset, Envoy uses the endpoint hostname, then the dialed address, then\nthe cluster name.",
+                                                  "maxLength": 259,
+                                                  "minLength": 1,
+                                                  "pattern": "^[^\\x00\\n\\r]*$",
+                                                  "type": "string"
+                                                },
+                                                "port": {
+                                                  "description": "Port overrides the port used for the OutOfBand reporting connection, e.g. to\nreach a separate reporting sidecar. Defaults to the endpoint's port.",
+                                                  "format": "int32",
+                                                  "maximum": 65535,
+                                                  "minimum": 1,
+                                                  "type": "integer"
+                                                },
+                                                "reportingPeriod": {
+                                                  "description": "ReportingPeriod is how often Envoy requests load reports from the server.\nMust be greater than 0. Defaults to 10s.",
+                                                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+                                                  "type": "string",
+                                                  "x-kubernetes-validations": [
+                                                    {
+                                                      "message": "reportingPeriod must be greater than 0",
+                                                      "rule": "duration(self) > duration('0s')"
+                                                    }
+                                                  ]
+                                                }
+                                              },
+                                              "type": "object"
                                             },
                                             "weightExpirationPeriod": {
                                               "description": "If a given endpoint has not reported load metrics in this long, stop using the reported weight. Defaults to 3m.",
@@ -12171,6 +12551,78 @@
               },
               "type": "object"
             },
+            "healthCheckLog": {
+              "additionalProperties": false,
+              "description": "HealthCheckLog defines health check event logging for xRoute-backed clusters.",
+              "properties": {
+                "matches": {
+                  "description": "Matches defines which health check probe outcomes produce a log entry.\nWhen omitted or empty, all events are logged.\n\nEach value must be unique. Multiple values are ORed. If any failure type is\nspecified then a success type must also be specified, and vice versa.",
+                  "items": {
+                    "description": "ProxyHealthCheckLogEventType specifies which health check probe outcomes produce a log entry.",
+                    "enum": [
+                      "Failure",
+                      "FailureSeriesStart",
+                      "Success",
+                      "HealthyTransition"
+                    ],
+                    "type": "string"
+                  },
+                  "maxItems": 4,
+                  "type": "array",
+                  "x-kubernetes-list-type": "set",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "a failure type and a success type must both be specified together",
+                      "rule": "self.exists(e, e == 'Failure' || e == 'FailureSeriesStart') == self.exists(e, e == 'Success' || e == 'HealthyTransition')"
+                    }
+                  ]
+                },
+                "sinks": {
+                  "description": "Sinks defines where health check events are written.\nWhen omitted, events are written to /dev/stdout.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "ProxyHealthCheckLogSink defines a destination for health check event logs.",
+                    "properties": {
+                      "file": {
+                        "additionalProperties": false,
+                        "description": "File defines the file sink configuration.\nRequired when type is File.",
+                        "properties": {
+                          "path": {
+                            "description": "Path specifies the file path for health check event output.\nUse /dev/stdout to write to standard output.",
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path"
+                        ],
+                        "type": "object"
+                      },
+                      "type": {
+                        "description": "Type defines the type of sink.",
+                        "enum": [
+                          "File"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "If ProxyHealthCheckLogSink type is File, file field needs to be set.",
+                        "rule": "self.type == 'File' ? has(self.file) : !has(self.file)"
+                      }
+                    ]
+                  },
+                  "maxItems": 1,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
             "metrics": {
               "additionalProperties": false,
               "description": "Metrics defines metrics configuration for managed proxies.",
@@ -12610,6 +13062,78 @@
                                         },
                                         "type": "object"
                                       },
+                                      "healthCheckLog": {
+                                        "additionalProperties": false,
+                                        "description": "HealthCheckLog defines health check event logging configuration for this cluster.\nWhen set, HC probe outcomes are logged to the configured sinks.\nTakes precedence over the gateway-level EnvoyProxy.spec.telemetry.healthCheckLog.",
+                                        "properties": {
+                                          "matches": {
+                                            "description": "Matches defines which health check probe outcomes produce a log entry.\nWhen omitted or empty, all events are logged.\n\nEach value must be unique. Multiple values are ORed. If any failure type is\nspecified then a success type must also be specified, and vice versa.",
+                                            "items": {
+                                              "description": "ProxyHealthCheckLogEventType specifies which health check probe outcomes produce a log entry.",
+                                              "enum": [
+                                                "Failure",
+                                                "FailureSeriesStart",
+                                                "Success",
+                                                "HealthyTransition"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "maxItems": 4,
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "set",
+                                            "x-kubernetes-validations": [
+                                              {
+                                                "message": "a failure type and a success type must both be specified together",
+                                                "rule": "self.exists(e, e == 'Failure' || e == 'FailureSeriesStart') == self.exists(e, e == 'Success' || e == 'HealthyTransition')"
+                                              }
+                                            ]
+                                          },
+                                          "sinks": {
+                                            "description": "Sinks defines where health check events are written.\nWhen omitted, events are written to /dev/stdout.",
+                                            "items": {
+                                              "additionalProperties": false,
+                                              "description": "ProxyHealthCheckLogSink defines a destination for health check event logs.",
+                                              "properties": {
+                                                "file": {
+                                                  "additionalProperties": false,
+                                                  "description": "File defines the file sink configuration.\nRequired when type is File.",
+                                                  "properties": {
+                                                    "path": {
+                                                      "description": "Path specifies the file path for health check event output.\nUse /dev/stdout to write to standard output.",
+                                                      "minLength": 1,
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "path"
+                                                  ],
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "description": "Type defines the type of sink.",
+                                                  "enum": [
+                                                    "File"
+                                                  ],
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "type"
+                                              ],
+                                              "type": "object",
+                                              "x-kubernetes-validations": [
+                                                {
+                                                  "message": "If ProxyHealthCheckLogSink type is File, file field needs to be set.",
+                                                  "rule": "self.type == 'File' ? has(self.file) : !has(self.file)"
+                                                }
+                                              ]
+                                            },
+                                            "maxItems": 1,
+                                            "type": "array"
+                                          }
+                                        },
+                                        "type": "object"
+                                      },
                                       "healthyThreshold": {
                                         "default": 1,
                                         "description": "HealthyThreshold defines the number of healthy health checks required before a backend host is marked healthy.",
@@ -12687,6 +13211,7 @@
                                           },
                                           "method": {
                                             "description": "Method defines the HTTP method used for health checking.\nDefaults to GET",
+                                            "maxLength": 16,
                                             "type": "string"
                                           },
                                           "path": {
@@ -12694,6 +13219,53 @@
                                             "maxLength": 1024,
                                             "minLength": 1,
                                             "type": "string"
+                                          },
+                                          "requestBody": {
+                                            "additionalProperties": false,
+                                            "description": "RequestBody defines the HTTP request body payload sent during health checking.",
+                                            "properties": {
+                                              "binary": {
+                                                "description": "Binary payload base64 encoded.",
+                                                "format": "byte",
+                                                "type": "string"
+                                              },
+                                              "text": {
+                                                "description": "Text payload in plain text.",
+                                                "type": "string"
+                                              },
+                                              "type": {
+                                                "allOf": [
+                                                  {
+                                                    "enum": [
+                                                      "Text",
+                                                      "Binary"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "enum": [
+                                                      "Text",
+                                                      "Binary"
+                                                    ]
+                                                  }
+                                                ],
+                                                "description": "Type defines the type of the payload.",
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ],
+                                            "type": "object",
+                                            "x-kubernetes-validations": [
+                                              {
+                                                "message": "If payload type is Text, text field needs to be set.",
+                                                "rule": "self.type == 'Text' ? has(self.text) : !has(self.text)"
+                                              },
+                                              {
+                                                "message": "If payload type is Binary, binary field needs to be set.",
+                                                "rule": "self.type == 'Binary' ? has(self.binary) : !has(self.binary)"
+                                              }
+                                            ]
                                           },
                                           "retriableStatuses": {
                                             "description": "RetriableStatuses defines a list of HTTP response statuses considered retriable.\nResponses matching these statuses count towards the unhealthy threshold but\ndo not result in the host being considered immediately unhealthy.\nThe expected statuses take precedence for any range overlaps with this field.",
@@ -12709,7 +13281,13 @@
                                         "required": [
                                           "path"
                                         ],
-                                        "type": "object"
+                                        "type": "object",
+                                        "x-kubernetes-validations": [
+                                          {
+                                            "message": "The requestBody field can only be set when method is POST or PUT.",
+                                            "rule": "!has(self.requestBody) || (has(self.method) && self.method.upperAscii() in ['POST','PUT'])"
+                                          }
+                                        ]
                                       },
                                       "initialJitter": {
                                         "description": "InitialJitter defines the maximum time Envoy will wait before the first health check.\nEnvoy will randomly select a value between 0 and the initial jitter value.",
@@ -13066,6 +13644,38 @@
                                           "type": "string"
                                         },
                                         "type": "array"
+                                      },
+                                      "outOfBand": {
+                                        "additionalProperties": false,
+                                        "description": "OutOfBand enables out-of-band ORCA load reporting. When set, Envoy opens a\nserver-streaming gRPC connection to each endpoint's\nxds.service.orca.v3.OpenRcaService/StreamCoreMetrics and pulls load\nreports periodically, instead of relying on in-band ORCA metrics\ncarried in response headers/trailers.\n\nThe backend must implement OpenRcaService for this to take effect.",
+                                        "properties": {
+                                          "authority": {
+                                            "description": "Authority overrides the :authority header on the OutOfBand gRPC stream.\nIf unset, Envoy uses the endpoint hostname, then the dialed address, then\nthe cluster name.",
+                                            "maxLength": 259,
+                                            "minLength": 1,
+                                            "pattern": "^[^\\x00\\n\\r]*$",
+                                            "type": "string"
+                                          },
+                                          "port": {
+                                            "description": "Port overrides the port used for the OutOfBand reporting connection, e.g. to\nreach a separate reporting sidecar. Defaults to the endpoint's port.",
+                                            "format": "int32",
+                                            "maximum": 65535,
+                                            "minimum": 1,
+                                            "type": "integer"
+                                          },
+                                          "reportingPeriod": {
+                                            "description": "ReportingPeriod is how often Envoy requests load reports from the server.\nMust be greater than 0. Defaults to 10s.",
+                                            "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+                                            "type": "string",
+                                            "x-kubernetes-validations": [
+                                              {
+                                                "message": "reportingPeriod must be greater than 0",
+                                                "rule": "duration(self) > duration('0s')"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "type": "object"
                                       },
                                       "weightExpirationPeriod": {
                                         "description": "If a given endpoint has not reported load metrics in this long, stop using the reported weight. Defaults to 3m.",
@@ -13708,6 +14318,33 @@
               "additionalProperties": false,
               "description": "Tracing defines tracing configuration for managed proxies.\nIf unspecified, will not send tracing data.",
               "properties": {
+                "clientSamplingFraction": {
+                  "additionalProperties": false,
+                  "description": "ClientSamplingFraction represents the fraction of requests that should be\nselected for tracing when requested by the client.\nIf unspecified, client-forced tracing is disabled by default and users must\nset this field to opt in.",
+                  "properties": {
+                    "denominator": {
+                      "default": 100,
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "numerator": {
+                      "format": "int32",
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "numerator"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "numerator must be less than or equal to denominator",
+                      "rule": "self.numerator <= self.denominator"
+                    }
+                  ]
+                },
                 "customTags": {
                   "additionalProperties": {
                     "additionalProperties": false,
@@ -13780,6 +14417,33 @@
                   },
                   "description": "CustomTags defines the custom tags to add to each span.\nIf provider is kubernetes, pod name and namespace are added by default.\n\nDeprecated: Use Tags instead.",
                   "type": "object"
+                },
+                "overallSamplingFraction": {
+                  "additionalProperties": false,
+                  "description": "OverallSamplingFraction represents the fraction of requests that should be\nselected for tracing after all other sampling checks have been applied.",
+                  "properties": {
+                    "denominator": {
+                      "default": 100,
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "numerator": {
+                      "format": "int32",
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "numerator"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "numerator must be less than or equal to denominator",
+                      "rule": "self.numerator <= self.denominator"
+                    }
+                  ]
                 },
                 "provider": {
                   "additionalProperties": false,
@@ -14106,6 +14770,78 @@
                                   },
                                   "type": "object"
                                 },
+                                "healthCheckLog": {
+                                  "additionalProperties": false,
+                                  "description": "HealthCheckLog defines health check event logging configuration for this cluster.\nWhen set, HC probe outcomes are logged to the configured sinks.\nTakes precedence over the gateway-level EnvoyProxy.spec.telemetry.healthCheckLog.",
+                                  "properties": {
+                                    "matches": {
+                                      "description": "Matches defines which health check probe outcomes produce a log entry.\nWhen omitted or empty, all events are logged.\n\nEach value must be unique. Multiple values are ORed. If any failure type is\nspecified then a success type must also be specified, and vice versa.",
+                                      "items": {
+                                        "description": "ProxyHealthCheckLogEventType specifies which health check probe outcomes produce a log entry.",
+                                        "enum": [
+                                          "Failure",
+                                          "FailureSeriesStart",
+                                          "Success",
+                                          "HealthyTransition"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "maxItems": 4,
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "set",
+                                      "x-kubernetes-validations": [
+                                        {
+                                          "message": "a failure type and a success type must both be specified together",
+                                          "rule": "self.exists(e, e == 'Failure' || e == 'FailureSeriesStart') == self.exists(e, e == 'Success' || e == 'HealthyTransition')"
+                                        }
+                                      ]
+                                    },
+                                    "sinks": {
+                                      "description": "Sinks defines where health check events are written.\nWhen omitted, events are written to /dev/stdout.",
+                                      "items": {
+                                        "additionalProperties": false,
+                                        "description": "ProxyHealthCheckLogSink defines a destination for health check event logs.",
+                                        "properties": {
+                                          "file": {
+                                            "additionalProperties": false,
+                                            "description": "File defines the file sink configuration.\nRequired when type is File.",
+                                            "properties": {
+                                              "path": {
+                                                "description": "Path specifies the file path for health check event output.\nUse /dev/stdout to write to standard output.",
+                                                "minLength": 1,
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "path"
+                                            ],
+                                            "type": "object"
+                                          },
+                                          "type": {
+                                            "description": "Type defines the type of sink.",
+                                            "enum": [
+                                              "File"
+                                            ],
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "type"
+                                        ],
+                                        "type": "object",
+                                        "x-kubernetes-validations": [
+                                          {
+                                            "message": "If ProxyHealthCheckLogSink type is File, file field needs to be set.",
+                                            "rule": "self.type == 'File' ? has(self.file) : !has(self.file)"
+                                          }
+                                        ]
+                                      },
+                                      "maxItems": 1,
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
                                 "healthyThreshold": {
                                   "default": 1,
                                   "description": "HealthyThreshold defines the number of healthy health checks required before a backend host is marked healthy.",
@@ -14183,6 +14919,7 @@
                                     },
                                     "method": {
                                       "description": "Method defines the HTTP method used for health checking.\nDefaults to GET",
+                                      "maxLength": 16,
                                       "type": "string"
                                     },
                                     "path": {
@@ -14190,6 +14927,53 @@
                                       "maxLength": 1024,
                                       "minLength": 1,
                                       "type": "string"
+                                    },
+                                    "requestBody": {
+                                      "additionalProperties": false,
+                                      "description": "RequestBody defines the HTTP request body payload sent during health checking.",
+                                      "properties": {
+                                        "binary": {
+                                          "description": "Binary payload base64 encoded.",
+                                          "format": "byte",
+                                          "type": "string"
+                                        },
+                                        "text": {
+                                          "description": "Text payload in plain text.",
+                                          "type": "string"
+                                        },
+                                        "type": {
+                                          "allOf": [
+                                            {
+                                              "enum": [
+                                                "Text",
+                                                "Binary"
+                                              ]
+                                            },
+                                            {
+                                              "enum": [
+                                                "Text",
+                                                "Binary"
+                                              ]
+                                            }
+                                          ],
+                                          "description": "Type defines the type of the payload.",
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "type"
+                                      ],
+                                      "type": "object",
+                                      "x-kubernetes-validations": [
+                                        {
+                                          "message": "If payload type is Text, text field needs to be set.",
+                                          "rule": "self.type == 'Text' ? has(self.text) : !has(self.text)"
+                                        },
+                                        {
+                                          "message": "If payload type is Binary, binary field needs to be set.",
+                                          "rule": "self.type == 'Binary' ? has(self.binary) : !has(self.binary)"
+                                        }
+                                      ]
                                     },
                                     "retriableStatuses": {
                                       "description": "RetriableStatuses defines a list of HTTP response statuses considered retriable.\nResponses matching these statuses count towards the unhealthy threshold but\ndo not result in the host being considered immediately unhealthy.\nThe expected statuses take precedence for any range overlaps with this field.",
@@ -14205,7 +14989,13 @@
                                   "required": [
                                     "path"
                                   ],
-                                  "type": "object"
+                                  "type": "object",
+                                  "x-kubernetes-validations": [
+                                    {
+                                      "message": "The requestBody field can only be set when method is POST or PUT.",
+                                      "rule": "!has(self.requestBody) || (has(self.method) && self.method.upperAscii() in ['POST','PUT'])"
+                                    }
+                                  ]
                                 },
                                 "initialJitter": {
                                   "description": "InitialJitter defines the maximum time Envoy will wait before the first health check.\nEnvoy will randomly select a value between 0 and the initial jitter value.",
@@ -14562,6 +15352,38 @@
                                     "type": "string"
                                   },
                                   "type": "array"
+                                },
+                                "outOfBand": {
+                                  "additionalProperties": false,
+                                  "description": "OutOfBand enables out-of-band ORCA load reporting. When set, Envoy opens a\nserver-streaming gRPC connection to each endpoint's\nxds.service.orca.v3.OpenRcaService/StreamCoreMetrics and pulls load\nreports periodically, instead of relying on in-band ORCA metrics\ncarried in response headers/trailers.\n\nThe backend must implement OpenRcaService for this to take effect.",
+                                  "properties": {
+                                    "authority": {
+                                      "description": "Authority overrides the :authority header on the OutOfBand gRPC stream.\nIf unset, Envoy uses the endpoint hostname, then the dialed address, then\nthe cluster name.",
+                                      "maxLength": 259,
+                                      "minLength": 1,
+                                      "pattern": "^[^\\x00\\n\\r]*$",
+                                      "type": "string"
+                                    },
+                                    "port": {
+                                      "description": "Port overrides the port used for the OutOfBand reporting connection, e.g. to\nreach a separate reporting sidecar. Defaults to the endpoint's port.",
+                                      "format": "int32",
+                                      "maximum": 65535,
+                                      "minimum": 1,
+                                      "type": "integer"
+                                    },
+                                    "reportingPeriod": {
+                                      "description": "ReportingPeriod is how often Envoy requests load reports from the server.\nMust be greater than 0. Defaults to 10s.",
+                                      "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+                                      "type": "string",
+                                      "x-kubernetes-validations": [
+                                        {
+                                          "message": "reportingPeriod must be greater than 0",
+                                          "rule": "duration(self) > duration('0s')"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "type": "object"
                                 },
                                 "weightExpirationPeriod": {
                                   "description": "If a given endpoint has not reported load metrics in this long, stop using the reported weight. Defaults to 3m.",
@@ -15329,7 +16151,13 @@
           "type": "object"
         }
       },
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "mergeGateways and mergeBackends cannot both be enabled",
+          "rule": "!(has(self.mergeGateways) && self.mergeGateways && has(self.mergeBackends))"
+        }
+      ]
     },
     "status": {
       "additionalProperties": false,
