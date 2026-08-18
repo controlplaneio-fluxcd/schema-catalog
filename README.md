@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-120-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C825-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-636%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-120-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C823-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-637%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -160,7 +160,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Image Scanner Operator](https://schemas.fluxoperator.dev/p/image-scanner-operator) | `image-scanner-operator` | v0.16.24 | 1 | 2026-08-14 |
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.9.3 | 2 | 2026-07-28 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.40.3 | 5 | 2026-07-23 |
-| [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.37.1 | 8 | 2026-08-14 |
+| [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.37.2 | 8 | 2026-08-18 |
 | [Kyverno](https://schemas.fluxoperator.dev/p/kyverno) | `kyverno` | v1.18.2 | 47 | 2026-07-10 |
 | [OPA Gatekeeper](https://schemas.fluxoperator.dev/p/gatekeeper) | `gatekeeper` | v3.23.0 | 27 | 2026-07-09 |
 | [OpenReports](https://schemas.fluxoperator.dev/p/openreports) | `openreports` | v0.2.1 | 2 | 2026-07-09 |
@@ -194,7 +194,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.1.2 | 4 | 2026-07-18 |
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.3.0 | 11 | 2026-08-14 |
 | [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.20.4 | 21 | 2026-08-14 |
-| [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.1 | 12 | 2026-07-09 |
+| [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.2 | 12 | 2026-08-18 |
 | [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.2.3-rc1 | 6 | 2026-07-31 |
 | [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.24.0 | 9 | 2026-07-09 |
 | [Submariner Operator](https://schemas.fluxoperator.dev/p/submariner) | `submariner-operator` | v0.24.0 | 3 | 2026-07-09 |
@@ -212,7 +212,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Envoy Gateway](https://schemas.fluxoperator.dev/p/envoy-gateway) | `envoy-gateway` | v1.9.0 | 8 | 2026-08-15 |
 | [ExternalDNS](https://schemas.fluxoperator.dev/p/external-dns) | `external-dns` | v0.21.0 | 1 | 2026-07-09 |
 | [Gateway API](https://schemas.fluxoperator.dev/p/gateway-api) | `gateway-api` | v1.6.1 | 21 | 2026-07-17 |
-| [Gateway API Inference Extension](https://schemas.fluxoperator.dev/p/gateway-api-inference-extension) | `gateway-api-inference-extension` | v1.5.0 | 4 | 2026-07-09 |
+| [Gateway API Inference Extension](https://schemas.fluxoperator.dev/p/gateway-api-inference-extension) | `gateway-api-inference-extension` | v1.6.0 | 2 | 2026-08-18 |
 | [Istio](https://schemas.fluxoperator.dev/p/istio) | `istio` | 1.30.3 | 33 | 2026-07-17 |
 | [JobSet](https://schemas.fluxoperator.dev/p/jobset) | `jobset` | v0.12.0 | 1 | 2026-07-09 |
 | [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.18.2 | 19 | 2026-08-01 |
@@ -257,7 +257,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.4 | 15 | 2026-08-08 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.58.0 | 4 | 2026-08-08 |
 | [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.8 | 2 | 2026-08-13 |
-| [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.11.1 | 9 | 2026-08-11 |
+| [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.11.2 | 9 | 2026-08-18 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.23.0 | 20 | 2026-07-29 |
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.23.0 | 12 | 2026-07-30 |
 | [KServe](https://schemas.fluxoperator.dev/p/kserve) | `kserve` | v0.20.0 | 6 | 2026-08-07 |
@@ -281,7 +281,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 6.0.0 | 1 | 2026-08-14 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.1 | 11 | 2026-08-12 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
-| [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.20.10 | 8 | 2026-08-14 |
+| [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.20.11 | 8 | 2026-08-18 |
 | [Spark Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `spark-operator` | v2.5.2 | 3 | 2026-08-01 |
 | [Strimzi](https://schemas.fluxoperator.dev/p/strimzi) | `strimzi` | 0.51.0 | 24 | 2026-07-09 |
 | [Tekton Pipeline](https://schemas.fluxoperator.dev/p/tekton-pipeline) | `tekton-pipeline` | v1.15.0 | 14 | 2026-08-04 |
@@ -293,14 +293,14 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | --- | --- | --- | --- | --- |
 | [Datadog Operator](https://schemas.fluxoperator.dev/p/datadog-operator) | `datadog-operator` | v1.29.0 | 13 | 2026-08-05 |
 | [Elastic Cloud](https://schemas.fluxoperator.dev/p/eck-operator) | `eck-operator` | v3.5.0 | 19 | 2026-08-05 |
-| [Fluent Operator](https://schemas.fluxoperator.dev/p/fluent-operator) | `fluent-operator` | v3.9.0 | 22 | 2026-07-09 |
+| [Fluent Operator](https://schemas.fluxoperator.dev/p/fluent-operator) | `fluent-operator` | v3.10.0 | 22 | 2026-08-18 |
 | [Grafana Operator](https://schemas.fluxoperator.dev/p/grafana-operator) | `grafana-operator` | v5.24.0 | 13 | 2026-07-09 |
 | [Jaeger Operator](https://schemas.fluxoperator.dev/p/jaeger-operator) | `jaeger-operator` | v1.65.0 | 1 | 2026-07-09 |
 | [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.31.0 | 3 | 2026-07-16 |
 | [Logging Operator](https://schemas.fluxoperator.dev/p/logging-operator) | `logging-operator` | 6.8.0 | 21 | 2026-08-12 |
 | [Loki Operator](https://schemas.fluxoperator.dev/p/loki-operator) | `loki-operator` | v0.10.2 | 9 | 2026-07-09 |
 | [OpenSearch Operator](https://schemas.fluxoperator.dev/p/opensearch-operator) | `opensearch-operator` | 3.0.2 | 20 | 2026-07-09 |
-| [OpenTelemetry Operator](https://schemas.fluxoperator.dev/p/opentelemetry) | `opentelemetry` | v0.157.0 | 5 | 2026-08-14 |
+| [OpenTelemetry Operator](https://schemas.fluxoperator.dev/p/opentelemetry) | `opentelemetry` | v0.158.0 | 5 | 2026-08-18 |
 | [Perses Operator](https://schemas.fluxoperator.dev/p/perses-operator) | `perses-operator` | v0.5.0 | 7 | 2026-08-05 |
 | [Prometheus Operator](https://schemas.fluxoperator.dev/p/prometheus-operator) | `prometheus-operator` | v0.93.1 | 10 | 2026-08-11 |
 | [Tempo Operator](https://schemas.fluxoperator.dev/p/tempo-operator) | `tempo-operator` | v0.21.0 | 2 | 2026-07-09 |
