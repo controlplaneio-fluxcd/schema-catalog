@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-120-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C823-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-637%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-121-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C827-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-638%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -246,6 +246,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | --- | --- | --- | --- | --- |
 | [Actions Runner Controller](https://schemas.fluxoperator.dev/p/actions-runner-controller) | `actions-runner-controller` | 0.14.2 | 9 | 2026-07-09 |
 | [AIBrix](https://schemas.fluxoperator.dev/p/aibrix) | `aibrix` | v0.7.0 | 8 | 2026-07-09 |
+| [Altinity ClickHouse Operator](https://schemas.fluxoperator.dev/p/altinity-clickhouse-operator) | `altinity-clickhouse-operator` | 0.27.3 | 4 | 2026-08-20 |
 | [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.5.1 | 3 | 2026-08-13 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.11 | 3 | 2026-07-14 |
 | [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.9.1 | 5 | 2026-07-18 |
@@ -281,7 +282,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 6.0.0 | 1 | 2026-08-14 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.21.1 | 11 | 2026-08-12 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
-| [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.20.11 | 8 | 2026-08-18 |
+| [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.20.12 | 8 | 2026-08-20 |
 | [Spark Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `spark-operator` | v2.5.2 | 3 | 2026-08-01 |
 | [Strimzi](https://schemas.fluxoperator.dev/p/strimzi) | `strimzi` | 0.51.0 | 24 | 2026-07-09 |
 | [Tekton Pipeline](https://schemas.fluxoperator.dev/p/tekton-pipeline) | `tekton-pipeline` | v1.15.0 | 14 | 2026-08-04 |
