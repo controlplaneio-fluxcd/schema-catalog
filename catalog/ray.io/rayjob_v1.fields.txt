@@ -1,4 +1,4 @@
-# schema source: KubeRay v1.6.2 https://github.com/ray-project/kuberay
+# schema source: KubeRay v1.7.0 https://github.com/ray-project/kuberay
 apiVersion <string> enum=ray.io/v1
 kind <string> enum=RayJob
 metadata.name <string> (required)
@@ -32,6 +32,8 @@ spec.rayClusterSpec.authOptions.enableK8sTokenAuth <boolean>
 spec.rayClusterSpec.authOptions.mode <string> enum=disabled|token
 spec.rayClusterSpec.authOptions.secretName <string>
 spec.rayClusterSpec.autoscalerOptions <object>
+spec.rayClusterSpec.autoscalerOptions.args <[]string>
+spec.rayClusterSpec.autoscalerOptions.command <[]string>
 spec.rayClusterSpec.autoscalerOptions.env <[]object>
 spec.rayClusterSpec.autoscalerOptions.env[].name <string> (required)
 spec.rayClusterSpec.autoscalerOptions.env[].value <string>
@@ -112,8 +114,9 @@ spec.rayClusterSpec.autoscalerOptions.volumeMounts[].subPath <string>
 spec.rayClusterSpec.autoscalerOptions.volumeMounts[].subPathExpr <string>
 spec.rayClusterSpec.enableInTreeAutoscaling <boolean>
 spec.rayClusterSpec.gcsFaultToleranceOptions <object>
+spec.rayClusterSpec.gcsFaultToleranceOptions.backend <string> enum=redis|rocksdb (immutable)
 spec.rayClusterSpec.gcsFaultToleranceOptions.externalStorageNamespace <string>
-spec.rayClusterSpec.gcsFaultToleranceOptions.redisAddress <string> (required)
+spec.rayClusterSpec.gcsFaultToleranceOptions.redisAddress <string>
 spec.rayClusterSpec.gcsFaultToleranceOptions.redisPassword <object>
 spec.rayClusterSpec.gcsFaultToleranceOptions.redisPassword.value <string>
 spec.rayClusterSpec.gcsFaultToleranceOptions.redisPassword.valueFrom <object>
@@ -160,6 +163,13 @@ spec.rayClusterSpec.gcsFaultToleranceOptions.redisUsername.valueFrom.secretKeyRe
 spec.rayClusterSpec.gcsFaultToleranceOptions.redisUsername.valueFrom.secretKeyRef.key <string> (required)
 spec.rayClusterSpec.gcsFaultToleranceOptions.redisUsername.valueFrom.secretKeyRef.name <string> default=""
 spec.rayClusterSpec.gcsFaultToleranceOptions.redisUsername.valueFrom.secretKeyRef.optional <boolean>
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage <object>
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage.accessModes <[]string>
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage.claimName <string>
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage.deletionPolicy <string> enum=DeleteWithCluster|Retain
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage.size <int-or-string>
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage.storageClassName <string>
+spec.rayClusterSpec.gcsFaultToleranceOptions.storage.subPath <string>
 spec.rayClusterSpec.headGroupSpec <object> (required)
 spec.rayClusterSpec.headGroupSpec.enableIngress <boolean>
 spec.rayClusterSpec.headGroupSpec.headService <object>
@@ -217,6 +227,13 @@ spec.rayClusterSpec.headGroupSpec.headService.status.loadBalancer.ingress[].port
 spec.rayClusterSpec.headGroupSpec.headService.status.loadBalancer.ingress[].ports[].error <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316
 spec.rayClusterSpec.headGroupSpec.headService.status.loadBalancer.ingress[].ports[].port <integer> (required) format=int32
 spec.rayClusterSpec.headGroupSpec.headService.status.loadBalancer.ingress[].ports[].protocol <string> (required)
+spec.rayClusterSpec.headGroupSpec.ingressOptions <object>
+spec.rayClusterSpec.headGroupSpec.ingressOptions.host <string>
+spec.rayClusterSpec.headGroupSpec.ingressOptions.path <string>
+spec.rayClusterSpec.headGroupSpec.ingressOptions.pathType <string> enum=Exact|Prefix|ImplementationSpecific
+spec.rayClusterSpec.headGroupSpec.ingressOptions.tls <[]object>
+spec.rayClusterSpec.headGroupSpec.ingressOptions.tls[].hosts <[]string>
+spec.rayClusterSpec.headGroupSpec.ingressOptions.tls[].secretName <string>
 spec.rayClusterSpec.headGroupSpec.labels <map[string]string>
 spec.rayClusterSpec.headGroupSpec.rayStartParams <map[string]string>
 spec.rayClusterSpec.headGroupSpec.resources <map[string]string>
@@ -991,6 +1008,8 @@ spec.rayClusterSpec.headGroupSpec.template.spec.runtimeClassName <string>
 spec.rayClusterSpec.headGroupSpec.template.spec.schedulerName <string>
 spec.rayClusterSpec.headGroupSpec.template.spec.schedulingGates <[]object>
 spec.rayClusterSpec.headGroupSpec.template.spec.schedulingGates[].name <string> (required)
+spec.rayClusterSpec.headGroupSpec.template.spec.schedulingGroup <object>
+spec.rayClusterSpec.headGroupSpec.template.spec.schedulingGroup.podGroupName <string>
 spec.rayClusterSpec.headGroupSpec.template.spec.securityContext <object>
 spec.rayClusterSpec.headGroupSpec.template.spec.securityContext.appArmorProfile <object>
 spec.rayClusterSpec.headGroupSpec.template.spec.securityContext.appArmorProfile.localhostProfile <string>
@@ -1301,14 +1320,178 @@ spec.rayClusterSpec.headGroupSpec.template.spec.volumes[].vsphereVolume.fsType <
 spec.rayClusterSpec.headGroupSpec.template.spec.volumes[].vsphereVolume.storagePolicyID <string>
 spec.rayClusterSpec.headGroupSpec.template.spec.volumes[].vsphereVolume.storagePolicyName <string>
 spec.rayClusterSpec.headGroupSpec.template.spec.volumes[].vsphereVolume.volumePath <string> (required)
-spec.rayClusterSpec.headGroupSpec.template.spec.workloadRef <object>
-spec.rayClusterSpec.headGroupSpec.template.spec.workloadRef.name <string> (required)
-spec.rayClusterSpec.headGroupSpec.template.spec.workloadRef.podGroup <string> (required)
-spec.rayClusterSpec.headGroupSpec.template.spec.workloadRef.podGroupReplicaKey <string>
 spec.rayClusterSpec.headServiceAnnotations <map[string]string>
+spec.rayClusterSpec.historyServerOptions <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env <[]object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].name <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].value <string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.configMapKeyRef <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.configMapKeyRef.key <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.configMapKeyRef.name <string> default=""
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.configMapKeyRef.optional <boolean>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fieldRef <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fieldRef.apiVersion <string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fileKeyRef <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fileKeyRef.key <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fileKeyRef.optional <boolean> default=false
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fileKeyRef.path <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.fileKeyRef.volumeName <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.resourceFieldRef <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.resourceFieldRef.containerName <string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.resourceFieldRef.divisor <int-or-string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.resourceFieldRef.resource <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.secretKeyRef <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.secretKeyRef.key <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.secretKeyRef.name <string> default=""
+spec.rayClusterSpec.historyServerOptions.collectorOptions.env[].valueFrom.secretKeyRef.optional <boolean>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.image <string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.imagePullPolicy <string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.resources <object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.resources.claims <[]object>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.resources.claims[].name <string> (required)
+spec.rayClusterSpec.historyServerOptions.collectorOptions.resources.claims[].request <string>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.resources.limits <object (free-form)>
+spec.rayClusterSpec.historyServerOptions.collectorOptions.resources.requests <object (free-form)>
 spec.rayClusterSpec.managedBy <string> (immutable)
+spec.rayClusterSpec.networkPolicy <object>
+spec.rayClusterSpec.networkPolicy.head <object>
+spec.rayClusterSpec.networkPolicy.head.egressRules <[]object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].ports <[]object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].ports[].endPort <integer> format=int32
+spec.rayClusterSpec.networkPolicy.head.egressRules[].ports[].port <int-or-string>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].ports[].protocol <string>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to <[]object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].ipBlock <object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].ipBlock.cidr <string> (required)
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].ipBlock.except <[]string>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].namespaceSelector <object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].namespaceSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].namespaceSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].namespaceSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].podSelector <object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].podSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].podSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].podSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].podSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.head.egressRules[].to[].podSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules <[]object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from <[]object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].ipBlock <object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].ipBlock.cidr <string> (required)
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].ipBlock.except <[]string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].namespaceSelector <object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].namespaceSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].namespaceSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].namespaceSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].podSelector <object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].podSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].podSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].podSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].podSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].from[].podSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].ports <[]object>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].ports[].endPort <integer> format=int32
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].ports[].port <int-or-string>
+spec.rayClusterSpec.networkPolicy.head.ingressRules[].ports[].protocol <string>
+spec.rayClusterSpec.networkPolicy.mode <string> enum=DenyAll|DenyAllIngress|DenyAllEgress default="DenyAll"
+spec.rayClusterSpec.networkPolicy.worker <object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules <[]object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].ports <[]object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].ports[].endPort <integer> format=int32
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].ports[].port <int-or-string>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].ports[].protocol <string>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to <[]object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].ipBlock <object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].ipBlock.cidr <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].ipBlock.except <[]string>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].namespaceSelector <object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].namespaceSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].namespaceSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].namespaceSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].podSelector <object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].podSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].podSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].podSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].podSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.worker.egressRules[].to[].podSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules <[]object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from <[]object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].ipBlock <object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].ipBlock.cidr <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].ipBlock.except <[]string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].namespaceSelector <object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].namespaceSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].namespaceSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].namespaceSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].podSelector <object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].podSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].podSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].podSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].podSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].from[].podSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].ports <[]object>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].ports[].endPort <integer> format=int32
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].ports[].port <int-or-string>
+spec.rayClusterSpec.networkPolicy.worker.ingressRules[].ports[].protocol <string>
+spec.rayClusterSpec.networkPolicy.workerGroups <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].ports <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].ports[].endPort <integer> format=int32
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].ports[].port <int-or-string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].ports[].protocol <string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].ipBlock <object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].ipBlock.cidr <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].ipBlock.except <[]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].namespaceSelector <object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].namespaceSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].namespaceSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].namespaceSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].podSelector <object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].podSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].podSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].podSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].podSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].egressRules[].to[].podSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].groupName <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].ipBlock <object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].ipBlock.cidr <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].ipBlock.except <[]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].namespaceSelector <object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].namespaceSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].namespaceSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].namespaceSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].namespaceSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].namespaceSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].podSelector <object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].podSelector.matchExpressions <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].podSelector.matchExpressions[].key <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].podSelector.matchExpressions[].operator <string> (required)
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].podSelector.matchExpressions[].values <[]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].from[].podSelector.matchLabels <map[string]string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].ports <[]object>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].ports[].endPort <integer> format=int32
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].ports[].port <int-or-string>
+spec.rayClusterSpec.networkPolicy.workerGroups[].ingressRules[].ports[].protocol <string>
 spec.rayClusterSpec.rayVersion <string>
 spec.rayClusterSpec.suspend <boolean>
+spec.rayClusterSpec.tlsOptions <object>
+spec.rayClusterSpec.tlsOptions.enabled <boolean>
 spec.rayClusterSpec.upgradeStrategy <object>
 spec.rayClusterSpec.upgradeStrategy.type <string> enum=Recreate|None
 spec.rayClusterSpec.workerGroupSpecs <[]object>
@@ -1318,6 +1501,7 @@ spec.rayClusterSpec.workerGroupSpecs[].labels <map[string]string>
 spec.rayClusterSpec.workerGroupSpecs[].maxReplicas <integer> (required) default=2147483647 format=int32
 spec.rayClusterSpec.workerGroupSpecs[].minReplicas <integer> (required) default=0 format=int32
 spec.rayClusterSpec.workerGroupSpecs[].numOfHosts <integer> default=1 format=int32
+spec.rayClusterSpec.workerGroupSpecs[].priority <integer> default=0 format=int32
 spec.rayClusterSpec.workerGroupSpecs[].rayStartParams <map[string]string>
 spec.rayClusterSpec.workerGroupSpecs[].replicas <integer> default=0 format=int32
 spec.rayClusterSpec.workerGroupSpecs[].resources <map[string]string>
@@ -2094,6 +2278,8 @@ spec.rayClusterSpec.workerGroupSpecs[].template.spec.runtimeClassName <string>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.schedulerName <string>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.schedulingGates <[]object>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.schedulingGates[].name <string> (required)
+spec.rayClusterSpec.workerGroupSpecs[].template.spec.schedulingGroup <object>
+spec.rayClusterSpec.workerGroupSpecs[].template.spec.schedulingGroup.podGroupName <string>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.securityContext <object>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.securityContext.appArmorProfile <object>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.securityContext.appArmorProfile.localhostProfile <string>
@@ -2404,10 +2590,6 @@ spec.rayClusterSpec.workerGroupSpecs[].template.spec.volumes[].vsphereVolume.fsT
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.volumes[].vsphereVolume.storagePolicyID <string>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.volumes[].vsphereVolume.storagePolicyName <string>
 spec.rayClusterSpec.workerGroupSpecs[].template.spec.volumes[].vsphereVolume.volumePath <string> (required)
-spec.rayClusterSpec.workerGroupSpecs[].template.spec.workloadRef <object>
-spec.rayClusterSpec.workerGroupSpecs[].template.spec.workloadRef.name <string> (required)
-spec.rayClusterSpec.workerGroupSpecs[].template.spec.workloadRef.podGroup <string> (required)
-spec.rayClusterSpec.workerGroupSpecs[].template.spec.workloadRef.podGroupReplicaKey <string>
 spec.runtimeEnvYAML <string>
 spec.shutdownAfterJobFinishes <boolean>
 spec.submissionMode <string> default="K8sJobMode"
@@ -3183,6 +3365,8 @@ spec.submitterPodTemplate.spec.runtimeClassName <string>
 spec.submitterPodTemplate.spec.schedulerName <string>
 spec.submitterPodTemplate.spec.schedulingGates <[]object>
 spec.submitterPodTemplate.spec.schedulingGates[].name <string> (required)
+spec.submitterPodTemplate.spec.schedulingGroup <object>
+spec.submitterPodTemplate.spec.schedulingGroup.podGroupName <string>
 spec.submitterPodTemplate.spec.securityContext <object>
 spec.submitterPodTemplate.spec.securityContext.appArmorProfile <object>
 spec.submitterPodTemplate.spec.securityContext.appArmorProfile.localhostProfile <string>
@@ -3493,10 +3677,6 @@ spec.submitterPodTemplate.spec.volumes[].vsphereVolume.fsType <string>
 spec.submitterPodTemplate.spec.volumes[].vsphereVolume.storagePolicyID <string>
 spec.submitterPodTemplate.spec.volumes[].vsphereVolume.storagePolicyName <string>
 spec.submitterPodTemplate.spec.volumes[].vsphereVolume.volumePath <string> (required)
-spec.submitterPodTemplate.spec.workloadRef <object>
-spec.submitterPodTemplate.spec.workloadRef.name <string> (required)
-spec.submitterPodTemplate.spec.workloadRef.podGroup <string> (required)
-spec.submitterPodTemplate.spec.workloadRef.podGroupReplicaKey <string>
 spec.suspend <boolean>
 spec.ttlSecondsAfterFinished <integer> default=0 format=int32
 status <object>
@@ -3506,6 +3686,7 @@ status.failed <integer> default=0 format=int32
 status.jobDeploymentStatus <string>
 status.jobId <string>
 status.jobStatus <string>
+status.jobStatusCheckFailureStartTime <string> format=date-time
 status.message <string>
 status.observedGeneration <integer> format=int64
 status.rayClusterName <string>

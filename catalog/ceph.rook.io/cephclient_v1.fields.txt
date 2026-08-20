@@ -1,4 +1,4 @@
-# schema source: Rook v1.20.4 https://github.com/rook/rook
+# schema source: Rook v1.20.5 https://github.com/rook/rook
 apiVersion <string> enum=ceph.rook.io/v1
 kind <string> enum=CephClient
 metadata.name <string> (required)
@@ -10,12 +10,14 @@ spec.removeSecret <boolean>	# RemoveSecret indicates whether the current secret 
 spec.secretName <string> (immutable)	# SecretName is the name of the secret created for this ceph client. If not specified, the default name is "rook-ceph-client-" as a prefix to the CR name.
 spec.security <object>	# Security represents security settings
 spec.security.cephx <object>	# CephX configures CephX key settings. More: https://docs.ceph.com/en/latest/dev/cephx/
-spec.security.cephx.keyGeneration <integer> format=int32 min=0 max=4294967295	# KeyGeneration specifies the desired CephX key generation. This is used when KeyRotationPolicy is KeyGeneration and ignored for other policies. If this is set to greater than the current key generation, relevant keys will be rotated, and the generation value will be updated to this new value (generation values are not necessarily incremental, though that is the intended use case). If this is set to less than or equal to the current key generation, keys are not rotated.
+spec.security.cephx.keyGeneration <integer> format=int64 min=0 max=4294967295	# KeyGeneration specifies the desired CephX key generation. This is used when KeyRotationPolicy is KeyGeneration and ignored for other policies. If this is set to greater than the current key generation, relevant keys will be rotated, and the generation value will be updated to this new value (generation values are not necessarily incremental, though that is the intended use case). If this is set to less than or equal to the current key generation, keys are not rotated.
 spec.security.cephx.keyRotationPolicy <string> enum=|Disabled|KeyGeneration	# KeyRotationPolicy controls if and when CephX keys are rotated after initial creation. One of Disabled, or KeyGeneration. Default Disabled.
+spec.security.cephx.keyType <string> enum=aes|aes256k min=3 max=7	# KeyType specifies the desired CephX key cipher type. If unspecified, Ceph's default will be used. If KeyRotationPolicy is Disabled or unspecified (default), modifying this value will never initiate key rotation. If KeyRotationPolicy is set to an enabled value (any other value), modifying this may initiate key rotation.
 status <object>	# Status represents the status of a Ceph Client
 status.cephx <object>
 status.cephx.keyCephVersion <string>	# KeyCephVersion reports the Ceph version that created the current generation's keys. This is same string format as reported by `CephCluster.status.version.version` to allow them to be compared. E.g., `20.2.0-0`. For all newly-created resources, this field set to the version of Ceph that created the key. The special value "Uninitialized" indicates that keys are being created for the first time. An empty string indicates that the version is unknown, as expected in brownfield deployments.
 status.cephx.keyGeneration <integer> format=int32	# KeyGeneration represents the CephX key generation for the last successful reconcile. For all newly-created resources, this field is set to `1`. When keys are rotated due to any rotation policy, the generation is incremented or updated to the configured policy generation. Generation `0` indicates that keys existed prior to the implementation of key tracking.
+status.cephx.keyType <string> min=3 max=7	# KeyType identifies the CephX key type for the current generation's keys, if known. If unknown, the value will be empty.
 status.info <map[string]string>
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the latest generation observed by the controller.
 status.phase <string>	# ConditionType represent a resource's status

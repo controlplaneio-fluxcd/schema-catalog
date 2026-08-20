@@ -1,10 +1,10 @@
-# schema source: AWS ElastiCache Controller v1.7.1 https://github.com/aws-controllers-k8s/elasticache-controller
+# schema source: AWS ElastiCache Controller v1.8.0 https://github.com/aws-controllers-k8s/elasticache-controller
 apiVersion <string> enum=elasticache.services.k8s.aws/v1alpha1
 kind <string> enum=ReplicationGroup
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# ReplicationGroupSpec defines the desired state of ReplicationGroup. Contains all of the attributes of a specific Valkey or Redis OSS replication group.
-spec.atRestEncryptionEnabled <boolean>	# A flag that enables encryption at rest when set to true. You cannot modify the value of AtRestEncryptionEnabled after the replication group is created. To enable encryption at rest on a replication group you must set AtRestEncryptionEnabled to true when you create the replication group. Required: Only available when creating a replication group in an Amazon VPC using Valkey 7.2 and later, Redis OSS version 3.2.6, or Redis OSS 4.x and later. Default: true when using Valkey, false when using Redis OSS
+spec.atRestEncryptionEnabled <boolean>	# A flag that enables encryption at-rest on the replication group when set to true. In some cases, encryption at-rest may be enabled even when this value is false. Use StorageEncryptionType to view the effective encryption state of a cluster. You cannot modify the value of AtRestEncryptionEnabled after the replication group is created. Default: true when using Valkey, false when using Redis OSS
 spec.authToken <object>	# Reserved parameter. The password used to access a password protected server. AuthToken can be specified only on replication groups where TransitEncryptionEnabled is true. For HIPAA compliance, you must specify TransitEncryptionEnabled as true, an AuthToken, and a CacheSubnetGroup. Password constraints: * Must be only printable ASCII characters. * Must be at least 16 characters and no more than 128 characters in length.
 spec.authToken.key <string> (required)	# Key is the key within the secret
 spec.authToken.name <string>	# name is unique within a namespace to reference a secret resource.
@@ -24,6 +24,7 @@ spec.cacheSubnetGroupRef.from.name <string>
 spec.cacheSubnetGroupRef.from.namespace <string>
 spec.dataTieringEnabled <boolean>	# Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to true when using r6gd nodes. For more information, see Data tiering (https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/data-tiering.html).
 spec.description <string> (required)	# A user-created description for the replication group.
+spec.durability <string>	# Specifies the durability setting for the replication group. When set to default, the service determines the effective durability based on the engine version, cluster mode, and other parameters. The resolved setting is reflected in the EffectiveDurability property of the replication group. For more information, see Durability (http://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Durability.html).
 spec.engine <string>	# The name of the cache engine to be used for the clusters in this replication group. The value must be set to valkey or redis.
 spec.engineVersion <string>	# The version number of the cache engine to be used for the clusters in this replication group. To view the supported cache engine versions, use the DescribeCacheEngineVersions operation. Important: You can upgrade to a newer engine version (see Selecting a Cache Engine and Version (https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/SelectEngine.html#VersionManagement)) in the ElastiCache User Guide, but you cannot downgrade to an earlier engine version. If you want to use an earlier engine version, you must delete the existing cluster or replication group and create it anew with the earlier engine version.
 spec.ipDiscovery <string>	# The network type you choose when creating a replication group, either ipv4 | ipv6. IPv6 is supported for workloads using Valkey 7.2 and above, Redis OSS engine version 6.2 to 7.1 or Memcached engine version 1.6.6 and above on all instances built on the Nitro system (http://aws.amazon.com/ec2/nitro/).
@@ -109,6 +110,7 @@ status.configurationEndpoint <object>	# The configuration endpoint for this repl
 status.configurationEndpoint.address <string>
 status.configurationEndpoint.port <integer> format=int64
 status.dataTiering <string>	# Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to true when using r6gd nodes. For more information, see Data tiering (https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/data-tiering.html).
+status.effectiveDurability <string>	# The effective durability of the replication group. When Durability is set to default, the service resolves the actual durability based on the engine version, cluster mode, and other parameters. This field reflects the resolved value. For more information, see Configuring Durability (http://docs.aws.amazon.com/AmazonElastiCache/latest/dg/ConfiguringDurability.html).
 status.events <[]object>	# A list of events. Each element in the list contains detailed information about one event.
 status.events[].date <string> format=date-time
 status.events[].message <string>
@@ -172,3 +174,4 @@ status.pendingModifiedValues.userGroups.userGroupIDsToRemove <[]string>
 status.replicationGroupCreateTime <string> format=date-time	# The date and time when the cluster was created.
 status.snapshottingClusterID <string>	# The cluster ID that is used as the daily snapshot source for the replication group.
 status.status <string>	# The current state of this replication group - creating, available, modifying, deleting, create-failed, snapshotting.
+status.storageEncryptionType <string>	# Indicates the type of encryption for data stored at rest in the replication group. The value is none if at-rest encryption is not enabled, sse-elasticache if an ElastiCache service-managed key is used, or sse-kms if a customer-managed KMS key is used.
