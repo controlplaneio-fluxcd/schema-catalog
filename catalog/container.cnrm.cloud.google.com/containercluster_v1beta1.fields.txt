@@ -1,4 +1,4 @@
-# schema source: GCP Config Connector v1.154.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.155.1 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=container.cnrm.cloud.google.com/v1beta1
 kind <string> enum=ContainerCluster
 metadata.name <string> (required)
@@ -102,6 +102,7 @@ spec.defaultMaxPodsPerNode <integer>	# Immutable. The default maximum number of 
 spec.defaultSnatStatus <object>	# Whether the cluster disables default in-node sNAT rules. In-node sNAT rules will be disabled when defaultSnatStatus is disabled.
 spec.defaultSnatStatus.disabled <boolean> (required)	# When disabled is set to false, default IP masquerade rules will be applied to the nodes to prevent sNAT on cluster internal traffic.
 spec.description <string>	# Immutable. Description of the cluster.
+spec.disableL4LbFirewallReconciliation <boolean>	# Whether the cluster disables L4 LB firewall reconciliation.
 spec.dnsConfig <object>	# Immutable. Configuration for Cloud DNS for Kubernetes Engine.
 spec.dnsConfig.clusterDns <string>	# Which in-cluster DNS provider should be used.
 spec.dnsConfig.clusterDnsDomain <string>	# The suffix used for all cluster service records.
@@ -123,6 +124,7 @@ spec.gatewayApiConfig <object>	# Configuration for GKE Gateway API controller.
 spec.gatewayApiConfig.channel <string> (required)	# The Gateway API release channel to use for Gateway API.
 spec.identityServiceConfig <object>	# Configuration for Identity Service which allows customers to use external identity providers with the K8S API.
 spec.identityServiceConfig.enabled <boolean>	# Whether to enable the Identity Service component.
+spec.inTransitEncryptionConfig <string>	# In-transit encryption options for the cluster. Possible values are IN_TRANSIT_ENCRYPTION_CONFIG_UNSPECIFIED, IN_TRANSIT_ENCRYPTION_DISABLED, IN_TRANSIT_ENCRYPTION_INTER_NODE_TRANSPARENT
 spec.initialNodeCount <integer>	# Immutable. The number of nodes to create in this cluster's default node pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Must be set if node_pool is not set. If you're using google_container_node_pool objects with no default node pool, you'll need to set this to a value of at least 1, alongside setting remove_default_node_pool to true.
 spec.ipAllocationPolicy <object>	# Immutable. Configuration of cluster IP allocation for VPC-native clusters. Adding this block enables IP aliasing, making the cluster VPC-native instead of routes-based.
 spec.ipAllocationPolicy.additionalIpRangesConfigs <[]object>	# AdditionalIPRangesConfig is the configuration for additional pod secondary ranges supporting the ClusterUpdate message. Each AdditionalIPRangesConfig corresponds to a single subnetwork.
@@ -207,6 +209,44 @@ spec.nodeConfig.bootDiskKMSCryptoKeyRef.namespace <string>	# The `namespace` of 
 spec.nodeConfig.confidentialNodes <object>	# Immutable. Configuration for the confidential nodes feature, which makes nodes run on confidential VMs. Warning: This configuration can't be changed (or added/removed) after pool creation without deleting and recreating the entire pool.
 spec.nodeConfig.confidentialNodes.confidentialInstanceType <string>	# Immutable. Defines the type of technology used by the confidential node.
 spec.nodeConfig.confidentialNodes.enabled <boolean> (required)	# Immutable. Whether Confidential Nodes feature is enabled for all nodes in this pool.
+spec.nodeConfig.containerdConfig <object>	# Parameters for containerd customization.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig <object>	# Parameters for private container registries configuration.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig <[]object>	# Private registry access configuration.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig[].fqdns <[]string>	# List of fully qualified domain names (FQDN). Specifying port is supported. Wildcards are NOT supported.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig[].gcpSecretManagerCertificateConfig <object>	# Google Secret Manager (GCP) certificate configuration.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig[].gcpSecretManagerCertificateConfig.secretRef <object>	# SecretRef is a reference to a SecretManagerSecretVersion resource.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig[].gcpSecretManagerCertificateConfig.secretRef.external <string>	#  If provided must be in the format `projects/*/secrets/*/versions/*`.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig[].gcpSecretManagerCertificateConfig.secretRef.name <string>	# The `name` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.certificateAuthorityDomainConfig[].gcpSecretManagerCertificateConfig.secretRef.namespace <string>	# The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.privateRegistryAccessConfig.enabled <boolean>	# Private registry access is enabled.
+spec.nodeConfig.containerdConfig.registryHosts <[]object>	# Configures containerd registry host configuration. Each registryHosts entry represents a hosts.toml file.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts <[]object>	# Configures a list of host-specific configurations for the server.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].ca <[]object>	# Configures the registry host certificate.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].secretRef <object>	# Reference to SecretManagerSecretVersion for the CA certificate.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].secretRef.external <string>	#  If provided must be in the format `projects/*/secrets/*/versions/*`.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].secretRef.name <string>	# The `name` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].secretRef.namespace <string>	# The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].capabilities <[]string>	# Represent the capabilities of the registry host, specifying what operations a host is capable of performing.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client <[]object>	# Configures the registry host client certificate and key.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert <object>	# Configures the client certificate.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.secretRef <object>	# Reference to SecretManagerSecretVersion for the client certificate.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.secretRef.external <string>	#  If provided must be in the format `projects/*/secrets/*/versions/*`.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.secretRef.name <string>	# The `name` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.secretRef.namespace <string>	# The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Configures the client private key.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.secretRef <object>	# Reference to SecretManagerSecretVersion for the client key.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.secretRef.external <string>	#  If provided must be in the format `projects/*/secrets/*/versions/*`.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.secretRef.name <string>	# The `name` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.secretRef.namespace <string>	# The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].dialTimeout <string>	# Specifies the maximum duration allowed for a connection attempt to complete.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].header <[]object>	# Configures the registry host headers.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Configures the header key.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].header[].value <[]string>	# Configures the header value.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].host <string>	# Configures the registry host/mirror.
+spec.nodeConfig.containerdConfig.registryHosts[].hosts[].overridePath <boolean>	# Indicate the host's API root endpoint is defined in the URL path rather than by the API specification.
+spec.nodeConfig.containerdConfig.registryHosts[].server <string>	# Defines the host name of the registry server.
+spec.nodeConfig.containerdConfig.writableCgroups <object>	# Parameters for writable cgroups configuration.
+spec.nodeConfig.containerdConfig.writableCgroups.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.nodeConfig.diskSizeGb <integer>	# Immutable. Size of the disk attached to each node, specified in GB. The smallest allowed disk size is 10GB.
 spec.nodeConfig.diskType <string>	# Immutable. Type of the disk attached to each node. Such as pd-standard, pd-balanced or pd-ssd.
 spec.nodeConfig.ephemeralStorageConfig <object>	# Immutable. Parameters for the ephemeral storage filesystem. If unspecified, ephemeral storage is backed by the boot disk.
@@ -236,6 +276,10 @@ spec.nodeConfig.kubeletConfig <object>	# Node kubelet configs.
 spec.nodeConfig.kubeletConfig.cpuCfsQuota <boolean>	# Enable CPU CFS quota enforcement for containers that specify CPU limits.
 spec.nodeConfig.kubeletConfig.cpuCfsQuotaPeriod <string>	# Set the CPU CFS quota period value 'cpu.cfs_period_us'.
 spec.nodeConfig.kubeletConfig.cpuManagerPolicy <string> (required)	# Control the CPU management policy on the node.
+spec.nodeConfig.kubeletConfig.imageGcHighThresholdPercent <integer>	# Percent of disk usage after which image garbage collection is always run.
+spec.nodeConfig.kubeletConfig.imageGcLowThresholdPercent <integer>	# Percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to.
+spec.nodeConfig.kubeletConfig.imageMaximumGcAge <string>	# Maximum age an image can be unused before it is garbage collected.
+spec.nodeConfig.kubeletConfig.imageMinimumGcAge <string>	# Minimum age for an unused image before it is garbage collected.
 spec.nodeConfig.kubeletConfig.podPidsLimit <integer>	# Controls the maximum number of processes allowed to run in a pod.
 spec.nodeConfig.labels <map[string]string>	# Immutable. The map of Kubernetes labels (key/value pairs) to be applied to each node. These will added in addition to any default label(s) that Kubernetes may apply to the node.
 spec.nodeConfig.linuxNodeConfig <object>	# Parameters that can be configured on Linux nodes.
@@ -259,6 +303,7 @@ spec.nodeConfig.reservationAffinity.consumeReservationType <string> (required)	#
 spec.nodeConfig.reservationAffinity.key <string>	# Immutable. The label key of a reservation resource.
 spec.nodeConfig.reservationAffinity.values <[]string>	# Immutable. The label values of the reservation resource.
 spec.nodeConfig.resourceLabels <map[string]string>	# The GCE resource labels (a map of key/value pairs) to be applied to the node pool.
+spec.nodeConfig.resourceManagerTags <map[string]string>	# The resource manager tags (a map of key/value pairs) to be applied to GKE nodes. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.
 spec.nodeConfig.sandboxConfig <object>	# Immutable. Sandbox configuration for this node.
 spec.nodeConfig.sandboxConfig.sandboxType <string> (required)	# Type of the sandbox to use for the node (e.g. 'gvisor').
 spec.nodeConfig.serviceAccountRef <object>
@@ -286,6 +331,7 @@ spec.nodeLocations <[]string>	# The list of zones in which the cluster's nodes a
 spec.nodePoolAutoConfig <object>	# Node pool configs that apply to all auto-provisioned node pools in autopilot clusters and node auto-provisioning enabled clusters.
 spec.nodePoolAutoConfig.networkTags <object>	# Collection of Compute Engine network tags that can be applied to a node's underlying VM instance.
 spec.nodePoolAutoConfig.networkTags.tags <[]string>	# List of network tags applied to auto-provisioned node pools.
+spec.nodePoolAutoConfig.resourceManagerTags <map[string]string>	# Collection of Resource Manager tags to be applied to GKE Autopilot node pools. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.
 spec.nodePoolDefaults <object>	# The default nodel pool settings for the entire cluster.
 spec.nodePoolDefaults.nodeConfigDefaults <object>	# Subset of NodeConfig message that has defaults.
 spec.nodePoolDefaults.nodeConfigDefaults.gcfsConfig <object>	# GCFS configuration for this node.

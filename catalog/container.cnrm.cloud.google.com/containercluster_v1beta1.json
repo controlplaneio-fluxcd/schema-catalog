@@ -635,6 +635,10 @@
           "description": "Immutable.  Description of the cluster.",
           "type": "string"
         },
+        "disableL4LbFirewallReconciliation": {
+          "description": "Whether the cluster disables L4 LB firewall reconciliation.",
+          "type": "boolean"
+        },
         "dnsConfig": {
           "additionalProperties": false,
           "description": "Immutable. Configuration for Cloud DNS for Kubernetes Engine.",
@@ -739,6 +743,10 @@
             }
           },
           "type": "object"
+        },
+        "inTransitEncryptionConfig": {
+          "description": "In-transit encryption options for the cluster. Possible values are IN_TRANSIT_ENCRYPTION_CONFIG_UNSPECIFIED, IN_TRANSIT_ENCRYPTION_DISABLED, IN_TRANSIT_ENCRYPTION_INTER_NODE_TRANSPARENT",
+          "type": "string"
         },
         "initialNodeCount": {
           "description": "Immutable. The number of nodes to create in this cluster's default node pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Must be set if node_pool is not set. If you're using google_container_node_pool objects with no default node pool, you'll need to set this to a value of at least 1, alongside setting remove_default_node_pool to true.",
@@ -1339,6 +1347,357 @@
               ],
               "type": "object"
             },
+            "containerdConfig": {
+              "additionalProperties": false,
+              "description": "Parameters for containerd customization.",
+              "properties": {
+                "privateRegistryAccessConfig": {
+                  "additionalProperties": false,
+                  "description": "Parameters for private container registries configuration.",
+                  "properties": {
+                    "certificateAuthorityDomainConfig": {
+                      "description": "Private registry access configuration.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "fqdns": {
+                            "description": "List of fully qualified domain names (FQDN). Specifying port is supported. Wildcards are NOT supported.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "gcpSecretManagerCertificateConfig": {
+                            "additionalProperties": false,
+                            "description": "Google Secret Manager (GCP) certificate configuration.",
+                            "properties": {
+                              "secretRef": {
+                                "additionalProperties": false,
+                                "description": "SecretRef is a reference to a SecretManagerSecretVersion resource.",
+                                "oneOf": [
+                                  {
+                                    "not": {
+                                      "required": [
+                                        "external"
+                                      ]
+                                    },
+                                    "required": [
+                                      "name"
+                                    ]
+                                  },
+                                  {
+                                    "not": {
+                                      "anyOf": [
+                                        {
+                                          "required": [
+                                            "name"
+                                          ]
+                                        },
+                                        {
+                                          "required": [
+                                            "namespace"
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    "required": [
+                                      "external"
+                                    ]
+                                  }
+                                ],
+                                "properties": {
+                                  "external": {
+                                    "description": " If provided must be in the format `projects/*/secrets/*/versions/*`.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "The `name` field of a `SecretManagerSecretVersion` resource.",
+                                    "type": "string"
+                                  },
+                                  "namespace": {
+                                    "description": "The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.",
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "enabled": {
+                      "description": "Private registry access is enabled.",
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "registryHosts": {
+                  "description": "Configures containerd registry host configuration. Each registryHosts entry represents a hosts.toml file.",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "hosts": {
+                        "description": "Configures a list of host-specific configurations for the server.",
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ca": {
+                              "description": "Configures the registry host certificate.",
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "secretRef": {
+                                    "additionalProperties": false,
+                                    "description": "Reference to SecretManagerSecretVersion for the CA certificate.",
+                                    "oneOf": [
+                                      {
+                                        "not": {
+                                          "required": [
+                                            "external"
+                                          ]
+                                        },
+                                        "required": [
+                                          "name"
+                                        ]
+                                      },
+                                      {
+                                        "not": {
+                                          "anyOf": [
+                                            {
+                                              "required": [
+                                                "name"
+                                              ]
+                                            },
+                                            {
+                                              "required": [
+                                                "namespace"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "required": [
+                                          "external"
+                                        ]
+                                      }
+                                    ],
+                                    "properties": {
+                                      "external": {
+                                        "description": " If provided must be in the format `projects/*/secrets/*/versions/*`.",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "description": "The `name` field of a `SecretManagerSecretVersion` resource.",
+                                        "type": "string"
+                                      },
+                                      "namespace": {
+                                        "description": "The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "capabilities": {
+                              "description": "Represent the capabilities of the registry host, specifying what operations a host is capable of performing.",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "client": {
+                              "description": "Configures the registry host client certificate and key.",
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "cert": {
+                                    "additionalProperties": false,
+                                    "description": "Configures the client certificate.",
+                                    "properties": {
+                                      "secretRef": {
+                                        "additionalProperties": false,
+                                        "description": "Reference to SecretManagerSecretVersion for the client certificate.",
+                                        "oneOf": [
+                                          {
+                                            "not": {
+                                              "required": [
+                                                "external"
+                                              ]
+                                            },
+                                            "required": [
+                                              "name"
+                                            ]
+                                          },
+                                          {
+                                            "not": {
+                                              "anyOf": [
+                                                {
+                                                  "required": [
+                                                    "name"
+                                                  ]
+                                                },
+                                                {
+                                                  "required": [
+                                                    "namespace"
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            "required": [
+                                              "external"
+                                            ]
+                                          }
+                                        ],
+                                        "properties": {
+                                          "external": {
+                                            "description": " If provided must be in the format `projects/*/secrets/*/versions/*`.",
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "description": "The `name` field of a `SecretManagerSecretVersion` resource.",
+                                            "type": "string"
+                                          },
+                                          "namespace": {
+                                            "description": "The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "type": "object"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "key": {
+                                    "additionalProperties": false,
+                                    "description": "Configures the client private key.",
+                                    "properties": {
+                                      "secretRef": {
+                                        "additionalProperties": false,
+                                        "description": "Reference to SecretManagerSecretVersion for the client key.",
+                                        "oneOf": [
+                                          {
+                                            "not": {
+                                              "required": [
+                                                "external"
+                                              ]
+                                            },
+                                            "required": [
+                                              "name"
+                                            ]
+                                          },
+                                          {
+                                            "not": {
+                                              "anyOf": [
+                                                {
+                                                  "required": [
+                                                    "name"
+                                                  ]
+                                                },
+                                                {
+                                                  "required": [
+                                                    "namespace"
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            "required": [
+                                              "external"
+                                            ]
+                                          }
+                                        ],
+                                        "properties": {
+                                          "external": {
+                                            "description": " If provided must be in the format `projects/*/secrets/*/versions/*`.",
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "description": "The `name` field of a `SecretManagerSecretVersion` resource.",
+                                            "type": "string"
+                                          },
+                                          "namespace": {
+                                            "description": "The `metadata.namespace` field of a `SecretManagerSecretVersion` resource.",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "type": "object"
+                                      }
+                                    },
+                                    "type": "object"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "dialTimeout": {
+                              "description": "Specifies the maximum duration allowed for a connection attempt to complete.",
+                              "type": "string"
+                            },
+                            "header": {
+                              "description": "Configures the registry host headers.",
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "key": {
+                                    "description": "Configures the header key.",
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "description": "Configures the header value.",
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "type": "array"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "host": {
+                              "description": "Configures the registry host/mirror.",
+                              "type": "string"
+                            },
+                            "overridePath": {
+                              "description": "Indicate the host's API root endpoint is defined in the URL path rather than by the API specification.",
+                              "type": "boolean"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "server": {
+                        "description": "Defines the host name of the registry server.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "writableCgroups": {
+                  "additionalProperties": false,
+                  "description": "Parameters for writable cgroups configuration.",
+                  "properties": {
+                    "enabled": {
+                      "description": "Whether writable cgroups are enabled.",
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
             "diskSizeGb": {
               "description": "Immutable. Size of the disk attached to each node, specified in GB. The smallest allowed disk size is 10GB.",
               "type": "integer"
@@ -1514,6 +1873,22 @@
                   "description": "Control the CPU management policy on the node.",
                   "type": "string"
                 },
+                "imageGcHighThresholdPercent": {
+                  "description": "Percent of disk usage after which image garbage collection is always run.",
+                  "type": "integer"
+                },
+                "imageGcLowThresholdPercent": {
+                  "description": "Percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to.",
+                  "type": "integer"
+                },
+                "imageMaximumGcAge": {
+                  "description": "Maximum age an image can be unused before it is garbage collected.",
+                  "type": "string"
+                },
+                "imageMinimumGcAge": {
+                  "description": "Minimum age for an unused image before it is garbage collected.",
+                  "type": "string"
+                },
                 "podPidsLimit": {
                   "description": "Controls the maximum number of processes allowed to run in a pod.",
                   "type": "integer"
@@ -1677,6 +2052,13 @@
                 "type": "string"
               },
               "description": "The GCE resource labels (a map of key/value pairs) to be applied to the node pool.",
+              "type": "object"
+            },
+            "resourceManagerTags": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "The resource manager tags (a map of key/value pairs) to be applied to GKE nodes. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
               "type": "object"
             },
             "sandboxConfig": {
@@ -1876,6 +2258,13 @@
                   "type": "array"
                 }
               },
+              "type": "object"
+            },
+            "resourceManagerTags": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Collection of Resource Manager tags to be applied to GKE Autopilot node pools. Keys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
               "type": "object"
             }
           },
