@@ -1,4 +1,4 @@
-# schema source: Kyverno v1.18.2 https://github.com/kyverno/kyverno
+# schema source: Kyverno v1.19.0 https://github.com/kyverno/kyverno
 apiVersion <string> enum=policies.kyverno.io/v1
 kind <string> enum=ImageValidatingPolicy (cluster-scoped)
 metadata.name <string> (required)
@@ -32,10 +32,12 @@ spec.attestors[].cosign.key.expression <string>	# Expression is a Expression exp
 spec.attestors[].cosign.key.hashAlgorithm <string>	# HashAlgorithm specifues signature algorithm for public keys. Supported values are sha224, sha256, sha384 and sha512. Defaults to sha256.
 spec.attestors[].cosign.key.kms <string>	# KMS contains the KMS url of the public key Supported formats differ based on the KMS system used.
 spec.attestors[].cosign.keyless <object>	# Keyless sets the configuration to verify the authority against a Fulcio instance.
+spec.attestors[].cosign.keyless.additionalExtensions <map[string]string>	# AdditionalExtensions are certificate-extensions used for keyless signing.
 spec.attestors[].cosign.keyless.identities <[]object> (required)	# Identities sets a list of identities.
 spec.attestors[].cosign.keyless.identities[].issuer <string>	# Issuer defines the issuer for this identity.
 spec.attestors[].cosign.keyless.identities[].issuerRegExp <string>	# IssuerRegExp specifies a regular expression to match the issuer for this identity.
 spec.attestors[].cosign.keyless.identities[].subject <string>	# Subject defines the subject for this identity.
+spec.attestors[].cosign.keyless.identities[].subjectExpression <string>	# SubjectExpression defines a CEL expression that evaluates to the subject string, matched as a regexp against the certificate SAN URI. Mutually exclusive with SubjectRegExp.
 spec.attestors[].cosign.keyless.identities[].subjectRegExp <string>	# SubjectRegExp specifies a regular expression to match the subject for this identity.
 spec.attestors[].cosign.keyless.roots <string>	# Roots is an optional set of PEM encoded trusted root certificates. If not provided, the system roots are used.
 spec.attestors[].cosign.source <object>	# Sources sets the configuration to specify the sources from where to consume the signature and attestations.
@@ -43,6 +45,9 @@ spec.attestors[].cosign.source.PullSecrets <[]object>	# SignaturePullSecrets is 
 spec.attestors[].cosign.source.PullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.attestors[].cosign.source.repository <string>	# Repository defines the location from where to pull the signature / attestations.
 spec.attestors[].cosign.source.tagPrefix <string>	# TagPrefix is an optional prefix that signature and attestations have. This is the 'tag based discovery' and in the future once references are fully supported that should likely be the preferred way to handle these.
+spec.attestors[].cosign.trustedRoot <object>	# TrustedRoot is the sigstore-go TrustedRoot JSON (mediaType application/vnd.dev.sigstore.trustedroot+json;version=0.1). When set, Kyverno uses this trust material directly instead of fetching trusted_root.json from the Sigstore TUF repository. Use this field when verifying attestations from providers that do not operate a TUF server, such as GitHub Actions. Takes precedence over the tuf field. Supports an inline JSON value or a CEL expression (e.g. variables.myRoot).
+spec.attestors[].cosign.trustedRoot.expression <string>	# Expression defines the a CEL expression input.
+spec.attestors[].cosign.trustedRoot.value <string>	# Value defines the raw string input.
 spec.attestors[].cosign.tuf <object>	# TUF defines the configuration to fetch sigstore root
 spec.attestors[].cosign.tuf.mirror <string>	# Mirror is the base URL of Sigstore TUF repository
 spec.attestors[].cosign.tuf.root <object>	# Root defines the path or data of the trusted root
@@ -71,7 +76,7 @@ spec.evaluation.admission <object>	# Admission controls policy evaluation during
 spec.evaluation.admission.enabled <boolean> default=true	# Enabled controls if rules are applied during admission. Optional. Default value is "true".
 spec.evaluation.background <object>	# Background controls policy evaluation during background scan.
 spec.evaluation.background.enabled <boolean> default=true	# Enabled controls if rules are applied to existing resources during a background scan. Optional. Default value is "true". The value must be set to "false" if the policy rule uses variables that are only available in the admission review request (e.g. user name).
-spec.evaluation.mode <string>	# Mode is the mode of policy evaluation. Allowed values are "Kubernetes" or "JSON". Optional. Default value is "Kubernetes".
+spec.evaluation.mode <string>	# Mode is the mode of policy evaluation. Allowed values are "Kubernetes", "HTTP" or "Envoy". Optional. Default value is "Kubernetes".
 spec.failurePolicy <string> enum=Ignore|Fail	# FailurePolicy defines how to handle failures for the admission policy. Failures can occur from CEL expression parse errors, type check errors, runtime errors and invalid or mis-configured policy definitions or bindings.
 spec.images <[]object>	# ImageExtractors is a list of CEL expression to extract images from the resource
 spec.images[].expression <string> (required)	# Expression defines CEL expression to extract images from the resource.
@@ -158,10 +163,12 @@ status.autogen.configs.<key>.spec.attestors[].cosign.key.expression <string>	# E
 status.autogen.configs.<key>.spec.attestors[].cosign.key.hashAlgorithm <string>	# HashAlgorithm specifues signature algorithm for public keys. Supported values are sha224, sha256, sha384 and sha512. Defaults to sha256.
 status.autogen.configs.<key>.spec.attestors[].cosign.key.kms <string>	# KMS contains the KMS url of the public key Supported formats differ based on the KMS system used.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless <object>	# Keyless sets the configuration to verify the authority against a Fulcio instance.
+status.autogen.configs.<key>.spec.attestors[].cosign.keyless.additionalExtensions <map[string]string>	# AdditionalExtensions are certificate-extensions used for keyless signing.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless.identities <[]object> (required)	# Identities sets a list of identities.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless.identities[].issuer <string>	# Issuer defines the issuer for this identity.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless.identities[].issuerRegExp <string>	# IssuerRegExp specifies a regular expression to match the issuer for this identity.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless.identities[].subject <string>	# Subject defines the subject for this identity.
+status.autogen.configs.<key>.spec.attestors[].cosign.keyless.identities[].subjectExpression <string>	# SubjectExpression defines a CEL expression that evaluates to the subject string, matched as a regexp against the certificate SAN URI. Mutually exclusive with SubjectRegExp.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless.identities[].subjectRegExp <string>	# SubjectRegExp specifies a regular expression to match the subject for this identity.
 status.autogen.configs.<key>.spec.attestors[].cosign.keyless.roots <string>	# Roots is an optional set of PEM encoded trusted root certificates. If not provided, the system roots are used.
 status.autogen.configs.<key>.spec.attestors[].cosign.source <object>	# Sources sets the configuration to specify the sources from where to consume the signature and attestations.
@@ -169,6 +176,9 @@ status.autogen.configs.<key>.spec.attestors[].cosign.source.PullSecrets <[]objec
 status.autogen.configs.<key>.spec.attestors[].cosign.source.PullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 status.autogen.configs.<key>.spec.attestors[].cosign.source.repository <string>	# Repository defines the location from where to pull the signature / attestations.
 status.autogen.configs.<key>.spec.attestors[].cosign.source.tagPrefix <string>	# TagPrefix is an optional prefix that signature and attestations have. This is the 'tag based discovery' and in the future once references are fully supported that should likely be the preferred way to handle these.
+status.autogen.configs.<key>.spec.attestors[].cosign.trustedRoot <object>	# TrustedRoot is the sigstore-go TrustedRoot JSON (mediaType application/vnd.dev.sigstore.trustedroot+json;version=0.1). When set, Kyverno uses this trust material directly instead of fetching trusted_root.json from the Sigstore TUF repository. Use this field when verifying attestations from providers that do not operate a TUF server, such as GitHub Actions. Takes precedence over the tuf field. Supports an inline JSON value or a CEL expression (e.g. variables.myRoot).
+status.autogen.configs.<key>.spec.attestors[].cosign.trustedRoot.expression <string>	# Expression defines the a CEL expression input.
+status.autogen.configs.<key>.spec.attestors[].cosign.trustedRoot.value <string>	# Value defines the raw string input.
 status.autogen.configs.<key>.spec.attestors[].cosign.tuf <object>	# TUF defines the configuration to fetch sigstore root
 status.autogen.configs.<key>.spec.attestors[].cosign.tuf.mirror <string>	# Mirror is the base URL of Sigstore TUF repository
 status.autogen.configs.<key>.spec.attestors[].cosign.tuf.root <object>	# Root defines the path or data of the trusted root
@@ -197,7 +207,7 @@ status.autogen.configs.<key>.spec.evaluation.admission <object>	# Admission cont
 status.autogen.configs.<key>.spec.evaluation.admission.enabled <boolean> default=true	# Enabled controls if rules are applied during admission. Optional. Default value is "true".
 status.autogen.configs.<key>.spec.evaluation.background <object>	# Background controls policy evaluation during background scan.
 status.autogen.configs.<key>.spec.evaluation.background.enabled <boolean> default=true	# Enabled controls if rules are applied to existing resources during a background scan. Optional. Default value is "true". The value must be set to "false" if the policy rule uses variables that are only available in the admission review request (e.g. user name).
-status.autogen.configs.<key>.spec.evaluation.mode <string>	# Mode is the mode of policy evaluation. Allowed values are "Kubernetes" or "JSON". Optional. Default value is "Kubernetes".
+status.autogen.configs.<key>.spec.evaluation.mode <string>	# Mode is the mode of policy evaluation. Allowed values are "Kubernetes", "HTTP" or "Envoy". Optional. Default value is "Kubernetes".
 status.autogen.configs.<key>.spec.failurePolicy <string> enum=Ignore|Fail	# FailurePolicy defines how to handle failures for the admission policy. Failures can occur from CEL expression parse errors, type check errors, runtime errors and invalid or mis-configured policy definitions or bindings.
 status.autogen.configs.<key>.spec.images <[]object>	# ImageExtractors is a list of CEL expression to extract images from the resource
 status.autogen.configs.<key>.spec.images[].expression <string> (required)	# Expression defines CEL expression to extract images from the resource.
