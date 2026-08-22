@@ -1,0 +1,36 @@
+# schema source: Capsule v0.14.0 https://github.com/projectcapsule/capsule
+apiVersion <string> enum=capsule.clastix.io/v1beta2
+kind <string> enum=GlobalResourceQuota (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# GlobalResourceQuotaSpec defines a native ResourceQuota shared by every namespace matched by any namespace selector.
+spec.namespaceSelectors <[]object>	# NamespaceSelectors select the namespaces that share this quota. Selectors are ORed; requirements within one selector are ANDed. An empty label selector matches all namespaces.
+spec.namespaceSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.namespaceSelectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.namespaceSelectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.namespaceSelectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.namespaceSelectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.quota <object> (required)	# Quota is the native Kubernetes ResourceQuota specification enforced across the selected namespaces.
+spec.quota.hard <object (free-form)>	# hard is the set of desired hard limits for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+spec.quota.scopeSelector <object>	# scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota but expressed using ScopeSelectorOperator in combination with possible values. For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
+spec.quota.scopeSelector.matchExpressions <[]object>	# A list of scope selector requirements by scope of the resources.
+spec.quota.scopeSelector.matchExpressions[].operator <string> (required)	# Represents a scope's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist.
+spec.quota.scopeSelector.matchExpressions[].scopeName <string> (required)	# The name of the scope that the selector applies to.
+spec.quota.scopeSelector.matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.quota.scopes <[]string>	# A collection of filters that must match each object tracked by a quota. If not specified, the quota matches all objects.
+status <object>
+status.conditions <[]object> (required)	# Conditions report reconciliation and admission readiness.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.namespaceCount <integer> default=0	# NamespaceSize is the number of selected namespaces.
+status.namespaceUsage <map[string]object>	# NamespaceUsage contains observed quota usage per selected namespace.
+status.namespaceUsage.<key>.used <object (free-form)>	# Used is the usage observed in this namespace.
+status.namespaces <[]string>	# Namespaces is the ordered set of selected namespace names.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation observed by the controller.
+status.total <object> (required)	# Total contains aggregate quota usage across all selected namespaces.
+status.total.available <object (free-form)>	# Available is max(Hard-Used, 0).
+status.total.hard <object (free-form)>	# Hard is the configured shared limit.
+status.total.used <object (free-form)>	# Used is the usage observed across the relevant namespace set.

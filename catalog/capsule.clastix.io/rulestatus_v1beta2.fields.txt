@@ -1,4 +1,4 @@
-# schema source: Capsule v0.13.11 https://github.com/projectcapsule/capsule
+# schema source: Capsule v0.14.0 https://github.com/projectcapsule/capsule
 apiVersion <string> enum=capsule.clastix.io/v1beta2
 kind <string> enum=RuleStatus
 metadata.name <string> (required)
@@ -54,11 +54,27 @@ spec[].enforce.workloads.registries[].exact <[]string> min=1	# Exact matches one
 spec[].enforce.workloads.registries[].exp <string> min=1	# Exp matches regular expression.
 spec[].enforce.workloads.registries[].negate <boolean> default=false	# Negate regular Expression
 spec[].enforce.workloads.registries[].policy <[]string>	# Allowed PullPolicy for the given registry. Supplying no value allows all policies.
+spec[].enforce.workloads.resources <object>	# Resources defines mutation and enforcement policies for Pod and container resource requests and limits. The workload targets select where the policies apply. With no targets, resource policies apply to all compatible locations: Pod-level resources, regular containers, and init containers. Resource names unsupported at Pod level still apply to compatible container locations. Mutation is applied when a Pod is created. Remove and MatchRequest manage explicit values, Default fills an absent value, and Ratio fills an absent limit from its request. An explicit Ratio violation is then handled by the enclosing allow, deny, or audit action.
+spec[].enforce.workloads.resources.limits <map[string]object>	# Limits defines policies for resource limits.
+spec[].enforce.workloads.resources.limits.<key>.policy <string> (required) enum=Preserve|Default|Remove|MatchRequest|Ratio	# Policy selects how the limit is handled: Preserve leaves it unchanged, Default fills an absent limit, Remove deletes it, MatchRequest manages it to equal the request, and Ratio defaults an absent limit and enforces the maximum multiplier against explicitly supplied limits.
+spec[].enforce.workloads.resources.limits.<key>.value <int-or-string>	# Value is the quantity applied by Default or the maximum limit-to-request multiplier applied by Ratio.
+spec[].enforce.workloads.resources.requests <map[string]object>	# Requests defines policies for resource requests.
+spec[].enforce.workloads.resources.requests.<key>.policy <string> (required) enum=Preserve|Default|Remove	# Policy selects how the request is handled: Preserve leaves it unchanged, Default fills an absent request, and Remove deletes it.
+spec[].enforce.workloads.resources.requests.<key>.value <int-or-string>	# Value is the quantity applied by the Default policy.
 spec[].enforce.workloads.schedulers <[]object>	# Schedulers defines schedulerName matchers for Pod admission. The rule is evaluated against pod.spec.schedulerName. Empty schedulerName is ignored and is not normalized to default-scheduler.
 spec[].enforce.workloads.schedulers[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
 spec[].enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regular expression.
 spec[].enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
 spec[].enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.
+spec[].quota <[]object>	# Quota contains native Kubernetes ResourceQuota specifications shared by all namespaces selected by this rule. Unlike Enforce, quota accounting is independent of the request audience.
+spec[].quota[].hard <object (free-form)>	# hard is the set of desired hard limits for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+spec[].quota[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Name is the stable identity of this quota within the Tenant. Changing the name replaces the generated GlobalResourceQuota; changing the quota or its namespace selector updates the existing object.
+spec[].quota[].scopeSelector <object>	# scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota but expressed using ScopeSelectorOperator in combination with possible values. For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
+spec[].quota[].scopeSelector.matchExpressions <[]object>	# A list of scope selector requirements by scope of the resources.
+spec[].quota[].scopeSelector.matchExpressions[].operator <string> (required)	# Represents a scope's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist.
+spec[].quota[].scopeSelector.matchExpressions[].scopeName <string> (required)	# The name of the scope that the selector applies to.
+spec[].quota[].scopeSelector.matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec[].quota[].scopes <[]string>	# A collection of filters that must match each object tracked by a quota. If not specified, the quota matches all objects.
 status <object>	# RuleStatus contains the accumulated rules applying to namespace it's deployed in.
 status.conditions <[]object> (required)	# Conditions
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
@@ -119,11 +135,27 @@ status.rule.enforce.workloads.registries[].exact <[]string> min=1	# Exact matche
 status.rule.enforce.workloads.registries[].exp <string> min=1	# Exp matches regular expression.
 status.rule.enforce.workloads.registries[].negate <boolean> default=false	# Negate regular Expression
 status.rule.enforce.workloads.registries[].policy <[]string>	# Allowed PullPolicy for the given registry. Supplying no value allows all policies.
+status.rule.enforce.workloads.resources <object>	# Resources defines mutation and enforcement policies for Pod and container resource requests and limits. The workload targets select where the policies apply. With no targets, resource policies apply to all compatible locations: Pod-level resources, regular containers, and init containers. Resource names unsupported at Pod level still apply to compatible container locations. Mutation is applied when a Pod is created. Remove and MatchRequest manage explicit values, Default fills an absent value, and Ratio fills an absent limit from its request. An explicit Ratio violation is then handled by the enclosing allow, deny, or audit action.
+status.rule.enforce.workloads.resources.limits <map[string]object>	# Limits defines policies for resource limits.
+status.rule.enforce.workloads.resources.limits.<key>.policy <string> (required) enum=Preserve|Default|Remove|MatchRequest|Ratio	# Policy selects how the limit is handled: Preserve leaves it unchanged, Default fills an absent limit, Remove deletes it, MatchRequest manages it to equal the request, and Ratio defaults an absent limit and enforces the maximum multiplier against explicitly supplied limits.
+status.rule.enforce.workloads.resources.limits.<key>.value <int-or-string>	# Value is the quantity applied by Default or the maximum limit-to-request multiplier applied by Ratio.
+status.rule.enforce.workloads.resources.requests <map[string]object>	# Requests defines policies for resource requests.
+status.rule.enforce.workloads.resources.requests.<key>.policy <string> (required) enum=Preserve|Default|Remove	# Policy selects how the request is handled: Preserve leaves it unchanged, Default fills an absent request, and Remove deletes it.
+status.rule.enforce.workloads.resources.requests.<key>.value <int-or-string>	# Value is the quantity applied by the Default policy.
 status.rule.enforce.workloads.schedulers <[]object>	# Schedulers defines schedulerName matchers for Pod admission. The rule is evaluated against pod.spec.schedulerName. Empty schedulerName is ignored and is not normalized to default-scheduler.
 status.rule.enforce.workloads.schedulers[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
 status.rule.enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regular expression.
 status.rule.enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
 status.rule.enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.
+status.rule.quota <[]object>	# Quota contains native Kubernetes ResourceQuota specifications shared by all namespaces selected by this rule. Unlike Enforce, quota accounting is independent of the request audience.
+status.rule.quota[].hard <object (free-form)>	# hard is the set of desired hard limits for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+status.rule.quota[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Name is the stable identity of this quota within the Tenant. Changing the name replaces the generated GlobalResourceQuota; changing the quota or its namespace selector updates the existing object.
+status.rule.quota[].scopeSelector <object>	# scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota but expressed using ScopeSelectorOperator in combination with possible values. For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
+status.rule.quota[].scopeSelector.matchExpressions <[]object>	# A list of scope selector requirements by scope of the resources.
+status.rule.quota[].scopeSelector.matchExpressions[].operator <string> (required)	# Represents a scope's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist.
+status.rule.quota[].scopeSelector.matchExpressions[].scopeName <string> (required)	# The name of the scope that the selector applies to.
+status.rule.quota[].scopeSelector.matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+status.rule.quota[].scopes <[]string>	# A collection of filters that must match each object tracked by a quota. If not specified, the quota matches all objects.
 status.rules <[]object>	# Rules contains the effective namespace rules after tenant rule selection. Order is preserved from the originating Tenant rules.
 status.rules[].audience <[]object>	# Audience limits this rule to matching request subjects. An empty audience matches every request.
 status.rules[].audience[].kind <string> (required) enum=User|Group|ServiceAccount|Custom
@@ -175,8 +207,24 @@ status.rules[].enforce.workloads.registries[].exact <[]string> min=1	# Exact mat
 status.rules[].enforce.workloads.registries[].exp <string> min=1	# Exp matches regular expression.
 status.rules[].enforce.workloads.registries[].negate <boolean> default=false	# Negate regular Expression
 status.rules[].enforce.workloads.registries[].policy <[]string>	# Allowed PullPolicy for the given registry. Supplying no value allows all policies.
+status.rules[].enforce.workloads.resources <object>	# Resources defines mutation and enforcement policies for Pod and container resource requests and limits. The workload targets select where the policies apply. With no targets, resource policies apply to all compatible locations: Pod-level resources, regular containers, and init containers. Resource names unsupported at Pod level still apply to compatible container locations. Mutation is applied when a Pod is created. Remove and MatchRequest manage explicit values, Default fills an absent value, and Ratio fills an absent limit from its request. An explicit Ratio violation is then handled by the enclosing allow, deny, or audit action.
+status.rules[].enforce.workloads.resources.limits <map[string]object>	# Limits defines policies for resource limits.
+status.rules[].enforce.workloads.resources.limits.<key>.policy <string> (required) enum=Preserve|Default|Remove|MatchRequest|Ratio	# Policy selects how the limit is handled: Preserve leaves it unchanged, Default fills an absent limit, Remove deletes it, MatchRequest manages it to equal the request, and Ratio defaults an absent limit and enforces the maximum multiplier against explicitly supplied limits.
+status.rules[].enforce.workloads.resources.limits.<key>.value <int-or-string>	# Value is the quantity applied by Default or the maximum limit-to-request multiplier applied by Ratio.
+status.rules[].enforce.workloads.resources.requests <map[string]object>	# Requests defines policies for resource requests.
+status.rules[].enforce.workloads.resources.requests.<key>.policy <string> (required) enum=Preserve|Default|Remove	# Policy selects how the request is handled: Preserve leaves it unchanged, Default fills an absent request, and Remove deletes it.
+status.rules[].enforce.workloads.resources.requests.<key>.value <int-or-string>	# Value is the quantity applied by the Default policy.
 status.rules[].enforce.workloads.schedulers <[]object>	# Schedulers defines schedulerName matchers for Pod admission. The rule is evaluated against pod.spec.schedulerName. Empty schedulerName is ignored and is not normalized to default-scheduler.
 status.rules[].enforce.workloads.schedulers[].exact <[]string> min=1	# Exact matches one of the provided values exactly.
 status.rules[].enforce.workloads.schedulers[].exp <string> min=1	# Exp matches regular expression.
 status.rules[].enforce.workloads.schedulers[].negate <boolean> default=false	# Negate regular Expression
 status.rules[].enforce.workloads.targets <[]string>	# Define the enforcement targets this rule applies to. If empty, each webhook applies its own backwards-compatible default.
+status.rules[].quota <[]object>	# Quota contains native Kubernetes ResourceQuota specifications shared by all namespaces selected by this rule. Unlike Enforce, quota accounting is independent of the request audience.
+status.rules[].quota[].hard <object (free-form)>	# hard is the set of desired hard limits for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+status.rules[].quota[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Name is the stable identity of this quota within the Tenant. Changing the name replaces the generated GlobalResourceQuota; changing the quota or its namespace selector updates the existing object.
+status.rules[].quota[].scopeSelector <object>	# scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota but expressed using ScopeSelectorOperator in combination with possible values. For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
+status.rules[].quota[].scopeSelector.matchExpressions <[]object>	# A list of scope selector requirements by scope of the resources.
+status.rules[].quota[].scopeSelector.matchExpressions[].operator <string> (required)	# Represents a scope's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist.
+status.rules[].quota[].scopeSelector.matchExpressions[].scopeName <string> (required)	# The name of the scope that the selector applies to.
+status.rules[].quota[].scopeSelector.matchExpressions[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+status.rules[].quota[].scopes <[]string>	# A collection of filters that must match each object tracked by a quota. If not specified, the quota matches all objects.
