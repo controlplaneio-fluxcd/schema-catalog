@@ -463,7 +463,7 @@
           "properties": {
             "additionalMetadata": {
               "additionalProperties": false,
-              "description": "Deprecated: Use additionalMetadataList instead (https://projectcapsule.dev/docs/tenants/metadata/#additionalmetadatalist)\n\nSpecifies additional labels and annotations the Capsule operator places on any Namespace resource in the Tenant. Optional.",
+              "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/#namespace)\n\nSpecifies additional labels and annotations the Capsule operator places on any Namespace resource in the Tenant. Optional.",
               "properties": {
                 "annotations": {
                   "additionalProperties": {
@@ -481,7 +481,7 @@
               "type": "object"
             },
             "additionalMetadataList": {
-              "description": "Specifies additional labels and annotations the Capsule operator places on any Namespace resource in the Tenant via a list. Optional.",
+              "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/#namespace)\n\nSpecifies additional labels and annotations the Capsule operator places on any Namespace resource in the Tenant via a list. Optional.",
               "items": {
                 "additionalProperties": false,
                 "properties": {
@@ -551,7 +551,7 @@
             },
             "forbiddenAnnotations": {
               "additionalProperties": false,
-              "description": "Define the annotations that a Tenant Owner cannot set for their Namespace resources.",
+              "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/#namespace)\n\nDefine the annotations that a Tenant Owner cannot set for their Namespace resources.",
               "properties": {
                 "denied": {
                   "items": {
@@ -567,7 +567,7 @@
             },
             "forbiddenLabels": {
               "additionalProperties": false,
-              "description": "Define the labels that a Tenant Owner cannot set for their Namespace resources.",
+              "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/#namespace)\n\nDefine the labels that a Tenant Owner cannot set for their Namespace resources.",
               "properties": {
                 "denied": {
                   "items": {
@@ -594,7 +594,7 @@
             },
             "requiredMetadata": {
               "additionalProperties": false,
-              "description": "Required Metadata for namespace within this tenant",
+              "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/#namespace)\n\nRequired Metadata for namespace within this tenant",
               "properties": {
                 "annotations": {
                   "additionalProperties": {
@@ -1193,7 +1193,7 @@
         },
         "podOptions": {
           "additionalProperties": false,
-          "description": "Specifies options for the Pods deployed in the Tenant namespaces, such as additional metadata.",
+          "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/)\n\nSpecifies options for the Pods deployed in the Tenant namespaces, such as additional metadata.",
           "properties": {
             "additionalMetadata": {
               "additionalProperties": false,
@@ -1285,7 +1285,7 @@
         },
         "resourceQuotas": {
           "additionalProperties": false,
-          "description": "Specifies a list of ResourceQuota resources assigned to the Tenant. The assigned values are inherited by any namespace created in the Tenant. The Capsule operator aggregates ResourceQuota at Tenant level, so that the hard quota is never crossed for the given Tenant. This permits the Tenant owner to consume resources in the Tenant regardless of the namespace. Optional.",
+          "description": "Deprecated: Use Rules Quota (https://projectcapsule.dev/docs/tenants/rules/#quotas)\n\nSpecifies a list of ResourceQuota resources assigned to the Tenant. The assigned values are inherited by any namespace created in the Tenant. The Capsule operator aggregates ResourceQuota at Tenant level, so that the hard quota is never crossed for the given Tenant. This permits the Tenant owner to consume resources in the Tenant regardless of the namespace. Optional.",
           "properties": {
             "items": {
               "items": {
@@ -1793,6 +1793,103 @@
                         },
                         "type": "array"
                       },
+                      "resources": {
+                        "additionalProperties": false,
+                        "description": "Resources defines mutation and enforcement policies for Pod and container\nresource requests and limits. The workload targets select where the\npolicies apply. With no targets, resource policies apply to all compatible\nlocations: Pod-level resources, regular containers, and init containers.\nResource names unsupported at Pod level still apply to compatible container\nlocations.\nMutation is applied when a Pod is created. Remove and MatchRequest manage\nexplicit values, Default fills an absent value, and Ratio fills an absent\nlimit from its request. An explicit Ratio violation is then handled by the\nenclosing allow, deny, or audit action.",
+                        "properties": {
+                          "limits": {
+                            "additionalProperties": {
+                              "additionalProperties": false,
+                              "description": "WorkloadResourceLimitPolicy defines how a resource limit is mutated and enforced.",
+                              "properties": {
+                                "policy": {
+                                  "description": "Policy selects how the limit is handled: Preserve leaves it unchanged,\nDefault fills an absent limit, Remove deletes it, MatchRequest manages it\nto equal the request, and Ratio defaults an absent limit and enforces the\nmaximum multiplier against explicitly supplied limits.",
+                                  "enum": [
+                                    "Preserve",
+                                    "Default",
+                                    "Remove",
+                                    "MatchRequest",
+                                    "Ratio"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "description": "Value is the quantity applied by Default or the maximum limit-to-request\nmultiplier applied by Ratio.",
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "policy"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-validations": [
+                                {
+                                  "message": "value must be set only for the Default and Ratio policies",
+                                  "rule": "self.policy == 'Default' || self.policy == 'Ratio' ? has(self.value) : !has(self.value)"
+                                }
+                              ]
+                            },
+                            "description": "Limits defines policies for resource limits.",
+                            "minProperties": 1,
+                            "type": "object"
+                          },
+                          "requests": {
+                            "additionalProperties": {
+                              "additionalProperties": false,
+                              "description": "WorkloadResourceRequestPolicy defines how a resource request is mutated.",
+                              "properties": {
+                                "policy": {
+                                  "description": "Policy selects how the request is handled: Preserve leaves it unchanged,\nDefault fills an absent request, and Remove deletes it.",
+                                  "enum": [
+                                    "Preserve",
+                                    "Default",
+                                    "Remove"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "description": "Value is the quantity applied by the Default policy.",
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "policy"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-validations": [
+                                {
+                                  "message": "value must be set only for the Default policy",
+                                  "rule": "self.policy == 'Default' ? has(self.value) : !has(self.value)"
+                                }
+                              ]
+                            },
+                            "description": "Requests defines policies for resource requests.",
+                            "minProperties": 1,
+                            "type": "object"
+                          }
+                        },
+                        "type": "object",
+                        "x-kubernetes-validations": [
+                          {
+                            "message": "at least one of requests or limits must be set",
+                            "rule": "has(self.requests) || has(self.limits)"
+                          }
+                        ]
+                      },
                       "schedulers": {
                         "description": "Schedulers defines schedulerName matchers for Pod admission.\n\nThe rule is evaluated against pod.spec.schedulerName.\nEmpty schedulerName is ignored and is not normalized to default-scheduler.",
                         "items": {
@@ -1832,6 +1929,7 @@
                         "description": "Define the enforcement targets this rule applies to.\nIf empty, each webhook applies its own backwards-compatible default.",
                         "items": {
                           "enum": [
+                            "pod",
                             "pod/initcontainers",
                             "pod/ephemeralcontainers",
                             "pod/containers",
@@ -2027,6 +2125,94 @@
                   }
                 },
                 "type": "object"
+              },
+              "quota": {
+                "description": "Quota contains native Kubernetes ResourceQuota specifications shared by\nall namespaces selected by this rule. Unlike Enforce, quota accounting is\nindependent of the request audience.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "ResourceQuotaRule defines a named ResourceQuota specification generated by a\nTenant rule. Name is the durable identity of the generated\nGlobalResourceQuota and must be unique across all rules of a Tenant.",
+                  "properties": {
+                    "hard": {
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      },
+                      "description": "hard is the set of desired hard limits for each named resource.\nMore info: https://kubernetes.io/docs/concepts/policy/resource-quotas/",
+                      "type": "object"
+                    },
+                    "name": {
+                      "description": "Name is the stable identity of this quota within the Tenant. Changing the\nname replaces the generated GlobalResourceQuota; changing the quota or its\nnamespace selector updates the existing object.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                      "type": "string"
+                    },
+                    "scopeSelector": {
+                      "additionalProperties": false,
+                      "description": "scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota\nbut expressed using ScopeSelectorOperator in combination with possible values.\nFor a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.",
+                      "properties": {
+                        "matchExpressions": {
+                          "description": "A list of scope selector requirements by scope of the resources.",
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "A scoped-resource selector requirement is a selector that contains values, a scope name, and an operator\nthat relates the scope name and values.",
+                            "properties": {
+                              "operator": {
+                                "description": "Represents a scope's relationship to a set of values.\nValid operators are In, NotIn, Exists, DoesNotExist.",
+                                "type": "string"
+                              },
+                              "scopeName": {
+                                "description": "The name of the scope that the selector applies to.",
+                                "type": "string"
+                              },
+                              "values": {
+                                "description": "An array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty.\nThis array is replaced during a strategic merge patch.",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array",
+                                "x-kubernetes-list-type": "atomic"
+                              }
+                            },
+                            "required": [
+                              "operator",
+                              "scopeName"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
+                        }
+                      },
+                      "type": "object",
+                      "x-kubernetes-map-type": "atomic"
+                    },
+                    "scopes": {
+                      "description": "A collection of filters that must match each object tracked by a quota.\nIf not specified, the quota matches all objects.",
+                      "items": {
+                        "description": "A ResourceQuotaScope defines a filter that must match each object tracked by a quota",
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array",
+                "x-kubernetes-list-map-keys": [
+                  "name"
+                ],
+                "x-kubernetes-list-type": "map"
               }
             },
             "type": "object"
@@ -2096,7 +2282,7 @@
         },
         "serviceOptions": {
           "additionalProperties": false,
-          "description": "Specifies options for the Service, such as additional metadata or block of certain type of Services. Optional.",
+          "description": "Deprecated: Use Rules Metadata instead (https://projectcapsule.dev/docs/rules/enforcement/metadata/)\n\nSpecifies options for the Service, such as additional metadata or block of certain type of Services. Optional.",
           "properties": {
             "additionalMetadata": {
               "additionalProperties": false,

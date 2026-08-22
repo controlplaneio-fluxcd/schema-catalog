@@ -1,12 +1,13 @@
-# schema source: NVIDIA GPU Operator v26.3.3 https://github.com/NVIDIA/gpu-operator
+# schema source: NVIDIA GPU Operator v26.7.0 https://github.com/NVIDIA/gpu-operator
 apiVersion <string> enum=nvidia.com/v1alpha1
 kind <string> enum=NVIDIADriver (cluster-scoped)
 metadata.name <string> (required)
-spec <object>	# NVIDIADriverSpec defines the desired state of NVIDIADriver
+spec <object>	# NVIDIADriverSpec defines the desired state of NVIDIADriver. The CEL validation allows non-default drivers to use nodeSelector, but requires default drivers to leave nodeSelector unset or empty.
 spec.annotations <map[string]string>	# Optional: Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects.
 spec.args <[]string>	# Optional: List of arguments
 spec.certConfig <object>	# Optional: Custom certificates configuration for NVIDIA Driver container
 spec.certConfig.name <string>
+spec.default <boolean> (required) default=false	# Default indicates that this NVIDIADriver acts as the fallback driver daemon set manager for GPU nodes that do not match any non-default NVIDIADriver nodeSelector.
 spec.driverType <string> (required) enum=gpu|vgpu|vgpu-host-manager default="gpu" (immutable)	# DriverType defines NVIDIA driver type
 spec.env <[]object>	# Optional: List of environment variables
 spec.env[].name <string> (required)	# Name of the environment variable.
@@ -140,6 +141,23 @@ spec.tolerations[].key <string>	# Key is the taint key that the toleration appli
 spec.tolerations[].operator <string>	# Operator represents a key's relationship to the value. Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category. Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
 spec.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
 spec.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
+spec.upgradePolicy <object>	# UpgradePolicy allows to control automatic upgrade of the driver on nodes
+spec.upgradePolicy.autoUpgrade <boolean> default=true	# AutoUpgrade is a switch for automatic upgrade feature. If set to false all other options are ignored.
+spec.upgradePolicy.drain <object>	# DrainSpec describes configuration for node drain during automatic upgrade
+spec.upgradePolicy.drain.deleteEmptyDir <boolean> default=false	# DeleteEmptyDir indicates if should continue even if there are pods using emptyDir (local data that will be deleted when the node is drained)
+spec.upgradePolicy.drain.enable <boolean> default=false	# Enable indicates if node draining is allowed during upgrade
+spec.upgradePolicy.drain.force <boolean> default=false	# Force indicates if force draining is allowed
+spec.upgradePolicy.drain.podSelector <string>	# PodSelector specifies a label selector to filter pods on the node that need to be drained For more details on label selectors, see: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+spec.upgradePolicy.drain.timeoutSeconds <integer> default=300 min=0	# TimeoutSecond specifies the length of time in seconds to wait before giving up drain, zero means infinite
+spec.upgradePolicy.maxParallelUpgrades <integer> default=1 min=0	# MaxParallelUpgrades indicates how many nodes can be upgraded in parallel. 0 means no limit, all nodes will be upgraded in parallel.
+spec.upgradePolicy.maxUnavailable <int-or-string> default="25%"	# MaxUnavailable is the maximum number of nodes with the driver installed, that can be unavailable during the upgrade. Value can be an absolute number (ex: 5) or a percentage of total nodes at the start of upgrade (ex: 10%). Absolute number is calculated from percentage by rounding up. By default, a fixed value of 25% is used.
+spec.upgradePolicy.podDeletion <object>	# PodDeletionSpec describes configuration for deletion of pods using special resources during automatic upgrade
+spec.upgradePolicy.podDeletion.deleteEmptyDir <boolean> default=false	# DeleteEmptyDir indicates if should continue even if there are pods using emptyDir (local data that will be deleted when the pod is deleted)
+spec.upgradePolicy.podDeletion.force <boolean> default=false	# Force indicates if force deletion is allowed
+spec.upgradePolicy.podDeletion.timeoutSeconds <integer> default=300 min=0	# TimeoutSecond specifies the length of time in seconds to wait before giving up on pod termination, zero means infinite
+spec.upgradePolicy.waitForCompletion <object>	# WaitForCompletionSpec describes the configuration for waiting on job completions
+spec.upgradePolicy.waitForCompletion.podSelector <string>	# PodSelector specifies a label selector for the pods to wait for completion For more details on label selectors, see: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+spec.upgradePolicy.waitForCompletion.timeoutSeconds <integer> default=0 min=0	# TimeoutSecond specifies the length of time in seconds to wait before giving up on pod termination, zero means infinite
 spec.useOpenKernelModules <boolean>	# Deprecated: This field is no longer honored by the gpu-operator. Please use KernelModuleType instead. UseOpenKernelModules indicates if the open GPU kernel modules should be used
 spec.usePrecompiled <boolean> (immutable)	# UsePrecompiled indicates if deployment of NVIDIA Driver using pre-compiled modules is enabled
 spec.version <string>	# NVIDIA Driver version (or just branch for precompiled drivers)
