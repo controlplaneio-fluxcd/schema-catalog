@@ -1,0 +1,101 @@
+# schema source: Amazon VPC CNI Network Policy Controller v1.1.1 https://github.com/aws/amazon-network-policy-controller-k8s
+apiVersion <string> enum=networking.k8s.aws/v1alpha1
+kind <string> enum=ClusterNetworkPolicy (cluster-scoped)
+metadata.name <string> (required)
+spec <object>	# ClusterNetworkPolicySpec defines the desired state of ClusterNetworkPolicy
+spec.egress <[]object> max=100	# Egress rules
+spec.egress[].action <string> (required) enum=Accept|Deny|Pass	# Action specifies the effect this rule will have on matching traffic.
+spec.egress[].name <string> max=100	# Name is an identifier for this rule, that may be no more than 100 characters in length. This field should be used by the implementation to help improve observability, readability and error-reporting for any applied AdminNetworkPolicies.
+spec.egress[].ports <[]object> min=1 max=100	# Ports allows for matching traffic based on port and protocols. This field is a list of destination ports for the outgoing egress traffic. If Ports is not set then the rule does not filter traffic via port.
+spec.egress[].ports[].namedPort <string>
+spec.egress[].ports[].portNumber <object>
+spec.egress[].ports[].portNumber.port <integer> (required) format=int32 min=1 max=65535	# Port defines a network port value.
+spec.egress[].ports[].portNumber.protocol <string> (required) default="TCP"	# Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must match. If not specified, this field defaults to TCP.
+spec.egress[].ports[].portRange <object>	# CNPPortRange defines an inclusive range of ports from the assigned Start value to End value.
+spec.egress[].ports[].portRange.end <integer> (required) format=int32 min=1 max=65535	# End defines a network port that is the end of a port range, the End value must be greater than Start.
+spec.egress[].ports[].portRange.protocol <string> default="TCP"	# Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must match. If not specified, this field defaults to TCP.
+spec.egress[].ports[].portRange.start <integer> (required) format=int32 min=1 max=65535	# Start defines a network port that is the start of a port range, the Start value must be less than End.
+spec.egress[].to <[]object> (required) min=1 max=100	# To is the List of destinations whose traffic this rule applies to. If any element matches the destination of outgoing traffic then the specified action is applied. This field must be defined and contain at least one item.
+spec.egress[].to[].domainNames <[]string> min=1 max=25	# DomainNames provides a way to specify domain names as peers. DomainNames support Accept and Pass actions (our extension from upstream) Upstream CNP only supports Accept for domainNames, we add Pass support
+spec.egress[].to[].namespaces <object>	# Namespaces defines a way to select all pods within a set of Namespaces. Note that host-networked pods are not included in this type of peer.
+spec.egress[].to[].namespaces.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.egress[].to[].namespaces.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.egress[].to[].namespaces.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.egress[].to[].namespaces.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.egress[].to[].namespaces.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.egress[].to[].networks <[]string> min=1 max=25	# Networks defines a way to select peers via CIDR blocks.
+spec.egress[].to[].pods <object>	# Pods defines a way to select a set of pods in a set of namespaces. Note that host-networked pods are not included in this type of peer.
+spec.egress[].to[].pods.namespaceSelector <object> (required)	# NamespaceSelector follows standard label selector semantics; if empty, it selects all Namespaces.
+spec.egress[].to[].pods.namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.egress[].to[].pods.namespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.egress[].to[].pods.namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.egress[].to[].pods.namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.egress[].to[].pods.namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.egress[].to[].pods.podSelector <object> (required)	# PodSelector is used to explicitly select pods within a namespace; if empty, it selects all Pods.
+spec.egress[].to[].pods.podSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.egress[].to[].pods.podSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.egress[].to[].pods.podSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.egress[].to[].pods.podSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.egress[].to[].pods.podSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.ingress <[]object> max=100	# Ingress rules
+spec.ingress[].action <string> (required) enum=Accept|Deny|Pass	# Action specifies the effect this rule will have on matching traffic.
+spec.ingress[].from <[]object> (required) min=1 max=100	# From is the list of sources whose traffic this rule applies to. If any element matches the source of incoming traffic then the specified action is applied. This field must be defined and contain at least one item.
+spec.ingress[].from[].namespaces <object>	# Namespaces defines a way to select all pods within a set of Namespaces. Note that host-networked pods are not included in this type of peer.
+spec.ingress[].from[].namespaces.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.ingress[].from[].namespaces.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.ingress[].from[].namespaces.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.ingress[].from[].namespaces.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.ingress[].from[].namespaces.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.ingress[].from[].pods <object>	# Pods defines a way to select a set of pods in a set of namespaces. Note that host-networked pods are not included in this type of peer.
+spec.ingress[].from[].pods.namespaceSelector <object> (required)	# NamespaceSelector follows standard label selector semantics; if empty, it selects all Namespaces.
+spec.ingress[].from[].pods.namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.ingress[].from[].pods.namespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.ingress[].from[].pods.namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.ingress[].from[].pods.namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.ingress[].from[].pods.namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.ingress[].from[].pods.podSelector <object> (required)	# PodSelector is used to explicitly select pods within a namespace; if empty, it selects all Pods.
+spec.ingress[].from[].pods.podSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.ingress[].from[].pods.podSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.ingress[].from[].pods.podSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.ingress[].from[].pods.podSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.ingress[].from[].pods.podSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.ingress[].name <string> max=100	# Name is an identifier for this rule, that may be no more than 100 characters in length. This field should be used by the implementation to help improve observability, readability and error-reporting for any applied AdminNetworkPolicies.
+spec.ingress[].ports <[]object> min=1 max=100	# Ports allows for matching traffic based on port and protocols. This field is a list of ports which should be matched on the pods selected for this policy i.e the subject of the policy. So it matches on the destination port for the ingress traffic. If Ports is not set then the rule does not filter traffic via port.
+spec.ingress[].ports[].namedPort <string>
+spec.ingress[].ports[].portNumber <object>
+spec.ingress[].ports[].portNumber.port <integer> (required) format=int32 min=1 max=65535	# Port defines a network port value.
+spec.ingress[].ports[].portNumber.protocol <string> (required) default="TCP"	# Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must match. If not specified, this field defaults to TCP.
+spec.ingress[].ports[].portRange <object>	# CNPPortRange defines an inclusive range of ports from the assigned Start value to End value.
+spec.ingress[].ports[].portRange.end <integer> (required) format=int32 min=1 max=65535	# End defines a network port that is the end of a port range, the End value must be greater than Start.
+spec.ingress[].ports[].portRange.protocol <string> default="TCP"	# Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must match. If not specified, this field defaults to TCP.
+spec.ingress[].ports[].portRange.start <integer> (required) format=int32 min=1 max=65535	# Start defines a network port that is the start of a port range, the Start value must be less than End.
+spec.priority <integer> (required) format=int32 min=0 max=1000	# Priority within the tier (0-1000, lower = higher precedence)
+spec.subject <object> (required)	# Subject defines which pods this policy applies to
+spec.subject.namespaces <object>	# Namespaces is used to select pods via namespace selectors.
+spec.subject.namespaces.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.subject.namespaces.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.subject.namespaces.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.subject.namespaces.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.subject.namespaces.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.subject.pods <object>	# Pods is used to select pods via namespace AND pod selectors.
+spec.subject.pods.namespaceSelector <object> (required)	# NamespaceSelector follows standard label selector semantics; if empty, it selects all Namespaces.
+spec.subject.pods.namespaceSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.subject.pods.namespaceSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.subject.pods.namespaceSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.subject.pods.namespaceSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.subject.pods.namespaceSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.subject.pods.podSelector <object> (required)	# PodSelector is used to explicitly select pods within a namespace; if empty, it selects all Pods.
+spec.subject.pods.podSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.subject.pods.podSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.subject.pods.podSelector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.subject.pods.podSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.subject.pods.podSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.tier <string> (required)	# Tier specifies the policy tier (Admin, Baseline)
+status <object>	# ClusterNetworkPolicyStatus defines the observed state of ClusterNetworkPolicy
+status.conditions <[]object>	# Conditions represent the latest available observations of the ClusterNetworkPolicy's current state.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
