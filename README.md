@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-122-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C868-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-640%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-122-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-8%2C869-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-640%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -122,7 +122,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS IAM Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-iam` | v1.8.1 | 7 | 2026-08-14 |
 | [AWS Kinesis Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kinesis` | v1.4.1 | 1 | 2026-08-14 |
 | [AWS KMS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kms` | v1.4.1 | 3 | 2026-08-14 |
-| [AWS Lambda Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-lambda` | v1.16.0 | 7 | 2026-08-14 |
+| [AWS Lambda Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-lambda` | v1.16.1 | 7 | 2026-08-26 |
 | [AWS MemoryDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-memorydb` | v1.6.0 | 6 | 2026-08-15 |
 | [AWS OpenSearch Service Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-opensearchservice` | v1.5.1 | 2 | 2026-08-14 |
 | [AWS Prometheus Service Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-prometheusservice` | v1.6.1 | 4 | 2026-08-14 |
@@ -192,7 +192,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Multus CNI](https://schemas.fluxoperator.dev/p/multus-cni) | `multus-cni` | v4.3.0 | 1 | 2026-07-09 |
 | [Network Policy API](https://schemas.fluxoperator.dev/p/network-policy-api) | `network-policy-api` | v0.2.0 | 1 | 2026-07-09 |
 | [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.7.0 | 5 | 2026-08-22 |
-| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.1.2 | 4 | 2026-07-18 |
+| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.7.0 | 5 | 2026-08-26 |
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.3.0 | 11 | 2026-08-14 |
 | [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.20.6 | 21 | 2026-08-21 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.2 | 12 | 2026-08-18 |
