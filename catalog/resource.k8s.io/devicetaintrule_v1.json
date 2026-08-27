@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "IPAddress represents a single IP of a single IP Family. The object is designed to be used by APIs that operate on IP addresses. The object is used by the Service core API for allocation of IP addresses. An IP address can be represented in different formats, to guarantee the uniqueness of the IP, the name of the object is the IP address in canonical format, four decimal digits separated by dots suppressing leading zeros for IPv4 and the representation defined by RFC 5952 for IPv6. Valid: 192.168.1.5 or 2001:db8::1 or 2001:db8:aaaa:bbbb:cccc:dddd:eeee:1 Invalid: 10.01.2.3 or 2001:db8:0:0:0::1",
+  "description": "DeviceTaintRule adds one taint to all devices which match the selector. This has the same effect as if the taint was specified directly in the ResourceSlice by the DRA driver.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -12,7 +12,7 @@
     },
     "metadata": {
       "additionalProperties": false,
-      "description": "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+      "description": "Standard object metadata",
       "properties": {
         "annotations": {
           "additionalProperties": {
@@ -261,50 +261,156 @@
     },
     "spec": {
       "additionalProperties": false,
-      "description": "spec is the desired state of the IPAddress. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+      "description": "Spec specifies the selector and one taint.\n\nChanging the spec automatically increments the metadata.generation number.",
       "properties": {
-        "parentRef": {
+        "deviceSelector": {
           "additionalProperties": false,
-          "description": "ParentRef references the resource that an IPAddress is attached to. An IPAddress must reference a parent object.",
+          "description": "DeviceSelector defines which device(s) the taint is applied to. All selector criteria must be satisfied for a device to match. The empty selector matches all devices. Without a selector, no devices are matches.",
           "properties": {
-            "group": {
-              "description": "Group is the group of the object being referenced.",
+            "device": {
+              "description": "If device is set, only devices with that name are selected. This field corresponds to slice.spec.devices[].name.\n\nSetting also driver and pool may be required to avoid ambiguity, but is not required.",
               "type": [
                 "string",
                 "null"
               ]
             },
-            "name": {
-              "description": "Name is the name of the object being referenced.",
-              "type": "string"
-            },
-            "namespace": {
-              "description": "Namespace is the namespace of the object being referenced.",
+            "driver": {
+              "description": "If driver is set, only devices from that driver are selected. This fields corresponds to slice.spec.driver.",
               "type": [
                 "string",
                 "null"
               ]
             },
-            "resource": {
-              "description": "Resource is the resource of the object being referenced.",
+            "pool": {
+              "description": "If pool is set, only devices in that pool are selected.\n\nAlso setting the driver name may be useful to avoid ambiguity when different drivers use the same pool name, but this is not required because selecting pools from different drivers may also be useful, for example when drivers with node-local devices use the node name as their pool name.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "DeviceTaintSelector",
+          "x-flux-schema-type-description": "DeviceTaintSelector defines which device(s) a DeviceTaintRule applies to. The empty selector matches all devices. Without a selector, no devices are matched."
+        },
+        "taint": {
+          "additionalProperties": false,
+          "description": "The taint that gets applied to matching devices.",
+          "properties": {
+            "effect": {
+              "description": "The effect of the taint on claims that do not tolerate the taint and through such claims on the pods using them.\n\nValid effects are None, NoSchedule and NoExecute. PreferNoSchedule as used for nodes is not valid here. More effects may get added in the future. Consumers must treat unknown effects like None.",
               "type": "string"
+            },
+            "key": {
+              "description": "The taint key to be applied to a device. Must be a label name.",
+              "type": "string"
+            },
+            "timeAdded": {
+              "description": "TimeAdded represents the time at which the taint was added or (only in a DeviceTaintRule) the effect was modified. Added automatically during create or update if not set.\n\nIn addition, in a DeviceTaintRule a value provided during an update gets replaced with the current time if the provided value is the same as the old one and the new effect is different. Changing the key and/or value while keeping the effect unchanged is possible and does not update the time stamp because the eviction which uses it is either already started (NoExecute) or not started yet (NoEffect, NoSchedule).",
+              "format": "date-time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "x-flux-schema-type": "Time",
+              "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
+            },
+            "value": {
+              "description": "The taint value corresponding to the taint key. Must be a label value.",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
-            "resource",
-            "name"
+            "key",
+            "effect"
           ],
           "type": "object",
-          "x-flux-schema-type": "ParentReference",
-          "x-flux-schema-type-description": "ParentReference describes a reference to a parent object."
+          "x-flux-schema-type": "DeviceTaint",
+          "x-flux-schema-type-description": "The device this taint is attached to has the \"effect\" on any claim which does not tolerate the taint and, through the claim, to pods using the claim."
         }
       },
       "required": [
-        "parentRef"
+        "taint"
       ],
       "type": "object",
-      "x-flux-schema-type": "IPAddressSpec",
-      "x-flux-schema-type-description": "IPAddressSpec describe the attributes in an IP Address."
+      "x-flux-schema-type": "DeviceTaintRuleSpec",
+      "x-flux-schema-type-description": "DeviceTaintRuleSpec specifies the selector and one taint."
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Status provides information about what was requested in the spec.",
+      "properties": {
+        "conditions": {
+          "description": "Conditions provide information about the state of the DeviceTaintRule and the cluster at some point in time, in a machine-readable and human-readable format.\n\nThe following condition is currently defined as part of this API, more may get added: - Type: EvictionInProgress - Status: True if there are currently pods which need to be evicted, False otherwise\n  (includes the effects which don't cause eviction).\n- Reason: not specified, may change - Message: includes information about number of pending pods and already evicted pods\n  in a human-readable format, updated periodically, may change\n\nFor `effect: None`, the condition above gets set once for each change to the spec, with the message containing information about what would happen if the effect was `NoExecute`. This feedback can be used to decide whether changing the effect to `NoExecute` will work as intended. It only gets set once to avoid having to constantly update the status.\n\nMust have 8 or fewer entries.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string",
+                "x-flux-schema-type": "Time",
+                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "status",
+              "lastTransitionTime",
+              "reason",
+              "message"
+            ],
+            "type": "object",
+            "x-flux-schema-type": "Condition",
+            "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        }
+      },
+      "type": [
+        "object",
+        "null"
+      ],
+      "x-flux-schema-type": "DeviceTaintRuleStatus",
+      "x-flux-schema-type-description": "DeviceTaintRuleStatus provides information about an on-going pod eviction."
     }
   },
   "required": [
@@ -313,5 +419,5 @@
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "IPAddress"
+  "x-flux-schema-type": "DeviceTaintRule"
 }

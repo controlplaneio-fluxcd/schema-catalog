@@ -1,8 +1,9 @@
-# schema source: Kubernetes v1.36.4 https://github.com/kubernetes/kubernetes
+# schema source: Kubernetes v1.37.0 https://github.com/kubernetes/kubernetes
 apiVersion <string> enum=resource.k8s.io/v1alpha3
 kind <string> enum=ResourcePoolStatusRequest (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# Spec defines the filters for which pools to include in the status. The spec is immutable once created.
+spec.defaultPartitionTypeAttribute <string>	# DefaultPartitionTypeAttribute optionally names a device attribute (by its fully qualified name, e.g. "gpu.example.com/profile") to use as the default grouping attribute for partitionable devices whose slice has not declared one themselves. A slice's own PartitionTypeAttribute always takes precedence. This default applies only to devices whose slice does not declare one, so that a request can still get an accurate partitionSummary from a driver that has not been updated to declare it. When neither the slice nor this default names an attribute, a partitionable pool reports no partitionSummary. Must include the domain qualifier.
 spec.driver <string> (required)	# Driver specifies the DRA driver name to filter pools. Only pools from ResourceSlices with this driver will be included. Must be a DNS subdomain (e.g., "gpu.example.com").
 spec.limit <integer> format=int32	# Limit optionally specifies the maximum number of pools to return in the status. If more pools match the filter criteria, the response will be truncated (i.e., len(status.pools) < status.poolCount). Default: 100 Minimum: 1 Maximum: 1000
 spec.poolName <string>	# PoolName optionally filters to a specific pool name. If not specified, all pools from the specified driver are included. When specified, must be a non-empty valid resource pool name (DNS subdomains separated by "/").
@@ -21,8 +22,21 @@ status.pools[].availableDevices <integer> format=int32	# AvailableDevices is the
 status.pools[].driver <string> (required)	# Driver is the DRA driver name for this pool. Must be a DNS subdomain (e.g., "gpu.example.com").
 status.pools[].generation <integer> (required) format=int64	# Generation is the pool generation observed across all ResourceSlices in this pool. Only the latest generation is reported. During a generation rollout, if not all slices at the latest generation have been published, the pool is included with a validationError and device counts unset.
 status.pools[].nodeName <string>	# NodeName is the node this pool is associated with. When omitted, the pool is not associated with a specific node. Must be a valid DNS subdomain name (RFC1123).
+status.pools[].partitionSummary <[]object>	# PartitionSummary reports allocatability per (attribute, partition type) for a partitionable pool that publishes SharedCounters. Each entry names the grouping attribute it was resolved from: the PartitionTypeAttribute declared by a device's own slice, or for devices whose slice declares none, the default named in the request. A pool that mixes partitions declared under different attributes reports each independently. When no slice declares an attribute and the request names no default, the pool reports no partition summary.
+status.pools[].partitionSummary[].allocatable <integer> (required) format=int32	# Allocatable is the number of additional devices of this partition type that could still be allocated given current shared-counter consumption.
+status.pools[].partitionSummary[].attribute <string> (required)	# Attribute is the fully qualified name of the device attribute whose value groups this entry. It is the PartitionTypeAttribute declared by the devices' own slice, or the default named in the request when their slice declares none.
+status.pools[].partitionSummary[].total <integer> (required) format=int32	# Total is the number of devices of this partition type in the pool.
+status.pools[].partitionSummary[].type <string> (required)	# Type is the partition type value (e.g. "Full" or "Half").
 status.pools[].poolName <string> (required)	# PoolName is the name of the pool. Must be a valid resource pool name (DNS subdomains separated by "/").
 status.pools[].resourceSliceCount <integer> format=int32	# ResourceSliceCount is the number of ResourceSlices that make up this pool. May be unset when validationError is set.
+status.pools[].shareableSummary <object>	# ShareableSummary reports aggregate capacity for a pool that contains devices with AllowMultipleAllocations. It is populated only when at least one device in the pool is shareable.
+status.pools[].shareableSummary.capacity <[]object>	# Capacity reports aggregate total, consumed, and available amounts per shareable capacity key across the pool.
+status.pools[].shareableSummary.capacity[].available <string> (required)	# Available is Total minus Consumed, never negative.
+status.pools[].shareableSummary.capacity[].consumed <string> (required)	# Consumed is the amount drawn by current allocations.
+status.pools[].shareableSummary.capacity[].name <string> (required)	# Name is the capacity name.
+status.pools[].shareableSummary.capacity[].total <string> (required)	# Total is the sum of this capacity across shareable devices in the pool.
+status.pools[].shareableSummary.fullyAvailableDevices <integer> (required) format=int32	# FullyAvailableDevices is the number of shareable devices with no capacity consumed.
+status.pools[].shareableSummary.partiallyAvailableDevices <integer> (required) format=int32	# PartiallyAvailableDevices is the number of shareable devices with some but not all capacity consumed.
 status.pools[].totalDevices <integer> format=int32	# TotalDevices is the total number of devices in the pool across all slices. A value of 0 means the pool has no devices. May be unset when validationError is set.
 status.pools[].unavailableDevices <integer> format=int32	# UnavailableDevices is the number of devices that are not available due to taints or other conditions, but are not allocated. A value of 0 means all unallocated devices are available. May be unset when validationError is set.
 status.pools[].validationError <string>	# ValidationError is set when the pool's data could not be fully validated (e.g., incomplete slice publication). When set, device count fields and ResourceSliceCount may be unset.

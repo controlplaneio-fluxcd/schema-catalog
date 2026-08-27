@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "ClusterTrustBundle is a cluster-scoped container for X.509 trust anchors (root certificates).\n\nClusterTrustBundle objects are considered to be readable by any authenticated user in the cluster, because they can be mounted by pods using the `clusterTrustBundle` projection.  All service accounts have read access to ClusterTrustBundles by default.  Users who only have namespace-level access to a cluster can read ClusterTrustBundles by impersonating a serviceaccount that they have access to.\n\nIt can be optionally associated with a particular assigner, in which case it contains one valid set of trust anchors for that signer. Signers may have multiple associated ClusterTrustBundles; each is an independent set of trust anchors for that signer. Admission control is used to enforce that only users with permissions on the signer can create or modify the corresponding bundle.",
+  "description": "CompositePodGroup represents a runtime instance of pod groups grouped together. CompositePodGroups are created by workload controllers (LWS, JobSet, etc...) from Workload.compositePodGroupTemplates. CompositePodGroup API enablement is toggled by the CompositePodGroup feature gate.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -12,7 +12,7 @@
     },
     "metadata": {
       "additionalProperties": false,
-      "description": "metadata contains the object metadata.",
+      "description": "metadata is the standard object metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
       "properties": {
         "annotations": {
           "additionalProperties": {
@@ -261,26 +261,240 @@
     },
     "spec": {
       "additionalProperties": false,
-      "description": "spec contains the signer (if any) and trust anchors.",
+      "description": "spec defines the desired state of the CompositePodGroup.",
       "properties": {
-        "signerName": {
-          "description": "signerName indicates the associated signer, if any.\n\nIn order to create or update a ClusterTrustBundle that sets signerName, you must have the following cluster-scoped permission: group=certificates.k8s.io resource=signers resourceName=<the signer name> verb=attest.\n\nIf signerName is not empty, then the ClusterTrustBundle object must be named with the signer name as a prefix (translating slashes to colons). For example, for the signer name `example.com/foo`, valid ClusterTrustBundle object names include `example.com:foo:abc` and `example.com:foo:v1`.\n\nIf signerName is empty, then the ClusterTrustBundle object's name must not have such a prefix.\n\nList/watch requests for ClusterTrustBundles can filter on this field using a `spec.signerName=NAME` field selector.",
+        "disruptionMode": {
+          "additionalProperties": false,
+          "description": "disruptionMode defines the mode in which a given CompositePodGroup can be disrupted. Controllers are expected to fill this field by copying it from a CompositePodGroupTemplate. One of Single, All. Defaults to Single if unset. This field is immutable.",
+          "properties": {
+            "all": {
+              "description": "all specifies that all children groups can only be disrupted together.",
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "AllCompositeDisruptionMode",
+              "x-flux-schema-type-description": "AllCompositeDisruptionMode means that children of a CompositePodGroup can only be disrupted or preempted together."
+            },
+            "single": {
+              "description": "single specifies that children groups can be disrupted independently from each other.",
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "SingleCompositeDisruptionMode",
+              "x-flux-schema-type-description": "SingleCompositeDisruptionMode means that individual children of a CompositePodGroup can be disrupted or preempted independently."
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "CompositeDisruptionMode",
+          "x-flux-schema-type-description": "CompositeDisruptionMode defines how individual entities within a composite pod group can be disrupted. Exactly one mode must be set."
+        },
+        "parentCompositePodGroupName": {
+          "description": "parentCompositePodGroupName contains the name of the parent composite pod group within the same namespace as this composite pod group. It must be a DNS name. If it's nil, then this composite pod group is a root of a workload's hierarchy. This field is immutable.",
           "type": [
             "string",
             "null"
           ]
         },
-        "trustBundle": {
-          "description": "trustBundle contains the individual X.509 trust anchors for this bundle, as PEM bundle of PEM-wrapped, DER-formatted X.509 certificates.\n\nThe data must consist only of PEM certificate blocks that parse as valid X.509 certificates.  Each certificate must include a basic constraints extension with the CA bit set.  The API server will reject objects that contain duplicate certificates, or that use PEM block headers.\n\nUsers of ClusterTrustBundles, including Kubelet, are free to reorder and deduplicate certificate blocks in this file according to their own logic, as well as to drop PEM block headers and inter-block data.",
-          "type": "string"
+        "preemptionPolicy": {
+          "description": "preemptionPolicy is the Policy for preempting pods/podgroups with lower priority. One of Never, PreemptLowerPriority. Defaults to PreemptLowerPriority if unset. When Priority Admission Controller is enabled, it populates this field from PriorityClassName, and defaults to PreemptLowerPriority if value is unset in PriorityClass. This field is immutable. This field is available only when the PodGroupPreemptionPolicy feature gate is enabled.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "priority": {
+          "description": "priority is the value of priority of this composite pod group. Various system components use this field to find the priority of the composite pod group. When Priority Admission Controller is enabled, it prevents users from setting this field. The admission controller populates this field from PriorityClassName. The higher the value, the higher the priority. This field is immutable.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "priorityClassName": {
+          "description": "priorityClassName defines the priority that should be considered when scheduling this CompositePodGroup. Controllers are expected to fill this field by copying it from a CompositePodGroupTemplate. If left unspecified, it is validated and resolved similarly to the PriorityClassName field in Pods (i.e. if no priority class is specified, admission control can set this to the global default priority class if it exists. Otherwise, the composite pod group's priority will be zero). This field is immutable.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schedulingConstraints": {
+          "additionalProperties": false,
+          "description": "schedulingConstraints defines optional scheduling constraints (e.g. topology) for this CompositePodGroup. Controllers are expected to fill this field by copying it from a CompositePodGroupTemplate. This field is immutable.",
+          "properties": {
+            "topology": {
+              "description": "topology defines the topology constraints for the composite pod group. Currently only a single topology constraint can be specified. This may change in the future.",
+              "items": {
+                "additionalProperties": false,
+                "description": "TopologyConstraint defines a topology constraint for a PodGroup.",
+                "properties": {
+                  "key": {
+                    "description": "key specifies the key of the node label representing the topology domain. All pods within the PodGroup must be colocated within the same domain instance. Different PodGroups can land on different domain instances even if they derive from the same PodGroupTemplate. Examples: \"topology.kubernetes.io/rack\"",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key"
+                ],
+                "type": "object",
+                "x-flux-schema-type": "TopologyConstraint",
+                "x-flux-schema-type-description": "TopologyConstraint defines a topology constraint for a PodGroup."
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-kubernetes-list-type": "atomic"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-flux-schema-type": "CompositePodGroupSchedulingConstraints",
+          "x-flux-schema-type-description": "CompositePodGroupSchedulingConstraints defines scheduling constraints (e.g. topology) for a CompositePodGroup."
+        },
+        "schedulingPolicy": {
+          "additionalProperties": false,
+          "description": "schedulingPolicy defines the scheduling policy for this instance of the CompositePodGroup. Controllers are expected to fill this field by copying it from a CompositePodGroupTemplate. This field is immutable.",
+          "properties": {
+            "basic": {
+              "description": "basic specifies that the groups of this composite group should be scheduled independently. This field is immutable.",
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "CompositeBasicSchedulingPolicy",
+              "x-flux-schema-type-description": "CompositeBasicSchedulingPolicy indicates that the groups belonging to the composite group should be scheduled independently."
+            },
+            "gang": {
+              "additionalProperties": false,
+              "description": "gang specifies that the groups of this composite group should be scheduled using all-or-nothing semantics.",
+              "properties": {
+                "minGroupCount": {
+                  "description": "minGroupCount is the minimum number of child groups that must be schedulable or scheduled at the same time for the scheduler to admit the entire group. It must be a positive integer.",
+                  "format": "int32",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "minGroupCount"
+              ],
+              "type": [
+                "object",
+                "null"
+              ],
+              "x-flux-schema-type": "CompositeGangSchedulingPolicy",
+              "x-flux-schema-type-description": "CompositeGangSchedulingPolicy indicates that the groups belonging to the composite group should be scheduled using all-or-nothing semantics."
+            }
+          },
+          "type": "object",
+          "x-flux-schema-type": "CompositePodGroupSchedulingPolicy",
+          "x-flux-schema-type-description": "CompositePodGroupSchedulingPolicy defines the scheduling configuration for a CompositePodGroup. Exactly one policy must be set."
+        },
+        "workloadRef": {
+          "additionalProperties": false,
+          "description": "workloadRef references an optional CompositePodGroup template within the Workload object that was used to create the CompositePodGroup. This field is required. This field is immutable.",
+          "properties": {
+            "templateName": {
+              "description": "templateName is the name of a template within the Workload object that was used to create a pod group. It must be a DNS label. This field is required.",
+              "type": "string"
+            },
+            "workloadName": {
+              "description": "workloadName is the name of the Workload object that contains a template that was used when creating a pod group. It must be a DNS name. This field is required.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "workloadName",
+            "templateName"
+          ],
+          "type": "object",
+          "x-flux-schema-type": "WorkloadReference",
+          "x-flux-schema-type-description": "WorkloadReference references the Workload object together with the template that was used to create a particular PodGroup."
         }
       },
       "required": [
-        "trustBundle"
+        "workloadRef",
+        "schedulingPolicy"
       ],
       "type": "object",
-      "x-flux-schema-type": "ClusterTrustBundleSpec",
-      "x-flux-schema-type-description": "ClusterTrustBundleSpec contains the signer and trust anchors."
+      "x-flux-schema-type": "CompositePodGroupSpec",
+      "x-flux-schema-type-description": "CompositePodGroupSpec defines the desired state of CompositePodGroup."
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "status represents the current observed state of the CompositePodGroup.",
+      "properties": {
+        "conditions": {
+          "description": "conditions represent the latest observations of the CompositePodGroup's state.\n\nKnown condition types: - \"CompositePodGroupInitiallyScheduled\": Indicates whether the overall scheduling requirement\n  for the subtree under this CompositePodGroup has been satisfied. Once this condition\n  transitions to True, it serves as a terminal state and will never revert to False,\n  even if pods are subsequently deleted and group constraints are no longer met.\n- \"DisruptionTarget\": Indicates whether the CompositePodGroup is about to be terminated\n  due to disruption such as preemption.\n\nKnown reasons for the CompositePodGroupInitiallyScheduled condition: - \"Unschedulable\": The CompositePodGroup's subtree could not be placed due to resource constraints,\n  affinity/anti-affinity, or topological constraints.\n- \"SchedulerError\": The CompositePodGroup cannot be scheduled due to some internal error\n  that occurred during scheduling.\n- \"Invalid\": Set to True when kube-scheduler detects an invalid group layout during\n  runtime validation. The `message` field details the specific layout violation (such as\n  a detected cycle, exceeding the maximum depth of 4, or referencing multiple distinct Workloads).\n\nKnown reasons for the DisruptionTarget condition: - \"PreemptionByScheduler\": The CompositePodGroup was targeted by the scheduler's preemption loop\n  to free up capacity for higher-priority preemptors.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string",
+                "x-flux-schema-type": "Time",
+                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "status",
+              "lastTransitionTime",
+              "reason",
+              "message"
+            ],
+            "type": "object",
+            "x-flux-schema-type": "Condition",
+            "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        }
+      },
+      "type": [
+        "object",
+        "null"
+      ],
+      "x-flux-schema-type": "CompositePodGroupStatus",
+      "x-flux-schema-type-description": "CompositePodGroupStatus represents information about the status of a composite pod group."
     }
   },
   "required": [
@@ -289,5 +503,5 @@
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "ClusterTrustBundle"
+  "x-flux-schema-type": "CompositePodGroup"
 }

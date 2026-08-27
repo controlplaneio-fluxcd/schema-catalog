@@ -1,4 +1,4 @@
-# schema source: Kubernetes v1.36.4 https://github.com/kubernetes/kubernetes
+# schema source: Kubernetes v1.37.0 https://github.com/kubernetes/kubernetes
 apiVersion <string> enum=storage.k8s.io/v1
 kind <string> enum=CSINode (cluster-scoped)
 metadata.name <string> (required)
@@ -9,3 +9,13 @@ spec.drivers[].allocatable.count <integer> format=int32	# count indicates the ma
 spec.drivers[].name <string> (required)	# name represents the name of the CSI driver that this object refers to. This MUST be the same name returned by the CSI GetPluginName() call for that driver.
 spec.drivers[].nodeID <string> (required)	# nodeID of the node from the driver point of view. This field enables Kubernetes to communicate with storage systems that do not share the same nomenclature for nodes. For example, Kubernetes may refer to a given node as "node1", but the storage system may refer to the same node as "nodeA". When Kubernetes issues a command to the storage system to attach a volume to a specific node, it can use this field to refer to the node name using the ID that the storage system will understand, e.g. "nodeA" instead of "node1". This field is required.
 spec.drivers[].topologyKeys <[]string>	# topologyKeys is the list of keys supported by the driver. When a driver is initialized on a cluster, it provides a set of topology keys that it understands (e.g. "company.com/zone", "company.com/region"). When a driver is initialized on a node, it provides the same topology keys along with values. Kubelet will expose these topology keys as labels on its own node object. When Kubernetes does topology aware provisioning, it can use this list to determine which labels it should retrieve from the node object and pass back to the driver. It is possible for different nodes to use different topology keys. This can be empty if driver does not support topology.
+status <object>	# status contains health and status information for the node's storage.
+status.storageHealth <[]object>	# storageHealth contains backend health reports for CSI drivers registered on the node.
+status.storageHealth[].healthConditions <[]object>	# healthConditions are the adverse storage backend conditions reported by the CSI driver. At most 16 conditions may be reported.
+status.storageHealth[].healthConditions[].accessMode <string>	# accessMode is the access mode affected. Nil means all access modes are affected.
+status.storageHealth[].healthConditions[].lastTransitionTime <string> format=date-time	# lastTransitionTime is when this condition first appeared at its current state.
+status.storageHealth[].healthConditions[].message <string>	# message is a human-readable description. Maximum permitted length of a message is 1024 characters.
+status.storageHealth[].healthConditions[].reason <string> (required)	# reason is a brief CamelCase machine-parseable reason. Maximum permitted length of a reason is 256 characters.
+status.storageHealth[].healthConditions[].status <string> (required)	# status is the health status category. One of "StorageUnreachable", "StorageDegraded".
+status.storageHealth[].healthConditions[].volumeMode <string>	# volumeMode is the volume mode affected. Nil means both are affected.
+status.storageHealth[].name <string> (required)	# name is the CSI driver name, matching CSINodeDriver.name.
