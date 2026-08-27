@@ -1,13 +1,9 @@
 {
   "additionalProperties": false,
-  "description": "VolumeAttributesClass represents a specification of mutable volume attributes defined by the CSI driver. The class can be specified during dynamic provisioning of PersistentVolumeClaims, and changed in the PersistentVolumeClaim spec after provisioning.",
+  "description": "StorageVersionMigration represents a migration of stored data to the latest storage version.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-      "type": "string"
-    },
-    "driverName": {
-      "description": "Name of the CSI driver This field is immutable.",
       "type": "string"
     },
     "kind": {
@@ -16,7 +12,7 @@
     },
     "metadata": {
       "additionalProperties": false,
-      "description": "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+      "description": "Standard object metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
       "properties": {
         "annotations": {
           "additionalProperties": {
@@ -263,22 +259,122 @@
       "x-flux-schema-type": "ObjectMeta",
       "x-flux-schema-type-description": "ObjectMeta is metadata that all persisted resources must have, which includes all objects users must create."
     },
-    "parameters": {
-      "additionalProperties": {
-        "type": "string"
+    "spec": {
+      "additionalProperties": false,
+      "description": "Specification of the migration.",
+      "properties": {
+        "resource": {
+          "additionalProperties": false,
+          "description": "The resource that is being migrated. The migrator sends requests to the endpoint serving the resource. Immutable.",
+          "properties": {
+            "group": {
+              "type": "string"
+            },
+            "resource": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "group",
+            "resource"
+          ],
+          "type": "object",
+          "x-flux-schema-type": "GroupResource",
+          "x-flux-schema-type-description": "GroupResource specifies a Group and a Resource, but does not force a version.  This is useful for identifying concepts during lookup stages without having partially valid types"
+        }
       },
-      "description": "parameters hold volume attributes defined by the CSI driver. These values are opaque to the Kubernetes and are passed directly to the CSI driver. The underlying storage provider supports changing these attributes on an existing volume, however the parameters field itself is immutable. To invoke a volume update, a new VolumeAttributesClass should be created with new parameters, and the PersistentVolumeClaim should be updated to reference the new VolumeAttributesClass.\n\nThis field is required and must contain at least one key/value pair. The keys cannot be empty, and the maximum number of parameters is 512, with a cumulative max size of 256K. If the CSI driver rejects invalid parameters, the target PersistentVolumeClaim will be set to an \"Infeasible\" state in the modifyVolumeStatus field.",
+      "required": [
+        "resource"
+      ],
       "type": [
         "object",
         "null"
-      ]
+      ],
+      "x-flux-schema-type": "StorageVersionMigrationSpec",
+      "x-flux-schema-type-description": "Spec of the storage version migration."
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Status of the migration.",
+      "properties": {
+        "conditions": {
+          "description": "The latest available observations of the migration's current state.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string",
+                "x-flux-schema-type": "Time",
+                "x-flux-schema-type-description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers."
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "status",
+              "lastTransitionTime",
+              "reason",
+              "message"
+            ],
+            "type": "object",
+            "x-flux-schema-type": "Condition",
+            "x-flux-schema-type-description": "Condition contains details for one aspect of the current state of this API Resource."
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "resourceVersion": {
+          "description": "ResourceVersion to compare with the GC cache for performing the migration. This is the current resource version of given group, version and resource when kube-controller-manager first observes this StorageVersionMigration resource.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": [
+        "object",
+        "null"
+      ],
+      "x-flux-schema-type": "StorageVersionMigrationStatus",
+      "x-flux-schema-type-description": "Status of the storage version migration."
     }
   },
   "required": [
-    "driverName",
     "apiVersion",
     "kind"
   ],
   "type": "object",
-  "x-flux-schema-type": "VolumeAttributesClass"
+  "x-flux-schema-type": "StorageVersionMigration"
 }
