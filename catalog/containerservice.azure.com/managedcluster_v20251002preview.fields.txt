@@ -1,4 +1,4 @@
-# schema source: Azure Service Operator v2.20.0 https://github.com/Azure/azure-service-operator
+# schema source: Azure Service Operator v2.21.0 https://github.com/Azure/azure-service-operator
 apiVersion <string> enum=containerservice.azure.com/v20251002preview
 kind <string> enum=ManagedCluster
 metadata.name <string> (required)
@@ -10,7 +10,9 @@ spec.aadProfile.clientAppID <string>	# ClientAppID: (DEPRECATED) The client AAD 
 spec.aadProfile.enableAzureRBAC <boolean>	# EnableAzureRBAC: Whether to enable Azure RBAC for Kubernetes authorization.
 spec.aadProfile.managed <boolean>	# Managed: Whether to enable managed AAD.
 spec.aadProfile.serverAppID <string>	# ServerAppID: (DEPRECATED) The server AAD application ID. Learn more at https://aka.ms/aks/aad-legacy.
-spec.aadProfile.serverAppSecret <string>	# ServerAppSecret: (DEPRECATED) The server AAD application secret. Learn more at https://aka.ms/aks/aad-legacy.
+spec.aadProfile.serverAppSecret <object>	# ServerAppSecret: (DEPRECATED) The server AAD application secret. Learn more at https://aka.ms/aks/aad-legacy.
+spec.aadProfile.serverAppSecret.key <string> (required)	# Key is the key in the Kubernetes secret being referenced
+spec.aadProfile.serverAppSecret.name <string> (required)	# Name is the name of the Kubernetes secret being referenced. The secret must be in the same namespace as the resource
 spec.aadProfile.tenantID <string>	# TenantID: The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription.
 spec.addonProfiles <map[string]object>	# AddonProfiles: The profile of managed cluster add-on.
 spec.addonProfiles.<key>.config <map[string]string>	# Config: Key-value pairs for configuring an add-on.
@@ -139,6 +141,7 @@ spec.agentPoolProfiles[].nodeCustomizationProfile.nodeCustomizationReference.arm
 spec.agentPoolProfiles[].nodeCustomizationProfile.nodeCustomizationReference.group <string>	# Group is the Kubernetes group of the resource.
 spec.agentPoolProfiles[].nodeCustomizationProfile.nodeCustomizationReference.kind <string>	# Kind is the Kubernetes kind of the resource.
 spec.agentPoolProfiles[].nodeCustomizationProfile.nodeCustomizationReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.agentPoolProfiles[].nodeImageVersion <string>	# NodeImageVersion: The version of node image
 spec.agentPoolProfiles[].nodeInitializationTaints <[]string>	# NodeInitializationTaints: Taints added on the nodes during creation that will not be reconciled by AKS. These taints will not be reconciled by AKS and can be removed with a kubectl call. This field can be modified after node pool is created, but nodes will not be recreated with new taints until another operation that requires recreation (e.g. node image upgrade) happens. These taints allow for required configuration to run before the node is ready to accept workloads, for example 'key1=value1:NoSchedule' that then can be removed with `kubectl taint nodes node1 key1=value1:NoSchedule-`
 spec.agentPoolProfiles[].nodeLabels <map[string]string>	# NodeLabels: The node labels to be persisted across all nodes in agent pool.
 spec.agentPoolProfiles[].nodePublicIPPrefixReference <object>	# NodePublicIPPrefixReference: The public IP prefix ID which VM nodes should use IPs from. This is of the form: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPPrefixes/{publicIPPrefixName}
@@ -496,7 +499,7 @@ spec.podIdentityProfile.userAssignedIdentityExceptions[].namespace <string> (req
 spec.podIdentityProfile.userAssignedIdentityExceptions[].podLabels <map[string]string> (required)	# PodLabels: The pod labels to match.
 spec.privateLinkResources <[]object>	# PrivateLinkResources: Private link resources associated with the cluster.
 spec.privateLinkResources[].groupId <string>	# GroupId: The group ID of the resource.
-spec.privateLinkResources[].name <string>	# Name: The name of the private link resource.
+spec.privateLinkResources[].name <string>	# Name: The name of the private link resource. See [naming rules](https://aka.ms/search-naming-rules) for more details.
 spec.privateLinkResources[].reference <object>	# Reference: The ID of the private link resource.
 spec.privateLinkResources[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
 spec.privateLinkResources[].reference.group <string>	# Group is the Kubernetes group of the resource.
@@ -631,7 +634,6 @@ status.aadProfile.clientAppID <string>	# ClientAppID: (DEPRECATED) The client AA
 status.aadProfile.enableAzureRBAC <boolean>	# EnableAzureRBAC: Whether to enable Azure RBAC for Kubernetes authorization.
 status.aadProfile.managed <boolean>	# Managed: Whether to enable managed AAD.
 status.aadProfile.serverAppID <string>	# ServerAppID: (DEPRECATED) The server AAD application ID. Learn more at https://aka.ms/aks/aad-legacy.
-status.aadProfile.serverAppSecret <string>	# ServerAppSecret: (DEPRECATED) The server AAD application secret. Learn more at https://aka.ms/aks/aad-legacy.
 status.aadProfile.tenantID <string>	# TenantID: The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription.
 status.addonProfiles <map[string]object>	# AddonProfiles: The profile of managed cluster add-on.
 status.addonProfiles.<key>.config <map[string]string>	# Config: Key-value pairs for configuring an add-on.
@@ -1038,7 +1040,7 @@ status.podIdentityProfile.userAssignedIdentities[].identity.objectId <string>	# 
 status.podIdentityProfile.userAssignedIdentities[].identity.resourceId <string>	# ResourceId: The resource ID of the user assigned identity.
 status.podIdentityProfile.userAssignedIdentities[].name <string>	# Name: The name of the pod identity.
 status.podIdentityProfile.userAssignedIdentities[].namespace <string>	# Namespace: The namespace of the pod identity.
-status.podIdentityProfile.userAssignedIdentities[].provisioningInfo <object>
+status.podIdentityProfile.userAssignedIdentities[].provisioningInfo <object>	# ProvisioningInfo: The provisioning information for the pod identity.
 status.podIdentityProfile.userAssignedIdentities[].provisioningInfo.error <object>	# Error: Pod identity assignment error (if any).
 status.podIdentityProfile.userAssignedIdentities[].provisioningInfo.error.error <object>	# Error: Details about the error.
 status.podIdentityProfile.userAssignedIdentities[].provisioningInfo.error.error.code <string>	# Code: An identifier for the error. Codes are invariant and are intended to be consumed programmatically.
@@ -1059,7 +1061,7 @@ status.privateFQDN <string>	# PrivateFQDN: The FQDN of private cluster.
 status.privateLinkResources <[]object>	# PrivateLinkResources: Private link resources associated with the cluster.
 status.privateLinkResources[].groupId <string>	# GroupId: The group ID of the resource.
 status.privateLinkResources[].id <string>	# Id: The ID of the private link resource.
-status.privateLinkResources[].name <string>	# Name: The name of the private link resource.
+status.privateLinkResources[].name <string>	# Name: The name of the private link resource. See [naming rules](https://aka.ms/search-naming-rules) for more details.
 status.privateLinkResources[].privateLinkServiceID <string>	# PrivateLinkServiceID: The private link service ID of the resource, this field is exposed only to NRP internally.
 status.privateLinkResources[].requiredMembers <[]string>	# RequiredMembers: The RequiredMembers of the resource
 status.privateLinkResources[].type <string>	# Type: The resource type.

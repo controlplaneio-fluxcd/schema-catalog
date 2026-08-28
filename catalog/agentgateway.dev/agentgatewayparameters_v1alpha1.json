@@ -582,6 +582,65 @@
             }
           ]
         },
+        "spiffe": {
+          "additionalProperties": false,
+          "description": "SPIFFE integration settings. When set, the gateway sources its TLS identity (X.509-SVID)\nand trust bundle from the local SPIFFE Workload API, and the controller\nmounts the Workload API socket into the pod. Listeners and backends opt in to SPIFFE individually\n(via the `agentgateway.dev/tls-certificate-source: SPIFFE` listener option and the\nAgentgatewayPolicy `backend.tls.certificateSource: SPIFFE` field respectively).",
+          "properties": {
+            "enabled": {
+              "description": "Explicitly turns SPIFFE integration on or off for this gateway. When unset, the presence\nof the spiffe block opts in. Set to false on a Gateway-level AgentgatewayParameters to opt\na gateway out of SPIFFE enabled at the GatewayClass level.",
+              "type": "boolean"
+            },
+            "source": {
+              "additionalProperties": false,
+              "description": "Volume source for the SPIFFE Workload API socket. When omitted (i.e. `spiffe: {}`),\nthe socket is sourced from the SPIFFE CSI driver with default settings.",
+              "properties": {
+                "csi": {
+                  "additionalProperties": false,
+                  "description": "Source the Workload API socket from the SPIFFE CSI driver (the default).",
+                  "properties": {
+                    "driver": {
+                      "description": "CSI driver name. Defaults to `csi.spiffe.io`.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "hostPath": {
+                  "additionalProperties": false,
+                  "description": "Source the Workload API socket from a host directory.",
+                  "properties": {
+                    "path": {
+                      "description": "Host directory containing the SPIFFE Workload API socket, e.g. `/run/spire/agent-sockets`.",
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                "mountPath": {
+                  "description": "Mount path inside the container for the Workload API socket directory.\nMust be an absolute path. Defaults to `/spiffe-workload-api`.",
+                  "pattern": "^/",
+                  "type": "string"
+                },
+                "socketName": {
+                  "description": "Socket filename within the mount directory. Defaults to `spire-agent.sock`.",
+                  "type": "string"
+                }
+              },
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "at most one of the fields in [csi hostPath] may be set",
+                  "rule": "[has(self.csi),has(self.hostPath)].filter(x,x==true).size() <= 1"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
         "workload": {
           "additionalProperties": false,
           "description": "`workload` selects the Kubernetes workload kind for the managed Gateway\ndata plane. If unset, Deployment is used.",

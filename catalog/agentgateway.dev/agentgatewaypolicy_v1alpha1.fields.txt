@@ -1,14 +1,17 @@
-# schema source: Agentgateway v1.4.1 https://github.com/agentgateway/agentgateway
+# schema source: Agentgateway v1.5.0 https://github.com/agentgateway/agentgateway
 apiVersion <string> enum=agentgateway.dev/v1alpha1
 kind <string> enum=AgentgatewayPolicy
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# Desired policy configuration.
-spec.backend <object>	# Settings for how to connect to destination backends. A backend policy can target a `Gateway` (optionally, with a `sectionName` indicating the listener), `ListenerSet`, `Route` (optionally, with a `sectionName` indicating the route rule), or a `Service` or `Backend` (optionally, with a `sectionName` indicating the port for `Service`, or sub-backend for `Backend`). Note that a backend policy applies when connecting to a specific destination backend. Targeting a higher level resource, like `Gateway`, is just a way to easily apply a policy to a group of backends. When multiple policies are selected for a given request, they are merged on a field-level basis, but not a deep merge. Precedence is given to more precise policies: `Gateway` < `Listener` < `Route` < `Route Rule` < `Backend` or `Service`. For example, if a `Gateway` policy sets `tcp` and `tls`, and a `Backend` policy sets `tls`, the effective policy would be `tcp` from the `Gateway`, and `tls` from the `Backend`.
+spec.backend <object>	# Settings for how to connect to destination backends. A backend policy can target a `Gateway` (optionally, with a `sectionName` indicating the listener), `ListenerSet`, `Route` (optionally, with a `sectionName` indicating the route rule), or a `Service` or `Backend` (optionally, with a `sectionName` indicating the numeric port for `Service`, or sub-backend for `Backend`). Note that a backend policy applies when connecting to a specific destination backend. Targeting a higher level resource, like `Gateway`, is just a way to easily apply a policy to a group of backends. When multiple policies are selected for a given request, they are merged on a field-level basis, but not a deep merge. Precedence is given to more precise policies: `Gateway` < `Listener` < `Route` < `Route Rule` < `Backend` or `Service`. For example, if a `Gateway` policy sets `tcp` and `tls`, and a `Backend` policy sets `tls`, the effective policy would be `tcp` from the `Gateway`, and `tls` from the `Backend`.
 spec.backend.ai <object>	# Settings for AI workloads. This is only applicable when connecting to a `Backend` of type `ai`.
 spec.backend.ai.defaults <[]object> min=1 max=64	# Defaults to merge with user input fields. If the field is already set, the field in the request is used.
 spec.backend.ai.defaults[].field <string> (required) min=1 max=256	# Name of the field.
 spec.backend.ai.defaults[].value <any> (required)	# Default value for the field. This can be any JSON data type.
+spec.backend.ai.finalTransformations <[]object> min=1 max=64	# CEL transformations to compute and set fields in the request body. The expression result overwrites any existing value for that field. This has a higher priority than `overrides` if both are set for the same key. Those transformations are applied after the request is converted to the provider's format, so they can be used to set provider-specific fields.
+spec.backend.ai.finalTransformations[].expression <string> (required) min=1 max=16384	# CEL expression used to compute the field value.
+spec.backend.ai.finalTransformations[].field <string> (required) min=1 max=256	# Name of the field to set.
 spec.backend.ai.modelAliases <map[string]string>	# Maps friendly model names to actual provider model names. Example: `{"fast": "gpt-3.5-turbo", "smart": "gpt-4-turbo"}`. Note: This field is only applicable when using the agentgateway data plane.
 spec.backend.ai.overrides <[]object> min=1 max=64	# Overrides to merge with user input fields. If the field is already set, the field is overwritten.
 spec.backend.ai.overrides[].field <string> (required) min=1 max=256	# Name of the field.
@@ -29,6 +32,7 @@ spec.backend.ai.promptCaching.minTokens <integer> default=1024 min=0	# Minimum e
 spec.backend.ai.promptGuard <object>	# Guardrails for LLM requests and responses.
 spec.backend.ai.promptGuard.request <[]object> min=1 max=8	# Prompt guards to apply to requests sent by the client.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails <object>	# AWS Bedrock Guardrails settings for prompt guarding.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.action <string> enum=Audit|Reject default="Reject"	# Action controls whether the guardrail's verdict is enforced or only observed. `Reject` (the default) enforces the guardrail: a blocked assessment rejects the request/response and an anonymized assessment masks the matched content. `Audit` runs the guardrail in observe mode: it is invoked and its assessment recorded (metrics + structured log), but the request/response is never blocked or masked.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.identifier <string> (required) min=1 max=256	# Identifier of the Guardrail policy to use for the backend.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies <object>	# Policies for communicating with AWS Bedrock Guardrails.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.auth <object>	# Settings for authenticating to AWS Bedrock Guardrails.
@@ -62,18 +66,20 @@ spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.auth.secretRef.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.auth.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.auth.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.http <object>	# Settings for managing HTTP requests to the backend
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.http.requestTimeout <string> max=32	# Deadline for receiving a response from the backend.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.http.requestTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for receiving a response from the backend.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.http.version <string> enum=HTTP1|HTTP2	# HTTP protocol version for backend connections. If unset, it is inferred: `Service` appProtocol, `HTTP2` for gRPC, the original protocol for plaintext HTTP, or `HTTP1` for HTTPS because clients often upgrade HTTPS to HTTP/2 even when the backend does not support it.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp <object>	# Settings for managing TCP connections to the backend
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.connectTimeout <string> max=32	# Deadline for establishing a connection to the destination.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.connectTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for establishing a connection to the destination.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls <object>	# Settings for managing TLS connections to the backend When set, TLS is originated to the backend using the system trusted CA certificates, and SNI is inferred from the destination.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate `ConfigMap` to use to verify the server certificate. If unset, the system's trusted certificates are used.
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.caCertificateRefs[].name <string> default=""	# Name of the referent
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate source to use to verify the server certificate. Omitted kind and `ConfigMap` select a ConfigMap; `Secret` selects a Secret. The `ca.crt` key is required. If unset, the system's trusted certificates are used.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.caCertificateRefs[].kind <string> enum=ConfigMap|Secret default="ConfigMap"	# Kind of the referenced CA certificate source. Omitted defaults to ConfigMap.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.caCertificateRefs[].name <string> (required) min=1 max=253	# Name of the referenced CA certificate source.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.certificateSource <string> enum=Inline|SPIFFE default="Inline"	# Source for the gateway's client identity and trust roots (`Inline` default, or `SPIFFE`).
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.insecureSkipVerify <string> enum=All|Hostname	# Originates TLS but skips verification of the backend's certificate WARNING: insecure; only use if the risks are understood Modes: * `All` disables all TLS verification * `Hostname` trusts the CA certificate but ignores hostname/SAN mismatches. Still insecure; prefer `verifySubjectAltNames` where possible.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS connection. For example: `X25519_MLKEM768,X25519`.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.mtlsCertificateRef <[]object> max=1	# Enables mutual TLS to the backend using `tls.key` and `tls.crt` from the referenced credential source (defaulting to a Kubernetes `Secret`). An optional `ca.cert`, if present, verifies the server certificate, but `caCertificateRefs` takes priority. If unspecified, no client certificate is used.
@@ -83,15 +89,18 @@ spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.mtlsCertifi
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.sni <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# Server Name Indicator (`SNI`) to use in the TLS handshake. If unset, the `SNI` is automatically set based on the destination hostname.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tls.verifySubjectAltNames <[]string> min=1 max=16	# Subject Alternative Names (`SAN`) to verify in the server certificate. If not present, the destination hostname is automatically used.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel <object>	# Settings for managing tunnel connections to the backend, like `HTTPS_PROXY`
-spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef <object> (required)	# Proxy server to reach. Supported types: `Service` and `Backend`.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.mode <string> enum=Auto|Connect default="Auto"	# How requests are sent through the proxy. Defaults to `Auto`.
+spec.backend.ai.promptGuard.request[].bedrockGuardrails.policies.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.region <string> (required) min=1 max=256	# AWS region where the guardrail is deployed, for example `us-west-2`).
 spec.backend.ai.promptGuard.request[].bedrockGuardrails.version <string> (required) min=1 max=256	# Version of the Guardrail policy to use for the backend.
 spec.backend.ai.promptGuard.request[].googleModelArmor <object>	# Google Model Armor settings for prompt guarding.
+spec.backend.ai.promptGuard.request[].googleModelArmor.action <string> enum=Audit|Reject default="Reject"	# Action controls whether flagged content is rejected or only observed. `Reject` (the default) rejects flagged content; `Audit` records the would-be rejection without blocking.
 spec.backend.ai.promptGuard.request[].googleModelArmor.location <string> default="us-central1" min=1 max=256	# Google Cloud location, for example `us-central1`. Defaults to `us-central1` if not specified.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies <object>	# Policies for communicating with Google Model Armor.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.auth <object>	# Settings for authenticating to Google Model Armor.
@@ -104,18 +113,20 @@ spec.backend.ai.promptGuard.request[].googleModelArmor.policies.auth.gcp.secretR
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.auth.gcp.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.auth.gcp.type <string> enum=AccessToken|IdToken	# The type of token to generate. To authenticate to GCP services, generally an `AccessToken` is used. To authenticate to Cloud Run, an `IdToken` is used.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.http <object>	# Settings for managing HTTP requests to the backend
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.http.requestTimeout <string> max=32	# Deadline for receiving a response from the backend.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.http.requestTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for receiving a response from the backend.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.http.version <string> enum=HTTP1|HTTP2	# HTTP protocol version for backend connections. If unset, it is inferred: `Service` appProtocol, `HTTP2` for gRPC, the original protocol for plaintext HTTP, or `HTTP1` for HTTPS because clients often upgrade HTTPS to HTTP/2 even when the backend does not support it.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp <object>	# Settings for managing TCP connections to the backend
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.connectTimeout <string> max=32	# Deadline for establishing a connection to the destination.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.connectTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for establishing a connection to the destination.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls <object>	# Settings for managing TLS connections to the backend When set, TLS is originated to the backend using the system trusted CA certificates, and SNI is inferred from the destination.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate `ConfigMap` to use to verify the server certificate. If unset, the system's trusted certificates are used.
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.caCertificateRefs[].name <string> default=""	# Name of the referent
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate source to use to verify the server certificate. Omitted kind and `ConfigMap` select a ConfigMap; `Secret` selects a Secret. The `ca.crt` key is required. If unset, the system's trusted certificates are used.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.caCertificateRefs[].kind <string> enum=ConfigMap|Secret default="ConfigMap"	# Kind of the referenced CA certificate source. Omitted defaults to ConfigMap.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.caCertificateRefs[].name <string> (required) min=1 max=253	# Name of the referenced CA certificate source.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.certificateSource <string> enum=Inline|SPIFFE default="Inline"	# Source for the gateway's client identity and trust roots (`Inline` default, or `SPIFFE`).
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.insecureSkipVerify <string> enum=All|Hostname	# Originates TLS but skips verification of the backend's certificate WARNING: insecure; only use if the risks are understood Modes: * `All` disables all TLS verification * `Hostname` trusts the CA certificate but ignores hostname/SAN mismatches. Still insecure; prefer `verifySubjectAltNames` where possible.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS connection. For example: `X25519_MLKEM768,X25519`.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.mtlsCertificateRef <[]object> max=1	# Enables mutual TLS to the backend using `tls.key` and `tls.crt` from the referenced credential source (defaulting to a Kubernetes `Secret`). An optional `ca.cert`, if present, verifies the server certificate, but `caCertificateRefs` takes priority. If unspecified, no client certificate is used.
@@ -125,15 +136,18 @@ spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.mtlsCertific
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.sni <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# Server Name Indicator (`SNI`) to use in the TLS handshake. If unset, the `SNI` is automatically set based on the destination hostname.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tls.verifySubjectAltNames <[]string> min=1 max=16	# Subject Alternative Names (`SAN`) to verify in the server certificate. If not present, the destination hostname is automatically used.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel <object>	# Settings for managing tunnel connections to the backend, like `HTTPS_PROXY`
-spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef <object> (required)	# Proxy server to reach. Supported types: `Service` and `Backend`.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.mode <string> enum=Auto|Connect default="Auto"	# How requests are sent through the proxy. Defaults to `Auto`.
+spec.backend.ai.promptGuard.request[].googleModelArmor.policies.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.ai.promptGuard.request[].googleModelArmor.projectId <string> (required) min=1 max=256	# Google Cloud project ID.
 spec.backend.ai.promptGuard.request[].googleModelArmor.templateId <string> (required) min=1 max=256	# Template ID for Google Model Armor.
 spec.backend.ai.promptGuard.request[].openAIModeration <object>	# Passes prompt data through the OpenAI Moderations endpoint. See https://developers.openai.com/api/reference/resources/moderations for more information.
+spec.backend.ai.promptGuard.request[].openAIModeration.action <string> enum=Audit|Reject default="Reject"	# Action controls whether flagged content is rejected or only observed. `Reject` (the default) rejects flagged content; `Audit` records the would-be rejection without blocking.
 spec.backend.ai.promptGuard.request[].openAIModeration.model <string>	# Moderation model to use. For example, `omni-moderation`.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies <object>	# Policies for communicating with OpenAI.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.auth <object>	# Settings for authenticating to OpenAI.
@@ -152,18 +166,20 @@ spec.backend.ai.promptGuard.request[].openAIModeration.policies.auth.secretRef.k
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.auth.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.auth.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.http <object>	# Settings for managing HTTP requests to the backend
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.http.requestTimeout <string> max=32	# Deadline for receiving a response from the backend.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.http.requestTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for receiving a response from the backend.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.http.version <string> enum=HTTP1|HTTP2	# HTTP protocol version for backend connections. If unset, it is inferred: `Service` appProtocol, `HTTP2` for gRPC, the original protocol for plaintext HTTP, or `HTTP1` for HTTPS because clients often upgrade HTTPS to HTTP/2 even when the backend does not support it.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp <object>	# Settings for managing TCP connections to the backend
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.connectTimeout <string> max=32	# Deadline for establishing a connection to the destination.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.connectTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for establishing a connection to the destination.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls <object>	# Settings for managing TLS connections to the backend When set, TLS is originated to the backend using the system trusted CA certificates, and SNI is inferred from the destination.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate `ConfigMap` to use to verify the server certificate. If unset, the system's trusted certificates are used.
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.caCertificateRefs[].name <string> default=""	# Name of the referent
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate source to use to verify the server certificate. Omitted kind and `ConfigMap` select a ConfigMap; `Secret` selects a Secret. The `ca.crt` key is required. If unset, the system's trusted certificates are used.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.caCertificateRefs[].kind <string> enum=ConfigMap|Secret default="ConfigMap"	# Kind of the referenced CA certificate source. Omitted defaults to ConfigMap.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.caCertificateRefs[].name <string> (required) min=1 max=253	# Name of the referenced CA certificate source.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.certificateSource <string> enum=Inline|SPIFFE default="Inline"	# Source for the gateway's client identity and trust roots (`Inline` default, or `SPIFFE`).
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.insecureSkipVerify <string> enum=All|Hostname	# Originates TLS but skips verification of the backend's certificate WARNING: insecure; only use if the risks are understood Modes: * `All` disables all TLS verification * `Hostname` trusts the CA certificate but ignores hostname/SAN mismatches. Still insecure; prefer `verifySubjectAltNames` where possible.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS connection. For example: `X25519_MLKEM768,X25519`.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.mtlsCertificateRef <[]object> max=1	# Enables mutual TLS to the backend using `tls.key` and `tls.crt` from the referenced credential source (defaulting to a Kubernetes `Secret`). An optional `ca.cert`, if present, verifies the server certificate, but `caCertificateRefs` takes priority. If unspecified, no client certificate is used.
@@ -173,20 +189,24 @@ spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.mtlsCertific
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.sni <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# Server Name Indicator (`SNI`) to use in the TLS handshake. If unset, the `SNI` is automatically set based on the destination hostname.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tls.verifySubjectAltNames <[]string> min=1 max=16	# Subject Alternative Names (`SAN`) to verify in the server certificate. If not present, the destination hostname is automatically used.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel <object>	# Settings for managing tunnel connections to the backend, like `HTTPS_PROXY`
-spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef <object> (required)	# Proxy server to reach. Supported types: `Service` and `Backend`.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.mode <string> enum=Auto|Connect default="Auto"	# How requests are sent through the proxy. Defaults to `Auto`.
+spec.backend.ai.promptGuard.request[].openAIModeration.policies.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.ai.promptGuard.request[].regex <object>	# Regular expression (regex) matching for prompt guards and data masking.
-spec.backend.ai.promptGuard.request[].regex.action <string> enum=Mask|Reject default="Mask"	# The action to take if a regex pattern is matched in a request or response. This setting applies only to request matches. `PromptguardResponse` matches are always masked by default. Defaults to `Mask`.
+spec.backend.ai.promptGuard.request[].regex.action <string> enum=Audit|Mask|Reject default="Mask"	# The action to take if a regex pattern is matched in a request or response. The action applies to request and response matches alike. Note that `Mask` is not applied to streamed responses: matched content in a streamed response is passed through unmodified. Defaults to `Mask`.
 spec.backend.ai.promptGuard.request[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.backend.ai.promptGuard.request[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.backend.ai.promptGuard.request[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.backend.ai.promptGuard.request[].response.message <string> default="The request was rejected due to inappropriate content"	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.backend.ai.promptGuard.request[].response.statusCode <integer> default=403 format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
+spec.backend.ai.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt` and `Messages`. Tool call inputs and outputs are not inspected unless `ToolInput`/`ToolOutput` are listed explicitly. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.backend.ai.promptGuard.request[].webhook <object>	# Webhook that receives requests for prompt guarding.
+spec.backend.ai.promptGuard.request[].webhook.action <string> enum=Audit|Reject default="Reject"	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.backend.ai.promptGuard.request[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
 spec.backend.ai.promptGuard.request[].webhook.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.request[].webhook.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
@@ -201,6 +221,7 @@ spec.backend.ai.promptGuard.request[].webhook.forwardHeaderMatches[].value <stri
 spec.backend.ai.promptGuard.request[].webhook.headers <map[string]string>	# CEL-computed headers to include in webhook requests.
 spec.backend.ai.promptGuard.response <[]object> min=1 max=8	# Prompt guards to apply to responses returned by the LLM provider.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails <object>	# AWS Bedrock Guardrails settings for prompt guarding.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.action <string> enum=Audit|Reject default="Reject"	# Action controls whether the guardrail's verdict is enforced or only observed. `Reject` (the default) enforces the guardrail: a blocked assessment rejects the request/response and an anonymized assessment masks the matched content. `Audit` runs the guardrail in observe mode: it is invoked and its assessment recorded (metrics + structured log), but the request/response is never blocked or masked.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.identifier <string> (required) min=1 max=256	# Identifier of the Guardrail policy to use for the backend.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies <object>	# Policies for communicating with AWS Bedrock Guardrails.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.auth <object>	# Settings for authenticating to AWS Bedrock Guardrails.
@@ -234,18 +255,20 @@ spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.auth.secretRef
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.auth.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.auth.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.http <object>	# Settings for managing HTTP requests to the backend
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.http.requestTimeout <string> max=32	# Deadline for receiving a response from the backend.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.http.requestTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for receiving a response from the backend.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.http.version <string> enum=HTTP1|HTTP2	# HTTP protocol version for backend connections. If unset, it is inferred: `Service` appProtocol, `HTTP2` for gRPC, the original protocol for plaintext HTTP, or `HTTP1` for HTTPS because clients often upgrade HTTPS to HTTP/2 even when the backend does not support it.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp <object>	# Settings for managing TCP connections to the backend
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.connectTimeout <string> max=32	# Deadline for establishing a connection to the destination.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.connectTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for establishing a connection to the destination.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls <object>	# Settings for managing TLS connections to the backend When set, TLS is originated to the backend using the system trusted CA certificates, and SNI is inferred from the destination.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate `ConfigMap` to use to verify the server certificate. If unset, the system's trusted certificates are used.
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.caCertificateRefs[].name <string> default=""	# Name of the referent
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate source to use to verify the server certificate. Omitted kind and `ConfigMap` select a ConfigMap; `Secret` selects a Secret. The `ca.crt` key is required. If unset, the system's trusted certificates are used.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.caCertificateRefs[].kind <string> enum=ConfigMap|Secret default="ConfigMap"	# Kind of the referenced CA certificate source. Omitted defaults to ConfigMap.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.caCertificateRefs[].name <string> (required) min=1 max=253	# Name of the referenced CA certificate source.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.certificateSource <string> enum=Inline|SPIFFE default="Inline"	# Source for the gateway's client identity and trust roots (`Inline` default, or `SPIFFE`).
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.insecureSkipVerify <string> enum=All|Hostname	# Originates TLS but skips verification of the backend's certificate WARNING: insecure; only use if the risks are understood Modes: * `All` disables all TLS verification * `Hostname` trusts the CA certificate but ignores hostname/SAN mismatches. Still insecure; prefer `verifySubjectAltNames` where possible.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS connection. For example: `X25519_MLKEM768,X25519`.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.mtlsCertificateRef <[]object> max=1	# Enables mutual TLS to the backend using `tls.key` and `tls.crt` from the referenced credential source (defaulting to a Kubernetes `Secret`). An optional `ca.cert`, if present, verifies the server certificate, but `caCertificateRefs` takes priority. If unspecified, no client certificate is used.
@@ -255,15 +278,18 @@ spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.mtlsCertif
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.sni <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# Server Name Indicator (`SNI`) to use in the TLS handshake. If unset, the `SNI` is automatically set based on the destination hostname.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tls.verifySubjectAltNames <[]string> min=1 max=16	# Subject Alternative Names (`SAN`) to verify in the server certificate. If not present, the destination hostname is automatically used.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel <object>	# Settings for managing tunnel connections to the backend, like `HTTPS_PROXY`
-spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef <object> (required)	# Proxy server to reach. Supported types: `Service` and `Backend`.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.mode <string> enum=Auto|Connect default="Auto"	# How requests are sent through the proxy. Defaults to `Auto`.
+spec.backend.ai.promptGuard.response[].bedrockGuardrails.policies.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.region <string> (required) min=1 max=256	# AWS region where the guardrail is deployed, for example `us-west-2`).
 spec.backend.ai.promptGuard.response[].bedrockGuardrails.version <string> (required) min=1 max=256	# Version of the Guardrail policy to use for the backend.
 spec.backend.ai.promptGuard.response[].googleModelArmor <object>	# Google Model Armor settings for prompt guarding.
+spec.backend.ai.promptGuard.response[].googleModelArmor.action <string> enum=Audit|Reject default="Reject"	# Action controls whether flagged content is rejected or only observed. `Reject` (the default) rejects flagged content; `Audit` records the would-be rejection without blocking.
 spec.backend.ai.promptGuard.response[].googleModelArmor.location <string> default="us-central1" min=1 max=256	# Google Cloud location, for example `us-central1`. Defaults to `us-central1` if not specified.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies <object>	# Policies for communicating with Google Model Armor.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.auth <object>	# Settings for authenticating to Google Model Armor.
@@ -276,18 +302,20 @@ spec.backend.ai.promptGuard.response[].googleModelArmor.policies.auth.gcp.secret
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.auth.gcp.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.auth.gcp.type <string> enum=AccessToken|IdToken	# The type of token to generate. To authenticate to GCP services, generally an `AccessToken` is used. To authenticate to Cloud Run, an `IdToken` is used.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.http <object>	# Settings for managing HTTP requests to the backend
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.http.requestTimeout <string> max=32	# Deadline for receiving a response from the backend.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.http.requestTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for receiving a response from the backend.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.http.version <string> enum=HTTP1|HTTP2	# HTTP protocol version for backend connections. If unset, it is inferred: `Service` appProtocol, `HTTP2` for gRPC, the original protocol for plaintext HTTP, or `HTTP1` for HTTPS because clients often upgrade HTTPS to HTTP/2 even when the backend does not support it.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp <object>	# Settings for managing TCP connections to the backend
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.connectTimeout <string> max=32	# Deadline for establishing a connection to the destination.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.connectTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for establishing a connection to the destination.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls <object>	# Settings for managing TLS connections to the backend When set, TLS is originated to the backend using the system trusted CA certificates, and SNI is inferred from the destination.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate `ConfigMap` to use to verify the server certificate. If unset, the system's trusted certificates are used.
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.caCertificateRefs[].name <string> default=""	# Name of the referent
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.caCertificateRefs <[]object> max=1	# CA certificate source to use to verify the server certificate. Omitted kind and `ConfigMap` select a ConfigMap; `Secret` selects a Secret. The `ca.crt` key is required. If unset, the system's trusted certificates are used.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.caCertificateRefs[].kind <string> enum=ConfigMap|Secret default="ConfigMap"	# Kind of the referenced CA certificate source. Omitted defaults to ConfigMap.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.caCertificateRefs[].name <string> (required) min=1 max=253	# Name of the referenced CA certificate source.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.certificateSource <string> enum=Inline|SPIFFE default="Inline"	# Source for the gateway's client identity and trust roots (`Inline` default, or `SPIFFE`).
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.insecureSkipVerify <string> enum=All|Hostname	# Originates TLS but skips verification of the backend's certificate WARNING: insecure; only use if the risks are understood Modes: * `All` disables all TLS verification * `Hostname` trusts the CA certificate but ignores hostname/SAN mismatches. Still insecure; prefer `verifySubjectAltNames` where possible.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS connection. For example: `X25519_MLKEM768,X25519`.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.mtlsCertificateRef <[]object> max=1	# Enables mutual TLS to the backend using `tls.key` and `tls.crt` from the referenced credential source (defaulting to a Kubernetes `Secret`). An optional `ca.cert`, if present, verifies the server certificate, but `caCertificateRefs` takes priority. If unspecified, no client certificate is used.
@@ -297,22 +325,25 @@ spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.mtlsCertifi
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.sni <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# Server Name Indicator (`SNI`) to use in the TLS handshake. If unset, the `SNI` is automatically set based on the destination hostname.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tls.verifySubjectAltNames <[]string> min=1 max=16	# Subject Alternative Names (`SAN`) to verify in the server certificate. If not present, the destination hostname is automatically used.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel <object>	# Settings for managing tunnel connections to the backend, like `HTTPS_PROXY`
-spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef <object> (required)	# Proxy server to reach. Supported types: `Service` and `Backend`.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.mode <string> enum=Auto|Connect default="Auto"	# How requests are sent through the proxy. Defaults to `Auto`.
+spec.backend.ai.promptGuard.response[].googleModelArmor.policies.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.ai.promptGuard.response[].googleModelArmor.projectId <string> (required) min=1 max=256	# Google Cloud project ID.
 spec.backend.ai.promptGuard.response[].googleModelArmor.templateId <string> (required) min=1 max=256	# Template ID for Google Model Armor.
 spec.backend.ai.promptGuard.response[].regex <object>	# Regular expression (regex) matching for prompt guards and data masking.
-spec.backend.ai.promptGuard.response[].regex.action <string> enum=Mask|Reject default="Mask"	# The action to take if a regex pattern is matched in a request or response. This setting applies only to request matches. `PromptguardResponse` matches are always masked by default. Defaults to `Mask`.
+spec.backend.ai.promptGuard.response[].regex.action <string> enum=Audit|Mask|Reject default="Mask"	# The action to take if a regex pattern is matched in a request or response. The action applies to request and response matches alike. Note that `Mask` is not applied to streamed responses: matched content in a streamed response is passed through unmodified. Defaults to `Mask`.
 spec.backend.ai.promptGuard.response[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.backend.ai.promptGuard.response[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.backend.ai.promptGuard.response[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The response was rejected due to inappropriate content`.
 spec.backend.ai.promptGuard.response[].response.message <string> default="The request was rejected due to inappropriate content"	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.backend.ai.promptGuard.response[].response.statusCode <integer> default=403 format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
 spec.backend.ai.promptGuard.response[].webhook <object>	# Webhook that receives responses for prompt guarding.
+spec.backend.ai.promptGuard.response[].webhook.action <string> enum=Audit|Reject default="Reject"	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.backend.ai.promptGuard.response[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
 spec.backend.ai.promptGuard.response[].webhook.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.ai.promptGuard.response[].webhook.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
@@ -347,10 +378,10 @@ spec.backend.auth.aws.secretRef.kind <string>	# Kind of the referenced credentia
 spec.backend.auth.aws.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.auth.aws.serviceName <string> min=1 max=256	# AWS SigV4 signing service name, for example `bedrock`, `bedrock-agentcore`, or `execute-api`). If unset, typed AWS backends may provide this automatically.
 spec.backend.auth.azure <object>	# Azure authentication method for the backend.
-spec.backend.auth.azure.managedIdentity <object>	# Managed identity authentication settings.
-spec.backend.auth.azure.managedIdentity.clientId <string> (required)
-spec.backend.auth.azure.managedIdentity.objectId <string> (required)
-spec.backend.auth.azure.managedIdentity.resourceId <string> (required)
+spec.backend.auth.azure.managedIdentity <object>	# Managed identity authentication settings. Leave this object empty to use the system-assigned identity. To use a user-assigned identity, set one of `clientId`, `objectId`, or `resourceId`.
+spec.backend.auth.azure.managedIdentity.clientId <string>	# Client ID of the user-assigned managed identity.
+spec.backend.auth.azure.managedIdentity.objectId <string>	# Object ID of the user-assigned managed identity.
+spec.backend.auth.azure.managedIdentity.resourceId <string>	# Resource ID of the user-assigned managed identity.
 spec.backend.auth.azure.secretRef <object>	# Credential source for Azure credentials, defaulting to a Kubernetes `Secret`. The default Secret resolver expects `clientID`, `tenantID`, and `clientSecret` keys.
 spec.backend.auth.azure.secretRef.group <string>	# API group of the referenced credential; empty selects the core API group
 spec.backend.auth.azure.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
@@ -371,13 +402,14 @@ spec.backend.auth.credentials[].secretRef.key <string> min=1 max=253	# Key in th
 spec.backend.auth.credentials[].secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.auth.credentials[].secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication.
+spec.backend.auth.crossAppAccess.accessTokenScopes <[]string> max=64	# Scopes requested when exchanging the ID-JAG for an access token. When omitted, defaults to Scopes. Set to an empty list to omit scope.
 spec.backend.auth.crossAppAccess.audience <string> (required) min=1 max=256	# Identifier of the resource authorization server. The issued ID-JAG is bound to this audience.
 spec.backend.auth.crossAppAccess.cache <object>	# Response cache configuration.
 spec.backend.auth.crossAppAccess.cache.inMemory <object>
-spec.backend.auth.crossAppAccess.cache.inMemory.defaultTtl <string>	# TTL used when the token endpoint omits expires_in. Default 300s.
+spec.backend.auth.crossAppAccess.cache.inMemory.defaultTtl <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# TTL used when the token endpoint omits expires_in. Default 300s.
 spec.backend.auth.crossAppAccess.cache.inMemory.maxEntries <integer> format=int32	# Default 8192; 0 disables the cache.
 spec.backend.auth.crossAppAccess.identityProvider <object> (required)	# User identity provider authorization server, used for the RFC 8693 ID-JAG exchange.
-spec.backend.auth.crossAppAccess.identityProvider.backendRef <object> (required)	# Token endpoint backend.
+spec.backend.auth.crossAppAccess.identityProvider.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.auth.crossAppAccess.identityProvider.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.auth.crossAppAccess.identityProvider.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.auth.crossAppAccess.identityProvider.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -407,8 +439,9 @@ spec.backend.auth.crossAppAccess.identityProvider.clientAuth.secretRef.key <stri
 spec.backend.auth.crossAppAccess.identityProvider.clientAuth.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.auth.crossAppAccess.identityProvider.clientAuth.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.auth.crossAppAccess.identityProvider.path <string> pattern="^/"	# Token endpoint path; defaults to "/". Must start with "/".
+spec.backend.auth.crossAppAccess.identityProvider.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer <object> (required)	# Resource authorization server, used for the RFC 7523 jwt-bearer exchange.
-spec.backend.auth.crossAppAccess.resourceAuthorizationServer.backendRef <object> (required)	# Token endpoint backend.
+spec.backend.auth.crossAppAccess.resourceAuthorizationServer.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -438,8 +471,9 @@ spec.backend.auth.crossAppAccess.resourceAuthorizationServer.clientAuth.secretRe
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer.clientAuth.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer.clientAuth.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.auth.crossAppAccess.resourceAuthorizationServer.path <string> pattern="^/"	# Token endpoint path; defaults to "/". Must start with "/".
+spec.backend.auth.crossAppAccess.resourceAuthorizationServer.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.auth.crossAppAccess.resources <[]string> min=1 max=64	# Resources sent to the token endpoint.
-spec.backend.auth.crossAppAccess.scopes <[]string> min=1 max=64	# Scopes sent to the token endpoint.
+spec.backend.auth.crossAppAccess.scopes <[]string> min=1 max=64	# Scopes requested when obtaining the ID-JAG from the identity provider.
 spec.backend.auth.crossAppAccess.subjectToken <object>	# Subject token sent to the identity provider. Defaults to an OpenID Connect ID token read from the Authorization Bearer header.
 spec.backend.auth.crossAppAccess.subjectToken.source <object>	# Where to read the subject token. Defaults to the Authorization Bearer header.
 spec.backend.auth.crossAppAccess.subjectToken.source.cookie <object>
@@ -450,6 +484,7 @@ spec.backend.auth.crossAppAccess.subjectToken.source.header.name <string> (requi
 spec.backend.auth.crossAppAccess.subjectToken.source.header.prefix <string> min=1 max=256
 spec.backend.auth.crossAppAccess.subjectToken.source.queryParameter <object>
 spec.backend.auth.crossAppAccess.subjectToken.source.queryParameter.name <string> (required) min=1 max=256
+spec.backend.auth.crossAppAccess.subjectToken.tokenType <string>	# OAuth RFC 8693 subject token type. Defaults to IdToken
 spec.backend.auth.gcp <object>	# Google authentication method for the backend. When omitted, default Google credential discovery is used.
 spec.backend.auth.gcp.audience <string> min=1 max=256	# Explicit `aud` value for the ID token. Only valid with `IdToken` type. If not set, the `aud` is automatically derived from the backend hostname.
 spec.backend.auth.gcp.secretRef <object>	# Credential source for ADC-compatible Google credential JSON, defaulting to a Kubernetes `Secret`. By default, the value is read from `credentials.json`; set `secretRef.key` to override it. When omitted, ambient credentials are used.
@@ -458,6 +493,23 @@ spec.backend.auth.gcp.secretRef.key <string> min=1 max=253	# Key in the referenc
 spec.backend.auth.gcp.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.auth.gcp.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.auth.gcp.type <string> enum=AccessToken|IdToken	# The type of token to generate. To authenticate to GCP services, generally an `AccessToken` is used. To authenticate to Cloud Run, an `IdToken` is used.
+spec.backend.auth.jwtSign <object>	# Signs a short-lived JWT with a private key on each request and sends it to the backend, for upstreams that require per-request keypair JWTs (e.g. the Snowflake SQL API) rather than a static credential.
+spec.backend.auth.jwtSign.alg <string> enum=ES256|ES384|PS256|RS256|RS384|RS512	# JWS signing algorithm. Defaults to RS256.
+spec.backend.auth.jwtSign.claims <object (free-form)>	# Static claims added to every token (e.g. iss, sub, aud). Values may be any JSON value (e.g. a string, number, bool, or array). iat, exp, and nbf are reserved for the signer and cannot be configured here; the controller rejects them at translation time.
+spec.backend.auth.jwtSign.kid <string>	# Optional JWS key ID header.
+spec.backend.auth.jwtSign.location <object>	# Where the signed token is written on the backend request. Defaults to the Authorization header with a "Bearer " prefix.
+spec.backend.auth.jwtSign.location.cookie <object>
+spec.backend.auth.jwtSign.location.cookie.name <string> (required) min=1 max=256
+spec.backend.auth.jwtSign.location.header <object>
+spec.backend.auth.jwtSign.location.header.name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of an HTTP header. HTTP/2 pseudo-headers (names beginning with `:`) are not supported
+spec.backend.auth.jwtSign.location.header.prefix <string> min=1 max=256
+spec.backend.auth.jwtSign.location.queryParameter <object>
+spec.backend.auth.jwtSign.location.queryParameter.name <string> (required) min=1 max=256
+spec.backend.auth.jwtSign.signingKeyRef <object> (required)	# Secret providing the `signingKey` key with a PEM-encoded RSA or EC private key.
+spec.backend.auth.jwtSign.signingKeyRef.group <string>	# API group of the referenced credential; empty selects the core API group
+spec.backend.auth.jwtSign.signingKeyRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
+spec.backend.auth.jwtSign.signingKeyRef.name <string> (required) min=1 max=253	# Name of the referenced credential
+spec.backend.auth.jwtSign.ttl <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Token lifetime used for exp. Defaults to 300s.
 spec.backend.auth.key <string> max=2048	# Inline key to use as the value of the `Authorization` header. This option is the least secure; usage of a `Secret` is preferred.
 spec.backend.auth.location <object>	# Where backend credentials are inserted. If omitted, credentials are written to the `Authorization` header with the `Bearer ` prefix. This applies to `key`, `secretRef`, and `passthrough`. Entries in `credentials` carry their own location.
 spec.backend.auth.location.cookie <object>
@@ -482,7 +534,7 @@ spec.backend.auth.oauthTokenExchange.actorToken.source.queryParameter.name <stri
 spec.backend.auth.oauthTokenExchange.actorToken.tokenType <string>	# OAuth token type. Empty defaults to AccessToken. Custom absolute URI values are supported for actor tokens.
 spec.backend.auth.oauthTokenExchange.additionalParams <map[string]string>	# Extra form params; values are CEL expressions over the incoming request.
 spec.backend.auth.oauthTokenExchange.audiences <[]string> min=1 max=64	# Audiences sent to the token endpoint.
-spec.backend.auth.oauthTokenExchange.backendRef <object> (required)	# RFC 8693 token endpoint backend.
+spec.backend.auth.oauthTokenExchange.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.auth.oauthTokenExchange.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.auth.oauthTokenExchange.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.auth.oauthTokenExchange.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -490,7 +542,7 @@ spec.backend.auth.oauthTokenExchange.backendRef.namespace <string> pattern="^[a-
 spec.backend.auth.oauthTokenExchange.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
 spec.backend.auth.oauthTokenExchange.cache <object>	# Response cache configuration.
 spec.backend.auth.oauthTokenExchange.cache.inMemory <object>
-spec.backend.auth.oauthTokenExchange.cache.inMemory.defaultTtl <string>	# TTL used when the token endpoint omits expires_in. Default 300s.
+spec.backend.auth.oauthTokenExchange.cache.inMemory.defaultTtl <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# TTL used when the token endpoint omits expires_in. Default 300s.
 spec.backend.auth.oauthTokenExchange.cache.inMemory.maxEntries <integer> format=int32	# Default 8192; 0 disables the cache.
 spec.backend.auth.oauthTokenExchange.clientAuth <object>	# Client authentication for the token endpoint. When unset, none is sent.
 spec.backend.auth.oauthTokenExchange.clientAuth.clientId <string> (required) min=1	# Client ID sent to the token endpoint.
@@ -539,6 +591,7 @@ spec.backend.auth.oauthTokenExchange.subjectToken.source.header.prefix <string> 
 spec.backend.auth.oauthTokenExchange.subjectToken.source.queryParameter <object>
 spec.backend.auth.oauthTokenExchange.subjectToken.source.queryParameter.name <string> (required) min=1 max=256
 spec.backend.auth.oauthTokenExchange.subjectToken.tokenType <string>	# OAuth token type. Empty defaults to AccessToken. Custom absolute URI values are supported for subject tokens.
+spec.backend.auth.oauthTokenExchange.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.auth.passthrough <object (free-form)>	# Reuses a client token already validated by another policy. Those policies may strip client credentials; passthrough adds the original token back to the backend request. Without client auth policies, this has no effect.
 spec.backend.auth.secretRef <object>	# Credential source for the authorization value, defaulting to a Kubernetes `Secret`. By default, the value is read from the `Authorization` key; set `secretRef.key` to override it. A `Bearer ` prefix is stripped only from the default `Authorization` key.
 spec.backend.auth.secretRef.group <string>	# API group of the referenced credential; empty selects the core API group
@@ -546,7 +599,7 @@ spec.backend.auth.secretRef.key <string> min=1 max=253	# Key in the referenced S
 spec.backend.auth.secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.backend.auth.secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.extAuth <object>	# External authentication configuration for requests sent to this backend.
-spec.backend.extAuth.backendRef <object>	# External Authorization server to reach. Supported types: `Service` and `Backend`.
+spec.backend.extAuth.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.extAuth.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.extAuth.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.extAuth.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -570,15 +623,16 @@ spec.backend.extAuth.http.body <string> min=1 max=16384	# Body is a CEL expressi
 spec.backend.extAuth.http.path <string> min=1 max=16384	# Path to send to the authorization server. If unset, this defaults to the original request path. This is a CEL expression, which allows customizing the path based on the incoming request. For example, to add a prefix, use `"/prefix/" + request.path`.
 spec.backend.extAuth.http.redirect <string> min=1 max=16384	# Optional expression that determines a path to redirect to on authorization failure. This is useful to redirect to a sign-in page.
 spec.backend.extAuth.http.responseMetadata <map[string]string>	# Metadata fields to construct from the authorization response. These will be included under the `extauthz` variable in future CEL expressions. Setting this is useful for things like logging usernames, without needing to include them as headers to the backend, as `allowedResponseHeaders` would.
+spec.backend.extAuth.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.health <object>	# Settings for passive and active health checking.
 spec.backend.health.eviction <object>	# Settings for evicting unhealthy backends.
 spec.backend.health.eviction.consecutiveFailures <integer> format=int32 min=0	# Number of consecutive unhealthy responses required before the backend is evicted. For example, a value of 5 means the backend must receive 5 unhealthy responses in a row before being evicted. When both consecutiveFailures and healthThreshold are set, the backend is evicted when either condition is met. When neither is set, a single unhealthy response can trigger eviction.
-spec.backend.health.eviction.duration <string> default="3s" max=32	# Base time a backend should be evicted after being marked unhealthy. Subsequent evictions use multiplicative backoff (duration * times_evicted). If all endpoints are evicted, the load balancer falls back to returning evicted endpoints rather than failing entirely. If unset, defaults to `3s`.
+spec.backend.health.eviction.duration <string> default="3s" pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Base time a backend should be evicted after being marked unhealthy. Subsequent evictions use multiplicative backoff (duration * times_evicted). If all endpoints are evicted, the load balancer falls back to returning evicted endpoints rather than failing entirely. If unset, defaults to `3s`.
 spec.backend.health.eviction.healthThreshold <integer> format=int32 min=0 max=100	# EWMA health score threshold, from 0 to 100. When set, a backend is evicted only if its computed health drops below this value after an unhealthy response (e.g. 50 evicts when EWMA health falls below 50%). Unlike consecutiveFailures, this sliding-window average lets a single success delay eviction. If both are set, either condition evicts; if neither, a single unhealthy response evicts.
 spec.backend.health.eviction.restoreHealth <integer> format=int32 min=0 max=100	# Health score from 0 to 100 assigned to a backend when it returns from eviction. For gradual recovery, set below 100; for full recovery immediately, set 100. If unset, the backend resumes with the health it had when evicted.
 spec.backend.health.unhealthyCondition <string> min=1 max=16384	# CEL expression that determines whether a response indicates an unhealthy backend. When the expression evaluates to true, the backend is considered unhealthy and may be evicted. For example, to evict on 5xx responses: `response.code >= 500`. When unset, any 5xx response, or a connection failure, is treated as unhealthy. This default lowers the backend's health score but does not trigger eviction on its own.
 spec.backend.http <object>	# Settings for managing HTTP requests to the backend
-spec.backend.http.requestTimeout <string> max=32	# Deadline for receiving a response from the backend.
+spec.backend.http.requestTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for receiving a response from the backend.
 spec.backend.http.version <string> enum=HTTP1|HTTP2	# HTTP protocol version for backend connections. If unset, it is inferred: `Service` appProtocol, `HTTP2` for gRPC, the original protocol for plaintext HTTP, or `HTTP1` for HTTPS because clients often upgrade HTTPS to HTTP/2 even when the backend does not support it.
 spec.backend.mcp <object>	# Settings for MCP workloads. This is only applicable when connecting to a `Backend` of type `mcp`.
 spec.backend.mcp.authentication <object>	# MCP backend-specific authentication rules. This field is deprecated; prefer to use traffic policy `jwtAuthentication.mcp`, which ensures authentication runs before other policies such as transformation and rate limiting.
@@ -591,14 +645,15 @@ spec.backend.mcp.authentication.clientSecretRef.kind <string>	# Kind of the refe
 spec.backend.mcp.authentication.clientSecretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
 spec.backend.mcp.authentication.issuer <string> min=1 max=256	# IdP that issued the JWT. This corresponds to the `iss` claim ([RFC 7519 §4.1.1](https://tools.ietf.org/html/rfc7519#section-4.1.1)).
 spec.backend.mcp.authentication.jwks <object> (required)	# Remote JSON Web Key used to validate the signature of the JWT.
-spec.backend.mcp.authentication.jwks.backendRef <object> (required)	# Remote JWKS server to reach. Supported types are `Service` and static `Backend`. An `AgentgatewayPolicy` containing backend TLS config can then be attached to the `Service` or `Backend` in order to set TLS options for a connection to the remote `jwks` source.
+spec.backend.mcp.authentication.jwks.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.mcp.authentication.jwks.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.mcp.authentication.jwks.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.mcp.authentication.jwks.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.mcp.authentication.jwks.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.mcp.authentication.jwks.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
-spec.backend.mcp.authentication.jwks.cacheDuration <string> default="5m" max=32
-spec.backend.mcp.authentication.jwks.jwksPath <string> (required) min=1 max=2000	# Path to the IdP `jwks` endpoint, relative to the root, commonly `".well-known/jwks.json"`.
+spec.backend.mcp.authentication.jwks.cacheDuration <string> default="5m" pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# How long a fetched `jwks` document is used before it is re-fetched from the IdP.
+spec.backend.mcp.authentication.jwks.jwksPath <string> min=1 max=1024	# Path to the IdP `jwks` endpoint, relative to the root, commonly `".well-known/jwks.json"`.
+spec.backend.mcp.authentication.jwks.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.mcp.authentication.mode <string> enum=Optional|Permissive|Strict default="Strict"	# Validation mode for JWT authentication.
 spec.backend.mcp.authentication.provider <string> enum=Auth0|Authentik|Descope|Entra|Keycloak|Okta	# Identity provider to use for authentication.
 spec.backend.mcp.authentication.resourceMetadata <object (free-form)>	# Metadata to use for MCP resources.
@@ -611,7 +666,7 @@ spec.backend.mcp.guardrails.processors <[]object> (required) min=1 max=16	# `pro
 spec.backend.mcp.guardrails.processors[].methods <map[string]string> (required)	# `methods` is the allowlist of JSON-RPC methods (e.g. `tools/call`, `tools/list`) routed through this processor, keyed by method name with the phase it runs in. Keys may be exact, a prefix wildcard (`tools/*`), a suffix wildcard (`*/list`), or `*` for all methods; the most specific match wins. Methods matching no key, including unknown ones, bypass this processor.
 spec.backend.mcp.guardrails.processors[].remote <object>	# `remote` configures a gRPC policy server.
 spec.backend.mcp.guardrails.processors[].remote.allowedRequestHeaders <[]string> max=64	# `allowedRequestHeaders` lists the incoming request headers forwarded to the policy server in `McpRequest.headers`. If empty, all headers and pseudo-headers (`:authority`, `:method`, ...) are forwarded. Matching is case-insensitive.
-spec.backend.mcp.guardrails.processors[].remote.backendRef <object> (required)	# `backendRef` references the remote guardrails policy server. Supported types: `Service` and `Backend`.
+spec.backend.mcp.guardrails.processors[].remote.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.mcp.guardrails.processors[].remote.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.mcp.guardrails.processors[].remote.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.mcp.guardrails.processors[].remote.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -620,16 +675,19 @@ spec.backend.mcp.guardrails.processors[].remote.backendRef.port <integer> format
 spec.backend.mcp.guardrails.processors[].remote.disallowedRequestHeaders <[]string> max=64	# `disallowedRequestHeaders` lists header names never forwarded to the policy server, even if listed in `allowedRequestHeaders`. Matching is case-insensitive.
 spec.backend.mcp.guardrails.processors[].remote.failureMode <string> enum=FailClosed|FailOpen	# `failureMode` controls behavior when the policy server is unreachable or returns an error. `FailOpen` allows the request; `FailClosed` (default) denies it.
 spec.backend.mcp.guardrails.processors[].remote.metadata <map[string]string>	# `metadata` is static or CEL-evaluated context surfaced to the policy server as fields of the `metadata_context` google.protobuf.Struct, keyed by config key. Values are CEL expressions.
+spec.backend.mcp.guardrails.processors[].remote.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.backend.tcp <object>	# Settings for managing TCP connections to the backend
-spec.backend.tcp.connectTimeout <string> max=32	# Deadline for establishing a connection to the destination.
+spec.backend.tcp.connectTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for establishing a connection to the destination.
 spec.backend.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.backend.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.backend.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.backend.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.backend.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.backend.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
 spec.backend.tls <object>	# Settings for managing TLS connections to the backend When set, TLS is originated to the backend using the system trusted CA certificates, and SNI is inferred from the destination.
 spec.backend.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
-spec.backend.tls.caCertificateRefs <[]object> max=1	# CA certificate `ConfigMap` to use to verify the server certificate. If unset, the system's trusted certificates are used.
-spec.backend.tls.caCertificateRefs[].name <string> default=""	# Name of the referent
+spec.backend.tls.caCertificateRefs <[]object> max=1	# CA certificate source to use to verify the server certificate. Omitted kind and `ConfigMap` select a ConfigMap; `Secret` selects a Secret. The `ca.crt` key is required. If unset, the system's trusted certificates are used.
+spec.backend.tls.caCertificateRefs[].kind <string> enum=ConfigMap|Secret default="ConfigMap"	# Kind of the referenced CA certificate source. Omitted defaults to ConfigMap.
+spec.backend.tls.caCertificateRefs[].name <string> (required) min=1 max=253	# Name of the referenced CA certificate source.
+spec.backend.tls.certificateSource <string> enum=Inline|SPIFFE default="Inline"	# Source for the gateway's client identity and trust roots (`Inline` default, or `SPIFFE`).
 spec.backend.tls.insecureSkipVerify <string> enum=All|Hostname	# Originates TLS but skips verification of the backend's certificate WARNING: insecure; only use if the risks are understood Modes: * `All` disables all TLS verification * `Hostname` trusts the CA certificate but ignores hostname/SAN mismatches. Still insecure; prefer `verifySubjectAltNames` where possible.
 spec.backend.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS connection. For example: `X25519_MLKEM768,X25519`.
 spec.backend.tls.mtlsCertificateRef <[]object> max=1	# Enables mutual TLS to the backend using `tls.key` and `tls.crt` from the referenced credential source (defaulting to a Kubernetes `Secret`). An optional `ca.cert`, if present, verifies the server certificate, but `caCertificateRefs` takes priority. If unspecified, no client certificate is used.
@@ -660,12 +718,14 @@ spec.backend.transformation.response.set <[]object> min=1 max=16	# Headers to se
 spec.backend.transformation.response.set[].name <string> (required) pattern="^:?[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# The name of the header to add.
 spec.backend.transformation.response.set[].value <string> (required) min=1 max=16384	# CEL expression that generates the output value for the header.
 spec.backend.tunnel <object>	# Settings for managing tunnel connections to the backend, like `HTTPS_PROXY`
-spec.backend.tunnel.backendRef <object> (required)	# Proxy server to reach. Supported types: `Service` and `Backend`.
+spec.backend.tunnel.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.backend.tunnel.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.backend.tunnel.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.backend.tunnel.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.backend.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.backend.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.backend.tunnel.mode <string> enum=Auto|Connect default="Auto"	# How requests are sent through the proxy. Defaults to `Auto`.
+spec.backend.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.frontend <object>	# Settings for how to handle incoming traffic. A frontend policy can only target a `Gateway`. `Listener` and `ListenerSet` are not valid targets. When multiple policies are selected for a given request, they are merged on a field-level basis, but not a deep merge. For example, policy A sets `tcp` and `tls`, and policy B sets `tls`; the effective policy would be `tcp` from policy A, and `tls` from policy B.
 spec.frontend.accessLog <object>	# Access logging configuration.
 spec.frontend.accessLog.attributes <object>	# Customizations to the key-value pairs that are logged.
@@ -680,7 +740,7 @@ spec.frontend.accessLog.otlp.attributes.add <[]object> min=1	# Additional key-va
 spec.frontend.accessLog.otlp.attributes.add[].expression <string> (required) min=1 max=16384	# A Common Expression Language (CEL) expression.
 spec.frontend.accessLog.otlp.attributes.add[].name <string> (required) min=1 max=256
 spec.frontend.accessLog.otlp.attributes.remove <[]string> min=1 max=32	# Default fields to remove. For example, `http.method`.
-spec.frontend.accessLog.otlp.backendRef <object> (required)	# OTLP server to send access logs to. Supported types: `Service` and `AgentgatewayBackend`.
+spec.frontend.accessLog.otlp.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.frontend.accessLog.otlp.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.frontend.accessLog.otlp.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.frontend.accessLog.otlp.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -689,20 +749,22 @@ spec.frontend.accessLog.otlp.backendRef.port <integer> format=int32 min=1 max=65
 spec.frontend.accessLog.otlp.filter <string> min=1 max=16384	# CEL expression used to filter OTLP logs. A log will only be exported if the expression evaluates to `true`. If unset, the parent access log filter is used.
 spec.frontend.accessLog.otlp.path <string> min=1 max=1024	# OTLP/HTTP path to use. This is only applicable when `protocol` is `HTTP`. If unset, this defaults to `/v1/logs`.
 spec.frontend.accessLog.otlp.protocol <string> enum=GRPC|HTTP default="GRPC"	# OTLP protocol variant to use.
+spec.frontend.accessLog.otlp.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.frontend.connect <object>	# Settings for downstream HTTP CONNECT handling. If unset, CONNECT requests are rejected with Method Not Allowed.
 spec.frontend.connect.mode <string> (required) enum=Deny|Route|Tunnel	# Whether downstream CONNECT requests are accepted.
 spec.frontend.http <object>	# Settings for managing incoming HTTP requests.
 spec.frontend.http.http1HeaderCase <string> enum=Lowercase|Preserve	# Controls HTTP/1 request header name casing when encoding responses on the same connection. This only applies to `HTTP/1`. If a request is HTTP/2 in either the incoming or outgoing request, this will be ignored. HTTP/2 requests are always lower case. Modifying the headers from other policies may result in the original case being lost.
-spec.frontend.http.http1IdleTimeout <string> max=32	# Timeout before an unused connection is closed. If unset, this defaults to 10 minutes.
+spec.frontend.http.http1IdleTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Timeout before an unused connection is closed. If unset, this defaults to 10 minutes.
 spec.frontend.http.http1MaxHeaders <integer> format=int32 min=1 max=4096	# Maximum number of headers allowed in `HTTP/1.1` requests. If unset, this defaults to 100.
 spec.frontend.http.http2ConnectionWindowSize <int-or-string>	# Initial window size for connection-level flow control for received data.
 spec.frontend.http.http2FrameSize <int-or-string>	# Maximum frame size to use. If unset, this defaults to `16kb`.
-spec.frontend.http.http2KeepaliveInterval <string> max=32
-spec.frontend.http.http2KeepaliveTimeout <string> max=32
+spec.frontend.http.http2KeepaliveInterval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Interval between `HTTP/2` keepalive pings. If unset, keepalive pings are not sent.
+spec.frontend.http.http2KeepaliveTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time to wait for a response to an `HTTP/2` keepalive ping before the connection is closed. Only applies when `http2KeepaliveInterval` is set.
 spec.frontend.http.http2MaxHeaderSize <int-or-string>	# Maximum aggregate size of decoded HTTP/2 request headers. If unset, this defaults to `16Ki`.
 spec.frontend.http.http2WindowSize <int-or-string>	# Initial window size for stream-level flow control for received data.
 spec.frontend.http.maxBufferSize <int-or-string>	# Maximum HTTP body size that will be buffered into memory. Bodies will only be buffered for policies which require buffering. If unset, this defaults to `2mb`.
-spec.frontend.http.maxConnectionDuration <string> max=32	# Maximum time a connection is allowed to remain open. After this duration, the connection is gracefully closed after the current in-flight request completes. Useful for ensuring even traffic distribution behind load balancers during scaling events.
+spec.frontend.http.maxConcurrentRequests <integer> format=int32 min=1	# Maximum number of in-flight HTTP requests across this gateway/port. This includes HTTP/1 requests and HTTP/2 streams. Requests over the limit are rejected immediately with a 503 response. Unset means unlimited.
+spec.frontend.http.maxConnectionDuration <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Maximum time a connection is allowed to remain open. After this duration, the connection is gracefully closed after the current in-flight request completes. Useful for ensuring even traffic distribution behind load balancers during scaling events.
 spec.frontend.metrics <object>	# Custom Prometheus metric label configuration. CEL expressions are evaluated per-request and added as labels to all Prometheus metrics exposed by agentgateway.
 spec.frontend.metrics.attributes <object> (required)	# Customizations to the labels that are added to Prometheus metrics.
 spec.frontend.metrics.attributes.add <[]object> min=1 max=16	# Additional key-value pairs to add as custom labels to all Prometheus metrics. The value is a CEL expression evaluated per-request. If the CEL expression fails to evaluate, the label value is set to "unknown". WARNING: High-cardinality labels (e.g., per-user IDs) can significantly increase Prometheus storage and memory usage. Prefer low-cardinality dimensions like team or environment.
@@ -717,13 +779,14 @@ spec.frontend.proxyProtocol.mode <string> enum=Optional|Strict default="Strict"	
 spec.frontend.proxyProtocol.version <string> enum=All|V1|V2 default="V2"	# PROXY protocol version to accept. If unset, this defaults to `V2`.
 spec.frontend.tcp <object>	# Settings for managing incoming TCP connections.
 spec.frontend.tcp.keepalive <object>	# Settings for enabling TCP keepalives on the connection.
-spec.frontend.tcp.keepalive.interval <string> max=32	# Time between keepalive probes. If unset, this defaults to 180s.
+spec.frontend.tcp.keepalive.interval <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time between keepalive probes. If unset, this defaults to 180s.
 spec.frontend.tcp.keepalive.retries <integer> format=int32 min=1 max=64	# Maximum number of keepalive probes to send before dropping the connection. If unset, this defaults to 9.
-spec.frontend.tcp.keepalive.time <string> max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.frontend.tcp.keepalive.time <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Time a connection needs to be idle before keepalive probes start being sent. If unset, this defaults to 180s.
+spec.frontend.tcp.maxConnections <integer> format=int32 min=1	# Maximum number of active downstream connections on this gateway/port. Connections over the limit are closed immediately. Unset means unlimited.
 spec.frontend.tls <object>	# Settings for managing incoming TLS connections.
 spec.frontend.tls.alpnProtocols <[]string> min=1 max=16	# Application-Layer Protocol Negotiation (`ALPN`) value to use in the TLS handshake. If not present, defaults to `["h2", "http/1.1"]`.
 spec.frontend.tls.cipherSuites <[]string>	# Cipher suites for a TLS listener. The value is a comma-separated list of cipher suites, for example `TLS13_AES_256_GCM_SHA384,TLS13_AES_128_GCM_SHA256`. Use this in the TLS options field of a TLS listener.
-spec.frontend.tls.handshakeTimeout <string> max=32	# Deadline for a TLS handshake to complete. If unset, this defaults to `15s`.
+spec.frontend.tls.handshakeTimeout <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Deadline for a TLS handshake to complete. If unset, this defaults to `15s`.
 spec.frontend.tls.keyExchangeGroups <[]string>	# Ordered list of key exchange groups for a TLS listener. For example: `X25519_MLKEM768,X25519`.
 spec.frontend.tls.maxProtocolVersion <string> enum=1.2|1.3	# Maximum TLS version to support.
 spec.frontend.tls.minProtocolVersion <string> enum=1.2|1.3	# Minimum TLS version to support.
@@ -733,7 +796,7 @@ spec.frontend.tracing.attributes.add <[]object> min=1	# Additional key-value pai
 spec.frontend.tracing.attributes.add[].expression <string> (required) min=1 max=16384	# A Common Expression Language (CEL) expression.
 spec.frontend.tracing.attributes.add[].name <string> (required) min=1 max=256
 spec.frontend.tracing.attributes.remove <[]string> min=1 max=32	# Default fields to remove. For example, `http.method`.
-spec.frontend.tracing.backendRef <object> (required)	# OTLP server to reach. Supported types: `Service` and `AgentgatewayBackend`.
+spec.frontend.tracing.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.frontend.tracing.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.frontend.tracing.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.frontend.tracing.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -747,6 +810,7 @@ spec.frontend.tracing.randomSampling <string> min=1 max=16384	# Expression that 
 spec.frontend.tracing.resources <[]object>	# Entity producing telemetry and resources resources to be included in the trace.
 spec.frontend.tracing.resources[].expression <string> (required) min=1 max=16384	# A Common Expression Language (CEL) expression.
 spec.frontend.tracing.resources[].name <string> (required) min=1 max=256
+spec.frontend.tracing.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.strategy <object>	# Policy merge and conflict resolution strategy. Strategy settings apply to the policy object as a whole. Individual strategy fields may only be valid for specific policy kinds; for example, inheritance is only valid when this policy contains traffic settings.
 spec.strategy.inheritance <string> enum=Default|Override	# Controls whether less-specific traffic policies prevent more-specific traffic policies from contributing to the effective policy. This field is only valid on traffic policies. Frontend and backend policy merging does not use inheritance. When unset or set to `Default`, traffic policy fields are merged by specificity, with more-specific attachment points such as routes and route rules able to override fields from less-specific attachment points such as gateways and listeners. In other words, this policy provides `Default`s that can be overridden. For example, you may provide a `Default` timeout policy for the entire Gateway that is overridden by specific routes. When set to `Override`, this policy blocks traffic policies at more-specific attachment points from being included in the effective policy. This is useful when a gateway-level policy must remain authoritative for all routes below it.
 spec.targetRefs <[]object> min=1 max=16	# Target resources to attach the policy to.
@@ -838,7 +902,7 @@ spec.traffic.directResponse.headers[].name <string> (required) pattern="^[A-Za-z
 spec.traffic.directResponse.headers[].value <string> (required) min=1 max=16384	# CEL expression that generates the output value for the header.
 spec.traffic.directResponse.status <integer> format=int32 min=200 max=599	# HTTP status code to return.
 spec.traffic.extAuth <object>	# External authentication configuration for the policy. This selects the external server to send requests to for authentication. An extAuth policy can be conditionally set by nesting configuration under the `conditional` field.
-spec.traffic.extAuth.backendRef <object>	# External Authorization server to reach. Supported types: `Service` and `Backend`.
+spec.traffic.extAuth.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.extAuth.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.extAuth.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.extAuth.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -851,7 +915,7 @@ spec.traffic.extAuth.cache.ttl <string> (required) min=1 max=16384	# Duration st
 spec.traffic.extAuth.conditional <[]object> min=1 max=16	# Conditional policy execution. Set this or the top-level extAuth fields. The first matching policy will be executed. A single policy may be provided without a condition set; if so, it must be the last policy and will be the fallback in case no conditions are met.
 spec.traffic.extAuth.conditional[].condition <string> min=1 max=16384	# CEL expression that must evaluate to true for this policy to execute.
 spec.traffic.extAuth.conditional[].policy <object> (required)	# Policy to apply when the condition matches.
-spec.traffic.extAuth.conditional[].policy.backendRef <object>	# External Authorization server to reach. Supported types: `Service` and `Backend`.
+spec.traffic.extAuth.conditional[].policy.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.extAuth.conditional[].policy.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.extAuth.conditional[].policy.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.extAuth.conditional[].policy.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -875,6 +939,7 @@ spec.traffic.extAuth.conditional[].policy.http.body <string> min=1 max=16384	# B
 spec.traffic.extAuth.conditional[].policy.http.path <string> min=1 max=16384	# Path to send to the authorization server. If unset, this defaults to the original request path. This is a CEL expression, which allows customizing the path based on the incoming request. For example, to add a prefix, use `"/prefix/" + request.path`.
 spec.traffic.extAuth.conditional[].policy.http.redirect <string> min=1 max=16384	# Optional expression that determines a path to redirect to on authorization failure. This is useful to redirect to a sign-in page.
 spec.traffic.extAuth.conditional[].policy.http.responseMetadata <map[string]string>	# Metadata fields to construct from the authorization response. These will be included under the `extauthz` variable in future CEL expressions. Setting this is useful for things like logging usernames, without needing to include them as headers to the backend, as `allowedResponseHeaders` would.
+spec.traffic.extAuth.conditional[].policy.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.extAuth.failureMode <string> enum=FailClosed|FailOpen	# Behavior when the external authorization service is unavailable or returns an error. "FailOpen" allows the request to continue. "FailClosed" (default) denies the request.
 spec.traffic.extAuth.forwardBody <object>	# Whether to include the HTTP body in the authorization request. If enabled, the request body will be buffered.
 spec.traffic.extAuth.forwardBody.maxSize <int-or-string> (required)	# Largest body, in bytes, that will be buffered and sent to the authorization server. If the body size is larger than `maxSize`, then the request will be rejected with a response.
@@ -889,8 +954,9 @@ spec.traffic.extAuth.http.body <string> min=1 max=16384	# Body is a CEL expressi
 spec.traffic.extAuth.http.path <string> min=1 max=16384	# Path to send to the authorization server. If unset, this defaults to the original request path. This is a CEL expression, which allows customizing the path based on the incoming request. For example, to add a prefix, use `"/prefix/" + request.path`.
 spec.traffic.extAuth.http.redirect <string> min=1 max=16384	# Optional expression that determines a path to redirect to on authorization failure. This is useful to redirect to a sign-in page.
 spec.traffic.extAuth.http.responseMetadata <map[string]string>	# Metadata fields to construct from the authorization response. These will be included under the `extauthz` variable in future CEL expressions. Setting this is useful for things like logging usernames, without needing to include them as headers to the backend, as `allowedResponseHeaders` would.
+spec.traffic.extAuth.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.extProc <object>	# External processing configuration for the policy.
-spec.traffic.extProc.backendRef <object>	# External Processor server to reach. Supported types: `Service` and `Backend`.
+spec.traffic.extProc.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.extProc.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.extProc.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.extProc.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -899,7 +965,7 @@ spec.traffic.extProc.backendRef.port <integer> format=int32 min=1 max=65535	# De
 spec.traffic.extProc.conditional <[]object> min=1 max=16	# Conditional policy execution. Set this or the top-level extProc fields. The first matching policy will be executed. A single policy may be provided without a condition set; if so, it must be the last policy and will be the fallback in case no conditions are met.
 spec.traffic.extProc.conditional[].condition <string> min=1 max=16384	# CEL expression that must evaluate to true for this policy to execute.
 spec.traffic.extProc.conditional[].policy <object> (required)	# Policy to apply when the condition matches.
-spec.traffic.extProc.conditional[].policy.backendRef <object>	# External Processor server to reach. Supported types: `Service` and `Backend`.
+spec.traffic.extProc.conditional[].policy.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.extProc.conditional[].policy.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.extProc.conditional[].policy.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.extProc.conditional[].policy.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -909,26 +975,28 @@ spec.traffic.extProc.conditional[].policy.failureMode <string> enum=FailClosed|F
 spec.traffic.extProc.conditional[].policy.metadataContext <map[string]object>	# Metadata to send to the external processor in the `metadata_context.filter_metadata` field of the ProcessingRequest. Keyed by metadata namespace, then by key within that namespace; values are CEL expressions evaluated per request.
 spec.traffic.extProc.conditional[].policy.processingOptions <object>	# How request and response phases are sent to ext_proc.
 spec.traffic.extProc.conditional[].policy.processingOptions.allowModeOverride <boolean> default=false	# Allows ext_proc `mode_override` values from matching header responses to update subsequent request/response processing phases for this exchange. Defaults to `false`.
-spec.traffic.extProc.conditional[].policy.processingOptions.requestBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How request bodies are sent to the external processor. `Buffered` buffers the full body and returns an error if it exceeds 8KB. `BufferedPartial` buffers up to 8KB and sends the buffered prefix if the body exceeds that limit. Defaults to `FullDuplexStreamed`.
+spec.traffic.extProc.conditional[].policy.processingOptions.requestBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How request bodies are sent to the external processor. Defaults to `FullDuplexStreamed`.
 spec.traffic.extProc.conditional[].policy.processingOptions.requestHeaderMode <string> enum=Send|Skip default="Send"	# Whether request headers are sent to the external processor. Defaults to `Send`.
 spec.traffic.extProc.conditional[].policy.processingOptions.requestTrailerMode <string> enum=Send|Skip default="Send"	# Whether request trailers are sent to the external processor. Defaults to `Send`.
-spec.traffic.extProc.conditional[].policy.processingOptions.responseBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How response bodies are sent to the external processor. `Buffered` buffers the full body and returns an error if it exceeds 8KB. `BufferedPartial` buffers up to 8KB and sends the buffered prefix if the body exceeds that limit. Defaults to `FullDuplexStreamed`.
+spec.traffic.extProc.conditional[].policy.processingOptions.responseBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How response bodies are sent to the external processor. Defaults to `FullDuplexStreamed`.
 spec.traffic.extProc.conditional[].policy.processingOptions.responseHeaderMode <string> enum=Send|Skip default="Send"	# Whether response headers are sent to the external processor. Defaults to `Send`.
 spec.traffic.extProc.conditional[].policy.processingOptions.responseTrailerMode <string> enum=Send|Skip default="Send"	# Whether response trailers are sent to the external processor. Defaults to `Send`.
 spec.traffic.extProc.conditional[].policy.requestAttributes <map[string]string>	# Request attributes to send to the external processor in the request `attributes` field of the ProcessingRequest. Values are CEL expressions evaluated per request.
 spec.traffic.extProc.conditional[].policy.responseAttributes <map[string]string>	# Response attributes to send to the external processor in the response `attributes` field of the ProcessingRequest. Values are CEL expressions evaluated per response.
+spec.traffic.extProc.conditional[].policy.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.extProc.failureMode <string> enum=FailClosed|FailOpen	# Behavior when the external processor is unavailable or returns an error. "FailOpen" allows the request to continue, as long as the request body has not been sent (or started streaming) to the ext_proc. Once the request body has started streaming to the ext_proc, the request will fail closed on error. "FailClosed" (default) rejects the request on any failure.
 spec.traffic.extProc.metadataContext <map[string]object>	# Metadata to send to the external processor in the `metadata_context.filter_metadata` field of the ProcessingRequest. Keyed by metadata namespace, then by key within that namespace; values are CEL expressions evaluated per request.
 spec.traffic.extProc.processingOptions <object>	# How request and response phases are sent to ext_proc.
 spec.traffic.extProc.processingOptions.allowModeOverride <boolean> default=false	# Allows ext_proc `mode_override` values from matching header responses to update subsequent request/response processing phases for this exchange. Defaults to `false`.
-spec.traffic.extProc.processingOptions.requestBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How request bodies are sent to the external processor. `Buffered` buffers the full body and returns an error if it exceeds 8KB. `BufferedPartial` buffers up to 8KB and sends the buffered prefix if the body exceeds that limit. Defaults to `FullDuplexStreamed`.
+spec.traffic.extProc.processingOptions.requestBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How request bodies are sent to the external processor. Defaults to `FullDuplexStreamed`.
 spec.traffic.extProc.processingOptions.requestHeaderMode <string> enum=Send|Skip default="Send"	# Whether request headers are sent to the external processor. Defaults to `Send`.
 spec.traffic.extProc.processingOptions.requestTrailerMode <string> enum=Send|Skip default="Send"	# Whether request trailers are sent to the external processor. Defaults to `Send`.
-spec.traffic.extProc.processingOptions.responseBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How response bodies are sent to the external processor. `Buffered` buffers the full body and returns an error if it exceeds 8KB. `BufferedPartial` buffers up to 8KB and sends the buffered prefix if the body exceeds that limit. Defaults to `FullDuplexStreamed`.
+spec.traffic.extProc.processingOptions.responseBodyMode <string> enum=Buffered|BufferedPartial|FullDuplexStreamed|None default="FullDuplexStreamed"	# How response bodies are sent to the external processor. Defaults to `FullDuplexStreamed`.
 spec.traffic.extProc.processingOptions.responseHeaderMode <string> enum=Send|Skip default="Send"	# Whether response headers are sent to the external processor. Defaults to `Send`.
 spec.traffic.extProc.processingOptions.responseTrailerMode <string> enum=Send|Skip default="Send"	# Whether response trailers are sent to the external processor. Defaults to `Send`.
 spec.traffic.extProc.requestAttributes <map[string]string>	# Request attributes to send to the external processor in the request `attributes` field of the ProcessingRequest. Values are CEL expressions evaluated per request.
 spec.traffic.extProc.responseAttributes <map[string]string>	# Response attributes to send to the external processor in the response `attributes` field of the ProcessingRequest. Values are CEL expressions evaluated per response.
+spec.traffic.extProc.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.headerModifiers <object>	# Request and response header modification policy.
 spec.traffic.headerModifiers.request <object>	# Header changes to apply before forwarding a request.
 spec.traffic.headerModifiers.request.add <[]object> max=16	# Add adds the given header(s) (name, value) to the request before the action. It appends to any existing values associated with the header name. Input: GET /foo HTTP/1.1 my-header: foo Config: add: - name: "my-header" value: "bar,baz" Output: GET /foo HTTP/1.1 my-header: foo,bar,baz
@@ -963,27 +1031,29 @@ spec.traffic.jwtAuthentication.mcp.clientId <string>	# Client ID to use for shor
 spec.traffic.jwtAuthentication.mcp.provider <string> enum=Auth0|Authentik|Descope|Entra|Keycloak|Okta	# Identity provider to use for MCP authentication flows.
 spec.traffic.jwtAuthentication.mcp.resourceMetadata <object (free-form)>	# Metadata to use for MCP resources, served at the MCP OAuth metadata endpoints.
 spec.traffic.jwtAuthentication.mode <string> enum=Optional|Permissive|Strict default="Strict"	# Validation mode for JWT authentication.
+spec.traffic.jwtAuthentication.preserveToken <boolean>	# Keeps a successfully validated JWT in its original location. By default, the gateway removes the JWT after validation. When the token only needs to be forwarded to the selected backend, prefer `backendAuth.passthrough` so it is not exposed to other policies in the request path.
 spec.traffic.jwtAuthentication.providers <[]object> (required) min=1 max=64
 spec.traffic.jwtAuthentication.providers[].audiences <[]string> min=1 max=64	# Allowed audiences that are allowed access. This corresponds to the `aud` claim ([RFC 7519 §4.1.3](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3)). If unset, any audience is allowed.
 spec.traffic.jwtAuthentication.providers[].issuer <string> (required) min=1 max=256	# IdP that issued the JWT. This corresponds to the `iss` claim ([RFC 7519 §4.1.1](https://tools.ietf.org/html/rfc7519#section-4.1.1)).
 spec.traffic.jwtAuthentication.providers[].jwks <object> (required)	# JSON Web Key Set used to validate the signature of the JWT.
 spec.traffic.jwtAuthentication.providers[].jwks.inline <string> min=2 max=65536	# Inline JSON Web Key Set used to validate the signature of the JWT.
 spec.traffic.jwtAuthentication.providers[].jwks.remote <object>	# How to reach the JSON Web Key Set from a remote address.
-spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef <object> (required)	# Remote JWKS server to reach. Supported types are `Service` and static `Backend`. An `AgentgatewayPolicy` containing backend TLS config can then be attached to the `Service` or `Backend` in order to set TLS options for a connection to the remote `jwks` source.
+spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
 spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
 spec.traffic.jwtAuthentication.providers[].jwks.remote.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
-spec.traffic.jwtAuthentication.providers[].jwks.remote.cacheDuration <string> default="5m" max=32
-spec.traffic.jwtAuthentication.providers[].jwks.remote.jwksPath <string> (required) min=1 max=2000	# Path to the IdP `jwks` endpoint, relative to the root, commonly `".well-known/jwks.json"`.
+spec.traffic.jwtAuthentication.providers[].jwks.remote.cacheDuration <string> default="5m" pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# How long a fetched `jwks` document is used before it is re-fetched from the IdP.
+spec.traffic.jwtAuthentication.providers[].jwks.remote.jwksPath <string> min=1 max=1024	# Path to the IdP `jwks` endpoint, relative to the root, commonly `".well-known/jwks.json"`.
+spec.traffic.jwtAuthentication.providers[].jwks.remote.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.phase <string> enum=PostRouting|PreRouting	# The phase to apply the traffic policy to. If the phase is `PreRouting`, the `targetRef` must be a `Gateway` or a `Listener`. `PreRouting` is typically used only when a policy needs to influence the routing decision. Even when using `PostRouting` mode, the policy can target the `Gateway` or `Listener`. This is a helper for applying the policy to all routes under that `Gateway` or `Listener`, and follows the merging logic described above. Note: `PreRouting` and `PostRouting` rules do not merge together. These are independent execution phases. That is, all `PreRouting` rules will merge and execute, then all `PostRouting` rules will merge and execute. If unset, this defaults to `PostRouting`.
 spec.traffic.rateLimit <object>	# Rate limiting configuration for the policy. This limits the rate at which requests are processed.
 spec.traffic.rateLimit.conditional <[]object> min=1 max=16	# Conditional policy execution. Set this or the top-level rateLimit fields. The first matching policy will be executed. A single policy may be provided without a condition set; if so, it must be the last policy and will be the fallback in case no conditions are met.
 spec.traffic.rateLimit.conditional[].condition <string> min=1 max=16384	# CEL expression that must evaluate to true for this policy to execute.
 spec.traffic.rateLimit.conditional[].policy <object> (required)	# Policy to apply when the condition matches.
 spec.traffic.rateLimit.conditional[].policy.global <object>	# Global rate limiting policy using an external service.
-spec.traffic.rateLimit.conditional[].policy.global.backendRef <object> (required)	# Rate limit server to reach. Supported types: `Service` and `Backend`.
+spec.traffic.rateLimit.conditional[].policy.global.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.rateLimit.conditional[].policy.global.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.rateLimit.conditional[].policy.global.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.rateLimit.conditional[].policy.global.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -994,16 +1064,18 @@ spec.traffic.rateLimit.conditional[].policy.global.descriptors[].cost <string> m
 spec.traffic.rateLimit.conditional[].policy.global.descriptors[].entries <[]object> (required) min=1 max=16	# Individual components that make up this descriptor.
 spec.traffic.rateLimit.conditional[].policy.global.descriptors[].entries[].expression <string> (required) min=1 max=16384	# Common Expression Language (`CEL`) expression that defines the value for the descriptor. For example, to rate limit based on the Client IP: `source.address`. See https://agentgateway.dev/docs/standalone/latest/reference/cel/ for more info.
 spec.traffic.rateLimit.conditional[].policy.global.descriptors[].entries[].name <string> (required) min=1 max=64	# Name of the descriptor.
+spec.traffic.rateLimit.conditional[].policy.global.descriptors[].limitOverride <string> min=1 max=16384	# Common Expression Language (`CEL`) expression that returns a dynamic limit override for this descriptor. The expression must evaluate to an object containing `unit` and `requestsPerUnit`, for example `{"unit":"minute","requestsPerUnit":5}`. See https://agentgateway.dev/docs/standalone/latest/reference/cel/ for more info.
 spec.traffic.rateLimit.conditional[].policy.global.descriptors[].unit <string> enum=Requests|Tokens	# Cost unit. If unspecified, `Requests` is used.
 spec.traffic.rateLimit.conditional[].policy.global.domain <string> (required) min=1 max=256	# Domain under which this limit should apply. This is an arbitrary string that enables a rate limit server to distinguish between different applications.
 spec.traffic.rateLimit.conditional[].policy.global.failureMode <string> enum=FailClosed|FailOpen	# Behavior when the remote rate limit service is unavailable or returns an error. `FailOpen` allows the request to continue. `FailClosed` (default) denies the request.
+spec.traffic.rateLimit.conditional[].policy.global.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.rateLimit.conditional[].policy.local <[]object> min=1 max=16	# Local rate limiting policy.
-spec.traffic.rateLimit.conditional[].policy.local[].burst <integer> format=int32	# Allowance of requests above the request-per-unit that should be allowed within a short period of time.
+spec.traffic.rateLimit.conditional[].policy.local[].burst <integer> format=int32 min=0	# Allowance of requests above the request-per-unit that should be allowed within a short period of time.
 spec.traffic.rateLimit.conditional[].policy.local[].requests <integer> format=int32 min=1	# Number of HTTP requests per unit of time that are allowed. Requests exceeding this limit will fail with a `429` error.
 spec.traffic.rateLimit.conditional[].policy.local[].tokens <integer> format=int32 min=1	# Number of LLM tokens per unit of time that are allowed. Requests exceeding this limit will fail with a `429` error. Both input and output tokens are counted. However, token counts are not known until the request completes. As a result, token-based rate limits will apply to future requests only.
 spec.traffic.rateLimit.conditional[].policy.local[].unit <string> (required) enum=Hours|Minutes|Seconds	# Unit of time for the limit.
 spec.traffic.rateLimit.global <object>	# Global rate limiting policy using an external service.
-spec.traffic.rateLimit.global.backendRef <object> (required)	# Rate limit server to reach. Supported types: `Service` and `Backend`.
+spec.traffic.rateLimit.global.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
 spec.traffic.rateLimit.global.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
 spec.traffic.rateLimit.global.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
 spec.traffic.rateLimit.global.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
@@ -1014,11 +1086,13 @@ spec.traffic.rateLimit.global.descriptors[].cost <string> min=1 max=16384	# Comm
 spec.traffic.rateLimit.global.descriptors[].entries <[]object> (required) min=1 max=16	# Individual components that make up this descriptor.
 spec.traffic.rateLimit.global.descriptors[].entries[].expression <string> (required) min=1 max=16384	# Common Expression Language (`CEL`) expression that defines the value for the descriptor. For example, to rate limit based on the Client IP: `source.address`. See https://agentgateway.dev/docs/standalone/latest/reference/cel/ for more info.
 spec.traffic.rateLimit.global.descriptors[].entries[].name <string> (required) min=1 max=64	# Name of the descriptor.
+spec.traffic.rateLimit.global.descriptors[].limitOverride <string> min=1 max=16384	# Common Expression Language (`CEL`) expression that returns a dynamic limit override for this descriptor. The expression must evaluate to an object containing `unit` and `requestsPerUnit`, for example `{"unit":"minute","requestsPerUnit":5}`. See https://agentgateway.dev/docs/standalone/latest/reference/cel/ for more info.
 spec.traffic.rateLimit.global.descriptors[].unit <string> enum=Requests|Tokens	# Cost unit. If unspecified, `Requests` is used.
 spec.traffic.rateLimit.global.domain <string> (required) min=1 max=256	# Domain under which this limit should apply. This is an arbitrary string that enables a rate limit server to distinguish between different applications.
 spec.traffic.rateLimit.global.failureMode <string> enum=FailClosed|FailOpen	# Behavior when the remote rate limit service is unavailable or returns an error. `FailOpen` allows the request to continue. `FailClosed` (default) denies the request.
+spec.traffic.rateLimit.global.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.traffic.rateLimit.local <[]object> min=1 max=16	# Local rate limiting policy.
-spec.traffic.rateLimit.local[].burst <integer> format=int32	# Allowance of requests above the request-per-unit that should be allowed within a short period of time.
+spec.traffic.rateLimit.local[].burst <integer> format=int32 min=0	# Allowance of requests above the request-per-unit that should be allowed within a short period of time.
 spec.traffic.rateLimit.local[].requests <integer> format=int32 min=1	# Number of HTTP requests per unit of time that are allowed. Requests exceeding this limit will fail with a `429` error.
 spec.traffic.rateLimit.local[].tokens <integer> format=int32 min=1	# Number of LLM tokens per unit of time that are allowed. Requests exceeding this limit will fail with a `429` error. Both input and output tokens are counted. However, token counts are not known until the request completes. As a result, token-based rate limits will apply to future requests only.
 spec.traffic.rateLimit.local[].unit <string> (required) enum=Hours|Minutes|Seconds	# Unit of time for the limit.
@@ -1029,7 +1103,7 @@ spec.traffic.retry.codes <[]integer>	# Codes defines the HTTP response status co
 spec.traffic.retry.condition <string> min=1 max=16384	# `condition` is a CEL expression evaluated against each response to decide whether to retry. A response is retried when its status code is in `codes` or this expression evaluates to `true`.
 spec.traffic.retry.precondition <string> min=1 max=16384	# `precondition` is a CEL expression evaluated against the request before any attempt is made. When it evaluates to `false`, retries are disabled and only the initial attempt is made, for example `request.method == "GET"`. Retrying requires buffering the request body in memory for replay, so this lets us skip that cost when the request is known to be non-retriable (for example streaming uploads or long-lived connections like websockets).
 spec.traffic.timeouts <object>	# Request timeouts. It is applicable to `HTTPRoute` resources and ignored for other targeted kinds.
-spec.traffic.timeouts.request <string> max=32	# Timeout for an individual request from the gateway to a backend. This covers the time from when the request first starts being sent from the gateway to when the full response has been received from the backend.
+spec.traffic.timeouts.request <string> pattern="^([0-9]{1,5}(h|m|s|ms)){1,4}$" max=32	# Timeout for an individual request from the gateway to a backend. This covers the time from when the request first starts being sent from the gateway to when the full response has been received from the backend.
 spec.traffic.transformation <object>	# Mutates and transforms requests and responses before forwarding them to the destination.
 spec.traffic.transformation.conditional <[]object> min=1 max=16	# Conditional policy execution. Set this or the top-level transformation fields. The first matching policy will be executed. A single policy may be provided without a condition set; if so, it must be the last policy and will be the fallback in case no conditions are met.
 spec.traffic.transformation.conditional[].condition <string> min=1 max=16384	# CEL expression that must evaluate to true for this policy to execute.
