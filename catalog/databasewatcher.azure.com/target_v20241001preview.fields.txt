@@ -1,0 +1,182 @@
+# schema source: Azure Service Operator v2.21.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=databasewatcher.azure.com/v20241001preview
+kind <string> enum=Target
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.azureName <string> pattern="^[a-zA-Z0-9]{1}[a-zA-Z0-9-_]{3,60}$"	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a databasewatcher.azure.com/Watcher resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.properties <object>	# Properties: The resource-specific properties for this resource.
+spec.properties.sqlDb <object>	# SqlDb: Mutually exclusive with all other properties
+spec.properties.sqlDb.connectionServerName <string> max=200	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlDb.connectionServerNameFromConfig <object>	# ConnectionServerNameFromConfig: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlDb.connectionServerNameFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.sqlDb.connectionServerNameFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.sqlDb.readIntent <boolean>	# ReadIntent: Set to true to monitor a high availability replica of specified target, if any.
+spec.properties.sqlDb.sqlDbResourceReference <object> (required)	# SqlDbResourceReference: The Azure resource ID of an Azure SQL DB database target.
+spec.properties.sqlDb.sqlDbResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlDb.sqlDbResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlDb.sqlDbResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlDb.sqlDbResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlDb.targetAuthenticationType <string> (required) enum=Aad|Sql	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+spec.properties.sqlDb.targetType <string> (required) enum=SqlDb	# TargetType: Discriminator property for TargetProperties.
+spec.properties.sqlDb.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+spec.properties.sqlDb.targetVault.akvResourceReference <object>	# AkvResourceReference: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+spec.properties.sqlDb.targetVault.akvResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlDb.targetVault.akvResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlDb.targetVault.akvResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlDb.targetVault.akvResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlDb.targetVault.akvTargetPassword <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+spec.properties.sqlDb.targetVault.akvTargetUser <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+spec.properties.sqlEp <object>	# SqlEp: Mutually exclusive with all other properties
+spec.properties.sqlEp.anchorDatabaseResourceReference <object> (required)	# AnchorDatabaseResourceReference: The Azure resource ID of the anchor database used to connect to an elastic pool.
+spec.properties.sqlEp.anchorDatabaseResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlEp.anchorDatabaseResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlEp.anchorDatabaseResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlEp.anchorDatabaseResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlEp.connectionServerName <string> max=200	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlEp.connectionServerNameFromConfig <object>	# ConnectionServerNameFromConfig: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlEp.connectionServerNameFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.sqlEp.connectionServerNameFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.sqlEp.readIntent <boolean>	# ReadIntent: Set to true to monitor a high availability replica of specified target, if any.
+spec.properties.sqlEp.sqlEpResourceReference <object> (required)	# SqlEpResourceReference: The Azure resource ID of an Azure SQL DB elastic pool target.
+spec.properties.sqlEp.sqlEpResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlEp.sqlEpResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlEp.sqlEpResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlEp.sqlEpResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlEp.targetAuthenticationType <string> (required) enum=Aad|Sql	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+spec.properties.sqlEp.targetType <string> (required) enum=SqlEp	# TargetType: Discriminator property for TargetProperties.
+spec.properties.sqlEp.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+spec.properties.sqlEp.targetVault.akvResourceReference <object>	# AkvResourceReference: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+spec.properties.sqlEp.targetVault.akvResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlEp.targetVault.akvResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlEp.targetVault.akvResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlEp.targetVault.akvResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlEp.targetVault.akvTargetPassword <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+spec.properties.sqlEp.targetVault.akvTargetUser <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+spec.properties.sqlMi <object>	# SqlMi: Mutually exclusive with all other properties
+spec.properties.sqlMi.connectionServerName <string> max=200	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlMi.connectionServerNameFromConfig <object>	# ConnectionServerNameFromConfig: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlMi.connectionServerNameFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.sqlMi.connectionServerNameFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.sqlMi.connectionTcpPort <integer>	# ConnectionTcpPort: The TCP port number to optionally use in the connection string when connecting to an Azure SQL Managed Instance target.
+spec.properties.sqlMi.readIntent <boolean>	# ReadIntent: Set to true to monitor a high availability replica of specified target, if any.
+spec.properties.sqlMi.sqlMiResourceReference <object> (required)	# SqlMiResourceReference: The Azure resource ID of an Azure SQL Managed Instance target.
+spec.properties.sqlMi.sqlMiResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlMi.sqlMiResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlMi.sqlMiResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlMi.sqlMiResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlMi.targetAuthenticationType <string> (required) enum=Aad|Sql	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+spec.properties.sqlMi.targetType <string> (required) enum=SqlMi	# TargetType: Discriminator property for TargetProperties.
+spec.properties.sqlMi.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+spec.properties.sqlMi.targetVault.akvResourceReference <object>	# AkvResourceReference: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+spec.properties.sqlMi.targetVault.akvResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlMi.targetVault.akvResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlMi.targetVault.akvResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlMi.targetVault.akvResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlMi.targetVault.akvTargetPassword <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+spec.properties.sqlMi.targetVault.akvTargetUser <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+spec.properties.sqlVm <object>	# SqlVm: Mutually exclusive with all other properties
+spec.properties.sqlVm.connectionServerName <string> max=200	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlVm.connectionServerNameFromConfig <object>	# ConnectionServerNameFromConfig: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+spec.properties.sqlVm.connectionServerNameFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.properties.sqlVm.connectionServerNameFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.properties.sqlVm.connectionTcpPort <integer>	# ConnectionTcpPort: The TCP port number to optionally use in the connection string when connecting to an Azure SQL VM target.
+spec.properties.sqlVm.sqlNamedInstanceName <string>	# SqlNamedInstanceName: The SQL instance name to optionally use in the connection string when connecting to an Azure SQL VM target.
+spec.properties.sqlVm.sqlVmResourceReference <object> (required)	# SqlVmResourceReference: The Azure resource ID of an Azure SQL VM target.
+spec.properties.sqlVm.sqlVmResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlVm.sqlVmResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlVm.sqlVmResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlVm.sqlVmResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlVm.targetAuthenticationType <string> (required) enum=Aad|Sql	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+spec.properties.sqlVm.targetType <string> (required) enum=SqlVm	# TargetType: Discriminator property for TargetProperties.
+spec.properties.sqlVm.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+spec.properties.sqlVm.targetVault.akvResourceReference <object>	# AkvResourceReference: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+spec.properties.sqlVm.targetVault.akvResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.properties.sqlVm.targetVault.akvResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.properties.sqlVm.targetVault.akvResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.properties.sqlVm.targetVault.akvResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.properties.sqlVm.targetVault.akvTargetPassword <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+spec.properties.sqlVm.targetVault.akvTargetUser <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+status <object>
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.id <string>	# Id: Fully qualified resource ID for the resource. E.g. "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}"
+status.name <string>	# Name: The name of the resource
+status.properties <object>	# Properties: The resource-specific properties for this resource.
+status.properties.sqlDb <object>	# SqlDb: Mutually exclusive with all other properties
+status.properties.sqlDb.connectionServerName <string>	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+status.properties.sqlDb.provisioningState <string>	# ProvisioningState: The provisioning state of the resource.
+status.properties.sqlDb.readIntent <boolean>	# ReadIntent: Set to true to monitor a high availability replica of specified target, if any.
+status.properties.sqlDb.sqlDbResourceId <string>	# SqlDbResourceId: The Azure resource ID of an Azure SQL DB database target.
+status.properties.sqlDb.targetAuthenticationType <string>	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+status.properties.sqlDb.targetType <string>	# TargetType: Discriminator property for TargetProperties.
+status.properties.sqlDb.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+status.properties.sqlDb.targetVault.akvResourceId <string>	# AkvResourceId: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+status.properties.sqlDb.targetVault.akvTargetPassword <string>	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+status.properties.sqlDb.targetVault.akvTargetUser <string>	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+status.properties.sqlEp <object>	# SqlEp: Mutually exclusive with all other properties
+status.properties.sqlEp.anchorDatabaseResourceId <string>	# AnchorDatabaseResourceId: The Azure resource ID of the anchor database used to connect to an elastic pool.
+status.properties.sqlEp.connectionServerName <string>	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+status.properties.sqlEp.provisioningState <string>	# ProvisioningState: The provisioning state of the resource.
+status.properties.sqlEp.readIntent <boolean>	# ReadIntent: Set to true to monitor a high availability replica of specified target, if any.
+status.properties.sqlEp.sqlEpResourceId <string>	# SqlEpResourceId: The Azure resource ID of an Azure SQL DB elastic pool target.
+status.properties.sqlEp.targetAuthenticationType <string>	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+status.properties.sqlEp.targetType <string>	# TargetType: Discriminator property for TargetProperties.
+status.properties.sqlEp.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+status.properties.sqlEp.targetVault.akvResourceId <string>	# AkvResourceId: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+status.properties.sqlEp.targetVault.akvTargetPassword <string>	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+status.properties.sqlEp.targetVault.akvTargetUser <string>	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+status.properties.sqlMi <object>	# SqlMi: Mutually exclusive with all other properties
+status.properties.sqlMi.connectionServerName <string>	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+status.properties.sqlMi.connectionTcpPort <integer>	# ConnectionTcpPort: The TCP port number to optionally use in the connection string when connecting to an Azure SQL Managed Instance target.
+status.properties.sqlMi.provisioningState <string>	# ProvisioningState: The provisioning state of the resource.
+status.properties.sqlMi.readIntent <boolean>	# ReadIntent: Set to true to monitor a high availability replica of specified target, if any.
+status.properties.sqlMi.sqlMiResourceId <string>	# SqlMiResourceId: The Azure resource ID of an Azure SQL Managed Instance target.
+status.properties.sqlMi.targetAuthenticationType <string>	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+status.properties.sqlMi.targetType <string>	# TargetType: Discriminator property for TargetProperties.
+status.properties.sqlMi.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+status.properties.sqlMi.targetVault.akvResourceId <string>	# AkvResourceId: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+status.properties.sqlMi.targetVault.akvTargetPassword <string>	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+status.properties.sqlMi.targetVault.akvTargetUser <string>	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+status.properties.sqlVm <object>	# SqlVm: Mutually exclusive with all other properties
+status.properties.sqlVm.connectionServerName <string>	# ConnectionServerName: The FQDN host name of the server to use in the connection string when connecting to a target. For example, for an Azure SQL logical server in the Azure commercial cloud, the value might be 'sql-logical-server-22092780.database.windows.net'; for an Azure SQL managed instance in the Azure commercial cloud, the value might be 'sql-mi-39441134.767d5869f605.database.windows.net'. Port number and instance name must be specified separately.
+status.properties.sqlVm.connectionTcpPort <integer>	# ConnectionTcpPort: The TCP port number to optionally use in the connection string when connecting to an Azure SQL VM target.
+status.properties.sqlVm.provisioningState <string>	# ProvisioningState: The provisioning state of the resource.
+status.properties.sqlVm.sqlNamedInstanceName <string>	# SqlNamedInstanceName: The SQL instance name to optionally use in the connection string when connecting to an Azure SQL VM target.
+status.properties.sqlVm.sqlVmResourceId <string>	# SqlVmResourceId: The Azure resource ID of an Azure SQL VM target.
+status.properties.sqlVm.targetAuthenticationType <string>	# TargetAuthenticationType: The type of authentication to use when connecting to a target.
+status.properties.sqlVm.targetType <string>	# TargetType: Discriminator property for TargetProperties.
+status.properties.sqlVm.targetVault <object>	# TargetVault: To use SQL authentication when connecting to targets, specify the vault where the login name and password secrets are stored.
+status.properties.sqlVm.targetVault.akvResourceId <string>	# AkvResourceId: The Azure resource ID of the Key Vault instance storing database authentication secrets.
+status.properties.sqlVm.targetVault.akvTargetPassword <string>	# AkvTargetPassword: The path to the Key Vault secret storing the password for authentication to a target.
+status.properties.sqlVm.targetVault.akvTargetUser <string>	# AkvTargetUser: The path to the Key Vault secret storing the login name (aka user name, aka account name) for authentication to a target.
+status.systemData <object>	# SystemData: Azure Resource Manager metadata containing createdBy and modifiedBy information.
+status.systemData.createdAt <string>	# CreatedAt: The timestamp of resource creation (UTC).
+status.systemData.createdBy <string>	# CreatedBy: The identity that created the resource.
+status.systemData.createdByType <string>	# CreatedByType: The type of identity that created the resource.
+status.systemData.lastModifiedAt <string>	# LastModifiedAt: The timestamp of resource last modification (UTC)
+status.systemData.lastModifiedBy <string>	# LastModifiedBy: The identity that last modified the resource.
+status.systemData.lastModifiedByType <string>	# LastModifiedByType: The type of identity that last modified the resource.
+status.type <string>	# Type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or "Microsoft.Storage/storageAccounts"

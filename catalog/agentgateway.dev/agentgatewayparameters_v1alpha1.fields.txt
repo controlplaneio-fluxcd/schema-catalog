@@ -1,4 +1,4 @@
-# schema source: Agentgateway v1.4.1 https://github.com/agentgateway/agentgateway
+# schema source: Agentgateway v1.5.0 https://github.com/agentgateway/agentgateway
 apiVersion <string> enum=agentgateway.dev/v1alpha1
 kind <string> enum=AgentgatewayParameters
 metadata.name <string> (required)
@@ -89,6 +89,15 @@ spec.serviceAccount.spec <object (free-form)>	# `spec` provides an opaque mechan
 spec.shutdown <object>	# Shutdown delay configuration. How graceful planned or unplanned data plane changes happen is in tension with how quickly rollouts of the data plane complete. How long a data plane pod must wait for shutdown to be perfectly graceful depends on how you have configured your `Gateway` resources.
 spec.shutdown.max <integer> (required) format=int64 min=0 max=31536000	# Maximum time (in seconds) to wait before allowing Agentgateway to terminate. Refer to the `TERMINATION_GRACE_PERIOD_SECONDS` environment variable for details.
 spec.shutdown.min <integer> (required) format=int64 min=0 max=31536000	# Minimum time (in seconds) to wait before allowing Agentgateway to terminate. Refer to the `CONNECTION_MIN_TERMINATION_DEADLINE` environment variable for details.
+spec.spiffe <object>	# SPIFFE integration settings. When set, the gateway sources its TLS identity (X.509-SVID) and trust bundle from the local SPIFFE Workload API, and the controller mounts the Workload API socket into the pod. Listeners and backends opt in to SPIFFE individually (via the `agentgateway.dev/tls-certificate-source: SPIFFE` listener option and the AgentgatewayPolicy `backend.tls.certificateSource: SPIFFE` field respectively).
+spec.spiffe.enabled <boolean>	# Explicitly turns SPIFFE integration on or off for this gateway. When unset, the presence of the spiffe block opts in. Set to false on a Gateway-level AgentgatewayParameters to opt a gateway out of SPIFFE enabled at the GatewayClass level.
+spec.spiffe.source <object>	# Volume source for the SPIFFE Workload API socket. When omitted (i.e. `spiffe: {}`), the socket is sourced from the SPIFFE CSI driver with default settings.
+spec.spiffe.source.csi <object>	# Source the Workload API socket from the SPIFFE CSI driver (the default).
+spec.spiffe.source.csi.driver <string>	# CSI driver name. Defaults to `csi.spiffe.io`.
+spec.spiffe.source.hostPath <object>	# Source the Workload API socket from a host directory.
+spec.spiffe.source.hostPath.path <string> (required) min=1	# Host directory containing the SPIFFE Workload API socket, e.g. `/run/spire/agent-sockets`.
+spec.spiffe.source.mountPath <string> pattern="^/"	# Mount path inside the container for the Workload API socket directory. Must be an absolute path. Defaults to `/spiffe-workload-api`.
+spec.spiffe.source.socketName <string>	# Socket filename within the mount directory. Defaults to `spire-agent.sock`.
 spec.workload <object>	# `workload` selects the Kubernetes workload kind for the managed Gateway data plane. If unset, Deployment is used.
 spec.workload.kind <string> enum=DaemonSet|Deployment	# Kind selects the Kubernetes workload kind. When unset, Deployment is used.
 status <object (free-form)>	# Current status for these provisioning settings.
