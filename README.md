@@ -238,8 +238,8 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.20.1 | 1 | 2026-07-23 |
 | [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.12 | 10 | 2026-08-27 |
 | [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.7.1 | 4 | 2026-07-27 |
-| [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.15.1 | 9 | 2026-07-30 |
-| [Volcano JobFlow](https://schemas.fluxoperator.dev/p/volcano) | `volcano-jobflow` | v1.15.1 | 2 | 2026-07-30 |
+| [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.15.2 | 9 | 2026-08-30 |
+| [Volcano JobFlow](https://schemas.fluxoperator.dev/p/volcano) | `volcano-jobflow` | v1.15.2 | 2 | 2026-08-30 |
 
 ### App Definition & Development
 
