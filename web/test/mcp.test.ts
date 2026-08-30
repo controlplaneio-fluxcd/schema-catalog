@@ -394,6 +394,27 @@ describe("summarizeMcpBody", () => {
     expect(summarizeMcpBody({ jsonrpc: "2.0", method: "notifications/initialized" })).toEqual([{ method: "notifications/initialized" }]);
   });
 
+  test("reads client identity from the 2026 per-request _meta envelope", () => {
+    expect(
+      summarizeMcpBody({
+        jsonrpc: "2.0",
+        id: 5,
+        method: "tools/call",
+        params: {
+          name: "grep_schema",
+          arguments: { apiVersion: "v1", kind: "Pod" },
+          _meta: {
+            "io.modelcontextprotocol/clientInfo": { name: "mcp-scanner", version: "2.1.0" },
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          },
+        },
+      }),
+    ).toEqual([{ method: "tools/call", tool: "grep_schema", client: "mcp-scanner", clientVersion: "2.1.0", protocol: "2026-07-28" }]);
+    expect(summarizeMcpBody({ jsonrpc: "2.0", id: 6, method: "server/discover", params: { _meta: { "io.modelcontextprotocol/clientInfo": "bogus" } } })).toEqual([
+      { method: "server/discover" },
+    ]);
+  });
+
   test("handles legacy batches and skips responses and malformed entries", () => {
     expect(
       summarizeMcpBody([

@@ -71,6 +71,11 @@ const GrepSchemaInput = z.object({
   limit: z.number().int().min(1).max(500).default(200),
 });
 
+// Handshake follow-ups carry nothing the `initialize` line did not already say;
+// pollers repeat them every few seconds, so skipping them cuts log volume
+// without losing a client identity.
+const UNLOGGED_MCP_METHODS = new Set(["notifications/initialized", "tools/list"]);
+
 let handler: ReturnType<typeof createMcpHandler> | undefined;
 
 // Read by the server factory on every request instead of closing over the
@@ -99,9 +104,11 @@ export function handleMcp(req: Request, env: Env, ctx: ExecutionContext): Promis
 
 /**
  * Emits one structured log line per JSON-RPC message so Workers Logs can
- * group MCP traffic by client product (`mcp.client`), method and tool. Runs
- * off the response path on a clone of the request; unparseable bodies are
- * left for the SDK to reject and are not logged.
+ * group MCP traffic by client product (`mcp.client`), method and tool,
+ * skipping `UNLOGGED_MCP_METHODS`. The client falls back to the User-Agent when the message carries no identity,
+ * so 2025-era clients stay attributable on every request. Runs off the
+ * response path on a clone of the request; unparseable bodies are left for
+ * the SDK to reject and are not logged.
  */
 async function logMcpRequest(req: Request): Promise<void> {
   let body: unknown;
@@ -114,7 +121,8 @@ async function logMcpRequest(req: Request): Promise<void> {
   const ua = req.headers.get("user-agent") ?? undefined;
   const ip = req.headers.get("cf-connecting-ip") ?? undefined;
   for (const message of summarizeMcpBody(body)) {
-    console.log({ mcp: { ...message, protocol: message.protocol ?? protocol, ua, ip } });
+    if (UNLOGGED_MCP_METHODS.has(message.method)) continue;
+    console.log({ mcp: { ...message, client: message.client ?? ua, protocol: message.protocol ?? protocol, ua, ip } });
   }
 }
 

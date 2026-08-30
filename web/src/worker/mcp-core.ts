@@ -527,6 +527,10 @@ function distance(a: string, b: string): number {
  * requests by client product. The HTTP User-Agent cannot: Go clients leave
  * it at the net/http default, while `clientInfo` in `initialize` is mandatory.
  */
+/** `_meta` keys 2026-07-28 clients stamp on every request; `initialize` carries the same data in `params`. */
+const CLIENT_INFO_META_KEY = "io.modelcontextprotocol/clientInfo";
+const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
+
 export interface McpMessageSummary {
   method: string;
   client?: string;
@@ -537,9 +541,10 @@ export interface McpMessageSummary {
 
 /**
  * Summarizes a parsed JSON-RPC request body (one message or a legacy batch)
- * for logging: the method, plus the client identity and negotiated protocol
- * on `initialize` and the tool name on `tools/call`. Responses and malformed
- * entries are skipped, so a body that carries no requests yields nothing.
+ * for logging: the method, the client identity and protocol version (from
+ * `params` on `initialize`, from the per-request `_meta` envelope on
+ * 2026-era requests) and the tool name on `tools/call`. Responses and
+ * malformed entries are skipped, so a body without requests yields nothing.
  */
 export function summarizeMcpBody(body: unknown): McpMessageSummary[] {
   const messages = Array.isArray(body) ? body : [body];
@@ -549,13 +554,15 @@ export function summarizeMcpBody(body: unknown): McpMessageSummary[] {
     if (!isRecord(message) || typeof message.method !== "string") continue;
     const summary: McpMessageSummary = { method: message.method };
     const params = isRecord(message.params) ? message.params : {};
+    const meta = isRecord(params._meta) ? params._meta : {};
+    const clientInfo = params.clientInfo ?? meta[CLIENT_INFO_META_KEY];
+    const info = isRecord(clientInfo) ? clientInfo : {};
+    const protocol = params.protocolVersion ?? meta[PROTOCOL_VERSION_META_KEY];
+    if (typeof info.name === "string") summary.client = info.name;
+    if (typeof info.version === "string") summary.clientVersion = info.version;
+    if (typeof protocol === "string") summary.protocol = protocol;
 
-    if (message.method === "initialize") {
-      const info = isRecord(params.clientInfo) ? params.clientInfo : {};
-      if (typeof info.name === "string") summary.client = info.name;
-      if (typeof info.version === "string") summary.clientVersion = info.version;
-      if (typeof params.protocolVersion === "string") summary.protocol = params.protocolVersion;
-    } else if (message.method === "tools/call" && typeof params.name === "string") {
+    if (message.method === "tools/call" && typeof params.name === "string") {
       summary.tool = params.name;
     }
 
