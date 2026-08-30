@@ -71,10 +71,10 @@ const GrepSchemaInput = z.object({
   limit: z.number().int().min(1).max(500).default(200),
 });
 
-// Handshake follow-ups carry nothing the `initialize` line did not already say;
+// Handshake follow-ups and keepalives carry nothing the `initialize` line did not already say;
 // pollers repeat them every few seconds, so skipping them cuts log volume
 // without losing a client identity.
-const UNLOGGED_MCP_METHODS = new Set(["notifications/initialized", "tools/list"]);
+const UNLOGGED_MCP_METHODS = new Set(["notifications/initialized", "tools/list", "ping"]);
 
 let handler: ReturnType<typeof createMcpHandler> | undefined;
 
