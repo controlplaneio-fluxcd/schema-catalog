@@ -21,6 +21,7 @@ import {
   listProjectsText,
   projectText,
   projectNotFoundMessage,
+  summarizeMcpBody,
 } from "./mcp-core.ts";
 import { getCatalogObject } from "./catalog.ts";
 import type { Env } from "./index.ts";
@@ -92,7 +93,29 @@ export function handleMcp(req: Request, env: Env, ctx: ExecutionContext): Promis
     // unauthenticated with no session to steal, so origins are unrestricted.
     allowedOriginHostnames: "*",
   });
+  if (req.method === "POST") ctx.waitUntil(logMcpRequest(req.clone()));
   return handler(req, env, ctx);
+}
+
+/**
+ * Emits one structured log line per JSON-RPC message so Workers Logs can
+ * group MCP traffic by client product (`mcp.client`), method and tool. Runs
+ * off the response path on a clone of the request; unparseable bodies are
+ * left for the SDK to reject and are not logged.
+ */
+async function logMcpRequest(req: Request): Promise<void> {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return;
+  }
+  const protocol = req.headers.get("mcp-protocol-version") ?? undefined;
+  const ua = req.headers.get("user-agent") ?? undefined;
+  const ip = req.headers.get("cf-connecting-ip") ?? undefined;
+  for (const message of summarizeMcpBody(body)) {
+    console.log({ mcp: { ...message, protocol: message.protocol ?? protocol, ua, ip } });
+  }
 }
 
 function createCatalogMcpServer(env: Env): McpServer {

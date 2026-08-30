@@ -521,3 +521,50 @@ function distance(a: string, b: string): number {
 
   return previous[b.length]!;
 }
+
+/**
+ * Per-message summary logged for MCP traffic so Workers Logs can group
+ * requests by client product. The HTTP User-Agent cannot: Go clients leave
+ * it at the net/http default, while `clientInfo` in `initialize` is mandatory.
+ */
+export interface McpMessageSummary {
+  method: string;
+  client?: string;
+  clientVersion?: string;
+  protocol?: string;
+  tool?: string;
+}
+
+/**
+ * Summarizes a parsed JSON-RPC request body (one message or a legacy batch)
+ * for logging: the method, plus the client identity and negotiated protocol
+ * on `initialize` and the tool name on `tools/call`. Responses and malformed
+ * entries are skipped, so a body that carries no requests yields nothing.
+ */
+export function summarizeMcpBody(body: unknown): McpMessageSummary[] {
+  const messages = Array.isArray(body) ? body : [body];
+  const summaries: McpMessageSummary[] = [];
+
+  for (const message of messages) {
+    if (!isRecord(message) || typeof message.method !== "string") continue;
+    const summary: McpMessageSummary = { method: message.method };
+    const params = isRecord(message.params) ? message.params : {};
+
+    if (message.method === "initialize") {
+      const info = isRecord(params.clientInfo) ? params.clientInfo : {};
+      if (typeof info.name === "string") summary.client = info.name;
+      if (typeof info.version === "string") summary.clientVersion = info.version;
+      if (typeof params.protocolVersion === "string") summary.protocol = params.protocolVersion;
+    } else if (message.method === "tools/call" && typeof params.name === "string") {
+      summary.tool = params.name;
+    }
+
+    summaries.push(summary);
+  }
+
+  return summaries;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}

@@ -16,6 +16,7 @@ import {
   projectNotFoundMessage,
   resolveKind,
   sizeGuardText,
+  summarizeMcpBody,
 } from "../src/worker/mcp-core.ts";
 import type { CatalogObjectLoader } from "../src/worker/mcp-core.ts";
 import type { Env } from "../src/worker/index.ts";
@@ -366,5 +367,44 @@ describe("MCP catalog helpers", () => {
 
     expect(text.startsWith('invalid regex "[":')).toBe(true);
     expect(text).toContain("Invalid regular expression");
+  });
+});
+
+describe("summarizeMcpBody", () => {
+  test("extracts client identity and protocol from initialize", () => {
+    expect(
+      summarizeMcpBody({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-11-25",
+          capabilities: {},
+          clientInfo: { name: "kagent", version: "0.9.0" },
+        },
+      }),
+    ).toEqual([{ method: "initialize", client: "kagent", clientVersion: "0.9.0", protocol: "2025-11-25" }]);
+  });
+
+  test("extracts the tool name from tools/call and only the method otherwise", () => {
+    expect(
+      summarizeMcpBody({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "grep_catalog", arguments: { query: "Bucket" } } }),
+    ).toEqual([{ method: "tools/call", tool: "grep_catalog" }]);
+    expect(summarizeMcpBody({ jsonrpc: "2.0", id: 3, method: "tools/list", params: {} })).toEqual([{ method: "tools/list" }]);
+    expect(summarizeMcpBody({ jsonrpc: "2.0", method: "notifications/initialized" })).toEqual([{ method: "notifications/initialized" }]);
+  });
+
+  test("handles legacy batches and skips responses and malformed entries", () => {
+    expect(
+      summarizeMcpBody([
+        { jsonrpc: "2.0", id: 1, method: "initialize", params: { clientInfo: { name: "mcp-go" } } },
+        { jsonrpc: "2.0", id: 1, result: {} },
+        { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: 42 } },
+        "junk",
+        null,
+      ]),
+    ).toEqual([{ method: "initialize", client: "mcp-go" }, { method: "tools/call" }]);
+    expect(summarizeMcpBody("not json-rpc")).toEqual([]);
+    expect(summarizeMcpBody({ jsonrpc: "2.0", id: 1, result: {} })).toEqual([]);
   });
 });
