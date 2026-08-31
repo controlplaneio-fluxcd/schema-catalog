@@ -135,7 +135,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS SQS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sqs` | v1.7.0 | 1 | 2026-08-29 |
 | [AWS WAFv2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-wafv2` | v1.6.0 | 3 | 2026-08-29 |
 | [Azure Service Operator](https://schemas.fluxoperator.dev/p/azure-service-operator) | `azure-service-operator` | v2.21.0 | 1539 | 2026-08-28 |
-| [Capsule](https://schemas.fluxoperator.dev/p/capsule) | `capsule` | v0.14.2 | 13 | 2026-08-25 |
+| [Capsule](https://schemas.fluxoperator.dev/p/capsule) | `capsule` | v0.14.3 | 13 | 2026-08-31 |
 | [Cert Manager](https://schemas.fluxoperator.dev/p/cert-manager) | `cert-manager` | v1.21.1 | 6 | 2026-07-30 |
 | [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.14.0 | 36 | 2026-08-12 |
 | [Cluster API Add-on Provider Helm](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-addon-provider-helm` | v0.6.4 | 2 | 2026-07-09 |
@@ -182,7 +182,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | --- | --- | --- | --- | --- |
 | [Amazon VPC CNI Network Policy Controller](https://schemas.fluxoperator.dev/p/amazon-network-policy-controller) | `amazon-network-policy-controller` | v1.1.1 | 4 | 2026-08-25 |
 | [Antrea](https://schemas.fluxoperator.dev/p/antrea) | `antrea` | v2.7.0 | 21 | 2026-08-15 |
-| [Calico](https://schemas.fluxoperator.dev/p/calico) | `calico` | v3.32.1 | 22 | 2026-07-09 |
+| [Calico](https://schemas.fluxoperator.dev/p/calico) | `calico` | v3.32.2 | 22 | 2026-08-31 |
 | [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.20.1 | 29 | 2026-08-19 |
 | [Container Object Storage Interface](https://schemas.fluxoperator.dev/p/cosi) | `cosi` | v0.2.2 | 5 | 2026-07-09 |
 | [CSI External Snapshotter](https://schemas.fluxoperator.dev/p/external-snapshotter) | `external-snapshotter` | v8.6.0 | 15 | 2026-07-09 |
@@ -196,11 +196,11 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.3.0 | 11 | 2026-08-14 |
 | [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.20.6 | 21 | 2026-08-21 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.2 | 12 | 2026-08-18 |
-| [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.2.3-rc1 | 6 | 2026-07-31 |
-| [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.24.0 | 9 | 2026-07-09 |
-| [Submariner Operator](https://schemas.fluxoperator.dev/p/submariner) | `submariner-operator` | v0.24.0 | 3 | 2026-07-09 |
+| [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.2.3 | 6 | 2026-08-31 |
+| [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.24.1 | 9 | 2026-08-31 |
+| [Submariner Operator](https://schemas.fluxoperator.dev/p/submariner) | `submariner-operator` | v0.24.1 | 3 | 2026-08-31 |
 | [Tailscale](https://schemas.fluxoperator.dev/p/tailscale) | `tailscale` | v1.102.3 | 8 | 2026-08-21 |
-| [Tigera Operator](https://schemas.fluxoperator.dev/p/calico) | `tigera-operator` | v3.32.1 | 9 | 2026-07-09 |
+| [Tigera Operator](https://schemas.fluxoperator.dev/p/calico) | `tigera-operator` | v3.32.2 | 9 | 2026-08-31 |
 | [Velero](https://schemas.fluxoperator.dev/p/velero) | `velero` | v1.18.2 | 11 | 2026-07-09 |
 
 ### Orchestration & Management
