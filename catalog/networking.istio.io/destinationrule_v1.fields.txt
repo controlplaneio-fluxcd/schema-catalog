@@ -1,4 +1,4 @@
-# schema source: Istio 1.30.4 https://github.com/istio/istio
+# schema source: Istio 1.31.0 https://github.com/istio/istio
 apiVersion <string> enum=networking.istio.io/v1
 kind <string> enum=DestinationRule
 metadata.name <string> (required)
@@ -14,6 +14,9 @@ spec.subsets[].trafficPolicy.connectionPool <object>
 spec.subsets[].trafficPolicy.connectionPool.http <object>	# HTTP connection pool settings.
 spec.subsets[].trafficPolicy.connectionPool.http.h2UpgradePolicy <string> enum=DEFAULT|DO_NOT_UPGRADE|UPGRADE	# Specify if http1.1 connection should be upgraded to http2 for the associated destination. Valid Options: DEFAULT, DO_NOT_UPGRADE, UPGRADE
 spec.subsets[].trafficPolicy.connectionPool.http.http1MaxPendingRequests <integer> format=int32	# Maximum number of requests that will be queued while waiting for a ready connection pool connection.
+spec.subsets[].trafficPolicy.connectionPool.http.http2KeepAlive <object>	# Configure HTTP/2 PING frames for upstream connections.
+spec.subsets[].trafficPolicy.connectionPool.http.http2KeepAlive.interval <string>	# Send HTTP/2 PING frames at this interval.
+spec.subsets[].trafficPolicy.connectionPool.http.http2KeepAlive.timeout <string>	# How long to wait for a response to an HTTP/2 PING frame before closing the connection.
 spec.subsets[].trafficPolicy.connectionPool.http.http2MaxRequests <integer> format=int32	# Maximum number of active requests to a destination.
 spec.subsets[].trafficPolicy.connectionPool.http.idleTimeout <string>	# The idle timeout for upstream connection pool connections.
 spec.subsets[].trafficPolicy.connectionPool.http.maxConcurrentStreams <integer> format=int32	# The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
@@ -30,7 +33,7 @@ spec.subsets[].trafficPolicy.connectionPool.tcp.tcpKeepalive.interval <string>	#
 spec.subsets[].trafficPolicy.connectionPool.tcp.tcpKeepalive.probes <integer> min=0 max=4294967295	# Maximum number of keepalive probes to send without response before deciding the connection is dead.
 spec.subsets[].trafficPolicy.connectionPool.tcp.tcpKeepalive.time <string>	# The time duration a connection needs to be idle before keep-alive probes start being sent.
 spec.subsets[].trafficPolicy.loadBalancer <object>	# Settings controlling the load balancer algorithms.
-spec.subsets[].trafficPolicy.loadBalancer.consistentHash <object>
+spec.subsets[].trafficPolicy.loadBalancer.consistentHash <object>	# Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.
 spec.subsets[].trafficPolicy.loadBalancer.consistentHash.httpCookie <object>	# Hash based on HTTP cookie.
 spec.subsets[].trafficPolicy.loadBalancer.consistentHash.httpCookie.attributes <[]object>	# Additional attributes for the cookie.
 spec.subsets[].trafficPolicy.loadBalancer.consistentHash.httpCookie.attributes[].name <string> (required)	# The name of the cookie attribute.
@@ -46,7 +49,7 @@ spec.subsets[].trafficPolicy.loadBalancer.consistentHash.minimumRingSize <intege
 spec.subsets[].trafficPolicy.loadBalancer.consistentHash.ringHash <object>	# The ring/modulo hash load balancer implements consistent hashing to backend hosts.
 spec.subsets[].trafficPolicy.loadBalancer.consistentHash.ringHash.minimumRingSize <integer> min=0	# The minimum number of virtual nodes to use for the hash ring.
 spec.subsets[].trafficPolicy.loadBalancer.consistentHash.useSourceIp <boolean>	# Hash based on the source IP address.
-spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting <object>
+spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting <object>	# Locality load balancer settings.
 spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.distribute <[]object>	# Optional: only one of distribute, failover or failoverPriority can be set.
 spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.distribute[].from <string>	# Originating locality, '/' separated, e.g.
 spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.distribute[].to <map[string]integer>	# Map of upstream localities to traffic distribution weights.
@@ -55,12 +58,19 @@ spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.failover <[]object>	
 spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.failover[].from <string>	# Originating region.
 spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
 spec.subsets[].trafficPolicy.loadBalancer.localityLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints to do priority based load balancing.
-spec.subsets[].trafficPolicy.loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	#  Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
+spec.subsets[].trafficPolicy.loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	# Standard load balancing algorithms that require no tuning. Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
 spec.subsets[].trafficPolicy.loadBalancer.warmup <object>	# Represents the warmup configuration of Service.
 spec.subsets[].trafficPolicy.loadBalancer.warmup.aggression <number> format=double min=0	# This parameter controls the speed of traffic increase over the warmup duration.
 spec.subsets[].trafficPolicy.loadBalancer.warmup.duration <string> (required)
 spec.subsets[].trafficPolicy.loadBalancer.warmup.minimumPercent <number> format=double min=0 max=100
 spec.subsets[].trafficPolicy.loadBalancer.warmupDurationSecs <string>	# Deprecated: use `warmup` instead.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting <object>	# Zone Aware load balancer settings.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting.enabled <boolean>	# Enable zone aware load balancing.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting.failover <[]object>	# Optional.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting.failover[].from <string>	# Originating region.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.
+spec.subsets[].trafficPolicy.loadBalancer.zoneAwareLbSetting.minClusterSize <integer> min=1 max=4294967295	# Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.
 spec.subsets[].trafficPolicy.outlierDetection <object>
 spec.subsets[].trafficPolicy.outlierDetection.baseEjectionTime <string>	# Minimum ejection duration.
 spec.subsets[].trafficPolicy.outlierDetection.consecutive5xxErrors <integer> min=0 max=4294967295	# Number of 5xx errors before a host is ejected from the connection pool.
@@ -70,12 +80,16 @@ spec.subsets[].trafficPolicy.outlierDetection.consecutiveLocalOriginFailures <in
 spec.subsets[].trafficPolicy.outlierDetection.interval <string>	# Time interval between ejection sweep analysis.
 spec.subsets[].trafficPolicy.outlierDetection.maxEjectionPercent <integer> format=int32	# Maximum % of hosts in the load balancing pool for the upstream service that can be ejected.
 spec.subsets[].trafficPolicy.outlierDetection.minHealthPercent <integer> format=int32	# Outlier detection will be enabled as long as the associated load balancing pool has at least `minHealthPercent` hosts in healthy mode.
+spec.subsets[].trafficPolicy.outlierDetection.outlierDetectionHttpErrorCodes <[]integer>	# Specifies the HTTP response status codes that are treated as outlier detection errors.
 spec.subsets[].trafficPolicy.outlierDetection.splitExternalLocalOriginErrors <boolean>	# Determines whether to distinguish local origin failures from external errors.
 spec.subsets[].trafficPolicy.portLevelSettings <[]object> max=4096	# Traffic policies specific to individual ports.
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool <object>
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http <object>	# HTTP connection pool settings.
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.h2UpgradePolicy <string> enum=DEFAULT|DO_NOT_UPGRADE|UPGRADE	# Specify if http1.1 connection should be upgraded to http2 for the associated destination. Valid Options: DEFAULT, DO_NOT_UPGRADE, UPGRADE
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.http1MaxPendingRequests <integer> format=int32	# Maximum number of requests that will be queued while waiting for a ready connection pool connection.
+spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.http2KeepAlive <object>	# Configure HTTP/2 PING frames for upstream connections.
+spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.http2KeepAlive.interval <string>	# Send HTTP/2 PING frames at this interval.
+spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.http2KeepAlive.timeout <string>	# How long to wait for a response to an HTTP/2 PING frame before closing the connection.
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.http2MaxRequests <integer> format=int32	# Maximum number of active requests to a destination.
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.idleTimeout <string>	# The idle timeout for upstream connection pool connections.
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.http.maxConcurrentStreams <integer> format=int32	# The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
@@ -92,7 +106,7 @@ spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.tcp.tcpKeepalive
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.tcp.tcpKeepalive.probes <integer> min=0 max=4294967295	# Maximum number of keepalive probes to send without response before deciding the connection is dead.
 spec.subsets[].trafficPolicy.portLevelSettings[].connectionPool.tcp.tcpKeepalive.time <string>	# The time duration a connection needs to be idle before keep-alive probes start being sent.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer <object>	# Settings controlling the load balancer algorithms.
-spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash <object>
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash <object>	# Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.httpCookie <object>	# Hash based on HTTP cookie.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.httpCookie.attributes <[]object>	# Additional attributes for the cookie.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.httpCookie.attributes[].name <string> (required)	# The name of the cookie attribute.
@@ -108,7 +122,7 @@ spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.min
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.ringHash <object>	# The ring/modulo hash load balancer implements consistent hashing to backend hosts.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.ringHash.minimumRingSize <integer> min=0	# The minimum number of virtual nodes to use for the hash ring.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.useSourceIp <boolean>	# Hash based on the source IP address.
-spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting <object>
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting <object>	# Locality load balancer settings.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.distribute <[]object>	# Optional: only one of distribute, failover or failoverPriority can be set.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.distribute[].from <string>	# Originating locality, '/' separated, e.g.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.distribute[].to <map[string]integer>	# Map of upstream localities to traffic distribution weights.
@@ -117,12 +131,19 @@ spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failover[].from <string>	# Originating region.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints to do priority based load balancing.
-spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	#  Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	# Standard load balancing algorithms that require no tuning. Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.warmup <object>	# Represents the warmup configuration of Service.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.warmup.aggression <number> format=double min=0	# This parameter controls the speed of traffic increase over the warmup duration.
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.warmup.duration <string> (required)
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.warmup.minimumPercent <number> format=double min=0 max=100
 spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.warmupDurationSecs <string>	# Deprecated: use `warmup` instead.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting <object>	# Zone Aware load balancer settings.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.enabled <boolean>	# Enable zone aware load balancing.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failover <[]object>	# Optional.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failover[].from <string>	# Originating region.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.
+spec.subsets[].trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.minClusterSize <integer> min=1 max=4294967295	# Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection <object>
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.baseEjectionTime <string>	# Minimum ejection duration.
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.consecutive5xxErrors <integer> min=0 max=4294967295	# Number of 5xx errors before a host is ejected from the connection pool.
@@ -132,6 +153,7 @@ spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.consecutiveLoc
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.interval <string>	# Time interval between ejection sweep analysis.
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.maxEjectionPercent <integer> format=int32	# Maximum % of hosts in the load balancing pool for the upstream service that can be ejected.
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.minHealthPercent <integer> format=int32	# Outlier detection will be enabled as long as the associated load balancing pool has at least `minHealthPercent` hosts in healthy mode.
+spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.outlierDetectionHttpErrorCodes <[]integer>	# Specifies the HTTP response status codes that are treated as outlier detection errors.
 spec.subsets[].trafficPolicy.portLevelSettings[].outlierDetection.splitExternalLocalOriginErrors <boolean>	# Determines whether to distinguish local origin failures from external errors.
 spec.subsets[].trafficPolicy.portLevelSettings[].port <object>	# Specifies the number of a port on the destination service on which this policy is being applied.
 spec.subsets[].trafficPolicy.portLevelSettings[].port.number <integer> min=0 max=4294967295
@@ -148,6 +170,7 @@ spec.subsets[].trafficPolicy.portLevelSettings[].tls.subjectAltNames <[]string>	
 spec.subsets[].trafficPolicy.proxyProtocol <object>	# The upstream PROXY protocol settings.
 spec.subsets[].trafficPolicy.proxyProtocol.version <string> enum=V1|V2	# The PROXY protocol version to use. Valid Options: V1, V2
 spec.subsets[].trafficPolicy.retryBudget <object>	# Specifies a limit on concurrent retries in relation to the number of active requests.
+spec.subsets[].trafficPolicy.retryBudget.budgetInterval <string>	# Specifies the duration in which requests will be considered when calculating the budget for retries.
 spec.subsets[].trafficPolicy.retryBudget.minRetryConcurrency <integer> min=0 max=4294967295	# Specifies the minimum retry concurrency allowed for the retry budget.
 spec.subsets[].trafficPolicy.retryBudget.percent <number> format=double min=0 max=100	# Specifies the limit on concurrent retries as a percentage of the sum of active requests and active pending requests.
 spec.subsets[].trafficPolicy.tls <object>	# TLS related settings for connections to the upstream service.
@@ -169,6 +192,9 @@ spec.trafficPolicy.connectionPool <object>
 spec.trafficPolicy.connectionPool.http <object>	# HTTP connection pool settings.
 spec.trafficPolicy.connectionPool.http.h2UpgradePolicy <string> enum=DEFAULT|DO_NOT_UPGRADE|UPGRADE	# Specify if http1.1 connection should be upgraded to http2 for the associated destination. Valid Options: DEFAULT, DO_NOT_UPGRADE, UPGRADE
 spec.trafficPolicy.connectionPool.http.http1MaxPendingRequests <integer> format=int32	# Maximum number of requests that will be queued while waiting for a ready connection pool connection.
+spec.trafficPolicy.connectionPool.http.http2KeepAlive <object>	# Configure HTTP/2 PING frames for upstream connections.
+spec.trafficPolicy.connectionPool.http.http2KeepAlive.interval <string>	# Send HTTP/2 PING frames at this interval.
+spec.trafficPolicy.connectionPool.http.http2KeepAlive.timeout <string>	# How long to wait for a response to an HTTP/2 PING frame before closing the connection.
 spec.trafficPolicy.connectionPool.http.http2MaxRequests <integer> format=int32	# Maximum number of active requests to a destination.
 spec.trafficPolicy.connectionPool.http.idleTimeout <string>	# The idle timeout for upstream connection pool connections.
 spec.trafficPolicy.connectionPool.http.maxConcurrentStreams <integer> format=int32	# The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
@@ -185,7 +211,7 @@ spec.trafficPolicy.connectionPool.tcp.tcpKeepalive.interval <string>	# The time 
 spec.trafficPolicy.connectionPool.tcp.tcpKeepalive.probes <integer> min=0 max=4294967295	# Maximum number of keepalive probes to send without response before deciding the connection is dead.
 spec.trafficPolicy.connectionPool.tcp.tcpKeepalive.time <string>	# The time duration a connection needs to be idle before keep-alive probes start being sent.
 spec.trafficPolicy.loadBalancer <object>	# Settings controlling the load balancer algorithms.
-spec.trafficPolicy.loadBalancer.consistentHash <object>
+spec.trafficPolicy.loadBalancer.consistentHash <object>	# Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.
 spec.trafficPolicy.loadBalancer.consistentHash.httpCookie <object>	# Hash based on HTTP cookie.
 spec.trafficPolicy.loadBalancer.consistentHash.httpCookie.attributes <[]object>	# Additional attributes for the cookie.
 spec.trafficPolicy.loadBalancer.consistentHash.httpCookie.attributes[].name <string> (required)	# The name of the cookie attribute.
@@ -201,7 +227,7 @@ spec.trafficPolicy.loadBalancer.consistentHash.minimumRingSize <integer> min=0	#
 spec.trafficPolicy.loadBalancer.consistentHash.ringHash <object>	# The ring/modulo hash load balancer implements consistent hashing to backend hosts.
 spec.trafficPolicy.loadBalancer.consistentHash.ringHash.minimumRingSize <integer> min=0	# The minimum number of virtual nodes to use for the hash ring.
 spec.trafficPolicy.loadBalancer.consistentHash.useSourceIp <boolean>	# Hash based on the source IP address.
-spec.trafficPolicy.loadBalancer.localityLbSetting <object>
+spec.trafficPolicy.loadBalancer.localityLbSetting <object>	# Locality load balancer settings.
 spec.trafficPolicy.loadBalancer.localityLbSetting.distribute <[]object>	# Optional: only one of distribute, failover or failoverPriority can be set.
 spec.trafficPolicy.loadBalancer.localityLbSetting.distribute[].from <string>	# Originating locality, '/' separated, e.g.
 spec.trafficPolicy.loadBalancer.localityLbSetting.distribute[].to <map[string]integer>	# Map of upstream localities to traffic distribution weights.
@@ -210,12 +236,19 @@ spec.trafficPolicy.loadBalancer.localityLbSetting.failover <[]object>	# Optional
 spec.trafficPolicy.loadBalancer.localityLbSetting.failover[].from <string>	# Originating region.
 spec.trafficPolicy.loadBalancer.localityLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
 spec.trafficPolicy.loadBalancer.localityLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints to do priority based load balancing.
-spec.trafficPolicy.loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	#  Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
+spec.trafficPolicy.loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	# Standard load balancing algorithms that require no tuning. Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
 spec.trafficPolicy.loadBalancer.warmup <object>	# Represents the warmup configuration of Service.
 spec.trafficPolicy.loadBalancer.warmup.aggression <number> format=double min=0	# This parameter controls the speed of traffic increase over the warmup duration.
 spec.trafficPolicy.loadBalancer.warmup.duration <string> (required)
 spec.trafficPolicy.loadBalancer.warmup.minimumPercent <number> format=double min=0 max=100
 spec.trafficPolicy.loadBalancer.warmupDurationSecs <string>	# Deprecated: use `warmup` instead.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting <object>	# Zone Aware load balancer settings.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting.enabled <boolean>	# Enable zone aware load balancing.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting.failover <[]object>	# Optional.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting.failover[].from <string>	# Originating region.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.
+spec.trafficPolicy.loadBalancer.zoneAwareLbSetting.minClusterSize <integer> min=1 max=4294967295	# Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.
 spec.trafficPolicy.outlierDetection <object>
 spec.trafficPolicy.outlierDetection.baseEjectionTime <string>	# Minimum ejection duration.
 spec.trafficPolicy.outlierDetection.consecutive5xxErrors <integer> min=0 max=4294967295	# Number of 5xx errors before a host is ejected from the connection pool.
@@ -225,12 +258,16 @@ spec.trafficPolicy.outlierDetection.consecutiveLocalOriginFailures <integer> min
 spec.trafficPolicy.outlierDetection.interval <string>	# Time interval between ejection sweep analysis.
 spec.trafficPolicy.outlierDetection.maxEjectionPercent <integer> format=int32	# Maximum % of hosts in the load balancing pool for the upstream service that can be ejected.
 spec.trafficPolicy.outlierDetection.minHealthPercent <integer> format=int32	# Outlier detection will be enabled as long as the associated load balancing pool has at least `minHealthPercent` hosts in healthy mode.
+spec.trafficPolicy.outlierDetection.outlierDetectionHttpErrorCodes <[]integer>	# Specifies the HTTP response status codes that are treated as outlier detection errors.
 spec.trafficPolicy.outlierDetection.splitExternalLocalOriginErrors <boolean>	# Determines whether to distinguish local origin failures from external errors.
 spec.trafficPolicy.portLevelSettings <[]object> max=4096	# Traffic policies specific to individual ports.
 spec.trafficPolicy.portLevelSettings[].connectionPool <object>
 spec.trafficPolicy.portLevelSettings[].connectionPool.http <object>	# HTTP connection pool settings.
 spec.trafficPolicy.portLevelSettings[].connectionPool.http.h2UpgradePolicy <string> enum=DEFAULT|DO_NOT_UPGRADE|UPGRADE	# Specify if http1.1 connection should be upgraded to http2 for the associated destination. Valid Options: DEFAULT, DO_NOT_UPGRADE, UPGRADE
 spec.trafficPolicy.portLevelSettings[].connectionPool.http.http1MaxPendingRequests <integer> format=int32	# Maximum number of requests that will be queued while waiting for a ready connection pool connection.
+spec.trafficPolicy.portLevelSettings[].connectionPool.http.http2KeepAlive <object>	# Configure HTTP/2 PING frames for upstream connections.
+spec.trafficPolicy.portLevelSettings[].connectionPool.http.http2KeepAlive.interval <string>	# Send HTTP/2 PING frames at this interval.
+spec.trafficPolicy.portLevelSettings[].connectionPool.http.http2KeepAlive.timeout <string>	# How long to wait for a response to an HTTP/2 PING frame before closing the connection.
 spec.trafficPolicy.portLevelSettings[].connectionPool.http.http2MaxRequests <integer> format=int32	# Maximum number of active requests to a destination.
 spec.trafficPolicy.portLevelSettings[].connectionPool.http.idleTimeout <string>	# The idle timeout for upstream connection pool connections.
 spec.trafficPolicy.portLevelSettings[].connectionPool.http.maxConcurrentStreams <integer> format=int32	# The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
@@ -247,7 +284,7 @@ spec.trafficPolicy.portLevelSettings[].connectionPool.tcp.tcpKeepalive.interval 
 spec.trafficPolicy.portLevelSettings[].connectionPool.tcp.tcpKeepalive.probes <integer> min=0 max=4294967295	# Maximum number of keepalive probes to send without response before deciding the connection is dead.
 spec.trafficPolicy.portLevelSettings[].connectionPool.tcp.tcpKeepalive.time <string>	# The time duration a connection needs to be idle before keep-alive probes start being sent.
 spec.trafficPolicy.portLevelSettings[].loadBalancer <object>	# Settings controlling the load balancer algorithms.
-spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash <object>
+spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash <object>	# Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.httpCookie <object>	# Hash based on HTTP cookie.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.httpCookie.attributes <[]object>	# Additional attributes for the cookie.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.httpCookie.attributes[].name <string> (required)	# The name of the cookie attribute.
@@ -263,7 +300,7 @@ spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.minimumRingSi
 spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.ringHash <object>	# The ring/modulo hash load balancer implements consistent hashing to backend hosts.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.ringHash.minimumRingSize <integer> min=0	# The minimum number of virtual nodes to use for the hash ring.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.consistentHash.useSourceIp <boolean>	# Hash based on the source IP address.
-spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting <object>
+spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting <object>	# Locality load balancer settings.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.distribute <[]object>	# Optional: only one of distribute, failover or failoverPriority can be set.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.distribute[].from <string>	# Originating locality, '/' separated, e.g.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.distribute[].to <map[string]integer>	# Map of upstream localities to traffic distribution weights.
@@ -272,12 +309,19 @@ spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failover <
 spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failover[].from <string>	# Originating region.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.localityLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints to do priority based load balancing.
-spec.trafficPolicy.portLevelSettings[].loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	#  Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
+spec.trafficPolicy.portLevelSettings[].loadBalancer.simple <string> enum=UNSPECIFIED|LEAST_CONN|RANDOM|PASSTHROUGH|ROUND_ROBIN|LEAST_REQUEST	# Standard load balancing algorithms that require no tuning. Valid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST
 spec.trafficPolicy.portLevelSettings[].loadBalancer.warmup <object>	# Represents the warmup configuration of Service.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.warmup.aggression <number> format=double min=0	# This parameter controls the speed of traffic increase over the warmup duration.
 spec.trafficPolicy.portLevelSettings[].loadBalancer.warmup.duration <string> (required)
 spec.trafficPolicy.portLevelSettings[].loadBalancer.warmup.minimumPercent <number> format=double min=0 max=100
 spec.trafficPolicy.portLevelSettings[].loadBalancer.warmupDurationSecs <string>	# Deprecated: use `warmup` instead.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting <object>	# Zone Aware load balancer settings.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.enabled <boolean>	# Enable zone aware load balancing.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failover <[]object>	# Optional.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failover[].from <string>	# Originating region.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failover[].to <string>	# Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.failoverPriority <[]string>	# failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.
+spec.trafficPolicy.portLevelSettings[].loadBalancer.zoneAwareLbSetting.minClusterSize <integer> min=1 max=4294967295	# Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.
 spec.trafficPolicy.portLevelSettings[].outlierDetection <object>
 spec.trafficPolicy.portLevelSettings[].outlierDetection.baseEjectionTime <string>	# Minimum ejection duration.
 spec.trafficPolicy.portLevelSettings[].outlierDetection.consecutive5xxErrors <integer> min=0 max=4294967295	# Number of 5xx errors before a host is ejected from the connection pool.
@@ -287,6 +331,7 @@ spec.trafficPolicy.portLevelSettings[].outlierDetection.consecutiveLocalOriginFa
 spec.trafficPolicy.portLevelSettings[].outlierDetection.interval <string>	# Time interval between ejection sweep analysis.
 spec.trafficPolicy.portLevelSettings[].outlierDetection.maxEjectionPercent <integer> format=int32	# Maximum % of hosts in the load balancing pool for the upstream service that can be ejected.
 spec.trafficPolicy.portLevelSettings[].outlierDetection.minHealthPercent <integer> format=int32	# Outlier detection will be enabled as long as the associated load balancing pool has at least `minHealthPercent` hosts in healthy mode.
+spec.trafficPolicy.portLevelSettings[].outlierDetection.outlierDetectionHttpErrorCodes <[]integer>	# Specifies the HTTP response status codes that are treated as outlier detection errors.
 spec.trafficPolicy.portLevelSettings[].outlierDetection.splitExternalLocalOriginErrors <boolean>	# Determines whether to distinguish local origin failures from external errors.
 spec.trafficPolicy.portLevelSettings[].port <object>	# Specifies the number of a port on the destination service on which this policy is being applied.
 spec.trafficPolicy.portLevelSettings[].port.number <integer> min=0 max=4294967295
@@ -303,6 +348,7 @@ spec.trafficPolicy.portLevelSettings[].tls.subjectAltNames <[]string>	# A list o
 spec.trafficPolicy.proxyProtocol <object>	# The upstream PROXY protocol settings.
 spec.trafficPolicy.proxyProtocol.version <string> enum=V1|V2	# The PROXY protocol version to use. Valid Options: V1, V2
 spec.trafficPolicy.retryBudget <object>	# Specifies a limit on concurrent retries in relation to the number of active requests.
+spec.trafficPolicy.retryBudget.budgetInterval <string>	# Specifies the duration in which requests will be considered when calculating the budget for retries.
 spec.trafficPolicy.retryBudget.minRetryConcurrency <integer> min=0 max=4294967295	# Specifies the minimum retry concurrency allowed for the retry budget.
 spec.trafficPolicy.retryBudget.percent <number> format=double min=0 max=100	# Specifies the limit on concurrent retries as a percentage of the sum of active requests and active pending requests.
 spec.trafficPolicy.tls <object>	# TLS related settings for connections to the upstream service.

@@ -56,6 +56,33 @@
                             "format": "int32",
                             "type": "integer"
                           },
+                          "http2KeepAlive": {
+                            "additionalProperties": false,
+                            "description": "Configure HTTP/2 PING frames for upstream connections.",
+                            "properties": {
+                              "interval": {
+                                "description": "Send HTTP/2 PING frames at this interval.",
+                                "type": "string",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "must be a valid duration greater than 1ms",
+                                    "rule": "duration(self) >= duration('1ms')"
+                                  }
+                                ]
+                              },
+                              "timeout": {
+                                "description": "How long to wait for a response to an HTTP/2 PING frame before closing the connection.",
+                                "type": "string",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "must be a valid duration greater than 1ms",
+                                    "rule": "duration(self) >= duration('1ms')"
+                                  }
+                                ]
+                              }
+                            },
+                            "type": "object"
+                          },
                           "http2MaxRequests": {
                             "description": "Maximum number of active requests to a destination.",
                             "format": "int32",
@@ -281,6 +308,7 @@
                             ]
                           }
                         ],
+                        "description": "Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.",
                         "properties": {
                           "httpCookie": {
                             "additionalProperties": false,
@@ -371,6 +399,7 @@
                       },
                       "localityLbSetting": {
                         "additionalProperties": false,
+                        "description": "Locality load balancer settings.",
                         "properties": {
                           "distribute": {
                             "description": "Optional: only one of distribute, failover or failoverPriority can be set.",
@@ -429,7 +458,7 @@
                         "type": "object"
                       },
                       "simple": {
-                        "description": "\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
+                        "description": "Standard load balancing algorithms that require no tuning.\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
                         "enum": [
                           "UNSPECIFIED",
                           "LEAST_CONN",
@@ -482,6 +511,50 @@
                             "rule": "duration(self) >= duration('1ms')"
                           }
                         ]
+                      },
+                      "zoneAwareLbSetting": {
+                        "additionalProperties": false,
+                        "description": "Zone Aware load balancer settings.",
+                        "properties": {
+                          "enabled": {
+                            "description": "Enable zone aware load balancing.",
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "failover": {
+                            "description": "Optional.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "from": {
+                                  "description": "Originating region.",
+                                  "type": "string"
+                                },
+                                "to": {
+                                  "description": "Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "failoverPriority": {
+                            "description": "failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "minClusterSize": {
+                            "description": "Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.",
+                            "maximum": 4294967295,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
                       }
                     },
                     "type": "object"
@@ -544,6 +617,15 @@
                         "format": "int32",
                         "type": "integer"
                       },
+                      "outlierDetectionHttpErrorCodes": {
+                        "description": "Specifies the HTTP response status codes that are treated as outlier detection errors.",
+                        "items": {
+                          "maximum": 599,
+                          "minimum": 100,
+                          "type": "integer"
+                        },
+                        "type": "array"
+                      },
                       "splitExternalLocalOriginErrors": {
                         "description": "Determines whether to distinguish local origin failures from external errors.",
                         "type": "boolean"
@@ -576,6 +658,33 @@
                                   "description": "Maximum number of requests that will be queued while waiting for a ready connection pool connection.",
                                   "format": "int32",
                                   "type": "integer"
+                                },
+                                "http2KeepAlive": {
+                                  "additionalProperties": false,
+                                  "description": "Configure HTTP/2 PING frames for upstream connections.",
+                                  "properties": {
+                                    "interval": {
+                                      "description": "Send HTTP/2 PING frames at this interval.",
+                                      "type": "string",
+                                      "x-kubernetes-validations": [
+                                        {
+                                          "message": "must be a valid duration greater than 1ms",
+                                          "rule": "duration(self) >= duration('1ms')"
+                                        }
+                                      ]
+                                    },
+                                    "timeout": {
+                                      "description": "How long to wait for a response to an HTTP/2 PING frame before closing the connection.",
+                                      "type": "string",
+                                      "x-kubernetes-validations": [
+                                        {
+                                          "message": "must be a valid duration greater than 1ms",
+                                          "rule": "duration(self) >= duration('1ms')"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "type": "object"
                                 },
                                 "http2MaxRequests": {
                                   "description": "Maximum number of active requests to a destination.",
@@ -802,6 +911,7 @@
                                   ]
                                 }
                               ],
+                              "description": "Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.",
                               "properties": {
                                 "httpCookie": {
                                   "additionalProperties": false,
@@ -892,6 +1002,7 @@
                             },
                             "localityLbSetting": {
                               "additionalProperties": false,
+                              "description": "Locality load balancer settings.",
                               "properties": {
                                 "distribute": {
                                   "description": "Optional: only one of distribute, failover or failoverPriority can be set.",
@@ -950,7 +1061,7 @@
                               "type": "object"
                             },
                             "simple": {
-                              "description": "\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
+                              "description": "Standard load balancing algorithms that require no tuning.\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
                               "enum": [
                                 "UNSPECIFIED",
                                 "LEAST_CONN",
@@ -1003,6 +1114,50 @@
                                   "rule": "duration(self) >= duration('1ms')"
                                 }
                               ]
+                            },
+                            "zoneAwareLbSetting": {
+                              "additionalProperties": false,
+                              "description": "Zone Aware load balancer settings.",
+                              "properties": {
+                                "enabled": {
+                                  "description": "Enable zone aware load balancing.",
+                                  "nullable": true,
+                                  "type": "boolean"
+                                },
+                                "failover": {
+                                  "description": "Optional.",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "from": {
+                                        "description": "Originating region.",
+                                        "type": "string"
+                                      },
+                                      "to": {
+                                        "description": "Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "failoverPriority": {
+                                  "description": "failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "type": "array"
+                                },
+                                "minClusterSize": {
+                                  "description": "Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.",
+                                  "maximum": 4294967295,
+                                  "minimum": 1,
+                                  "nullable": true,
+                                  "type": "integer"
+                                }
+                              },
+                              "type": "object"
                             }
                           },
                           "type": "object"
@@ -1064,6 +1219,15 @@
                               "description": "Outlier detection will be enabled as long as the associated load balancing pool has at least `minHealthPercent` hosts in healthy mode.",
                               "format": "int32",
                               "type": "integer"
+                            },
+                            "outlierDetectionHttpErrorCodes": {
+                              "description": "Specifies the HTTP response status codes that are treated as outlier detection errors.",
+                              "items": {
+                                "maximum": 599,
+                                "minimum": 100,
+                                "type": "integer"
+                              },
+                              "type": "array"
                             },
                             "splitExternalLocalOriginErrors": {
                               "description": "Determines whether to distinguish local origin failures from external errors.",
@@ -1162,6 +1326,10 @@
                     "additionalProperties": false,
                     "description": "Specifies a limit on concurrent retries in relation to the number of active requests.",
                     "properties": {
+                      "budgetInterval": {
+                        "description": "Specifies the duration in which requests will be considered when calculating the budget for retries.",
+                        "type": "string"
+                      },
                       "minRetryConcurrency": {
                         "description": "Specifies the minimum retry concurrency allowed for the retry budget.",
                         "maximum": 4294967295,
@@ -1292,6 +1460,33 @@
                       "description": "Maximum number of requests that will be queued while waiting for a ready connection pool connection.",
                       "format": "int32",
                       "type": "integer"
+                    },
+                    "http2KeepAlive": {
+                      "additionalProperties": false,
+                      "description": "Configure HTTP/2 PING frames for upstream connections.",
+                      "properties": {
+                        "interval": {
+                          "description": "Send HTTP/2 PING frames at this interval.",
+                          "type": "string",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "must be a valid duration greater than 1ms",
+                              "rule": "duration(self) >= duration('1ms')"
+                            }
+                          ]
+                        },
+                        "timeout": {
+                          "description": "How long to wait for a response to an HTTP/2 PING frame before closing the connection.",
+                          "type": "string",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "must be a valid duration greater than 1ms",
+                              "rule": "duration(self) >= duration('1ms')"
+                            }
+                          ]
+                        }
+                      },
+                      "type": "object"
                     },
                     "http2MaxRequests": {
                       "description": "Maximum number of active requests to a destination.",
@@ -1518,6 +1713,7 @@
                       ]
                     }
                   ],
+                  "description": "Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.",
                   "properties": {
                     "httpCookie": {
                       "additionalProperties": false,
@@ -1608,6 +1804,7 @@
                 },
                 "localityLbSetting": {
                   "additionalProperties": false,
+                  "description": "Locality load balancer settings.",
                   "properties": {
                     "distribute": {
                       "description": "Optional: only one of distribute, failover or failoverPriority can be set.",
@@ -1666,7 +1863,7 @@
                   "type": "object"
                 },
                 "simple": {
-                  "description": "\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
+                  "description": "Standard load balancing algorithms that require no tuning.\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
                   "enum": [
                     "UNSPECIFIED",
                     "LEAST_CONN",
@@ -1719,6 +1916,50 @@
                       "rule": "duration(self) >= duration('1ms')"
                     }
                   ]
+                },
+                "zoneAwareLbSetting": {
+                  "additionalProperties": false,
+                  "description": "Zone Aware load balancer settings.",
+                  "properties": {
+                    "enabled": {
+                      "description": "Enable zone aware load balancing.",
+                      "nullable": true,
+                      "type": "boolean"
+                    },
+                    "failover": {
+                      "description": "Optional.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "from": {
+                            "description": "Originating region.",
+                            "type": "string"
+                          },
+                          "to": {
+                            "description": "Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "failoverPriority": {
+                      "description": "failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "minClusterSize": {
+                      "description": "Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.",
+                      "maximum": 4294967295,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -1781,6 +2022,15 @@
                   "format": "int32",
                   "type": "integer"
                 },
+                "outlierDetectionHttpErrorCodes": {
+                  "description": "Specifies the HTTP response status codes that are treated as outlier detection errors.",
+                  "items": {
+                    "maximum": 599,
+                    "minimum": 100,
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
                 "splitExternalLocalOriginErrors": {
                   "description": "Determines whether to distinguish local origin failures from external errors.",
                   "type": "boolean"
@@ -1813,6 +2063,33 @@
                             "description": "Maximum number of requests that will be queued while waiting for a ready connection pool connection.",
                             "format": "int32",
                             "type": "integer"
+                          },
+                          "http2KeepAlive": {
+                            "additionalProperties": false,
+                            "description": "Configure HTTP/2 PING frames for upstream connections.",
+                            "properties": {
+                              "interval": {
+                                "description": "Send HTTP/2 PING frames at this interval.",
+                                "type": "string",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "must be a valid duration greater than 1ms",
+                                    "rule": "duration(self) >= duration('1ms')"
+                                  }
+                                ]
+                              },
+                              "timeout": {
+                                "description": "How long to wait for a response to an HTTP/2 PING frame before closing the connection.",
+                                "type": "string",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "must be a valid duration greater than 1ms",
+                                    "rule": "duration(self) >= duration('1ms')"
+                                  }
+                                ]
+                              }
+                            },
+                            "type": "object"
                           },
                           "http2MaxRequests": {
                             "description": "Maximum number of active requests to a destination.",
@@ -2039,6 +2316,7 @@
                             ]
                           }
                         ],
+                        "description": "Consistent Hash-based load balancing can be used to provide soft session affinity based on HTTP headers, cookies or other properties.",
                         "properties": {
                           "httpCookie": {
                             "additionalProperties": false,
@@ -2129,6 +2407,7 @@
                       },
                       "localityLbSetting": {
                         "additionalProperties": false,
+                        "description": "Locality load balancer settings.",
                         "properties": {
                           "distribute": {
                             "description": "Optional: only one of distribute, failover or failoverPriority can be set.",
@@ -2187,7 +2466,7 @@
                         "type": "object"
                       },
                       "simple": {
-                        "description": "\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
+                        "description": "Standard load balancing algorithms that require no tuning.\n\nValid Options: LEAST_CONN, RANDOM, PASSTHROUGH, ROUND_ROBIN, LEAST_REQUEST",
                         "enum": [
                           "UNSPECIFIED",
                           "LEAST_CONN",
@@ -2240,6 +2519,50 @@
                             "rule": "duration(self) >= duration('1ms')"
                           }
                         ]
+                      },
+                      "zoneAwareLbSetting": {
+                        "additionalProperties": false,
+                        "description": "Zone Aware load balancer settings.",
+                        "properties": {
+                          "enabled": {
+                            "description": "Enable zone aware load balancing.",
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "failover": {
+                            "description": "Optional.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "from": {
+                                  "description": "Originating region.",
+                                  "type": "string"
+                                },
+                                "to": {
+                                  "description": "Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "failoverPriority": {
+                            "description": "failoverPriority is an ordered list of labels used to sort endpoints for priority-based load balancing.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "minClusterSize": {
+                            "description": "Minimum number of hosts in the upstream cluster's local region required for zone-aware load balancing to be enabled.",
+                            "maximum": 4294967295,
+                            "minimum": 1,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
                       }
                     },
                     "type": "object"
@@ -2301,6 +2624,15 @@
                         "description": "Outlier detection will be enabled as long as the associated load balancing pool has at least `minHealthPercent` hosts in healthy mode.",
                         "format": "int32",
                         "type": "integer"
+                      },
+                      "outlierDetectionHttpErrorCodes": {
+                        "description": "Specifies the HTTP response status codes that are treated as outlier detection errors.",
+                        "items": {
+                          "maximum": 599,
+                          "minimum": 100,
+                          "type": "integer"
+                        },
+                        "type": "array"
                       },
                       "splitExternalLocalOriginErrors": {
                         "description": "Determines whether to distinguish local origin failures from external errors.",
@@ -2399,6 +2731,10 @@
               "additionalProperties": false,
               "description": "Specifies a limit on concurrent retries in relation to the number of active requests.",
               "properties": {
+                "budgetInterval": {
+                  "description": "Specifies the duration in which requests will be considered when calculating the budget for retries.",
+                  "type": "string"
+                },
                 "minRetryConcurrency": {
                   "description": "Specifies the minimum retry concurrency allowed for the retry budget.",
                   "maximum": 4294967295,
