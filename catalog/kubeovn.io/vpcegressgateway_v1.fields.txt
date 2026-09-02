@@ -1,12 +1,12 @@
-# schema source: Kube-OVN v1.16.2 https://github.com/kubeovn/kube-ovn
+# schema source: Kube-OVN v1.16.3 https://github.com/kubeovn/kube-ovn
 apiVersion <string> enum=kubeovn.io/v1
 kind <string> enum=VpcEgressGateway
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>
 spec.bandwidth <object>	# Optional bandwidth limit for each egress gateway instance in both ingress and egress directions. If not specified, there will be no bandwidth limit.
-spec.bandwidth.egress <integer> format=int64	# egress bandwidth limit in Mbps
-spec.bandwidth.ingress <integer> format=int64	# ingress bandwidth limit in Mbps
+spec.bandwidth.egress <int-or-string>	# egress bandwidth limit, specified as an integer in Mbps or a Kubernetes quantity such as 100M or 1Gi in bits per second
+spec.bandwidth.ingress <int-or-string>	# ingress bandwidth limit, specified as an integer in Mbps or a Kubernetes quantity such as 100M or 1Gi in bits per second
 spec.bfd <object>	# BFD configuration
 spec.bfd.enabled <boolean> default=false	# whether to enable BFD if set to true, the egress gateway will establish BFD session(s) with the VPC BFD LRP the VPC's .spec.bfd.enabled must be set to true to enable BFD
 spec.bfd.minRX <integer> default=1000 format=int32 min=1 max=3600000	# optional BFD minRX/minTX/multiplier
@@ -14,9 +14,11 @@ spec.bfd.minTX <integer> default=1000 format=int32 min=1 max=3600000
 spec.bfd.multiplier <integer> default=3 format=int32 min=1 max=3600000
 spec.bgpConf <string>	# optional BGP configuration name it references a cluster-scoped BgpConf resource
 spec.evpnConf <string>	# optional EVPN configuration name it references a cluster-scoped EvpnConf resource
+spec.externalIPPool <string>	# optional name of an IPPool resource used to allocate the external IP for the workload the referenced IPPool's subnet must match the external subnet mutually exclusive with externalIPs
 spec.externalIPs <[]string>	# External IP addresses for the egress gateway
 spec.externalSubnet <string> (required)	# external subnet used to create the workload
 spec.image <string>	# optional image used by the workload if not specified, the default image passed in by kube-ovn-controller will be used
+spec.internalIPPool <string>	# optional name of an IPPool resource used to allocate the internal IP for the workload the referenced IPPool's subnet must match the internal subnet mutually exclusive with internalIPs
 spec.internalIPs <[]string>	# optional internal/external IPs used to create the workload these IPs must be in the internal/external subnet the IPs count must NOT be less than the replicas count
 spec.internalSubnet <string>	# optional internal subnet used to create the workload if not specified, the workload will be created in the default subnet of the VPC
 spec.nodeSelector <[]object>	# optional node selector used to select the nodes where the workload will be running
@@ -29,6 +31,72 @@ spec.nodeSelector[].matchFields[].key <string> (required)	# The label key that t
 spec.nodeSelector[].matchFields[].operator <string> (required)	# Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
 spec.nodeSelector[].matchFields[].values <[]string>	# An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
 spec.nodeSelector[].matchLabels <map[string]string>
+spec.observability <object>	# Optional observability configuration for the gateway workload.
+spec.observability.conntrack <object>	# VpcEgressGatewayConntrackObservability configures conntrack metrics and flow logs.
+spec.observability.conntrack.log <object>	# VpcEgressGatewayConntrackLog configures JSON Lines flow logging to stdout.
+spec.observability.conntrack.log.enabled <boolean>
+spec.observability.conntrack.log.events <[]string> max=2	# flow lifecycle events to log; start and end are used when omitted
+spec.observability.conntrack.log.filters <object>	# VpcEgressGatewayConntrackLogFilters selects flow records. Exclude rules take precedence.
+spec.observability.conntrack.log.filters.exclude <[]object> max=64
+spec.observability.conntrack.log.filters.exclude[].addressFamilies <[]string> max=2
+spec.observability.conntrack.log.filters.exclude[].natTypes <[]string> max=3
+spec.observability.conntrack.log.filters.exclude[].original <object>	# VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.
+spec.observability.conntrack.log.filters.exclude[].original.destinationCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.exclude[].original.destinationPorts <[]object> max=64
+spec.observability.conntrack.log.filters.exclude[].original.destinationPorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].original.destinationPorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].original.sourceCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.exclude[].original.sourcePorts <[]object> max=64
+spec.observability.conntrack.log.filters.exclude[].original.sourcePorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].original.sourcePorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].protocols <[]string> max=6
+spec.observability.conntrack.log.filters.exclude[].translated <object>	# VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.
+spec.observability.conntrack.log.filters.exclude[].translated.destinationCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.exclude[].translated.destinationPorts <[]object> max=64
+spec.observability.conntrack.log.filters.exclude[].translated.destinationPorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].translated.destinationPorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].translated.sourceCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.exclude[].translated.sourcePorts <[]object> max=64
+spec.observability.conntrack.log.filters.exclude[].translated.sourcePorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.exclude[].translated.sourcePorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include <[]object> max=64
+spec.observability.conntrack.log.filters.include[].addressFamilies <[]string> max=2
+spec.observability.conntrack.log.filters.include[].natTypes <[]string> max=3
+spec.observability.conntrack.log.filters.include[].original <object>	# VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.
+spec.observability.conntrack.log.filters.include[].original.destinationCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.include[].original.destinationPorts <[]object> max=64
+spec.observability.conntrack.log.filters.include[].original.destinationPorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].original.destinationPorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].original.sourceCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.include[].original.sourcePorts <[]object> max=64
+spec.observability.conntrack.log.filters.include[].original.sourcePorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].original.sourcePorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].protocols <[]string> max=6
+spec.observability.conntrack.log.filters.include[].translated <object>	# VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.
+spec.observability.conntrack.log.filters.include[].translated.destinationCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.include[].translated.destinationPorts <[]object> max=64
+spec.observability.conntrack.log.filters.include[].translated.destinationPorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].translated.destinationPorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].translated.sourceCIDRs <[]string> max=64
+spec.observability.conntrack.log.filters.include[].translated.sourcePorts <[]object> max=64
+spec.observability.conntrack.log.filters.include[].translated.sourcePorts[].end <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.filters.include[].translated.sourcePorts[].start <integer> format=int32 min=0 max=65535
+spec.observability.conntrack.log.rateLimit <object>	# VpcEgressGatewayConntrackLogRateLimit limits flow log records per gateway pod.
+spec.observability.conntrack.log.rateLimit.burst <integer> format=int32 min=1 max=1000000
+spec.observability.conntrack.log.rateLimit.recordsPerSecond <integer> format=int32 min=1 max=100000
+spec.observability.conntrack.metrics <object>	# VpcEgressGatewayObservabilityFeature enables an observability collector.
+spec.observability.conntrack.metrics.enabled <boolean>
+spec.observability.interfaceMetrics <object>	# VpcEgressGatewayObservabilityFeature enables an observability collector.
+spec.observability.interfaceMetrics.enabled <boolean>
+spec.observability.resources <object>	# Compute resources required by the observability sidecar.
+spec.observability.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
+spec.observability.resources.claims[].name <string> (required)	# Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+spec.observability.resources.claims[].request <string>	# Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.
+spec.observability.resources.limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.observability.resources.requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.observability.serviceMonitor <object>	# VpcEgressGatewayServiceMonitor configures metadata for the per-gateway ServiceMonitor.
+spec.observability.serviceMonitor.annotations <map[string]string>
+spec.observability.serviceMonitor.labels <map[string]string>
 spec.policies <[]object>	# egress policies at least one policy must be specified
 spec.policies[].ipBlocks <[]string>	# CIDRs/subnets targeted by the egress traffic policy
 spec.policies[].snat <boolean> default=false	# whether to enable SNAT/MASQUERADE for the egress traffic
