@@ -1,0 +1,25 @@
+# schema source: OVN-Kubernetes v1.4.0 https://github.com/ovn-kubernetes/ovn-kubernetes
+apiVersion <string> enum=k8s.ovn.org/v1alpha1
+kind <string> enum=UplinkState (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)
+spec.nodeName <string> (required) min=1 max=253 (immutable)	# NodeName is the node this state belongs to.
+spec.uplinkName <string> (required) min=1 max=253 (immutable)	# UplinkName is the Uplink this state belongs to.
+status <object>
+status.conditions <[]object>	# Conditions reports node-local discovery and gateway programming state for this resolved uplink.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.defaultGateways <[]string> max=2	# DefaultGateways are default route next-hop IPs discovered for the selected host interface.
+status.hostFunction <object>	# HostFunction identifies the PCI function (a PF, or a VF on that PF) backing the host interface. Only SR-IOV capable functions are published: they are the ones that can have a representor on a DPU, which is what this field exists to resolve. In split DPU mode the DPU-host publishes it so the DPU can resolve the interface's representor and OVS bridge directly, without scanning bridges by host MAC. Absent when the host interface has no such function or its identity cannot be resolved.
+status.hostFunction.pfID <integer> (required) format=int32 min=0	# PFID is the index of the physical function backing the host interface.
+status.hostFunction.vfID <integer> format=int32 min=0	# VFID is the index of the virtual function on the physical function. Absent when the host interface is the physical function itself.
+status.hostInterfaceName <string> pattern="^[^/\\s]+$" min=1 max=15	# HostInterfaceName is the host-visible Linux interface selected by Uplink spec. It carries the host-side gateway L3 identity in all modes.
+status.ipAddresses <[]string> max=2	# IPAddresses are host-side shared gateway IP addresses.
+status.macAddress <string> pattern="^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"	# MACAddress is the MAC address used for the OVN gateway interface.
+status.ovsBridge <object>	# OVSBridge contains resolved OVS bridge data.
+status.ovsBridge.name <string> pattern="^[^/\\s]+$" min=1 max=15	# Name is the resolved OVS bridge used for OVN bridge mappings and flows.
+status.type <string> enum=OVSBridge	# Type is defined by the matched nodeConfig of the Uplink.
