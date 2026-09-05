@@ -235,7 +235,8 @@
                   },
                   "maxItems": 4,
                   "minItems": 1,
-                  "type": "array"
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
                 },
                 "ipam": {
                   "additionalProperties": false,
@@ -250,10 +251,11 @@
                       "type": "string"
                     },
                     "mode": {
-                      "description": "Mode controls how much of the IP configuration will be managed by OVN.\n`Enabled` means OVN-Kubernetes will apply IP configuration to the SDN infrastructure and it will also assign IPs\nfrom the selected subnet to the individual pods.\n`Disabled` means OVN-Kubernetes will only assign MAC addresses and provide layer 2 communication, letting users\nconfigure IP addresses for the pods.\n`Disabled` is only available for Secondary networks.\nBy disabling IPAM, any Kubernetes features that rely on selecting pods by IP will no longer function\n(such as network policy, services, etc). Additionally, IP port security will also be disabled for interfaces attached to this network.\nDefaults to `Enabled`.",
+                      "description": "Mode controls how much of the IP configuration will be managed by OVN.\n`Enabled` means OVN-Kubernetes will apply IP configuration to the SDN infrastructure and it will also assign IPs\nfrom the selected subnet to the individual pods.\n`DHCP` delegates IP assignment to a DHCP server reachable on the physical network; OVN-Kubernetes\ndoes not allocate addresses. Lease acquisition depends on the workload type: regular pods use the\nDHCP CNI plugin on the node, while KubeVirt virtual machines run a DHCP client inside the guest OS.\nOnly supported for Localnet Secondary networks, and currently only for IPv4.\n`Disabled` means OVN-Kubernetes will only assign MAC addresses and provide layer 2 communication, letting users\nconfigure IP addresses for the pods.\n`Disabled` is only available for Secondary networks.\nBy disabling IPAM, any Kubernetes features that rely on selecting pods by IP will no longer function\n(such as network policy, services, etc). Additionally, IP port security will also be disabled for interfaces attached to this network.\nDefaults to `Enabled`.",
                       "enum": [
                         "Enabled",
-                        "Disabled"
+                        "Disabled",
+                        "DHCP"
                       ],
                       "type": "string"
                     }
@@ -309,7 +311,8 @@
                   },
                   "maxItems": 25,
                   "minItems": 1,
-                  "type": "array"
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
                 },
                 "role": {
                   "description": "Role describes the network role in the pod.\n\nAllowed value is \"Secondary\".\nSecondary network is only assigned to pods that use `k8s.v1.cni.cncf.io/networks` annotation to select given network.",
@@ -348,6 +351,10 @@
               "type": "object",
               "x-kubernetes-validations": [
                 {
+                  "message": "Layer2 is immutable",
+                  "rule": "self == oldSelf"
+                },
+                {
                   "message": "Subnets is required with ipam.mode is Enabled or unset",
                   "rule": "has(self.ipam) && has(self.ipam.mode) && self.ipam.mode != 'Enabled' || has(self.subnets)"
                 },
@@ -358,6 +365,10 @@
                 {
                   "message": "Disabled ipam.mode is only supported for Secondary network",
                   "rule": "!has(self.ipam) || !has(self.ipam.mode) || self.ipam.mode != 'Disabled' || self.role == 'Secondary'"
+                },
+                {
+                  "message": "DHCP ipam.mode is not supported for Layer2 topology, use Localnet topology instead",
+                  "rule": "!has(self.ipam) || !has(self.ipam.mode) || self.ipam.mode != 'DHCP'"
                 },
                 {
                   "message": "JoinSubnets is only supported for Primary network",
@@ -444,6 +455,10 @@
                   "type": "array",
                   "x-kubernetes-validations": [
                     {
+                      "message": "joinSubnets is immutable",
+                      "rule": "self == oldSelf"
+                    },
+                    {
                       "message": "When 2 CIDRs are set, they must be from different IP families",
                       "rule": "size(self) != 2 || !isCIDR(self[0]) || !isCIDR(self[1]) || cidr(self[0]).ip().family() != cidr(self[1]).ip().family()"
                     }
@@ -454,7 +469,13 @@
                   "format": "int32",
                   "maximum": 65536,
                   "minimum": 576,
-                  "type": "integer"
+                  "type": "integer",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "mtu is immutable",
+                      "rule": "self == oldSelf"
+                    }
+                  ]
                 },
                 "role": {
                   "description": "Role describes the network role in the pod.\n\nAllowed values are \"Primary\" and \"Secondary\".\nPrimary network is automatically assigned to every pod created in the same namespace.\nSecondary network is only assigned to pods that use `k8s.v1.cni.cncf.io/networks` annotation to select given network.",
@@ -462,10 +483,16 @@
                     "Primary",
                     "Secondary"
                   ],
-                  "type": "string"
+                  "type": "string",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "role is immutable",
+                      "rule": "self == oldSelf"
+                    }
+                  ]
                 },
                 "subnets": {
-                  "description": "Subnets are used for the pod network across the cluster.\n\nDual-stack clusters may set 2 subnets (one for each IP family), otherwise only 1 subnet is allowed.\nGiven subnet is split into smaller subnets for every node.",
+                  "description": "Subnets are used for the pod network across the cluster.\n\nEach IP family can have multiple subnets.\nFor each IP family, every node allocates a smaller subnet from the provided subnets.",
                   "items": {
                     "additionalProperties": false,
                     "properties": {
@@ -503,15 +530,10 @@
                       }
                     ]
                   },
-                  "maxItems": 2,
+                  "maxItems": 400,
                   "minItems": 1,
                   "type": "array",
-                  "x-kubernetes-validations": [
-                    {
-                      "message": "When 2 CIDRs are set, they must be from different IP families",
-                      "rule": "size(self) != 2 || !isCIDR(self[0].cidr) || !isCIDR(self[1].cidr) || cidr(self[0].cidr).ip().family() != cidr(self[1].cidr).ip().family()"
-                    }
-                  ]
+                  "x-kubernetes-list-type": "atomic"
                 }
               },
               "required": [
@@ -521,12 +543,44 @@
               "type": "object",
               "x-kubernetes-validations": [
                 {
+                  "message": "Subnets is immutable for Secondary role",
+                  "rule": "self.role != 'Secondary' || self.subnets == oldSelf.subnets"
+                },
+                {
+                  "message": "Secondary networks may define at most 2 subnets",
+                  "rule": "self.role != 'Secondary' || !has(self.subnets) || self.subnets.size() <= 2"
+                },
+                {
+                  "message": "When 2 CIDRs are set for Secondary networks, they must be from different IP families",
+                  "rule": "self.role != 'Secondary' || size(self.subnets) != 2 || !isCIDR(self.subnets[0].cidr) || !isCIDR(self.subnets[1].cidr) || cidr(self.subnets[0].cidr).ip().family() != cidr(self.subnets[1].cidr).ip().family()"
+                },
+                {
                   "message": "JoinSubnets is only supported for Primary network",
                   "rule": "!has(self.joinSubnets) || has(self.role) && self.role == 'Primary'"
                 },
                 {
                   "message": "MTU should be greater than or equal to 1280 when IPv6 subnet is used",
                   "rule": "!has(self.subnets) || !has(self.mtu) || !self.subnets.exists_one(i, isCIDR(i.cidr) && cidr(i.cidr).ip().family() == 6) || self.mtu >= 1280"
+                },
+                {
+                  "message": "Removing existing subnets is not allowed",
+                  "rule": "!has(oldSelf.subnets) || oldSelf.subnets.all(old, self.subnets.exists(new, new.cidr == old.cidr))"
+                },
+                {
+                  "message": "Subnets must not overlap or contain each other",
+                  "rule": "!has(self.subnets) || self.subnets.size() == 1 || !self.subnets.exists(i, self.subnets.exists(j, i != j && cidr(i.cidr).containsCIDR(j.cidr)))"
+                },
+                {
+                  "message": "Subnets with same CIDR are not allowed",
+                  "rule": "!has(self.subnets) || self.subnets.size() == 1 || !self.subnets.exists(i, self.subnets.filter(j, j.cidr == i.cidr).size() > 1)"
+                },
+                {
+                  "message": "hostSubnet is immutable",
+                  "rule": "!has(oldSelf.subnets) || oldSelf.subnets.all(old, self.subnets.exists(new, new.cidr == old.cidr && (!has(old.hostSubnet) && !has(new.hostSubnet) || has(old.hostSubnet) && has(new.hostSubnet) && old.hostSubnet == new.hostSubnet)))"
+                },
+                {
+                  "message": "Subnets from the same IP family must use the same hostSubnet value",
+                  "rule": "!has(self.subnets) || self.subnets.size() == 1 || self.subnets.all(i, self.subnets.all(j, cidr(i.cidr).ip().family() != cidr(j.cidr).ip().family() || (has(i.hostSubnet) == has(j.hostSubnet) && (!has(i.hostSubnet) || i.hostSubnet == j.hostSubnet))))"
                 }
               ]
             },
@@ -535,7 +589,7 @@
               "description": "Localnet is the Localnet topology configuration.",
               "properties": {
                 "excludeSubnets": {
-                  "description": "excludeSubnets is a list of CIDRs to be removed from the specified CIDRs in `subnets`.\nThe CIDRs in this list must be in range of at least one subnet specified in `subnets`.\nexcludeSubnets is optional. When omitted no IP address is excluded and all IP addresses specified in `subnets`\nare subject to assignment.\nThe format should match standard CIDR notation (for example, \"10.128.0.0/16\").\nThis field must be omitted if `subnets` is unset or `ipam.mode` is `Disabled`.\nWhen `physicalNetworkName` points to OVS bridge mapping of a network with reserved IP addresses\n(which shouldn't be assigned by OVN-Kubernetes), the specified CIDRs will not be assigned. For example:\nGiven: `subnets: \"10.0.0.0/24\"`, `excludeSubnets: \"10.0.0.200/30\", the following addresses will not be assigned\nto pods: `10.0.0.201`, `10.0.0.202`.",
+                  "description": "excludeSubnets is a list of CIDRs to be removed from the specified CIDRs in `subnets`.\nThe CIDRs in this list must be in range of at least one subnet specified in `subnets`.\nexcludeSubnets is optional. When omitted no IP address is excluded and all IP addresses specified in `subnets`\nare subject to assignment.\nThe format should match standard CIDR notation (for example, \"10.128.0.0/16\").\nThis field must be omitted if `subnets` is unset or `ipam.mode` is `Disabled` or `DHCP`.\nWhen `physicalNetworkName` points to OVS bridge mapping of a network with reserved IP addresses\n(which shouldn't be assigned by OVN-Kubernetes), the specified CIDRs will not be assigned. For example:\nGiven: `subnets: \"10.0.0.0/24\"`, `excludeSubnets`: \"10.0.0.200/30\", the following addresses will not be assigned\nto pods: `10.0.0.201`, `10.0.0.202`.",
                   "items": {
                     "maxLength": 43,
                     "type": "string",
@@ -548,11 +602,12 @@
                   },
                   "maxItems": 25,
                   "minItems": 1,
-                  "type": "array"
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
                 },
                 "ipam": {
                   "additionalProperties": false,
-                  "description": "ipam configurations for the network.\nipam is optional. When omitted, `subnets` must be specified.\nWhen `ipam.mode` is `Disabled`, `subnets` must be omitted.\n`ipam.mode` controls how much of the IP configuration will be managed by OVN.\n   When `Enabled`, OVN-Kubernetes will apply IP configuration to the SDN infra and assign IPs from the selected\n   subnet to the pods.\n   When `Disabled`, OVN-Kubernetes only assigns MAC addresses, and provides layer2 communication, and enables users\n   to configure IP addresses on the pods.\n`ipam.lifecycle` controls IP addresses management lifecycle.\n   When set to 'Persistent', the assigned IP addresses will be persisted in `ipamclaims.k8s.cni.cncf.io` object.\n\t  Useful for VMs, IP address will be persistent after restarts and migrations. Supported when `ipam.mode` is `Enabled`.",
+                  "description": "ipam configurations for the network.\nipam is optional. When omitted, `subnets` must be specified.\nWhen `ipam.mode` is `Disabled` or `DHCP`, `subnets` must be omitted.\n`ipam.mode` controls how much of the IP configuration will be managed by OVN.\n   When `Enabled`, OVN-Kubernetes will apply IP configuration to the SDN infra and assign IPs from the selected\n   subnet to the pods.\n   When `Disabled`, OVN-Kubernetes only assigns MAC addresses, and provides layer2 communication, and enables users\n   to configure IP addresses on the pods.\n   When `DHCP`, IP assignment is delegated to a DHCP server reachable on the physical network. OVN-Kubernetes\n   learns the assigned IPs but does not allocate them. Currently supported only for IPv4.\n`ipam.lifecycle` controls IP addresses management lifecycle.\n   When set to 'Persistent', the assigned IP addresses will be persisted in `ipamclaims.k8s.cni.cncf.io` object.\n\t  Useful for VMs, IP address will be persistent after restarts and migrations. Supported when `ipam.mode` is `Enabled`.",
                   "minProperties": 1,
                   "properties": {
                     "lifecycle": {
@@ -563,10 +618,11 @@
                       "type": "string"
                     },
                     "mode": {
-                      "description": "Mode controls how much of the IP configuration will be managed by OVN.\n`Enabled` means OVN-Kubernetes will apply IP configuration to the SDN infrastructure and it will also assign IPs\nfrom the selected subnet to the individual pods.\n`Disabled` means OVN-Kubernetes will only assign MAC addresses and provide layer 2 communication, letting users\nconfigure IP addresses for the pods.\n`Disabled` is only available for Secondary networks.\nBy disabling IPAM, any Kubernetes features that rely on selecting pods by IP will no longer function\n(such as network policy, services, etc). Additionally, IP port security will also be disabled for interfaces attached to this network.\nDefaults to `Enabled`.",
+                      "description": "Mode controls how much of the IP configuration will be managed by OVN.\n`Enabled` means OVN-Kubernetes will apply IP configuration to the SDN infrastructure and it will also assign IPs\nfrom the selected subnet to the individual pods.\n`DHCP` delegates IP assignment to a DHCP server reachable on the physical network; OVN-Kubernetes\ndoes not allocate addresses. Lease acquisition depends on the workload type: regular pods use the\nDHCP CNI plugin on the node, while KubeVirt virtual machines run a DHCP client inside the guest OS.\nOnly supported for Localnet Secondary networks, and currently only for IPv4.\n`Disabled` means OVN-Kubernetes will only assign MAC addresses and provide layer 2 communication, letting users\nconfigure IP addresses for the pods.\n`Disabled` is only available for Secondary networks.\nBy disabling IPAM, any Kubernetes features that rely on selecting pods by IP will no longer function\n(such as network policy, services, etc). Additionally, IP port security will also be disabled for interfaces attached to this network.\nDefaults to `Enabled`.",
                       "enum": [
                         "Enabled",
-                        "Disabled"
+                        "Disabled",
+                        "DHCP"
                       ],
                       "type": "string"
                     }
@@ -606,7 +662,7 @@
                   "type": "string"
                 },
                 "subnets": {
-                  "description": "subnets is a list of subnets used for pods in this localnet network across the cluster.\nThe list may be either 1 IPv4 subnet, 1 IPv6 subnet, or 1 of each IP family.\nWhen set, OVN-Kubernetes assigns an IP address from the specified CIDRs to the connected pod,\neliminating the need for manual IP assignment or reliance on an external IPAM service (e.g., a DHCP server).\nsubnets is optional. When omitted OVN-Kubernetes won't assign IP address automatically.\nDual-stack clusters may set 2 subnets (one for each IP family), otherwise only 1 subnet is allowed.\nThe format should match standard CIDR notation (for example, \"10.128.0.0/16\").\nThis field must be omitted if `ipam.mode` is `Disabled`.\nWhen physicalNetworkName points to the OVS bridge mapping of a network that provides IPAM services\n(e.g., a DHCP server), ipam.mode should be set to Disabled. This turns off OVN-Kubernetes IPAM and avoids\nconflicts with the existing IPAM services on this localnet network.",
+                  "description": "subnets is a list of subnets used for pods in this localnet network across the cluster.\nThe list may be either 1 IPv4 subnet, 1 IPv6 subnet, or 1 of each IP family.\nWhen set, OVN-Kubernetes assigns an IP address from the specified CIDRs to the connected pod,\neliminating the need for manual IP assignment or reliance on an external IPAM service (e.g., a DHCP server).\nsubnets is optional. When omitted OVN-Kubernetes won't assign IP address automatically.\nDual-stack clusters may set 2 subnets (one for each IP family), otherwise only 1 subnet is allowed.\nThe format should match standard CIDR notation (for example, \"10.128.0.0/16\").\nThis field must be omitted if `ipam.mode` is `Disabled` or `DHCP`.\nWhen physicalNetworkName points to the OVS bridge mapping of a network that provides IPAM services,\nipam.mode should be set to `Disabled` (users configure the pod IPs themselves) or `DHCP` (a DHCP\nserver on that network assigns them). Both turn off OVN-Kubernetes IPAM and avoid conflicts with\nthe existing IPAM services on this localnet network.",
                   "items": {
                     "maxLength": 43,
                     "type": "string",
@@ -675,6 +731,10 @@
               "type": "object",
               "x-kubernetes-validations": [
                 {
+                  "message": "Localnet is immutable",
+                  "rule": "self == oldSelf"
+                },
+                {
                   "message": "Subnets is required with ipam.mode is Enabled or unset, and forbidden otherwise",
                   "rule": "!has(self.ipam) || !has(self.ipam.mode) || self.ipam.mode == 'Enabled' ? has(self.subnets) : !has(self.subnets)"
                 },
@@ -713,7 +773,13 @@
                 "outboundSNAT",
                 "routing"
               ],
-              "type": "object"
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "NoOverlay is immutable",
+                  "rule": "self == oldSelf"
+                }
+              ]
             },
             "topology": {
               "description": "Topology describes network configuration.\n\nAllowed values are \"Layer3\", \"Layer2\" and \"Localnet\".\nLayer3 topology creates a layer 2 segment per node, each with a different subnet. Layer 3 routing is used to interconnect node subnets.\nLayer2 topology creates one logical switch shared by all nodes.\nLocalnet topology is based on layer 2 topology, but also allows connecting to an existent (configured) physical network to provide north-south traffic to the workloads.",
@@ -722,7 +788,13 @@
                 "Layer3",
                 "Localnet"
               ],
-              "type": "string"
+              "type": "string",
+              "x-kubernetes-validations": [
+                {
+                  "message": "Topology is immutable",
+                  "rule": "self == oldSelf"
+                }
+              ]
             },
             "transport": {
               "description": "Transport describes the transport technology for pod-to-pod traffic.\nAllowed values are \"NoOverlay\" and \"EVPN\".\n- \"NoOverlay\": The network operates in no-overlay mode.\n- \"EVPN\": The network uses EVPN transport.\nWhen omitted, the network uses the default OVN overlay transport (e.g. Geneve, VXLAN)\nas configured by ovn-encap-type.",
@@ -730,7 +802,13 @@
                 "NoOverlay",
                 "EVPN"
               ],
-              "type": "string"
+              "type": "string",
+              "x-kubernetes-validations": [
+                {
+                  "message": "Transport is immutable",
+                  "rule": "self == oldSelf"
+                }
+              ]
             }
           },
           "required": [
@@ -785,9 +863,24 @@
             {
               "message": "spec.evpn.macVRF field is forbidden for Layer3 topology when transport is 'EVPN'",
               "rule": "!has(self.transport) || self.transport != 'EVPN' || self.topology != 'Layer3' || !has(self.evpn) || !has(self.evpn.macVRF)"
-            },
+            }
+          ]
+        },
+        "uplinks": {
+          "description": "Uplinks references Uplink resources used for this network's external\ntraffic. Currently, one Uplink is supported. When omitted, existing gateway\nbehavior is preserved.",
+          "items": {
+            "maxLength": 253,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+            "type": "string"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "type": "array",
+          "x-kubernetes-list-type": "atomic",
+          "x-kubernetes-validations": [
             {
-              "message": "Network spec is immutable",
+              "message": "uplinks is immutable",
               "rule": "self == oldSelf"
             }
           ]
@@ -797,7 +890,17 @@
         "namespaceSelector",
         "network"
       ],
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "spec.uplinks is supported only for primary Layer2 and Layer3 networks",
+          "rule": "!has(self.uplinks) || ((self.network.topology == 'Layer2' && has(self.network.layer2) && self.network.layer2.role == 'Primary') || (self.network.topology == 'Layer3' && has(self.network.layer3) && self.network.layer3.role == 'Primary'))"
+        },
+        {
+          "message": "spec.uplinks is not supported with EVPN transport",
+          "rule": "!has(self.uplinks) || !has(self.network.transport) || self.network.transport != 'EVPN'"
+        }
+      ]
     },
     "status": {
       "additionalProperties": false,
@@ -862,6 +965,11 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "vrfName": {
+          "description": "VRFName is the name of the Linux VRF device that OVN-Kubernetes creates\nfor this network on every node where the network is present. It is\npopulated for primary networks. Consumers that must name the VRF, such\nas FRRConfiguration authors filling in the routers 'vrf' field, should\nread this value instead of deriving it.",
+          "maxLength": 15,
+          "type": "string"
         }
       },
       "type": "object"

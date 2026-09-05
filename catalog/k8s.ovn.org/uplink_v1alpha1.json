@@ -1,5 +1,5 @@
 {
-  "description": "EgressQoS is a CRD that allows the user to define a DSCP value\nfor pods egress traffic on its namespace to specified CIDRs.\nTraffic from these pods will be checked against each EgressQoSRule in\nthe namespace's EgressQoS, and if there is a match the traffic is marked\nwith the relevant DSCP value.",
+  "description": "Uplink represents a physical network path out of a node that OVN-Kubernetes\ncan connect its logical topology to. Supported node config type: OVSBridge.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -10,38 +10,26 @@
       "type": "string"
     },
     "metadata": {
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "pattern": "^default$",
-          "type": "string"
-        }
-      },
       "type": "object"
     },
     "spec": {
       "additionalProperties": false,
-      "description": "EgressQoSSpec defines the desired state of EgressQoS",
       "properties": {
-        "egress": {
-          "description": "a collection of Egress QoS rule objects",
+        "nodeConfigs": {
+          "description": "NodeConfigs contains mappings of nodes to uplink configuration. A node may\nbe selected by at most one nodeConfig entry. Multiple nodeConfigs that\nselect the same node are treated as a configuration error.",
           "items": {
             "additionalProperties": false,
             "properties": {
-              "dscp": {
-                "description": "DSCP marking value for matching pods' traffic.",
-                "maximum": 63,
-                "minimum": 0,
-                "type": "integer"
-              },
-              "dstCIDR": {
-                "description": "DstCIDR specifies the destination's CIDR. Only traffic heading\nto this CIDR will be marked with the DSCP value.\nThis field is optional, and in case it is not set the rule is applied\nto all egress traffic regardless of the destination.",
-                "format": "cidr",
+              "hostInterfaceName": {
+                "description": "HostInterfaceName is the host-visible Linux interface that carries the\ngateway L3 identity for this uplink. In non-accelerated deployments,\nthis is typically the OVS bridge Linux interface, whose name usually\nmatches the OVS bridge name. In SmartNIC accelerated deployments, this is\nthe VF/SF netdevice and OVN-Kubernetes resolves the OVS bridge through\nits representor. In DPU deployments, this is the DPU-host PF interface\nwhose DPU-side PF representor is attached to the OVS bridge.",
+                "maxLength": 15,
+                "minLength": 1,
+                "pattern": "^[^/\\s]+$",
                 "type": "string"
               },
-              "podSelector": {
+              "nodeSelector": {
                 "additionalProperties": false,
-                "description": "PodSelector applies the QoS rule only to the pods in the namespace whose label\nmatches this definition. This field is optional, and in case it is not set\nresults in the rule being applied to all pods in the namespace.",
+                "description": "NodeSelector selects nodes where this uplink config applies. An empty\nselector matches all nodes.",
                 "properties": {
                   "matchExpressions": {
                     "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -85,28 +73,38 @@
                 },
                 "type": "object",
                 "x-kubernetes-map-type": "atomic"
+              },
+              "type": {
+                "description": "Type is the uplink node config type. Supported value: OVSBridge.",
+                "enum": [
+                  "OVSBridge"
+                ],
+                "type": "string"
               }
             },
             "required": [
-              "dscp"
+              "hostInterfaceName",
+              "nodeSelector",
+              "type"
             ],
             "type": "object"
           },
+          "maxItems": 64,
+          "minItems": 1,
           "type": "array",
           "x-kubernetes-list-type": "atomic"
         }
       },
       "required": [
-        "egress"
+        "nodeConfigs"
       ],
       "type": "object"
     },
     "status": {
       "additionalProperties": false,
-      "description": "EgressQoSStatus defines the observed state of EgressQoS",
       "properties": {
         "conditions": {
-          "description": "An array of condition objects indicating details about status of EgressQoS object.",
+          "description": "Conditions reports aggregate Uplink state.",
           "items": {
             "additionalProperties": false,
             "description": "Condition contains details for one aspect of the current state of this API Resource.",
@@ -164,15 +162,14 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
-        },
-        "status": {
-          "description": "A concise indication of whether the EgressQoS resource is applied with success.",
-          "type": "string"
         }
       },
       "type": "object"
     }
   },
+  "required": [
+    "spec"
+  ],
   "type": "object",
-  "x-flux-schema-type": "EgressQoS"
+  "x-flux-schema-type": "Uplink"
 }
