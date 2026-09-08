@@ -1,4 +1,4 @@
-# schema source: Cluster API k0smotron Bootstrap v2.1.0 https://github.com/k0sproject/k0smotron
+# schema source: Cluster API k0smotron Bootstrap v2.1.1 https://github.com/k0sproject/k0smotron
 apiVersion <string> enum=bootstrap.cluster.x-k8s.io/v1beta1 (deprecated)
 kind <string> enum=K0sControllerConfig
 metadata.name <string> (required)
@@ -14,6 +14,7 @@ spec.customUserDataRef.secretRef.key <string> (required)	# Key is the key in the
 spec.customUserDataRef.secretRef.name <string> (required)	# Name is the name of the source
 spec.downloadURL <string>	# DownloadURL specifies the URL from which to download the k0s binary. If the version field is specified, it is ignored, and whatever version is downloaded from the URL is used. Supported protocols are: http, https, oci. Using 'oci' scheme requires 'oras' to be installed on the target system. If 'oci' schema is used and the OCI registry requires authentication, make sure to set up the authentication beforehand by adding a file to the Files section that contains the necessary config for ORAS. See: https://oras.land/docs/how_to_guides/authentication/ The file must be placed at `/root` directory (HOME for cloud-init execution time) and named `config.json`. NOTE: use `.preStartCommands` to set DOCKER_CONFIG environment variable in order to let ORAS pick up your custom config file. When no value is specified, k0smotron will use the default URL: https://get.k0s.sh
 spec.files <[]object>	# Files specifies extra files to be passed to user_data upon creation.
+spec.files[].append <boolean>	# Append specifies whether Content is appended to an existing file rather than replacing it. If the file does not exist it is created either way.
 spec.files[].content <string>
 spec.files[].contentFrom <object>	# ContentFrom specifies the source of the content.
 spec.files[].contentFrom.configMapRef <object>	# ConfigMapRef is a reference to a configmap that contains the content.
@@ -22,6 +23,8 @@ spec.files[].contentFrom.configMapRef.name <string> (required)	# Name is the nam
 spec.files[].contentFrom.secretRef <object>	# SecretRef is a reference to a secret that contains the content.
 spec.files[].contentFrom.secretRef.key <string> (required)	# Key is the key in the source that contains the content
 spec.files[].contentFrom.secretRef.name <string> (required)	# Name is the name of the source
+spec.files[].encoding <string> enum=base64	# Encoding specifies how Content is encoded. When empty Content is used verbatim. Use it to carry bytes that a plain string cannot hold.
+spec.files[].owner <string> max=256	# Owner sets file ownership as a user name and an optional group name separated by a colon. Empty means the file is owned by root.
 spec.files[].path <string>
 spec.files[].permissions <string>
 spec.ignition <object>	# Ignition defines the ignition configuration. If empty, k0smotron will use cloud-init.

@@ -1,4 +1,4 @@
-# schema source: Cluster API k0smotron Control Plane v2.1.0 https://github.com/k0sproject/k0smotron
+# schema source: Cluster API k0smotron Control Plane v2.1.1 https://github.com/k0sproject/k0smotron
 apiVersion <string> enum=controlplane.cluster.x-k8s.io/v1beta1
 kind <string> enum=K0sControlPlaneTemplate
 metadata.name <string> (required)
@@ -23,6 +23,7 @@ spec.template.spec.k0sConfigSpec.customUserDataRef.secretRef.key <string> (requi
 spec.template.spec.k0sConfigSpec.customUserDataRef.secretRef.name <string> (required)	# Name is the name of the source
 spec.template.spec.k0sConfigSpec.downloadURL <string>	# DownloadURL specifies the URL from which to download the k0s binary. If the version field is specified, it is ignored, and whatever version is downloaded from the URL is used. Supported protocols are: http, https, oci. Using 'oci' scheme requires 'oras' to be installed on the target system. If 'oci' schema is used and the OCI registry requires authentication, make sure to set up the authentication beforehand by adding a file to the Files section that contains the necessary config for ORAS. See: https://oras.land/docs/how_to_guides/authentication/ The file must be placed at `/root` directory (HOME for cloud-init execution time) and named `config.json`. NOTE: use `.preStartCommands` to set DOCKER_CONFIG environment variable in order to let ORAS pick up your custom config file. When no value is specified, k0smotron will use the default URL: https://get.k0s.sh
 spec.template.spec.k0sConfigSpec.files <[]object>	# Files specifies extra files to be passed to user_data upon creation.
+spec.template.spec.k0sConfigSpec.files[].append <boolean>	# Append specifies whether Content is appended to an existing file rather than replacing it. If the file does not exist it is created either way.
 spec.template.spec.k0sConfigSpec.files[].content <string>
 spec.template.spec.k0sConfigSpec.files[].contentFrom <object>	# ContentFrom specifies the source of the content.
 spec.template.spec.k0sConfigSpec.files[].contentFrom.configMapRef <object>	# ConfigMapRef is a reference to a configmap that contains the content.
@@ -31,6 +32,8 @@ spec.template.spec.k0sConfigSpec.files[].contentFrom.configMapRef.name <string> 
 spec.template.spec.k0sConfigSpec.files[].contentFrom.secretRef <object>	# SecretRef is a reference to a secret that contains the content.
 spec.template.spec.k0sConfigSpec.files[].contentFrom.secretRef.key <string> (required)	# Key is the key in the source that contains the content
 spec.template.spec.k0sConfigSpec.files[].contentFrom.secretRef.name <string> (required)	# Name is the name of the source
+spec.template.spec.k0sConfigSpec.files[].encoding <string> enum=base64	# Encoding specifies how Content is encoded. When empty Content is used verbatim. Use it to carry bytes that a plain string cannot hold.
+spec.template.spec.k0sConfigSpec.files[].owner <string> max=256	# Owner sets file ownership as a user name and an optional group name separated by a colon. Empty means the file is owned by root.
 spec.template.spec.k0sConfigSpec.files[].path <string>
 spec.template.spec.k0sConfigSpec.files[].permissions <string>
 spec.template.spec.k0sConfigSpec.ignition <object>	# Ignition defines the ignition configuration. If empty, k0smotron will use cloud-init.
