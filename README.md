@@ -117,7 +117,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS EFS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-efs` | v1.6.0 | 3 | 2026-08-29 |
 | [AWS EKS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eks` | v1.23.0 | 8 | 2026-09-10 |
 | [AWS Elastic Load Balancing v2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elbv2` | v1.7.0 | 4 | 2026-08-29 |
-| [AWS ElastiCache Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elasticache` | v1.9.0 | 9 | 2026-08-29 |
+| [AWS ElastiCache Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elasticache` | v1.9.1 | 9 | 2026-09-11 |
 | [AWS EventBridge Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eventbridge` | v1.7.0 | 4 | 2026-08-29 |
 | [AWS IAM Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-iam` | v1.9.0 | 7 | 2026-08-29 |
 | [AWS Kinesis Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kinesis` | v1.5.0 | 1 | 2026-08-29 |
@@ -161,12 +161,12 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.9.4 | 2 | 2026-09-05 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.40.4 | 5 | 2026-09-05 |
 | [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.37.2 | 8 | 2026-08-18 |
-| [Kyverno](https://schemas.fluxoperator.dev/p/kyverno) | `kyverno` | v1.19.0 | 47 | 2026-08-21 |
+| [Kyverno](https://schemas.fluxoperator.dev/p/kyverno) | `kyverno` | v1.19.1 | 47 | 2026-09-11 |
 | [OPA Gatekeeper](https://schemas.fluxoperator.dev/p/gatekeeper) | `gatekeeper` | v3.23.1 | 27 | 2026-08-28 |
 | [OpenReports](https://schemas.fluxoperator.dev/p/openreports) | `openreports` | v0.2.1 | 2 | 2026-07-09 |
 | [Rancher Elemental Operator](https://schemas.fluxoperator.dev/p/rancher-elemental-operator) | `rancher-elemental-operator` | v1.9.2 | 9 | 2026-07-10 |
 | [Rancher Turtles](https://schemas.fluxoperator.dev/p/rancher-turtles) | `rancher-turtles` | v0.27.1 | 2 | 2026-08-25 |
-| [Sealed Secrets](https://schemas.fluxoperator.dev/p/sealed-secrets) | `sealed-secrets` | v0.39.1 | 1 | 2026-08-21 |
+| [Sealed Secrets](https://schemas.fluxoperator.dev/p/sealed-secrets) | `sealed-secrets` | v0.40.0 | 1 | 2026-09-11 |
 | [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.1 | 4 | 2026-09-10 |
 | [Sigstore Policy Controller](https://schemas.fluxoperator.dev/p/sigstore-policy-controller) | `sigstore-policy-controller` | v0.15.1 | 3 | 2026-07-09 |
 | [SPIRE Controller Manager](https://schemas.fluxoperator.dev/p/spire-controller-manager) | `spire-controller-manager` | v0.7.0 | 4 | 2026-07-28 |
@@ -199,7 +199,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.2.3 | 6 | 2026-08-31 |
 | [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.24.1 | 9 | 2026-08-31 |
 | [Submariner Operator](https://schemas.fluxoperator.dev/p/submariner) | `submariner-operator` | v0.24.1 | 3 | 2026-08-31 |
-| [Tailscale](https://schemas.fluxoperator.dev/p/tailscale) | `tailscale` | v1.102.3 | 8 | 2026-08-21 |
+| [Tailscale](https://schemas.fluxoperator.dev/p/tailscale) | `tailscale` | v1.102.4 | 8 | 2026-09-11 |
 | [Tigera Operator](https://schemas.fluxoperator.dev/p/calico) | `tigera-operator` | v3.32.2 | 9 | 2026-08-31 |
 | [Velero](https://schemas.fluxoperator.dev/p/velero) | `velero` | v1.18.2 | 11 | 2026-07-09 |
 
@@ -227,7 +227,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [kjob](https://schemas.fluxoperator.dev/p/kjob) | `kjob` | v0.1.0 | 5 | 2026-07-09 |
 | [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.1 | 18 | 2026-07-16 |
 | [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.7.0 | 7 | 2026-08-20 |
-| [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.19.3 | 22 | 2026-09-04 |
+| [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.19.4 | 22 | 2026-09-11 |
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.4 | 54 | 2026-09-03 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v0.10.0 | 3 | 2026-08-12 |
@@ -236,7 +236,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.19.0 | 2 | 2026-07-11 |
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.19.0 | 3 | 2026-07-11 |
 | [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.20.1 | 1 | 2026-07-23 |
-| [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.12 | 10 | 2026-08-27 |
+| [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.13 | 10 | 2026-09-11 |
 | [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.7.1 | 4 | 2026-07-27 |
 | [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.15.2 | 9 | 2026-08-30 |
 | [Volcano JobFlow](https://schemas.fluxoperator.dev/p/volcano) | `volcano-jobflow` | v1.15.2 | 2 | 2026-08-30 |
