@@ -1,88 +1,30 @@
 {
-  "description": "vpc egress gateway is used to forward the egress traffic from the VPC to the external network",
   "properties": {
-    "apiVersion": {
-      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-      "type": "string"
-    },
-    "kind": {
-      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-      "type": "string"
-    },
-    "metadata": {
-      "type": "object"
-    },
     "spec": {
       "additionalProperties": false,
       "properties": {
-        "bandwidth": {
-          "additionalProperties": false,
-          "description": "Optional bandwidth limit for each egress gateway instance in both ingress and egress directions.\nIf not specified, there will be no bandwidth limit.",
-          "properties": {
-            "egress": {
-              "description": "egress bandwidth limit, specified as an integer in Mbps or a Kubernetes quantity such as 100M or 1Gi in bits per second",
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "message": "integer bandwidth must be between 0 and 9223372036854 Mbps",
-                  "rule": "type(self) == int ? self >= 0 && self <= 9223372036854 : true"
-                }
-              ]
-            },
-            "ingress": {
-              "description": "ingress bandwidth limit, specified as an integer in Mbps or a Kubernetes quantity such as 100M or 1Gi in bits per second",
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "message": "integer bandwidth must be between 0 and 9223372036854 Mbps",
-                  "rule": "type(self) == int ? self >= 0 && self <= 9223372036854 : true"
-                }
-              ]
-            }
-          },
-          "type": "object"
-        },
         "bfd": {
           "additionalProperties": false,
-          "description": "BFD configuration",
+          "description": "BFD (Bidirectional Forwarding Detection) configuration",
           "properties": {
             "enabled": {
               "default": false,
-              "description": "whether to enable BFD\nif set to true, the egress gateway will establish BFD session(s) with the VPC BFD LRP\nthe VPC's .spec.bfd.enabled must be set to true to enable BFD",
               "type": "boolean"
             },
             "minRX": {
               "default": 1000,
-              "description": "optional BFD minRX/minTX/multiplier",
-              "format": "int32",
               "maximum": 3600000,
               "minimum": 1,
               "type": "integer"
             },
             "minTX": {
               "default": 1000,
-              "format": "int32",
               "maximum": 3600000,
               "minimum": 1,
               "type": "integer"
             },
             "multiplier": {
               "default": 3,
-              "format": "int32",
               "maximum": 3600000,
               "minimum": 1,
               "type": "integer"
@@ -90,73 +32,91 @@
           },
           "type": "object"
         },
-        "bgpConf": {
-          "description": "optional BGP configuration name\nit references a cluster-scoped BgpConf resource",
-          "type": "string"
-        },
-        "evpnConf": {
-          "description": "optional EVPN configuration name\nit references a cluster-scoped EvpnConf resource",
-          "type": "string"
-        },
-        "externalIPPool": {
-          "description": "optional name of an IPPool resource used to allocate the external IP for the workload\nthe referenced IPPool's subnet must match the external subnet\nmutually exclusive with externalIPs",
-          "type": "string"
-        },
         "externalIPs": {
           "description": "External IP addresses for the egress gateway",
           "items": {
+            "oneOf": [
+              {
+                "format": "ipv4"
+              },
+              {
+                "format": "ipv6"
+              },
+              {
+                "pattern": "^(?:(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5]),((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|:)))$"
+              },
+              {
+                "pattern": "^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|:))),(?:(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])$"
+              }
+            ],
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-type": "set"
         },
         "externalSubnet": {
-          "description": "external subnet used to create the workload",
+          "description": "External subnet name for the egress gateway. This field is immutable after creation and is required.",
           "type": "string"
         },
         "image": {
-          "description": "optional image used by the workload\nif not specified, the default image passed in by kube-ovn-controller will be used",
-          "type": "string"
-        },
-        "internalIPPool": {
-          "description": "optional name of an IPPool resource used to allocate the internal IP for the workload\nthe referenced IPPool's subnet must match the internal subnet\nmutually exclusive with internalIPs",
+          "description": "Container image for the egress gateway",
           "type": "string"
         },
         "internalIPs": {
-          "description": "optional internal/external IPs used to create the workload\nthese IPs must be in the internal/external subnet\nthe IPs count must NOT be less than the replicas count",
+          "description": "Internal IP addresses for the egress gateway",
           "items": {
+            "oneOf": [
+              {
+                "format": "ipv4"
+              },
+              {
+                "format": "ipv6"
+              },
+              {
+                "pattern": "^(?:(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5]),((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|:)))$"
+              },
+              {
+                "pattern": "^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|:))),(?:(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])$"
+              }
+            ],
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-type": "set"
         },
         "internalSubnet": {
-          "description": "optional internal subnet used to create the workload\nif not specified, the workload will be created in the default subnet of the VPC",
+          "description": "Internal subnet name for the egress gateway. This field is immutable after creation.",
           "type": "string"
         },
         "nodeSelector": {
-          "description": "optional node selector used to select the nodes where the workload will be running",
+          "description": "Node selector for egress gateway placement",
           "items": {
             "additionalProperties": false,
             "properties": {
               "matchExpressions": {
                 "items": {
                   "additionalProperties": false,
-                  "description": "A node selector requirement is a selector that contains values, a key, and an operator\nthat relates the key and values.",
                   "properties": {
                     "key": {
-                      "description": "The label key that the selector applies to.",
                       "type": "string"
                     },
                     "operator": {
-                      "description": "Represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.",
+                      "enum": [
+                        "In",
+                        "NotIn",
+                        "Exists",
+                        "DoesNotExist",
+                        "Gt",
+                        "Lt"
+                      ],
                       "type": "string"
                     },
                     "values": {
-                      "description": "An array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. If the operator is Gt or Lt, the values\narray must have a single element, which will be interpreted as an integer.\nThis array is replaced during a strategic merge patch.",
                       "items": {
                         "type": "string"
                       },
                       "type": "array",
-                      "x-kubernetes-list-type": "atomic"
+                      "x-kubernetes-list-type": "set"
                     }
                   },
                   "required": [
@@ -170,23 +130,27 @@
               "matchFields": {
                 "items": {
                   "additionalProperties": false,
-                  "description": "A node selector requirement is a selector that contains values, a key, and an operator\nthat relates the key and values.",
                   "properties": {
                     "key": {
-                      "description": "The label key that the selector applies to.",
                       "type": "string"
                     },
                     "operator": {
-                      "description": "Represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.",
+                      "enum": [
+                        "In",
+                        "NotIn",
+                        "Exists",
+                        "DoesNotExist",
+                        "Gt",
+                        "Lt"
+                      ],
                       "type": "string"
                     },
                     "values": {
-                      "description": "An array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. If the operator is Gt or Lt, the values\narray must have a single element, which will be interpreted as an integer.\nThis array is replaced during a strategic merge patch.",
                       "items": {
                         "type": "string"
                       },
                       "type": "array",
-                      "x-kubernetes-list-type": "atomic"
+                      "x-kubernetes-list-type": "set"
                     }
                   },
                   "required": [
@@ -208,726 +172,100 @@
           },
           "type": "array"
         },
-        "observability": {
-          "additionalProperties": false,
-          "description": "Optional observability configuration for the gateway workload.",
-          "properties": {
-            "conntrack": {
-              "additionalProperties": false,
-              "description": "VpcEgressGatewayConntrackObservability configures conntrack metrics and flow logs.",
-              "properties": {
-                "log": {
-                  "additionalProperties": false,
-                  "description": "VpcEgressGatewayConntrackLog configures JSON Lines flow logging to stdout.",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean"
-                    },
-                    "events": {
-                      "description": "flow lifecycle events to log; start and end are used when omitted",
-                      "items": {
-                        "enum": [
-                          "start",
-                          "end"
-                        ],
-                        "type": "string"
-                      },
-                      "maxItems": 2,
-                      "type": "array",
-                      "x-kubernetes-list-type": "set"
-                    },
-                    "filters": {
-                      "additionalProperties": false,
-                      "description": "VpcEgressGatewayConntrackLogFilters selects flow records. Exclude rules take precedence.",
-                      "properties": {
-                        "exclude": {
-                          "items": {
-                            "additionalProperties": false,
-                            "description": "VpcEgressGatewayConntrackLogFilter matches all configured fields in a rule.",
-                            "properties": {
-                              "addressFamilies": {
-                                "items": {
-                                  "enum": [
-                                    "ipv4",
-                                    "ipv6"
-                                  ],
-                                  "type": "string"
-                                },
-                                "maxItems": 2,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
-                              },
-                              "natTypes": {
-                                "items": {
-                                  "enum": [
-                                    "snat",
-                                    "dnat",
-                                    "snat_dnat"
-                                  ],
-                                  "type": "string"
-                                },
-                                "maxItems": 3,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
-                              },
-                              "original": {
-                                "additionalProperties": false,
-                                "description": "VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.",
-                                "properties": {
-                                  "destinationCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "destinationPorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  },
-                                  "sourceCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "sourcePorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  }
-                                },
-                                "type": "object"
-                              },
-                              "protocols": {
-                                "items": {
-                                  "enum": [
-                                    "tcp",
-                                    "udp",
-                                    "sctp",
-                                    "icmp",
-                                    "icmpv6",
-                                    "other"
-                                  ],
-                                  "type": "string"
-                                },
-                                "maxItems": 6,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
-                              },
-                              "translated": {
-                                "additionalProperties": false,
-                                "description": "VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.",
-                                "properties": {
-                                  "destinationCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "destinationPorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  },
-                                  "sourceCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "sourcePorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  }
-                                },
-                                "type": "object"
-                              }
-                            },
-                            "type": "object"
-                          },
-                          "maxItems": 64,
-                          "type": "array"
-                        },
-                        "include": {
-                          "items": {
-                            "additionalProperties": false,
-                            "description": "VpcEgressGatewayConntrackLogFilter matches all configured fields in a rule.",
-                            "properties": {
-                              "addressFamilies": {
-                                "items": {
-                                  "enum": [
-                                    "ipv4",
-                                    "ipv6"
-                                  ],
-                                  "type": "string"
-                                },
-                                "maxItems": 2,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
-                              },
-                              "natTypes": {
-                                "items": {
-                                  "enum": [
-                                    "snat",
-                                    "dnat",
-                                    "snat_dnat"
-                                  ],
-                                  "type": "string"
-                                },
-                                "maxItems": 3,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
-                              },
-                              "original": {
-                                "additionalProperties": false,
-                                "description": "VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.",
-                                "properties": {
-                                  "destinationCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "destinationPorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  },
-                                  "sourceCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "sourcePorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  }
-                                },
-                                "type": "object"
-                              },
-                              "protocols": {
-                                "items": {
-                                  "enum": [
-                                    "tcp",
-                                    "udp",
-                                    "sctp",
-                                    "icmp",
-                                    "icmpv6",
-                                    "other"
-                                  ],
-                                  "type": "string"
-                                },
-                                "maxItems": 6,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
-                              },
-                              "translated": {
-                                "additionalProperties": false,
-                                "description": "VpcEgressGatewayConntrackTupleFilter matches tuple addresses and ports.",
-                                "properties": {
-                                  "destinationCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "destinationPorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  },
-                                  "sourceCIDRs": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
-                                  },
-                                  "sourcePorts": {
-                                    "items": {
-                                      "additionalProperties": false,
-                                      "description": "VpcEgressGatewayPortRange is an inclusive transport port range.",
-                                      "properties": {
-                                        "end": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        },
-                                        "start": {
-                                          "format": "int32",
-                                          "maximum": 65535,
-                                          "minimum": 0,
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "type": "object",
-                                      "x-kubernetes-validations": [
-                                        {
-                                          "message": "start must not be greater than end",
-                                          "rule": "self.start <= self.end"
-                                        }
-                                      ]
-                                    },
-                                    "maxItems": 64,
-                                    "type": "array"
-                                  }
-                                },
-                                "type": "object"
-                              }
-                            },
-                            "type": "object"
-                          },
-                          "maxItems": 64,
-                          "type": "array"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "rateLimit": {
-                      "additionalProperties": false,
-                      "description": "VpcEgressGatewayConntrackLogRateLimit limits flow log records per gateway pod.",
-                      "properties": {
-                        "burst": {
-                          "format": "int32",
-                          "maximum": 1000000,
-                          "minimum": 1,
-                          "type": "integer"
-                        },
-                        "recordsPerSecond": {
-                          "format": "int32",
-                          "maximum": 100000,
-                          "minimum": 1,
-                          "type": "integer"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "type": "object"
-                },
-                "metrics": {
-                  "additionalProperties": false,
-                  "description": "VpcEgressGatewayObservabilityFeature enables an observability collector.",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "type": "object"
-            },
-            "interfaceMetrics": {
-              "additionalProperties": false,
-              "description": "VpcEgressGatewayObservabilityFeature enables an observability collector.",
-              "properties": {
-                "enabled": {
-                  "type": "boolean"
-                }
-              },
-              "type": "object"
-            },
-            "resources": {
-              "additionalProperties": false,
-              "description": "Compute resources required by the observability sidecar.",
-              "properties": {
-                "claims": {
-                  "description": "Claims lists the names of resources, defined in spec.resourceClaims,\nthat are used by this container.\n\nThis field depends on the\nDynamicResourceAllocation feature gate.\n\nThis field is immutable. It can only be set for containers.",
-                  "items": {
-                    "additionalProperties": false,
-                    "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
-                    "properties": {
-                      "name": {
-                        "description": "Name must match the name of one entry in pod.spec.resourceClaims of\nthe Pod where this field is used. It makes that resource available\ninside a container.",
-                        "type": "string"
-                      },
-                      "request": {
-                        "description": "Request is the name chosen for a request in the referenced claim.\nIf empty, everything from the claim is made available, otherwise\nonly the result of this request.",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "name"
-                    ],
-                    "type": "object"
-                  },
-                  "type": "array",
-                  "x-kubernetes-list-map-keys": [
-                    "name"
-                  ],
-                  "x-kubernetes-list-type": "map"
-                },
-                "limits": {
-                  "additionalProperties": {
-                    "oneOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "integer"
-                      }
-                    ]
-                  },
-                  "description": "Limits describes the maximum amount of compute resources allowed.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
-                  "type": "object"
-                },
-                "requests": {
-                  "additionalProperties": {
-                    "oneOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "integer"
-                      }
-                    ]
-                  },
-                  "description": "Requests describes the minimum amount of compute resources required.\nIf Requests is omitted for a container, it defaults to Limits if that is explicitly specified,\notherwise to an implementation-defined value. Requests cannot exceed Limits.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
-                  "type": "object"
-                }
-              },
-              "type": "object"
-            },
-            "serviceMonitor": {
-              "additionalProperties": false,
-              "description": "VpcEgressGatewayServiceMonitor configures metadata for the per-gateway ServiceMonitor.",
-              "properties": {
-                "annotations": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                "labels": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                }
-              },
-              "type": "object"
-            }
-          },
-          "type": "object"
-        },
         "policies": {
-          "description": "egress policies\nat least one policy must be specified",
+          "description": "Egress policies for the gateway",
           "items": {
             "additionalProperties": false,
             "properties": {
               "ipBlocks": {
-                "description": "CIDRs/subnets targeted by the egress traffic policy",
                 "items": {
+                  "anyOf": [
+                    {
+                      "format": "ipv4"
+                    },
+                    {
+                      "format": "ipv6"
+                    },
+                    {
+                      "format": "cidr"
+                    }
+                  ],
                   "type": "string"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "set"
               },
               "snat": {
                 "default": false,
-                "description": "whether to enable SNAT/MASQUERADE for the egress traffic",
                 "type": "boolean"
               },
               "subnets": {
                 "items": {
+                  "minLength": 1,
                   "type": "string"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "set"
               }
             },
-            "type": "object"
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "Each policy MUST have at least one ipBlock or subnet",
+                "rule": "size(self.ipBlocks) != 0 || size(self.subnets) != 0"
+              }
+            ]
           },
           "type": "array"
         },
         "prefix": {
-          "description": "optional name prefix used to generate the workload\nthe workload name will be generated as <prefix><vpc-egress-gateway-name>",
-          "type": "string"
+          "anyOf": [
+            {
+              "pattern": "^$"
+            },
+            {
+              "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*[-\\.]?$"
+            }
+          ],
+          "description": "Name prefix for egress gateway pods. This field is immutable after creation.",
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "This field is immutable.",
+              "rule": "self == oldSelf"
+            }
+          ]
         },
         "replicas": {
           "default": 1,
-          "description": "workload replicas",
-          "format": "int32",
+          "description": "Number of egress gateway replicas",
+          "maximum": 10,
+          "minimum": 0,
           "type": "integer"
         },
-        "resources": {
-          "additionalProperties": false,
-          "description": "Compute Resources required for the container. If not specified, the controller will set a default value.\nIf specified, the controller will not set any default value and use the specified value directly.",
-          "properties": {
-            "claims": {
-              "description": "Claims lists the names of resources, defined in spec.resourceClaims,\nthat are used by this container.\n\nThis field depends on the\nDynamicResourceAllocation feature gate.\n\nThis field is immutable. It can only be set for containers.",
-              "items": {
-                "additionalProperties": false,
-                "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
-                "properties": {
-                  "name": {
-                    "description": "Name must match the name of one entry in pod.spec.resourceClaims of\nthe Pod where this field is used. It makes that resource available\ninside a container.",
-                    "type": "string"
-                  },
-                  "request": {
-                    "description": "Request is the name chosen for a request in the referenced claim.\nIf empty, everything from the claim is made available, otherwise\nonly the result of this request.",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "name"
-                ],
-                "type": "object"
-              },
-              "type": "array",
-              "x-kubernetes-list-map-keys": [
-                "name"
-              ],
-              "x-kubernetes-list-type": "map"
-            },
-            "limits": {
-              "additionalProperties": {
-                "oneOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "integer"
-                  }
-                ]
-              },
-              "description": "Limits describes the maximum amount of compute resources allowed.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
-              "type": "object"
-            },
-            "requests": {
-              "additionalProperties": {
-                "oneOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "integer"
-                  }
-                ]
-              },
-              "description": "Requests describes the minimum amount of compute resources required.\nIf Requests is omitted for a container, it defaults to Limits if that is explicitly specified,\notherwise to an implementation-defined value. Requests cannot exceed Limits.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
-              "type": "object"
-            }
-          },
-          "type": "object"
-        },
         "selectors": {
-          "description": "namespace/pod selectors",
+          "description": "Selectors for pods to use this egress gateway",
           "items": {
             "additionalProperties": false,
             "properties": {
               "namespaceSelector": {
                 "additionalProperties": false,
-                "description": "A label selector is a label query over a set of resources. The result of matchLabels and\nmatchExpressions are ANDed. An empty label selector matches all objects. A null\nlabel selector matches no objects.",
                 "properties": {
                   "matchExpressions": {
-                    "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                     "items": {
                       "additionalProperties": false,
-                      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                       "properties": {
                         "key": {
-                          "description": "key is the label key that the selector applies to.",
                           "type": "string"
                         },
                         "operator": {
-                          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                           "type": "string"
                         },
                         "values": {
-                          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                           "items": {
                             "type": "string"
                           },
-                          "type": "array",
-                          "x-kubernetes-list-type": "atomic"
+                          "type": "array"
                         }
                       },
                       "required": [
@@ -936,45 +274,41 @@
                       ],
                       "type": "object"
                     },
-                    "type": "array",
-                    "x-kubernetes-list-type": "atomic"
+                    "type": "array"
                   },
                   "matchLabels": {
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
                     "type": "object"
                   }
                 },
                 "type": "object",
-                "x-kubernetes-map-type": "atomic"
+                "x-kubernetes-validations": [
+                  {
+                    "message": "Each namespace selector MUST have at least one matchLabels or matchExpressions",
+                    "rule": "size(self.matchLabels) != 0 || size(self.matchExpressions) != 0"
+                  }
+                ]
               },
               "podSelector": {
                 "additionalProperties": false,
-                "description": "A label selector is a label query over a set of resources. The result of matchLabels and\nmatchExpressions are ANDed. An empty label selector matches all objects. A null\nlabel selector matches no objects.",
                 "properties": {
                   "matchExpressions": {
-                    "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                     "items": {
                       "additionalProperties": false,
-                      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                       "properties": {
                         "key": {
-                          "description": "key is the label key that the selector applies to.",
                           "type": "string"
                         },
                         "operator": {
-                          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                           "type": "string"
                         },
                         "values": {
-                          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                           "items": {
                             "type": "string"
                           },
-                          "type": "array",
-                          "x-kubernetes-list-type": "atomic"
+                          "type": "array"
                         }
                       },
                       "required": [
@@ -983,19 +317,22 @@
                       ],
                       "type": "object"
                     },
-                    "type": "array",
-                    "x-kubernetes-list-type": "atomic"
+                    "type": "array"
                   },
                   "matchLabels": {
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
                     "type": "object"
                   }
                 },
                 "type": "object",
-                "x-kubernetes-map-type": "atomic"
+                "x-kubernetes-validations": [
+                  {
+                    "message": "Each pod selector MUST have at least one matchLabels or matchExpressions",
+                    "rule": "size(self.matchLabels) != 0 || size(self.matchExpressions) != 0"
+                  }
+                ]
               }
             },
             "type": "object"
@@ -1010,6 +347,11 @@
             "properties": {
               "effect": {
                 "description": "Effect indicates the taint effect to match. Empty means match all taint effects.\nWhen specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.",
+                "enum": [
+                  "NoSchedule",
+                  "PreferNoSchedule",
+                  "NoExecute"
+                ],
                 "type": "string"
               },
               "key": {
@@ -1017,7 +359,11 @@
                 "type": "string"
               },
               "operator": {
-                "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
+                "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                "enum": [
+                  "Exists",
+                  "Equal"
+                ],
                 "type": "string"
               },
               "tolerationSeconds": {
@@ -1036,11 +382,15 @@
         },
         "trafficPolicy": {
           "default": "Cluster",
-          "description": "optional traffic policy used to control the traffic routing\nif not specified, the default traffic policy \"Cluster\" will be used\nif set to \"Local\", traffic will be routed to the gateway pod/instance on the same node when available\ncurrently it works only for the default vpc",
+          "description": "Traffic policy for the egress gateway (Local or Cluster)",
+          "enum": [
+            "Local",
+            "Cluster"
+          ],
           "type": "string"
         },
         "vpc": {
-          "description": "optional VPC name\nif not specified, the default VPC will be used",
+          "description": "VPC name for the egress gateway. This field is immutable after creation.",
           "type": "string"
         }
       },
@@ -1050,14 +400,18 @@
       "type": "object",
       "x-kubernetes-validations": [
         {
-          "fieldPath": ".internalIPPool",
-          "message": "internalIPs and internalIPPool are mutually exclusive",
-          "rule": "!(has(self.internalIPs) && size(self.internalIPs) != 0 && has(self.internalIPPool) && size(self.internalIPPool) > 0)"
+          "fieldPath": ".internalIPs",
+          "message": "Size of Internal IPs MUST be equal to or greater than Replicas",
+          "rule": "!has(self.internalIPs) || size(self.internalIPs) == 0 || size(self.internalIPs) >= self.replicas"
         },
         {
-          "fieldPath": ".externalIPPool",
-          "message": "externalIPs and externalIPPool are mutually exclusive",
-          "rule": "!(has(self.externalIPs) && size(self.externalIPs) != 0 && has(self.externalIPPool) && size(self.externalIPPool) > 0)"
+          "fieldPath": ".externalIPs",
+          "message": "Size of External IPs MUST be equal to or greater than Replicas",
+          "rule": "!has(self.externalIPs) || size(self.externalIPs) == 0 || size(self.externalIPs) >= self.replicas"
+        },
+        {
+          "message": "Each VPC Egress Gateway MUST have at least one policy or selector",
+          "rule": "size(self.policies) != 0 || size(self.selectors) != 0"
         }
       ]
     },
@@ -1068,43 +422,58 @@
           "description": "Conditions represent the latest available observations of the egress gateway's current state",
           "items": {
             "additionalProperties": false,
-            "description": "Condition describes the state of an object at a certain point.",
             "properties": {
               "lastTransitionTime": {
-                "description": "Last time the condition transitioned from one status to another.",
                 "format": "date-time",
                 "type": "string"
               },
               "lastUpdateTime": {
-                "description": "Last time the condition was probed",
                 "format": "date-time",
                 "type": "string"
               },
               "message": {
-                "description": "A human readable message indicating details about the transition.",
+                "maxLength": 32768,
                 "type": "string"
               },
               "observedGeneration": {
-                "description": "ObservedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9,\nthe condition is out of date with respect to the current state of the instance.",
-                "format": "int64",
+                "minimum": 0,
                 "type": "integer"
               },
               "reason": {
-                "description": "The reason for the condition's last transition.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
                 "type": "string"
               },
               "status": {
-                "description": "Status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
                 "type": "string"
               },
               "type": {
-                "description": "Type of condition.",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
                 "type": "string"
               }
             },
+            "required": [
+              "lastTransitionTime",
+              "lastUpdateTime",
+              "observedGeneration",
+              "reason",
+              "status",
+              "type"
+            ],
             "type": "object"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
         },
         "externalIPs": {
           "description": "External IP addresses assigned to the egress gateway",
@@ -1114,7 +483,7 @@
           "type": "array"
         },
         "internalIPs": {
-          "description": "internal/external IPs used by the workload",
+          "description": "Internal IP addresses assigned to the egress gateway",
           "items": {
             "type": "string"
           },
@@ -1127,21 +496,27 @@
         "phase": {
           "default": "Pending",
           "description": "Current phase of the egress gateway (Pending, Processing, or Completed)",
+          "enum": [
+            "Pending",
+            "Processing",
+            "Completed"
+          ],
           "type": "string"
         },
         "ready": {
           "default": false,
-          "description": "whether the egress gateway is ready",
+          "description": "Indicates whether the egress gateway is ready",
           "type": "boolean"
         },
         "replicas": {
-          "description": "used by the scale subresource",
-          "format": "int32",
+          "description": "Number of egress gateway replicas",
+          "maximum": 10,
+          "minimum": 0,
           "type": "integer"
         },
         "workload": {
           "additionalProperties": false,
-          "description": "workload information",
+          "description": "Workload information for the egress gateway",
           "properties": {
             "apiVersion": {
               "type": "string"
@@ -1153,7 +528,6 @@
               "type": "string"
             },
             "nodes": {
-              "description": "nodes where the workload is running",
               "items": {
                 "type": "string"
               },
