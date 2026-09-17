@@ -186,13 +186,13 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.20.2 | 30 | 2026-09-16 |
 | [Container Object Storage Interface](https://schemas.fluxoperator.dev/p/cosi) | `cosi` | v0.2.2 | 5 | 2026-07-09 |
 | [CSI External Snapshotter](https://schemas.fluxoperator.dev/p/external-snapshotter) | `external-snapshotter` | v8.6.0 | 15 | 2026-07-09 |
-| [Kube-OVN](https://schemas.fluxoperator.dev/p/kube-ovn) | `kube-ovn` | v1.16.4 | 24 | 2026-09-15 |
+| [Kube-OVN](https://schemas.fluxoperator.dev/p/kube-ovn) | `kube-ovn` | v1.16.5 | 24 | 2026-09-17 |
 | [Longhorn](https://schemas.fluxoperator.dev/p/longhorn) | `longhorn` | v1.12.1 | 25 | 2026-08-14 |
 | [Multi-Cluster Services API](https://schemas.fluxoperator.dev/p/mcs-api) | `mcs-api` | v0.5.2 | 4 | 2026-07-14 |
 | [Multus CNI](https://schemas.fluxoperator.dev/p/multus-cni) | `multus-cni` | v4.3.1 | 1 | 2026-09-09 |
 | [Network Policy API](https://schemas.fluxoperator.dev/p/network-policy-api) | `network-policy-api` | v0.2.0 | 1 | 2026-07-09 |
 | [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.7.0 | 5 | 2026-08-22 |
-| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.7.0 | 5 | 2026-08-26 |
+| [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.4.2 | 5 | 2026-09-17 |
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.4.0 | 13 | 2026-09-05 |
 | [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.20.7 | 21 | 2026-09-03 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.2 | 12 | 2026-08-18 |
@@ -223,7 +223,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Karpenter Cluster API](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-cluster-api` | v0.2.0 | 1 | 2026-07-09 |
 | [Karpenter IBM Cloud](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-ibm-cloud` | v1.0.5 | 1 | 2026-07-14 |
 | [KEDA](https://schemas.fluxoperator.dev/p/keda) | `keda` | v2.20.2 | 6 | 2026-08-01 |
-| [kgateway](https://schemas.fluxoperator.dev/p/kgateway) | `kgateway` | v2.4.4 | 8 | 2026-09-01 |
+| [kgateway](https://schemas.fluxoperator.dev/p/kgateway) | `kgateway` | v2.4.5 | 8 | 2026-09-17 |
 | [kjob](https://schemas.fluxoperator.dev/p/kjob) | `kjob` | v0.1.0 | 5 | 2026-07-09 |
 | [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.1 | 18 | 2026-07-16 |
 | [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.7.0 | 7 | 2026-08-20 |
@@ -231,7 +231,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v2.14.4 | 54 | 2026-09-03 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v0.10.0 | 3 | 2026-08-12 |
-| [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.9.2 | 19 | 2026-09-15 |
+| [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.9.3 | 19 | 2026-09-17 |
 | [MetalLB](https://schemas.fluxoperator.dev/p/metallb) | `metallb` | v0.16.0 | 10 | 2026-07-09 |
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.19.0 | 2 | 2026-07-11 |
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.19.0 | 3 | 2026-07-11 |
@@ -285,7 +285,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 6.3.0 | 2 | 2026-09-05 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.22.0 | 11 | 2026-09-03 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
-| [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.21.2 | 8 | 2026-09-15 |
+| [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.21.3 | 8 | 2026-09-17 |
 | [Spark Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `spark-operator` | v2.5.2 | 3 | 2026-08-01 |
 | [Strimzi](https://schemas.fluxoperator.dev/p/strimzi) | `strimzi` | 0.51.0 | 24 | 2026-07-09 |
 | [Tekton Pipeline](https://schemas.fluxoperator.dev/p/tekton-pipeline) | `tekton-pipeline` | v1.16.0 | 14 | 2026-09-12 |
