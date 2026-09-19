@@ -1,4 +1,4 @@
-# schema source: Rancher Fleet v0.16.1 https://github.com/rancher/fleet
+# schema source: Rancher Fleet v0.16.2 https://github.com/rancher/fleet
 apiVersion <string> enum=fleet.cattle.io/v1alpha1
 kind <string> enum=Bundle
 metadata.name <string> (required)
@@ -20,7 +20,7 @@ spec.defaultNamespace <string>	# DefaultNamespace is the namespace to use for re
 spec.deleteCRDResources <boolean>	# DeleteCRDResources deletes CRDs. Warning! this will also delete all your Custom Resources.
 spec.deleteNamespace <boolean>	# DeleteNamespace can be used to delete the deployed namespace when removing the bundle
 spec.dependsOn <[]object>	# DependsOn refers to the bundles which must be ready before this bundle can be deployed.
-spec.dependsOn[].acceptedStates <[]string>	# AcceptedStates is a list of BundleDeployment state that are considered acceptable for this dependency. If the dependency is in one of these states, it will not block the deployment of the dependent bundle. Valid Values should match the StateRank keys. If not specified, default to ["Ready"]: only fully ready dependencies are accepted Example: ["Ready", "Modified"] will accept dependencies that are either ready or have drifted from their desired state.
+spec.dependsOn[].acceptedStates <[]string>	# AcceptedStates is a list of BundleDeployment state that are considered acceptable for this dependency. If the dependency is in one of these states, it will not block the deployment of the dependent bundle. Valid Values should match the StateRank keys, except for WaitingForDependency, which is rejected: it would unblock this bundle exactly when its dependency became blocked on a dependency of its own. If not specified, default to ["Ready"]: only fully ready dependencies are accepted Example: ["Ready", "Modified"] will accept dependencies that are either ready or have drifted from their desired state.
 spec.dependsOn[].name <string>	# Name of the bundle.
 spec.dependsOn[].selector <object>	# Selector matching bundle's labels.
 spec.dependsOn[].selector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -276,6 +276,7 @@ status.partitions[].summary.outOfSync <integer>	# OutOfSync is the number of bun
 status.partitions[].summary.pending <integer>	# Pending is the number of bundle deployments that are being processed by Fleet controller.
 status.partitions[].summary.ready <integer>	# Ready is the number of bundle deployments that have been deployed where all resources are ready.
 status.partitions[].summary.waitApplied <integer>	# WaitApplied is the number of bundle deployments that have been synced from Fleet controller and downstream cluster, but are waiting to be deployed.
+status.partitions[].summary.waitingForDependency <integer>	# WaitingForDependency is the number of bundle deployments which are not deployed because at least one of the bundles they depend on has not reached an accepted state.
 status.partitions[].unavailable <integer>	# Unavailable is the number of unavailable clusters in the partition.
 status.resourceKey <[]object>	# ResourceKey lists resources, which will likely be deployed. The actual list of resources on a cluster might differ, depending on the helm chart, value templating, etc.. (deprecated to reduce bundle size)
 status.resourceKey[].apiVersion <string>	# APIVersion is the k8s api version of the resource.
@@ -316,5 +317,6 @@ status.summary.outOfSync <integer>	# OutOfSync is the number of bundle deploymen
 status.summary.pending <integer>	# Pending is the number of bundle deployments that are being processed by Fleet controller.
 status.summary.ready <integer>	# Ready is the number of bundle deployments that have been deployed where all resources are ready.
 status.summary.waitApplied <integer>	# WaitApplied is the number of bundle deployments that have been synced from Fleet controller and downstream cluster, but are waiting to be deployed.
+status.summary.waitingForDependency <integer>	# WaitingForDependency is the number of bundle deployments which are not deployed because at least one of the bundles they depend on has not reached an accepted state.
 status.unavailable <integer>	# Unavailable is the number of bundle deployments that are not ready or where the AppliedDeploymentID in the status does not match the DeploymentID from the spec.
 status.unavailablePartitions <integer>	# UnavailablePartitions is the number of unavailable partitions.
