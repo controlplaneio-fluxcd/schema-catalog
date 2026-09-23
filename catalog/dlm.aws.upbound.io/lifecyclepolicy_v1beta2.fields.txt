@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.8.1 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=dlm.aws.upbound.io/v1beta2
 kind <string> enum=LifecyclePolicy (cluster-scoped)
 metadata.name <string> (required)
@@ -23,12 +23,12 @@ spec.forProvider.policyDetails <object>	# See the policy_details configuration b
 spec.forProvider.policyDetails.action <object>	# The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the action configuration block.
 spec.forProvider.policyDetails.action.crossRegionCopy <[]object>	# The rule for copying shared snapshots across Regions. See the cross_region_copy configuration block.
 spec.forProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration <object>	# The encryption settings for the copied snapshot. See the encryption_configuration block. Max of 1 per action.
-spec.forProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.cmkArn <string>	# The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+spec.forProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.cmkArn <string>	# ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 spec.forProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.encrypted <boolean>	# To encrypt a copy of an unencrypted snapshot when encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or when encryption by default is not enabled.
 spec.forProvider.policyDetails.action.crossRegionCopy[].retainRule <object>	# Specifies the retention rule for cross-Region snapshot copies. See the retain_rule block. Max of 1 per action.
 spec.forProvider.policyDetails.action.crossRegionCopy[].retainRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
 spec.forProvider.policyDetails.action.crossRegionCopy[].retainRule.intervalUnit <string>	# The unit for how often the lifecycle policy should be evaluated. HOURS is currently the only allowed value and also the default value. Conflicts with cron_expression. Must be set if interval is set.
-spec.forProvider.policyDetails.action.crossRegionCopy[].target <string>	# The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+spec.forProvider.policyDetails.action.crossRegionCopy[].target <string>	# Target Region or the ARN of the target Outpost for the snapshot copies.
 spec.forProvider.policyDetails.action.name <string>	# A descriptive name for the action.
 spec.forProvider.policyDetails.copyTags <boolean>	# Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is false.
 spec.forProvider.policyDetails.createInterval <number>	# How often the policy should run and create snapshots or AMIs. valid values range from 1 to 7. Default value is 1.
@@ -45,6 +45,7 @@ spec.forProvider.policyDetails.exclusions.excludeVolumeTypes <[]string>	# List s
 spec.forProvider.policyDetails.extendDeletion <boolean>	# snapshot or AMI retention behavior for the policy if the source volume or instance is deleted, or if the policy enters the error, disabled, or deleted state. Default value is false.
 spec.forProvider.policyDetails.parameters <object>	# A set of optional parameters for snapshot and AMI lifecycle policies. See the parameters configuration block.
 spec.forProvider.policyDetails.parameters.excludeBootVolume <boolean>	# Indicates whether to exclude the root volume from snapshots created using CreateSnapshots. The default is false.
+spec.forProvider.policyDetails.parameters.excludeDataVolumeTags <map[string]string>	# Map specifies whether to exclude volumes that have specific tags.
 spec.forProvider.policyDetails.parameters.noReboot <boolean>	# Applies to AMI lifecycle policies only. Indicates whether targeted instances are rebooted when the lifecycle policy runs. true indicates that targeted instances are not rebooted when the policy runs. false indicates that target instances are rebooted when the policy runs. The default is true (instances are not rebooted).
 spec.forProvider.policyDetails.policyLanguage <string>	# Type of policy to create. SIMPLIFIED To create a default policy. STANDARD To create a custom policy.
 spec.forProvider.policyDetails.policyType <string>	# The valid target resource types and actions a policy can manage. Specify EBS_SNAPSHOT_MANAGEMENT to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify IMAGE_MANAGEMENT to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify EVENT_BASED_POLICY to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is EBS_SNAPSHOT_MANAGEMENT.
@@ -74,7 +75,7 @@ spec.forProvider.policyDetails.schedule[].createRule.scripts.maximumRetryCount <
 spec.forProvider.policyDetails.schedule[].createRule.scripts.stages <[]string>	# List to indicate which scripts Amazon Data Lifecycle Manager should run on target instances. Pre scripts run before Amazon Data Lifecycle Manager initiates snapshot creation. Post scripts run after Amazon Data Lifecycle Manager initiates snapshot creation. Valid values: PRE and POST. The default is PRE and POST
 spec.forProvider.policyDetails.schedule[].createRule.times <[]string>	# A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1. Conflicts with cron_expression. Must be set if interval is set.
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule <[]object>	# See the cross_region_copy_rule block. Max of 3 per schedule.
-spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArn <string>	# The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArn <string>	# ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArnRef <object>	# Reference to a Key in kms to populate cmkArn.
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArnRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArnRef.policy <object>	# Policies for referencing.
@@ -94,8 +95,8 @@ spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].encrypted <boole
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule <object>	# Specifies the retention rule for cross-Region snapshot copies. See the retain_rule block. Max of 1 per action.
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
 spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule.intervalUnit <string>	# The unit for how often the lifecycle policy should be evaluated. HOURS is currently the only allowed value and also the default value. Conflicts with cron_expression. Must be set if interval is set.
-spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].target <string>	# The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
-spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].targetRegion <string>	# Use only for DLM policies of policy_type=IMAGE_MANAGEMENT. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].target <string>	# Target Region or the ARN of the target Outpost for the snapshot copies.
+spec.forProvider.policyDetails.schedule[].crossRegionCopyRule[].targetRegion <string>	# Use only for DLM policies of policy_type=IMAGE_MANAGEMENT. The target Region or the ARN of the target Outpost for the snapshot copies.
 spec.forProvider.policyDetails.schedule[].deprecateRule <object>	# See the deprecate_rule block. Max of 1 per schedule.
 spec.forProvider.policyDetails.schedule[].deprecateRule.count <number>	# Specifies the number of oldest AMIs to deprecate. Must be an integer between 1 and 1000. Conflicts with interval and interval_unit.
 spec.forProvider.policyDetails.schedule[].deprecateRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
@@ -139,12 +140,12 @@ spec.initProvider.policyDetails <object>	# See the policy_details configuration 
 spec.initProvider.policyDetails.action <object>	# The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the action configuration block.
 spec.initProvider.policyDetails.action.crossRegionCopy <[]object>	# The rule for copying shared snapshots across Regions. See the cross_region_copy configuration block.
 spec.initProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration <object>	# The encryption settings for the copied snapshot. See the encryption_configuration block. Max of 1 per action.
-spec.initProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.cmkArn <string>	# The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+spec.initProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.cmkArn <string>	# ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 spec.initProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.encrypted <boolean>	# To encrypt a copy of an unencrypted snapshot when encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or when encryption by default is not enabled.
 spec.initProvider.policyDetails.action.crossRegionCopy[].retainRule <object>	# Specifies the retention rule for cross-Region snapshot copies. See the retain_rule block. Max of 1 per action.
 spec.initProvider.policyDetails.action.crossRegionCopy[].retainRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
 spec.initProvider.policyDetails.action.crossRegionCopy[].retainRule.intervalUnit <string>	# The unit for how often the lifecycle policy should be evaluated. HOURS is currently the only allowed value and also the default value. Conflicts with cron_expression. Must be set if interval is set.
-spec.initProvider.policyDetails.action.crossRegionCopy[].target <string>	# The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+spec.initProvider.policyDetails.action.crossRegionCopy[].target <string>	# Target Region or the ARN of the target Outpost for the snapshot copies.
 spec.initProvider.policyDetails.action.name <string>	# A descriptive name for the action.
 spec.initProvider.policyDetails.copyTags <boolean>	# Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is false.
 spec.initProvider.policyDetails.createInterval <number>	# How often the policy should run and create snapshots or AMIs. valid values range from 1 to 7. Default value is 1.
@@ -161,6 +162,7 @@ spec.initProvider.policyDetails.exclusions.excludeVolumeTypes <[]string>	# List 
 spec.initProvider.policyDetails.extendDeletion <boolean>	# snapshot or AMI retention behavior for the policy if the source volume or instance is deleted, or if the policy enters the error, disabled, or deleted state. Default value is false.
 spec.initProvider.policyDetails.parameters <object>	# A set of optional parameters for snapshot and AMI lifecycle policies. See the parameters configuration block.
 spec.initProvider.policyDetails.parameters.excludeBootVolume <boolean>	# Indicates whether to exclude the root volume from snapshots created using CreateSnapshots. The default is false.
+spec.initProvider.policyDetails.parameters.excludeDataVolumeTags <map[string]string>	# Map specifies whether to exclude volumes that have specific tags.
 spec.initProvider.policyDetails.parameters.noReboot <boolean>	# Applies to AMI lifecycle policies only. Indicates whether targeted instances are rebooted when the lifecycle policy runs. true indicates that targeted instances are not rebooted when the policy runs. false indicates that target instances are rebooted when the policy runs. The default is true (instances are not rebooted).
 spec.initProvider.policyDetails.policyLanguage <string>	# Type of policy to create. SIMPLIFIED To create a default policy. STANDARD To create a custom policy.
 spec.initProvider.policyDetails.policyType <string>	# The valid target resource types and actions a policy can manage. Specify EBS_SNAPSHOT_MANAGEMENT to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify IMAGE_MANAGEMENT to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify EVENT_BASED_POLICY to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is EBS_SNAPSHOT_MANAGEMENT.
@@ -190,7 +192,7 @@ spec.initProvider.policyDetails.schedule[].createRule.scripts.maximumRetryCount 
 spec.initProvider.policyDetails.schedule[].createRule.scripts.stages <[]string>	# List to indicate which scripts Amazon Data Lifecycle Manager should run on target instances. Pre scripts run before Amazon Data Lifecycle Manager initiates snapshot creation. Post scripts run after Amazon Data Lifecycle Manager initiates snapshot creation. Valid values: PRE and POST. The default is PRE and POST
 spec.initProvider.policyDetails.schedule[].createRule.times <[]string>	# A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1. Conflicts with cron_expression. Must be set if interval is set.
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule <[]object>	# See the cross_region_copy_rule block. Max of 3 per schedule.
-spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArn <string>	# The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArn <string>	# ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArnRef <object>	# Reference to a Key in kms to populate cmkArn.
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArnRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArnRef.policy <object>	# Policies for referencing.
@@ -210,8 +212,8 @@ spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].encrypted <bool
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule <object>	# Specifies the retention rule for cross-Region snapshot copies. See the retain_rule block. Max of 1 per action.
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
 spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule.intervalUnit <string>	# The unit for how often the lifecycle policy should be evaluated. HOURS is currently the only allowed value and also the default value. Conflicts with cron_expression. Must be set if interval is set.
-spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].target <string>	# The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
-spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].targetRegion <string>	# Use only for DLM policies of policy_type=IMAGE_MANAGEMENT. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].target <string>	# Target Region or the ARN of the target Outpost for the snapshot copies.
+spec.initProvider.policyDetails.schedule[].crossRegionCopyRule[].targetRegion <string>	# Use only for DLM policies of policy_type=IMAGE_MANAGEMENT. The target Region or the ARN of the target Outpost for the snapshot copies.
 spec.initProvider.policyDetails.schedule[].deprecateRule <object>	# See the deprecate_rule block. Max of 1 per schedule.
 spec.initProvider.policyDetails.schedule[].deprecateRule.count <number>	# Specifies the number of oldest AMIs to deprecate. Must be an integer between 1 and 1000. Conflicts with interval and interval_unit.
 spec.initProvider.policyDetails.schedule[].deprecateRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
@@ -246,7 +248,7 @@ spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the secret.
 status <object>	# LifecyclePolicyStatus defines the observed state of LifecyclePolicy.
 status.atProvider <object>
-status.atProvider.arn <string>	# Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
+status.atProvider.arn <string>	# ARN of the DLM Lifecycle Policy.
 status.atProvider.defaultPolicy <string>	# Specify the type of default policy to create. valid values are VOLUME or INSTANCE.
 status.atProvider.description <string>	# A description for the DLM lifecycle policy.
 status.atProvider.executionRoleArn <string>	# The ARN of an IAM role that is able to be assumed by the DLM service.
@@ -255,12 +257,12 @@ status.atProvider.policyDetails <object>	# See the policy_details configuration 
 status.atProvider.policyDetails.action <object>	# The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the action configuration block.
 status.atProvider.policyDetails.action.crossRegionCopy <[]object>	# The rule for copying shared snapshots across Regions. See the cross_region_copy configuration block.
 status.atProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration <object>	# The encryption settings for the copied snapshot. See the encryption_configuration block. Max of 1 per action.
-status.atProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.cmkArn <string>	# The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+status.atProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.cmkArn <string>	# ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 status.atProvider.policyDetails.action.crossRegionCopy[].encryptionConfiguration.encrypted <boolean>	# To encrypt a copy of an unencrypted snapshot when encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or when encryption by default is not enabled.
 status.atProvider.policyDetails.action.crossRegionCopy[].retainRule <object>	# Specifies the retention rule for cross-Region snapshot copies. See the retain_rule block. Max of 1 per action.
 status.atProvider.policyDetails.action.crossRegionCopy[].retainRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
 status.atProvider.policyDetails.action.crossRegionCopy[].retainRule.intervalUnit <string>	# The unit for how often the lifecycle policy should be evaluated. HOURS is currently the only allowed value and also the default value. Conflicts with cron_expression. Must be set if interval is set.
-status.atProvider.policyDetails.action.crossRegionCopy[].target <string>	# The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+status.atProvider.policyDetails.action.crossRegionCopy[].target <string>	# Target Region or the ARN of the target Outpost for the snapshot copies.
 status.atProvider.policyDetails.action.name <string>	# A descriptive name for the action.
 status.atProvider.policyDetails.copyTags <boolean>	# Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is false.
 status.atProvider.policyDetails.createInterval <number>	# How often the policy should run and create snapshots or AMIs. valid values range from 1 to 7. Default value is 1.
@@ -277,6 +279,7 @@ status.atProvider.policyDetails.exclusions.excludeVolumeTypes <[]string>	# List 
 status.atProvider.policyDetails.extendDeletion <boolean>	# snapshot or AMI retention behavior for the policy if the source volume or instance is deleted, or if the policy enters the error, disabled, or deleted state. Default value is false.
 status.atProvider.policyDetails.parameters <object>	# A set of optional parameters for snapshot and AMI lifecycle policies. See the parameters configuration block.
 status.atProvider.policyDetails.parameters.excludeBootVolume <boolean>	# Indicates whether to exclude the root volume from snapshots created using CreateSnapshots. The default is false.
+status.atProvider.policyDetails.parameters.excludeDataVolumeTags <map[string]string>	# Map specifies whether to exclude volumes that have specific tags.
 status.atProvider.policyDetails.parameters.noReboot <boolean>	# Applies to AMI lifecycle policies only. Indicates whether targeted instances are rebooted when the lifecycle policy runs. true indicates that targeted instances are not rebooted when the policy runs. false indicates that target instances are rebooted when the policy runs. The default is true (instances are not rebooted).
 status.atProvider.policyDetails.policyLanguage <string>	# Type of policy to create. SIMPLIFIED To create a default policy. STANDARD To create a custom policy.
 status.atProvider.policyDetails.policyType <string>	# The valid target resource types and actions a policy can manage. Specify EBS_SNAPSHOT_MANAGEMENT to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify IMAGE_MANAGEMENT to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify EVENT_BASED_POLICY to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is EBS_SNAPSHOT_MANAGEMENT.
@@ -306,7 +309,7 @@ status.atProvider.policyDetails.schedule[].createRule.scripts.maximumRetryCount 
 status.atProvider.policyDetails.schedule[].createRule.scripts.stages <[]string>	# List to indicate which scripts Amazon Data Lifecycle Manager should run on target instances. Pre scripts run before Amazon Data Lifecycle Manager initiates snapshot creation. Post scripts run after Amazon Data Lifecycle Manager initiates snapshot creation. Valid values: PRE and POST. The default is PRE and POST
 status.atProvider.policyDetails.schedule[].createRule.times <[]string>	# A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1. Conflicts with cron_expression. Must be set if interval is set.
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule <[]object>	# See the cross_region_copy_rule block. Max of 3 per schedule.
-status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArn <string>	# The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].cmkArn <string>	# ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].copyTags <boolean>	# Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is false.
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].deprecateRule <object>	# See the deprecate_rule block. Max of 1 per schedule.
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].deprecateRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
@@ -315,8 +318,8 @@ status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].encrypted <bool
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule <object>	# Specifies the retention rule for cross-Region snapshot copies. See the retain_rule block. Max of 1 per action.
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.
 status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].retainRule.intervalUnit <string>	# The unit for how often the lifecycle policy should be evaluated. HOURS is currently the only allowed value and also the default value. Conflicts with cron_expression. Must be set if interval is set.
-status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].target <string>	# The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
-status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].targetRegion <string>	# Use only for DLM policies of policy_type=IMAGE_MANAGEMENT. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].target <string>	# Target Region or the ARN of the target Outpost for the snapshot copies.
+status.atProvider.policyDetails.schedule[].crossRegionCopyRule[].targetRegion <string>	# Use only for DLM policies of policy_type=IMAGE_MANAGEMENT. The target Region or the ARN of the target Outpost for the snapshot copies.
 status.atProvider.policyDetails.schedule[].deprecateRule <object>	# See the deprecate_rule block. Max of 1 per schedule.
 status.atProvider.policyDetails.schedule[].deprecateRule.count <number>	# Specifies the number of oldest AMIs to deprecate. Must be an integer between 1 and 1000. Conflicts with interval and interval_unit.
 status.atProvider.policyDetails.schedule[].deprecateRule.interval <number>	# How often this lifecycle policy should be evaluated. 1, 2,3,4,6,8,12 or 24 are valid values. Conflicts with cron_expression. If set, interval_unit and times must also be set.

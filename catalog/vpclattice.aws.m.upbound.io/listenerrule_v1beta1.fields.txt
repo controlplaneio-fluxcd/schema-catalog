@@ -1,16 +1,16 @@
-# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.8.1 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=vpclattice.aws.m.upbound.io/v1beta1
 kind <string> enum=ListenerRule
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# ListenerRuleSpec defines the desired state of ListenerRule
 spec.forProvider <object> (required)
-spec.forProvider.action <object>	# The action for the listener rule. See action Block for details.
-spec.forProvider.action.fixedResponse <object>	# Describes the rule action that returns a custom HTTP response. See fixed_response Block for details.
-spec.forProvider.action.fixedResponse.statusCode <number>	# The HTTP response code.
-spec.forProvider.action.forward <object>	# The forward action. Traffic that matches the rule is forwarded to the specified target groups. See forward Block for details.
-spec.forProvider.action.forward.targetGroups <[]object>	# The target groups. Traffic matching the rule is forwarded to the specified target groups. With forward actions, you can assign a weight that controls the prioritization and selection of each target group. This means that requests are distributed to individual target groups based on their weights. For example, if two target groups have the same weight, each target group receives half of the traffic.
-spec.forProvider.action.forward.targetGroups[].targetGroupIdentifier <string>
+spec.forProvider.action <object>	# Action for the listener rule. See action Block for details.
+spec.forProvider.action.fixedResponse <object>	# Rule action that returns a custom HTTP response. See fixed_response Block for details.
+spec.forProvider.action.fixedResponse.statusCode <number>	# HTTP response code.
+spec.forProvider.action.forward <object>	# Forward action. Traffic that matches the rule is forwarded to the specified target groups. See forward Block for details.
+spec.forProvider.action.forward.targetGroups <[]object>	# Target groups that traffic matching the rule is forwarded to. See target_groups Block for details.
+spec.forProvider.action.forward.targetGroups[].targetGroupIdentifier <string>	# ID or ARN of the target group.
 spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierRef <object>	# Reference to a TargetGroup in vpclattice to populate targetGroupIdentifier.
 spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierRef.namespace <string>	# Namespace of the referenced object
@@ -24,8 +24,8 @@ spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.nam
 spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.policy <object>	# Policies for selection.
 spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.action.forward.targetGroups[].weight <number>
-spec.forProvider.listenerIdentifier <string>	# The ID or Amazon Resource Name (ARN) of the listener.
+spec.forProvider.action.forward.targetGroups[].weight <number>	# Weight assigned to the target group, controlling the prioritization and selection of each target group so that requests are distributed based on their weights. Default is 100.
+spec.forProvider.listenerIdentifier <string>	# ID or ARN of the listener.
 spec.forProvider.listenerIdentifierRef <object>	# Reference to a Listener in vpclattice to populate listenerIdentifier.
 spec.forProvider.listenerIdentifierRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.listenerIdentifierRef.namespace <string>	# Namespace of the referenced object
@@ -39,25 +39,25 @@ spec.forProvider.listenerIdentifierSelector.namespace <string>	# Namespace for t
 spec.forProvider.listenerIdentifierSelector.policy <object>	# Policies for selection.
 spec.forProvider.listenerIdentifierSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.listenerIdentifierSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.match <object>	# The rule match. See match Block
-spec.forProvider.match.httpMatch <object>	# The HTTP criteria that a rule must match. See http_match Block for details.
-spec.forProvider.match.httpMatch.headerMatches <[]object>	# The header matches. Matches incoming requests with rule based on request header value before applying rule action. See header_matches Block for details.
-spec.forProvider.match.httpMatch.headerMatches[].caseSensitive <boolean>	# Indicates whether the match is case sensitive. Default is false.
-spec.forProvider.match.httpMatch.headerMatches[].match <object>	# The header match type. See Header Match for details.
-spec.forProvider.match.httpMatch.headerMatches[].match.contains <string>	# Specifies a contains type match.
-spec.forProvider.match.httpMatch.headerMatches[].match.exact <string>	# Specifies an exact type match.
-spec.forProvider.match.httpMatch.headerMatches[].match.prefix <string>	# Specifies a prefix type match. Matches the value with the prefix.
-spec.forProvider.match.httpMatch.headerMatches[].name <string>	# The name of the header.
-spec.forProvider.match.httpMatch.method <string>	# The HTTP method type.
-spec.forProvider.match.httpMatch.pathMatch <object>	# The path match. See path_match Block for details.
-spec.forProvider.match.httpMatch.pathMatch.caseSensitive <boolean>	# Indicates whether the match is case sensitive. Default is false.
-spec.forProvider.match.httpMatch.pathMatch.match <object>	# The header match type. See Path Match for details.
-spec.forProvider.match.httpMatch.pathMatch.match.exact <string>	# Specifies an exact type match.
-spec.forProvider.match.httpMatch.pathMatch.match.prefix <string>	# Specifies a prefix type match. Matches the value with the prefix.
-spec.forProvider.name <string>	# The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
-spec.forProvider.priority <number>	# The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
+spec.forProvider.match <object>	# Rule match. See match Block for details.
+spec.forProvider.match.httpMatch <object>	# HTTP criteria that a rule must match. See http_match Block for details.
+spec.forProvider.match.httpMatch.headerMatches <[]object>	# Header matches that match incoming requests based on the request header value before applying the rule action. See header_matches Block for details.
+spec.forProvider.match.httpMatch.headerMatches[].caseSensitive <boolean>	# Whether the match is case sensitive. Default is false.
+spec.forProvider.match.httpMatch.headerMatches[].match <object>	# Header match type. See match.http_match.header_matches.match Block for details.
+spec.forProvider.match.httpMatch.headerMatches[].match.contains <string>	# Value that the header must contain to match.
+spec.forProvider.match.httpMatch.headerMatches[].match.exact <string>	# Exact type match.
+spec.forProvider.match.httpMatch.headerMatches[].match.prefix <string>	# Prefix type match. Matches the value with the prefix.
+spec.forProvider.match.httpMatch.headerMatches[].name <string>	# Name of the header.
+spec.forProvider.match.httpMatch.method <string>	# HTTP method type.
+spec.forProvider.match.httpMatch.pathMatch <object>	# Path match. See path_match Block for details.
+spec.forProvider.match.httpMatch.pathMatch.caseSensitive <boolean>	# Whether the match is case sensitive. Default is false.
+spec.forProvider.match.httpMatch.pathMatch.match <object>	# Path match type. See match.http_match.path_match.match Block for details.
+spec.forProvider.match.httpMatch.pathMatch.match.exact <string>	# Exact type match.
+spec.forProvider.match.httpMatch.pathMatch.match.prefix <string>	# Prefix type match. Matches the value with the prefix.
+spec.forProvider.name <string>	# Name of the rule. Must be unique within the listener. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
+spec.forProvider.priority <number>	# Priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
-spec.forProvider.serviceIdentifier <string>	# The ID or Amazon Resource Identifier (ARN) of the service.
+spec.forProvider.serviceIdentifier <string>	# ID or ARN of the service.
 spec.forProvider.serviceIdentifierRef <object>	# Reference to a Service in vpclattice to populate serviceIdentifier.
 spec.forProvider.serviceIdentifierRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.serviceIdentifierRef.namespace <string>	# Namespace of the referenced object
@@ -73,12 +73,12 @@ spec.forProvider.serviceIdentifierSelector.policy.resolution <string> enum=Requi
 spec.forProvider.serviceIdentifierSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
-spec.initProvider.action <object>	# The action for the listener rule. See action Block for details.
-spec.initProvider.action.fixedResponse <object>	# Describes the rule action that returns a custom HTTP response. See fixed_response Block for details.
-spec.initProvider.action.fixedResponse.statusCode <number>	# The HTTP response code.
-spec.initProvider.action.forward <object>	# The forward action. Traffic that matches the rule is forwarded to the specified target groups. See forward Block for details.
-spec.initProvider.action.forward.targetGroups <[]object>	# The target groups. Traffic matching the rule is forwarded to the specified target groups. With forward actions, you can assign a weight that controls the prioritization and selection of each target group. This means that requests are distributed to individual target groups based on their weights. For example, if two target groups have the same weight, each target group receives half of the traffic.
-spec.initProvider.action.forward.targetGroups[].targetGroupIdentifier <string>
+spec.initProvider.action <object>	# Action for the listener rule. See action Block for details.
+spec.initProvider.action.fixedResponse <object>	# Rule action that returns a custom HTTP response. See fixed_response Block for details.
+spec.initProvider.action.fixedResponse.statusCode <number>	# HTTP response code.
+spec.initProvider.action.forward <object>	# Forward action. Traffic that matches the rule is forwarded to the specified target groups. See forward Block for details.
+spec.initProvider.action.forward.targetGroups <[]object>	# Target groups that traffic matching the rule is forwarded to. See target_groups Block for details.
+spec.initProvider.action.forward.targetGroups[].targetGroupIdentifier <string>	# ID or ARN of the target group.
 spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierRef <object>	# Reference to a TargetGroup in vpclattice to populate targetGroupIdentifier.
 spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierRef.namespace <string>	# Namespace of the referenced object
@@ -92,8 +92,8 @@ spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.na
 spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.policy <object>	# Policies for selection.
 spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.action.forward.targetGroups[].targetGroupIdentifierSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.action.forward.targetGroups[].weight <number>
-spec.initProvider.listenerIdentifier <string>	# The ID or Amazon Resource Name (ARN) of the listener.
+spec.initProvider.action.forward.targetGroups[].weight <number>	# Weight assigned to the target group, controlling the prioritization and selection of each target group so that requests are distributed based on their weights. Default is 100.
+spec.initProvider.listenerIdentifier <string>	# ID or ARN of the listener.
 spec.initProvider.listenerIdentifierRef <object>	# Reference to a Listener in vpclattice to populate listenerIdentifier.
 spec.initProvider.listenerIdentifierRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.listenerIdentifierRef.namespace <string>	# Namespace of the referenced object
@@ -107,24 +107,24 @@ spec.initProvider.listenerIdentifierSelector.namespace <string>	# Namespace for 
 spec.initProvider.listenerIdentifierSelector.policy <object>	# Policies for selection.
 spec.initProvider.listenerIdentifierSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.listenerIdentifierSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.match <object>	# The rule match. See match Block
-spec.initProvider.match.httpMatch <object>	# The HTTP criteria that a rule must match. See http_match Block for details.
-spec.initProvider.match.httpMatch.headerMatches <[]object>	# The header matches. Matches incoming requests with rule based on request header value before applying rule action. See header_matches Block for details.
-spec.initProvider.match.httpMatch.headerMatches[].caseSensitive <boolean>	# Indicates whether the match is case sensitive. Default is false.
-spec.initProvider.match.httpMatch.headerMatches[].match <object>	# The header match type. See Header Match for details.
-spec.initProvider.match.httpMatch.headerMatches[].match.contains <string>	# Specifies a contains type match.
-spec.initProvider.match.httpMatch.headerMatches[].match.exact <string>	# Specifies an exact type match.
-spec.initProvider.match.httpMatch.headerMatches[].match.prefix <string>	# Specifies a prefix type match. Matches the value with the prefix.
-spec.initProvider.match.httpMatch.headerMatches[].name <string>	# The name of the header.
-spec.initProvider.match.httpMatch.method <string>	# The HTTP method type.
-spec.initProvider.match.httpMatch.pathMatch <object>	# The path match. See path_match Block for details.
-spec.initProvider.match.httpMatch.pathMatch.caseSensitive <boolean>	# Indicates whether the match is case sensitive. Default is false.
-spec.initProvider.match.httpMatch.pathMatch.match <object>	# The header match type. See Path Match for details.
-spec.initProvider.match.httpMatch.pathMatch.match.exact <string>	# Specifies an exact type match.
-spec.initProvider.match.httpMatch.pathMatch.match.prefix <string>	# Specifies a prefix type match. Matches the value with the prefix.
-spec.initProvider.name <string>	# The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
-spec.initProvider.priority <number>	# The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
-spec.initProvider.serviceIdentifier <string>	# The ID or Amazon Resource Identifier (ARN) of the service.
+spec.initProvider.match <object>	# Rule match. See match Block for details.
+spec.initProvider.match.httpMatch <object>	# HTTP criteria that a rule must match. See http_match Block for details.
+spec.initProvider.match.httpMatch.headerMatches <[]object>	# Header matches that match incoming requests based on the request header value before applying the rule action. See header_matches Block for details.
+spec.initProvider.match.httpMatch.headerMatches[].caseSensitive <boolean>	# Whether the match is case sensitive. Default is false.
+spec.initProvider.match.httpMatch.headerMatches[].match <object>	# Header match type. See match.http_match.header_matches.match Block for details.
+spec.initProvider.match.httpMatch.headerMatches[].match.contains <string>	# Value that the header must contain to match.
+spec.initProvider.match.httpMatch.headerMatches[].match.exact <string>	# Exact type match.
+spec.initProvider.match.httpMatch.headerMatches[].match.prefix <string>	# Prefix type match. Matches the value with the prefix.
+spec.initProvider.match.httpMatch.headerMatches[].name <string>	# Name of the header.
+spec.initProvider.match.httpMatch.method <string>	# HTTP method type.
+spec.initProvider.match.httpMatch.pathMatch <object>	# Path match. See path_match Block for details.
+spec.initProvider.match.httpMatch.pathMatch.caseSensitive <boolean>	# Whether the match is case sensitive. Default is false.
+spec.initProvider.match.httpMatch.pathMatch.match <object>	# Path match type. See match.http_match.path_match.match Block for details.
+spec.initProvider.match.httpMatch.pathMatch.match.exact <string>	# Exact type match.
+spec.initProvider.match.httpMatch.pathMatch.match.prefix <string>	# Prefix type match. Matches the value with the prefix.
+spec.initProvider.name <string>	# Name of the rule. Must be unique within the listener. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
+spec.initProvider.priority <number>	# Priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
+spec.initProvider.serviceIdentifier <string>	# ID or ARN of the service.
 spec.initProvider.serviceIdentifierRef <object>	# Reference to a Service in vpclattice to populate serviceIdentifier.
 spec.initProvider.serviceIdentifierRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.serviceIdentifierRef.namespace <string>	# Namespace of the referenced object
@@ -147,36 +147,36 @@ spec.writeConnectionSecretToRef <object>	# WriteConnectionSecretToReference spec
 spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 status <object>	# ListenerRuleStatus defines the observed state of ListenerRule.
 status.atProvider <object>
-status.atProvider.action <object>	# The action for the listener rule. See action Block for details.
-status.atProvider.action.fixedResponse <object>	# Describes the rule action that returns a custom HTTP response. See fixed_response Block for details.
-status.atProvider.action.fixedResponse.statusCode <number>	# The HTTP response code.
-status.atProvider.action.forward <object>	# The forward action. Traffic that matches the rule is forwarded to the specified target groups. See forward Block for details.
-status.atProvider.action.forward.targetGroups <[]object>	# The target groups. Traffic matching the rule is forwarded to the specified target groups. With forward actions, you can assign a weight that controls the prioritization and selection of each target group. This means that requests are distributed to individual target groups based on their weights. For example, if two target groups have the same weight, each target group receives half of the traffic.
-status.atProvider.action.forward.targetGroups[].targetGroupIdentifier <string>
-status.atProvider.action.forward.targetGroups[].weight <number>
-status.atProvider.arn <string>	# The ARN for the listener rule.
+status.atProvider.action <object>	# Action for the listener rule. See action Block for details.
+status.atProvider.action.fixedResponse <object>	# Rule action that returns a custom HTTP response. See fixed_response Block for details.
+status.atProvider.action.fixedResponse.statusCode <number>	# HTTP response code.
+status.atProvider.action.forward <object>	# Forward action. Traffic that matches the rule is forwarded to the specified target groups. See forward Block for details.
+status.atProvider.action.forward.targetGroups <[]object>	# Target groups that traffic matching the rule is forwarded to. See target_groups Block for details.
+status.atProvider.action.forward.targetGroups[].targetGroupIdentifier <string>	# ID or ARN of the target group.
+status.atProvider.action.forward.targetGroups[].weight <number>	# Weight assigned to the target group, controlling the prioritization and selection of each target group so that requests are distributed based on their weights. Default is 100.
+status.atProvider.arn <string>	# ARN for the listener rule.
 status.atProvider.id <string>
-status.atProvider.listenerIdentifier <string>	# The ID or Amazon Resource Name (ARN) of the listener.
-status.atProvider.match <object>	# The rule match. See match Block
-status.atProvider.match.httpMatch <object>	# The HTTP criteria that a rule must match. See http_match Block for details.
-status.atProvider.match.httpMatch.headerMatches <[]object>	# The header matches. Matches incoming requests with rule based on request header value before applying rule action. See header_matches Block for details.
-status.atProvider.match.httpMatch.headerMatches[].caseSensitive <boolean>	# Indicates whether the match is case sensitive. Default is false.
-status.atProvider.match.httpMatch.headerMatches[].match <object>	# The header match type. See Header Match for details.
-status.atProvider.match.httpMatch.headerMatches[].match.contains <string>	# Specifies a contains type match.
-status.atProvider.match.httpMatch.headerMatches[].match.exact <string>	# Specifies an exact type match.
-status.atProvider.match.httpMatch.headerMatches[].match.prefix <string>	# Specifies a prefix type match. Matches the value with the prefix.
-status.atProvider.match.httpMatch.headerMatches[].name <string>	# The name of the header.
-status.atProvider.match.httpMatch.method <string>	# The HTTP method type.
-status.atProvider.match.httpMatch.pathMatch <object>	# The path match. See path_match Block for details.
-status.atProvider.match.httpMatch.pathMatch.caseSensitive <boolean>	# Indicates whether the match is case sensitive. Default is false.
-status.atProvider.match.httpMatch.pathMatch.match <object>	# The header match type. See Path Match for details.
-status.atProvider.match.httpMatch.pathMatch.match.exact <string>	# Specifies an exact type match.
-status.atProvider.match.httpMatch.pathMatch.match.prefix <string>	# Specifies a prefix type match. Matches the value with the prefix.
-status.atProvider.name <string>	# The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
-status.atProvider.priority <number>	# The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
+status.atProvider.listenerIdentifier <string>	# ID or ARN of the listener.
+status.atProvider.match <object>	# Rule match. See match Block for details.
+status.atProvider.match.httpMatch <object>	# HTTP criteria that a rule must match. See http_match Block for details.
+status.atProvider.match.httpMatch.headerMatches <[]object>	# Header matches that match incoming requests based on the request header value before applying the rule action. See header_matches Block for details.
+status.atProvider.match.httpMatch.headerMatches[].caseSensitive <boolean>	# Whether the match is case sensitive. Default is false.
+status.atProvider.match.httpMatch.headerMatches[].match <object>	# Header match type. See match.http_match.header_matches.match Block for details.
+status.atProvider.match.httpMatch.headerMatches[].match.contains <string>	# Value that the header must contain to match.
+status.atProvider.match.httpMatch.headerMatches[].match.exact <string>	# Exact type match.
+status.atProvider.match.httpMatch.headerMatches[].match.prefix <string>	# Prefix type match. Matches the value with the prefix.
+status.atProvider.match.httpMatch.headerMatches[].name <string>	# Name of the header.
+status.atProvider.match.httpMatch.method <string>	# HTTP method type.
+status.atProvider.match.httpMatch.pathMatch <object>	# Path match. See path_match Block for details.
+status.atProvider.match.httpMatch.pathMatch.caseSensitive <boolean>	# Whether the match is case sensitive. Default is false.
+status.atProvider.match.httpMatch.pathMatch.match <object>	# Path match type. See match.http_match.path_match.match Block for details.
+status.atProvider.match.httpMatch.pathMatch.match.exact <string>	# Exact type match.
+status.atProvider.match.httpMatch.pathMatch.match.prefix <string>	# Prefix type match. Matches the value with the prefix.
+status.atProvider.name <string>	# Name of the rule. Must be unique within the listener. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
+status.atProvider.priority <number>	# Priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.ruleId <string>	# Unique identifier for the listener rule.
-status.atProvider.serviceIdentifier <string>	# The ID or Amazon Resource Identifier (ARN) of the service.
+status.atProvider.serviceIdentifier <string>	# ID or ARN of the service.
 status.atProvider.tags <map[string]string>	# Key-value map of resource tags.
 status.atProvider.tagsAll <map[string]string>	# Map of tags assigned to the resource, including those inherited from the provider default_tags configuration block.
 status.conditions <[]object>	# Conditions of the resource.

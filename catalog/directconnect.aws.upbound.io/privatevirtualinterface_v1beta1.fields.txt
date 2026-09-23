@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.8.1 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=directconnect.aws.upbound.io/v1beta1
 kind <string> enum=PrivateVirtualInterface (cluster-scoped)
 metadata.name <string> (required)
@@ -7,7 +7,8 @@ spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolic
 spec.forProvider <object> (required)
 spec.forProvider.addressFamily <string>	# The address family for the BGP peer. ipv4 or ipv6.
 spec.forProvider.amazonAddress <string>	# The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
-spec.forProvider.bgpAsn <number>	# The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+spec.forProvider.bgpAsn <number>	# BGP autonomous system number as an integer between 1 and 2147483646. For larger values, use bgp_asn_long. Exactly one of bgp_asn or bgp_asn_long must be specified.
+spec.forProvider.bgpAsnLong <string>	# BGP autonomous system number as an asplain decimal string between 1 and 4294967294. This argument also accepts values in the bgp_asn range. Exactly one of bgp_asn or bgp_asn_long must be specified.
 spec.forProvider.bgpAuthKey <string>	# The authentication key for BGP configuration.
 spec.forProvider.connectionId <string>	# The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
 spec.forProvider.connectionIdRef <object>	# Reference to a Connection in directconnect to populate connectionId.
@@ -23,8 +24,22 @@ spec.forProvider.connectionIdSelector.policy.resolution <string> enum=Required|O
 spec.forProvider.connectionIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.customerAddress <string>	# The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 spec.forProvider.dxGatewayId <string>	# The ID of the Direct Connect gateway to which to connect the virtual interface.
+spec.forProvider.dxGatewayIdRef <object>	# Reference to a Gateway in directconnect to populate dxGatewayId.
+spec.forProvider.dxGatewayIdRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.dxGatewayIdRef.policy <object>	# Policies for referencing.
+spec.forProvider.dxGatewayIdRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.dxGatewayIdRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.dxGatewayIdSelector <object>	# Selector for a Gateway in directconnect to populate dxGatewayId.
+spec.forProvider.dxGatewayIdSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.dxGatewayIdSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.dxGatewayIdSelector.policy <object>	# Policies for selection.
+spec.forProvider.dxGatewayIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.dxGatewayIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.mtu <number>	# The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection. The MTU of a virtual private interface can be either 1500 or 9001 (jumbo frames). Default is 1500.
 spec.forProvider.name <string>	# The name for the virtual interface.
+spec.forProvider.prefixPoolAllocatedCountIpv4 <number>	# The number of inbound IPv4 route prefixes to allocate to the virtual interface. Valid values are 0 to 1000. If not specified, AWS applies the default allocation of 100.
+spec.forProvider.prefixPoolAllocatedCountIpv6 <number>	# The number of inbound IPv6 route prefixes to allocate to the virtual interface. Valid values are 0 to 1000. If not specified, AWS applies the default allocation of 100.
+spec.forProvider.rateLimit <string>	# Maximum bandwidth allocation for the virtual interface, restricting the bandwidth it can use on the parent connection. Specify a supported bandwidth value without a space (for example, 50Mbps, 1Gbps, or 10Gbps); the value cannot exceed the bandwidth of the parent connection or link aggregation group (LAG), and supported values range up to 1.6Tbps. See the VIF Rate Limiters documentation for the full list of supported values. Rate Limiters are supported only on Direct Connect dedicated connections (including LAGs); they are not supported on hosted connections.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 spec.forProvider.sitelinkEnabled <boolean>	# Indicates whether to enable or disable SiteLink.
 spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
@@ -44,7 +59,8 @@ spec.forProvider.vpnGatewayIdSelector.policy.resolve <string> enum=Always|IfNotP
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.addressFamily <string>	# The address family for the BGP peer. ipv4 or ipv6.
 spec.initProvider.amazonAddress <string>	# The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
-spec.initProvider.bgpAsn <number>	# The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+spec.initProvider.bgpAsn <number>	# BGP autonomous system number as an integer between 1 and 2147483646. For larger values, use bgp_asn_long. Exactly one of bgp_asn or bgp_asn_long must be specified.
+spec.initProvider.bgpAsnLong <string>	# BGP autonomous system number as an asplain decimal string between 1 and 4294967294. This argument also accepts values in the bgp_asn range. Exactly one of bgp_asn or bgp_asn_long must be specified.
 spec.initProvider.bgpAuthKey <string>	# The authentication key for BGP configuration.
 spec.initProvider.connectionId <string>	# The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
 spec.initProvider.connectionIdRef <object>	# Reference to a Connection in directconnect to populate connectionId.
@@ -60,8 +76,22 @@ spec.initProvider.connectionIdSelector.policy.resolution <string> enum=Required|
 spec.initProvider.connectionIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.customerAddress <string>	# The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 spec.initProvider.dxGatewayId <string>	# The ID of the Direct Connect gateway to which to connect the virtual interface.
+spec.initProvider.dxGatewayIdRef <object>	# Reference to a Gateway in directconnect to populate dxGatewayId.
+spec.initProvider.dxGatewayIdRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.dxGatewayIdRef.policy <object>	# Policies for referencing.
+spec.initProvider.dxGatewayIdRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.dxGatewayIdRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.dxGatewayIdSelector <object>	# Selector for a Gateway in directconnect to populate dxGatewayId.
+spec.initProvider.dxGatewayIdSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.dxGatewayIdSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.dxGatewayIdSelector.policy <object>	# Policies for selection.
+spec.initProvider.dxGatewayIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.dxGatewayIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.mtu <number>	# The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection. The MTU of a virtual private interface can be either 1500 or 9001 (jumbo frames). Default is 1500.
 spec.initProvider.name <string>	# The name for the virtual interface.
+spec.initProvider.prefixPoolAllocatedCountIpv4 <number>	# The number of inbound IPv4 route prefixes to allocate to the virtual interface. Valid values are 0 to 1000. If not specified, AWS applies the default allocation of 100.
+spec.initProvider.prefixPoolAllocatedCountIpv6 <number>	# The number of inbound IPv6 route prefixes to allocate to the virtual interface. Valid values are 0 to 1000. If not specified, AWS applies the default allocation of 100.
+spec.initProvider.rateLimit <string>	# Maximum bandwidth allocation for the virtual interface, restricting the bandwidth it can use on the parent connection. Specify a supported bandwidth value without a space (for example, 50Mbps, 1Gbps, or 10Gbps); the value cannot exceed the bandwidth of the parent connection or link aggregation group (LAG), and supported values range up to 1.6Tbps. See the VIF Rate Limiters documentation for the full list of supported values. Rate Limiters are supported only on Direct Connect dedicated connections (including LAGs); they are not supported on hosted connections.
 spec.initProvider.sitelinkEnabled <boolean>	# Indicates whether to enable or disable SiteLink.
 spec.initProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.initProvider.vlan <number>	# The VLAN ID.
@@ -93,7 +123,8 @@ status.atProvider.amazonAddress <string>	# The IPv4 CIDR address to use to send 
 status.atProvider.amazonSideAsn <string>
 status.atProvider.arn <string>	# The ARN of the virtual interface.
 status.atProvider.awsDevice <string>	# The Direct Connect endpoint on which the virtual interface terminates.
-status.atProvider.bgpAsn <number>	# The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+status.atProvider.bgpAsn <number>	# BGP autonomous system number as an integer between 1 and 2147483646. For larger values, use bgp_asn_long. Exactly one of bgp_asn or bgp_asn_long must be specified.
+status.atProvider.bgpAsnLong <string>	# BGP autonomous system number as an asplain decimal string between 1 and 4294967294. This argument also accepts values in the bgp_asn range. Exactly one of bgp_asn or bgp_asn_long must be specified.
 status.atProvider.bgpAuthKey <string>	# The authentication key for BGP configuration.
 status.atProvider.connectionId <string>	# The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
 status.atProvider.customerAddress <string>	# The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
@@ -102,6 +133,9 @@ status.atProvider.id <string>	# The ID of the virtual interface.
 status.atProvider.jumboFrameCapable <boolean>	# Indicates whether jumbo frames (9001 MTU) are supported.
 status.atProvider.mtu <number>	# The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection. The MTU of a virtual private interface can be either 1500 or 9001 (jumbo frames). Default is 1500.
 status.atProvider.name <string>	# The name for the virtual interface.
+status.atProvider.prefixPoolAllocatedCountIpv4 <number>	# The number of inbound IPv4 route prefixes to allocate to the virtual interface. Valid values are 0 to 1000. If not specified, AWS applies the default allocation of 100.
+status.atProvider.prefixPoolAllocatedCountIpv6 <number>	# The number of inbound IPv6 route prefixes to allocate to the virtual interface. Valid values are 0 to 1000. If not specified, AWS applies the default allocation of 100.
+status.atProvider.rateLimit <string>	# Maximum bandwidth allocation for the virtual interface, restricting the bandwidth it can use on the parent connection. Specify a supported bandwidth value without a space (for example, 50Mbps, 1Gbps, or 10Gbps); the value cannot exceed the bandwidth of the parent connection or link aggregation group (LAG), and supported values range up to 1.6Tbps. See the VIF Rate Limiters documentation for the full list of supported values. Rate Limiters are supported only on Direct Connect dedicated connections (including LAGs); they are not supported on hosted connections.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.sitelinkEnabled <boolean>	# Indicates whether to enable or disable SiteLink.
 status.atProvider.tags <map[string]string>	# Key-value map of resource tags.

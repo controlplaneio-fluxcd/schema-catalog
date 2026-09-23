@@ -1,20 +1,58 @@
-# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.8.1 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=bedrockagentcore.aws.upbound.io/v1beta1
 kind <string> enum=MemoryStrategy (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# MemoryStrategySpec defines the desired state of MemoryStrategy
 spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
 spec.forProvider <object> (required)
-spec.forProvider.configuration <object>	# Custom configuration block. Required when type is CUSTOM, must be omitted for other types. See configuration below.
-spec.forProvider.configuration.consolidation <object>	# Consolidation configuration for processing and organizing memory content. See consolidation below. Once added, this block cannot be removed without recreating the resource.
+spec.forProvider.configuration <object>	# Custom configuration block. Required when type is CUSTOM, must be omitted for other types. See configuration Block below.
+spec.forProvider.configuration.consolidation <object>	# Consolidation configuration for the memory strategy. See consolidation Block below. Cannot be used with type set to SELF_MANAGED. Once added, this block cannot be removed without recreating the resource.
 spec.forProvider.configuration.consolidation.appendToPrompt <string>	# Additional text to append to the model prompt for consolidation processing.
 spec.forProvider.configuration.consolidation.modelId <string>	# ID of the foundation model to use for consolidation processing.
-spec.forProvider.configuration.extraction <object>	# Extraction configuration for identifying and extracting relevant information. See extraction below. Cannot be used with type set to SUMMARY_OVERRIDE. Once added, this block cannot be removed without recreating the resource.
-spec.forProvider.configuration.extraction.appendToPrompt <string>	# Additional text to append to the model prompt for extraction processing.
-spec.forProvider.configuration.extraction.modelId <string>	# ID of the foundation model to use for extraction processing.
-spec.forProvider.configuration.type <string>	# Type of custom override. Valid values: SEMANTIC_OVERRIDE, SUMMARY_OVERRIDE, USER_PREFERENCE_OVERRIDE, EPISODIC_OVERRIDE. Changing this forces a new resource.
-spec.forProvider.description <string>	# Description of the memory strategy.
-spec.forProvider.memoryExecutionRoleArn <string>
+spec.forProvider.configuration.extraction <object>	# Extraction configuration for the memory strategy. See extraction Block below. Cannot be used with type set to SUMMARY_OVERRIDE or SELF_MANAGED. Once added, this block cannot be removed without recreating the resource.
+spec.forProvider.configuration.extraction.appendToPrompt <string>	# Additional text to append to the model prompt for reflection processing.
+spec.forProvider.configuration.extraction.modelId <string>	# ID of the foundation model to use for reflection processing.
+spec.forProvider.configuration.reflection <object>	# Reflection configuration for the memory strategy. See reflection Block below. Can only be used, and is required, with type set to EPISODIC_OVERRIDE. Once added, this block cannot be removed without recreating the resource.
+spec.forProvider.configuration.reflection.appendToPrompt <string>	# Additional text to append to the model prompt for reflection processing.
+spec.forProvider.configuration.reflection.modelId <string>	# ID of the foundation model to use for reflection processing.
+spec.forProvider.configuration.reflection.namespaceTemplates <[]string>	# Namespace templates over which to create reflections. Can be less nested than episode namespaces.
+spec.forProvider.configuration.selfManagedConfiguration <object>	# Self-managed processing configuration. Required when type is SELF_MANAGED and only valid for that type. See self_managed_configuration Block below.
+spec.forProvider.configuration.selfManagedConfiguration.historicalContextWindowSize <number>	# Number of historical messages to include in processing context. Valid range: 0 to 50. Defaults to 4.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration <object>	# Configuration used to invoke the self-managed memory processing pipeline. See invocation_configuration Block below.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketName <string>	# S3 bucket name for event payload delivery.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef <object>	# Reference to a Bucket in s3 to populate payloadDeliveryBucketName.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.policy <object>	# Policies for referencing.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector <object>	# Selector for a Bucket in s3 to populate payloadDeliveryBucketName.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.policy <object>	# Policies for selection.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArn <string>	# ARN of the SNS topic for job notifications.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef <object>	# Reference to a Topic in sns to populate topicArn.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.name <string> (required)	# Name of the referenced object.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.policy <object>	# Policies for referencing.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector <object>	# Selector for a Topic in sns to populate topicArn.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.policy <object>	# Policies for selection.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.forProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions <object>	# Conditions that trigger memory processing. See trigger_conditions Block below. When omitted, the service supplies the documented defaults for all three trigger types.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions.messageBasedTrigger <object>	# Message-based condition. See message_based_trigger Block below.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions.messageBasedTrigger.messageCount <number>	# Number of messages that trigger memory processing. Accepts values from 1 to 50.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions.timeBasedTrigger <object>	# Idle-time condition. See time_based_trigger Block below.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions.timeBasedTrigger.idleSessionTimeout <number>	# Idle session timeout (seconds) that triggers memory processing. Accepts values from 10 to 3000.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions.tokenBasedTrigger <object>	# Token-based condition. See token_based_trigger Block below.
+spec.forProvider.configuration.selfManagedConfiguration.triggerConditions.tokenBasedTrigger.tokenCount <number>	# Number of tokens that trigger memory processing. Accepts values from 100 to 500000.
+spec.forProvider.configuration.type <string>	# Type of custom override. Valid values: SEMANTIC_OVERRIDE, SUMMARY_OVERRIDE, USER_PREFERENCE_OVERRIDE, EPISODIC_OVERRIDE, SELF_MANAGED. Changing this forces a new resource.
+spec.forProvider.description <string>	# Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
+spec.forProvider.memoryExecutionRoleArn <string>	# ARN of the IAM role that the memory service assumes to perform operations.
 spec.forProvider.memoryExecutionRoleArnRef <object>	# Reference to a Role in iam to populate memoryExecutionRoleArn.
 spec.forProvider.memoryExecutionRoleArnRef.name <string> (required)	# Name of the referenced object.
 spec.forProvider.memoryExecutionRoleArnRef.policy <object>	# Policies for referencing.
@@ -38,21 +76,80 @@ spec.forProvider.memoryIdSelector.matchLabels <map[string]string>	# MatchLabels 
 spec.forProvider.memoryIdSelector.policy <object>	# Policies for selection.
 spec.forProvider.memoryIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.memoryIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.name <string>	# Name of the memory strategy.
-spec.forProvider.namespaces <[]string>	# Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
+spec.forProvider.memoryRecordSchema <object>	# Schema for metadata fields on records generated by this strategy. Valid for all strategy types. See memory_record_schema Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema <[]object>	# List of metadata field definitions for records generated by this strategy. See metadata_schema Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig <object>	# Configuration for extracting this metadata value from conversational content. Applicable only when extraction_type is LLM_INFERRED. See extraction_config Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig <object>	# Model-based extraction configuration. See llm_extraction_config Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.definition <string>	# Description of what this metadata field represents.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.llmExtractionInstruction <string>	# Instructions for extraction. Supports built-in operators like LATEST_VALUE or custom natural-language instructions.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation <object>	# Validation rules to constrain extracted values. See validation Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation <object>	# Validation for NUMBER fields. See number_validation Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation.maxValue <number>	# Maximum allowed value.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation.minValue <number>	# Minimum allowed value.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation <object>	# Validation for STRINGLIST fields. See string_list_validation Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation.allowedValues <[]string>	# Allowed values for items in this STRINGLIST field.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation.maxItems <number>	# Maximum number of items in the string list.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringValidation <object>	# Validation for STRING fields. See string_validation Block below.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringValidation.allowedValues <[]string>	# Allowed values for items in this STRINGLIST field.
+spec.forProvider.memoryRecordSchema.metadataSchema[].extractionType <string>	# Whether the metadata value is extracted by the LLM or passed through deterministically from the event. Valid values: LLM_INFERRED, STRICTLY_CONSISTENT.
+spec.forProvider.memoryRecordSchema.metadataSchema[].key <string>	# Metadata field name. Must match an indexed key to be queryable via metadata filters.
+spec.forProvider.memoryRecordSchema.metadataSchema[].type <string>	# Metadata value type. Valid values: STRING, STRINGLIST, NUMBER.
+spec.forProvider.name <string>	# Name of the memory strategy. Changing this forces a new resource, because the service API does not support renaming a strategy.
+spec.forProvider.namespaceTemplates <[]string>	# Set containing exactly one namespace template where this strategy applies (for example /strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}). Namespace templates help organize and scope memory content. Exactly one of namespace_templates or namespaces must be configured for all strategies except CUSTOM strategies using SELF_MANAGED configuration.
+spec.forProvider.namespaces <[]string>	# Set of namespace identifiers where this strategy applies. Exactly one of namespaces or namespace_templates must be configured. The API treats this as a legacy parameter; prefer namespace_templates. Since the API mirrors the two fields, switching an existing configuration from namespaces to namespace_templates with the same value is an in-place no-op.
+spec.forProvider.reflectionConfiguration <object>	# Configuration for the reflections created with the episodic memory strategy. Valid when type is EPISODIC, must be omitted for other types. See reflection_configuration Block below.
+spec.forProvider.reflectionConfiguration.namespaceTemplates <[]string>	# Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 spec.forProvider.type <string>	# Type of memory strategy. Valid values: SEMANTIC, SUMMARIZATION, USER_PREFERENCE, EPISODIC, CUSTOM. Changing this forces a new resource. Note that only one strategy of each built-in type (SEMANTIC, SUMMARIZATION, USER_PREFERENCE, EPISODIC) can exist per memory.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
-spec.initProvider.configuration <object>	# Custom configuration block. Required when type is CUSTOM, must be omitted for other types. See configuration below.
-spec.initProvider.configuration.consolidation <object>	# Consolidation configuration for processing and organizing memory content. See consolidation below. Once added, this block cannot be removed without recreating the resource.
+spec.initProvider.configuration <object>	# Custom configuration block. Required when type is CUSTOM, must be omitted for other types. See configuration Block below.
+spec.initProvider.configuration.consolidation <object>	# Consolidation configuration for the memory strategy. See consolidation Block below. Cannot be used with type set to SELF_MANAGED. Once added, this block cannot be removed without recreating the resource.
 spec.initProvider.configuration.consolidation.appendToPrompt <string>	# Additional text to append to the model prompt for consolidation processing.
 spec.initProvider.configuration.consolidation.modelId <string>	# ID of the foundation model to use for consolidation processing.
-spec.initProvider.configuration.extraction <object>	# Extraction configuration for identifying and extracting relevant information. See extraction below. Cannot be used with type set to SUMMARY_OVERRIDE. Once added, this block cannot be removed without recreating the resource.
-spec.initProvider.configuration.extraction.appendToPrompt <string>	# Additional text to append to the model prompt for extraction processing.
-spec.initProvider.configuration.extraction.modelId <string>	# ID of the foundation model to use for extraction processing.
-spec.initProvider.configuration.type <string>	# Type of custom override. Valid values: SEMANTIC_OVERRIDE, SUMMARY_OVERRIDE, USER_PREFERENCE_OVERRIDE, EPISODIC_OVERRIDE. Changing this forces a new resource.
-spec.initProvider.description <string>	# Description of the memory strategy.
-spec.initProvider.memoryExecutionRoleArn <string>
+spec.initProvider.configuration.extraction <object>	# Extraction configuration for the memory strategy. See extraction Block below. Cannot be used with type set to SUMMARY_OVERRIDE or SELF_MANAGED. Once added, this block cannot be removed without recreating the resource.
+spec.initProvider.configuration.extraction.appendToPrompt <string>	# Additional text to append to the model prompt for reflection processing.
+spec.initProvider.configuration.extraction.modelId <string>	# ID of the foundation model to use for reflection processing.
+spec.initProvider.configuration.reflection <object>	# Reflection configuration for the memory strategy. See reflection Block below. Can only be used, and is required, with type set to EPISODIC_OVERRIDE. Once added, this block cannot be removed without recreating the resource.
+spec.initProvider.configuration.reflection.appendToPrompt <string>	# Additional text to append to the model prompt for reflection processing.
+spec.initProvider.configuration.reflection.modelId <string>	# ID of the foundation model to use for reflection processing.
+spec.initProvider.configuration.reflection.namespaceTemplates <[]string>	# Namespace templates over which to create reflections. Can be less nested than episode namespaces.
+spec.initProvider.configuration.selfManagedConfiguration <object>	# Self-managed processing configuration. Required when type is SELF_MANAGED and only valid for that type. See self_managed_configuration Block below.
+spec.initProvider.configuration.selfManagedConfiguration.historicalContextWindowSize <number>	# Number of historical messages to include in processing context. Valid range: 0 to 50. Defaults to 4.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration <object>	# Configuration used to invoke the self-managed memory processing pipeline. See invocation_configuration Block below.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketName <string>	# S3 bucket name for event payload delivery.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef <object>	# Reference to a Bucket in s3 to populate payloadDeliveryBucketName.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.policy <object>	# Policies for referencing.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector <object>	# Selector for a Bucket in s3 to populate payloadDeliveryBucketName.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.policy <object>	# Policies for selection.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketNameSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArn <string>	# ARN of the SNS topic for job notifications.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef <object>	# Reference to a Topic in sns to populate topicArn.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.name <string> (required)	# Name of the referenced object.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.policy <object>	# Policies for referencing.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnRef.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector <object>	# Selector for a Topic in sns to populate topicArn.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.matchControllerRef <boolean>	# MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.matchLabels <map[string]string>	# MatchLabels ensures an object with matching labels is selected.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.policy <object>	# Policies for selection.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
+spec.initProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArnSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions <object>	# Conditions that trigger memory processing. See trigger_conditions Block below. When omitted, the service supplies the documented defaults for all three trigger types.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions.messageBasedTrigger <object>	# Message-based condition. See message_based_trigger Block below.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions.messageBasedTrigger.messageCount <number>	# Number of messages that trigger memory processing. Accepts values from 1 to 50.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions.timeBasedTrigger <object>	# Idle-time condition. See time_based_trigger Block below.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions.timeBasedTrigger.idleSessionTimeout <number>	# Idle session timeout (seconds) that triggers memory processing. Accepts values from 10 to 3000.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions.tokenBasedTrigger <object>	# Token-based condition. See token_based_trigger Block below.
+spec.initProvider.configuration.selfManagedConfiguration.triggerConditions.tokenBasedTrigger.tokenCount <number>	# Number of tokens that trigger memory processing. Accepts values from 100 to 500000.
+spec.initProvider.configuration.type <string>	# Type of custom override. Valid values: SEMANTIC_OVERRIDE, SUMMARY_OVERRIDE, USER_PREFERENCE_OVERRIDE, EPISODIC_OVERRIDE, SELF_MANAGED. Changing this forces a new resource.
+spec.initProvider.description <string>	# Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
+spec.initProvider.memoryExecutionRoleArn <string>	# ARN of the IAM role that the memory service assumes to perform operations.
 spec.initProvider.memoryExecutionRoleArnRef <object>	# Reference to a Role in iam to populate memoryExecutionRoleArn.
 spec.initProvider.memoryExecutionRoleArnRef.name <string> (required)	# Name of the referenced object.
 spec.initProvider.memoryExecutionRoleArnRef.policy <object>	# Policies for referencing.
@@ -76,8 +173,29 @@ spec.initProvider.memoryIdSelector.matchLabels <map[string]string>	# MatchLabels
 spec.initProvider.memoryIdSelector.policy <object>	# Policies for selection.
 spec.initProvider.memoryIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.memoryIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.name <string>	# Name of the memory strategy.
-spec.initProvider.namespaces <[]string>	# Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
+spec.initProvider.memoryRecordSchema <object>	# Schema for metadata fields on records generated by this strategy. Valid for all strategy types. See memory_record_schema Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema <[]object>	# List of metadata field definitions for records generated by this strategy. See metadata_schema Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig <object>	# Configuration for extracting this metadata value from conversational content. Applicable only when extraction_type is LLM_INFERRED. See extraction_config Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig <object>	# Model-based extraction configuration. See llm_extraction_config Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.definition <string>	# Description of what this metadata field represents.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.llmExtractionInstruction <string>	# Instructions for extraction. Supports built-in operators like LATEST_VALUE or custom natural-language instructions.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation <object>	# Validation rules to constrain extracted values. See validation Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation <object>	# Validation for NUMBER fields. See number_validation Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation.maxValue <number>	# Maximum allowed value.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation.minValue <number>	# Minimum allowed value.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation <object>	# Validation for STRINGLIST fields. See string_list_validation Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation.allowedValues <[]string>	# Allowed values for items in this STRINGLIST field.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation.maxItems <number>	# Maximum number of items in the string list.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringValidation <object>	# Validation for STRING fields. See string_validation Block below.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringValidation.allowedValues <[]string>	# Allowed values for items in this STRINGLIST field.
+spec.initProvider.memoryRecordSchema.metadataSchema[].extractionType <string>	# Whether the metadata value is extracted by the LLM or passed through deterministically from the event. Valid values: LLM_INFERRED, STRICTLY_CONSISTENT.
+spec.initProvider.memoryRecordSchema.metadataSchema[].key <string>	# Metadata field name. Must match an indexed key to be queryable via metadata filters.
+spec.initProvider.memoryRecordSchema.metadataSchema[].type <string>	# Metadata value type. Valid values: STRING, STRINGLIST, NUMBER.
+spec.initProvider.name <string>	# Name of the memory strategy. Changing this forces a new resource, because the service API does not support renaming a strategy.
+spec.initProvider.namespaceTemplates <[]string>	# Set containing exactly one namespace template where this strategy applies (for example /strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}). Namespace templates help organize and scope memory content. Exactly one of namespace_templates or namespaces must be configured for all strategies except CUSTOM strategies using SELF_MANAGED configuration.
+spec.initProvider.namespaces <[]string>	# Set of namespace identifiers where this strategy applies. Exactly one of namespaces or namespace_templates must be configured. The API treats this as a legacy parameter; prefer namespace_templates. Since the API mirrors the two fields, switching an existing configuration from namespaces to namespace_templates with the same value is an in-place no-op.
+spec.initProvider.reflectionConfiguration <object>	# Configuration for the reflections created with the episodic memory strategy. Valid when type is EPISODIC, must be omitted for other types. See reflection_configuration Block below.
+spec.initProvider.reflectionConfiguration.namespaceTemplates <[]string>	# Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 spec.initProvider.type <string>	# Type of memory strategy. Valid values: SEMANTIC, SUMMARIZATION, USER_PREFERENCE, EPISODIC, CUSTOM. Changing this forces a new resource. Note that only one strategy of each built-in type (SEMANTIC, SUMMARIZATION, USER_PREFERENCE, EPISODIC) can exist per memory.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. This field is planned to replace the DeletionPolicy field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. If both are custom, the DeletionPolicy field will be ignored. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
 spec.providerConfigRef <object> default={"name":"default"}	# ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -90,21 +208,65 @@ spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the secret.
 status <object>	# MemoryStrategyStatus defines the observed state of MemoryStrategy.
 status.atProvider <object>
-status.atProvider.configuration <object>	# Custom configuration block. Required when type is CUSTOM, must be omitted for other types. See configuration below.
-status.atProvider.configuration.consolidation <object>	# Consolidation configuration for processing and organizing memory content. See consolidation below. Once added, this block cannot be removed without recreating the resource.
+status.atProvider.configuration <object>	# Custom configuration block. Required when type is CUSTOM, must be omitted for other types. See configuration Block below.
+status.atProvider.configuration.consolidation <object>	# Consolidation configuration for the memory strategy. See consolidation Block below. Cannot be used with type set to SELF_MANAGED. Once added, this block cannot be removed without recreating the resource.
 status.atProvider.configuration.consolidation.appendToPrompt <string>	# Additional text to append to the model prompt for consolidation processing.
 status.atProvider.configuration.consolidation.modelId <string>	# ID of the foundation model to use for consolidation processing.
-status.atProvider.configuration.extraction <object>	# Extraction configuration for identifying and extracting relevant information. See extraction below. Cannot be used with type set to SUMMARY_OVERRIDE. Once added, this block cannot be removed without recreating the resource.
-status.atProvider.configuration.extraction.appendToPrompt <string>	# Additional text to append to the model prompt for extraction processing.
-status.atProvider.configuration.extraction.modelId <string>	# ID of the foundation model to use for extraction processing.
-status.atProvider.configuration.type <string>	# Type of custom override. Valid values: SEMANTIC_OVERRIDE, SUMMARY_OVERRIDE, USER_PREFERENCE_OVERRIDE, EPISODIC_OVERRIDE. Changing this forces a new resource.
-status.atProvider.description <string>	# Description of the memory strategy.
+status.atProvider.configuration.extraction <object>	# Extraction configuration for the memory strategy. See extraction Block below. Cannot be used with type set to SUMMARY_OVERRIDE or SELF_MANAGED. Once added, this block cannot be removed without recreating the resource.
+status.atProvider.configuration.extraction.appendToPrompt <string>	# Additional text to append to the model prompt for reflection processing.
+status.atProvider.configuration.extraction.modelId <string>	# ID of the foundation model to use for reflection processing.
+status.atProvider.configuration.reflection <object>	# Reflection configuration for the memory strategy. See reflection Block below. Can only be used, and is required, with type set to EPISODIC_OVERRIDE. Once added, this block cannot be removed without recreating the resource.
+status.atProvider.configuration.reflection.appendToPrompt <string>	# Additional text to append to the model prompt for reflection processing.
+status.atProvider.configuration.reflection.modelId <string>	# ID of the foundation model to use for reflection processing.
+status.atProvider.configuration.reflection.namespaceTemplates <[]string>	# Namespace templates over which to create reflections. Can be less nested than episode namespaces.
+status.atProvider.configuration.selfManagedConfiguration <object>	# Self-managed processing configuration. Required when type is SELF_MANAGED and only valid for that type. See self_managed_configuration Block below.
+status.atProvider.configuration.selfManagedConfiguration.historicalContextWindowSize <number>	# Number of historical messages to include in processing context. Valid range: 0 to 50. Defaults to 4.
+status.atProvider.configuration.selfManagedConfiguration.invocationConfiguration <object>	# Configuration used to invoke the self-managed memory processing pipeline. See invocation_configuration Block below.
+status.atProvider.configuration.selfManagedConfiguration.invocationConfiguration.payloadDeliveryBucketName <string>	# S3 bucket name for event payload delivery.
+status.atProvider.configuration.selfManagedConfiguration.invocationConfiguration.topicArn <string>	# ARN of the SNS topic for job notifications.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions <object>	# Conditions that trigger memory processing. See trigger_conditions Block below. When omitted, the service supplies the documented defaults for all three trigger types.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions.messageBasedTrigger <object>	# Message-based condition. See message_based_trigger Block below.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions.messageBasedTrigger.messageCount <number>	# Number of messages that trigger memory processing. Accepts values from 1 to 50.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions.timeBasedTrigger <object>	# Idle-time condition. See time_based_trigger Block below.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions.timeBasedTrigger.idleSessionTimeout <number>	# Idle session timeout (seconds) that triggers memory processing. Accepts values from 10 to 3000.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions.tokenBasedTrigger <object>	# Token-based condition. See token_based_trigger Block below.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditions.tokenBasedTrigger.tokenCount <number>	# Number of tokens that trigger memory processing. Accepts values from 100 to 500000.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual <[]object>	# Actual deployed trigger conditions.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual[].messageBasedTrigger <[]object>	# Message-based condition.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual[].messageBasedTrigger[].messageCount <number>	# Number of messages that trigger memory processing.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual[].timeBasedTrigger <[]object>	# Idle-time condition.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual[].timeBasedTrigger[].idleSessionTimeout <number>	# Idle session timeout (seconds) that triggers memory processing.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual[].tokenBasedTrigger <[]object>	# Token-based condition.
+status.atProvider.configuration.selfManagedConfiguration.triggerConditionsActual[].tokenBasedTrigger[].tokenCount <number>	# Number of tokens that trigger memory processing.
+status.atProvider.configuration.type <string>	# Type of custom override. Valid values: SEMANTIC_OVERRIDE, SUMMARY_OVERRIDE, USER_PREFERENCE_OVERRIDE, EPISODIC_OVERRIDE, SELF_MANAGED. Changing this forces a new resource.
+status.atProvider.description <string>	# Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
 status.atProvider.id <string>
-status.atProvider.memoryExecutionRoleArn <string>
+status.atProvider.memoryExecutionRoleArn <string>	# ARN of the IAM role that the memory service assumes to perform operations.
 status.atProvider.memoryId <string>	# ID of the memory to associate with this strategy. Changing this forces a new resource.
+status.atProvider.memoryRecordSchema <object>	# Schema for metadata fields on records generated by this strategy. Valid for all strategy types. See memory_record_schema Block below.
+status.atProvider.memoryRecordSchema.metadataSchema <[]object>	# List of metadata field definitions for records generated by this strategy. See metadata_schema Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig <object>	# Configuration for extracting this metadata value from conversational content. Applicable only when extraction_type is LLM_INFERRED. See extraction_config Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig <object>	# Model-based extraction configuration. See llm_extraction_config Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.definition <string>	# Description of what this metadata field represents.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.llmExtractionInstruction <string>	# Instructions for extraction. Supports built-in operators like LATEST_VALUE or custom natural-language instructions.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation <object>	# Validation rules to constrain extracted values. See validation Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation <object>	# Validation for NUMBER fields. See number_validation Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation.maxValue <number>	# Maximum allowed value.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.numberValidation.minValue <number>	# Minimum allowed value.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation <object>	# Validation for STRINGLIST fields. See string_list_validation Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation.allowedValues <[]string>	# Allowed values for items in this STRINGLIST field.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringListValidation.maxItems <number>	# Maximum number of items in the string list.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringValidation <object>	# Validation for STRING fields. See string_validation Block below.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionConfig.llmExtractionConfig.validation.stringValidation.allowedValues <[]string>	# Allowed values for items in this STRINGLIST field.
+status.atProvider.memoryRecordSchema.metadataSchema[].extractionType <string>	# Whether the metadata value is extracted by the LLM or passed through deterministically from the event. Valid values: LLM_INFERRED, STRICTLY_CONSISTENT.
+status.atProvider.memoryRecordSchema.metadataSchema[].key <string>	# Metadata field name. Must match an indexed key to be queryable via metadata filters.
+status.atProvider.memoryRecordSchema.metadataSchema[].type <string>	# Metadata value type. Valid values: STRING, STRINGLIST, NUMBER.
 status.atProvider.memoryStrategyId <string>	# Unique identifier of the Memory Strategy. This corresponds to the service strategyId identifier (AWS API / CloudFormation terminology).
-status.atProvider.name <string>	# Name of the memory strategy.
-status.atProvider.namespaces <[]string>	# Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
+status.atProvider.name <string>	# Name of the memory strategy. Changing this forces a new resource, because the service API does not support renaming a strategy.
+status.atProvider.namespaceTemplates <[]string>	# Set containing exactly one namespace template where this strategy applies (for example /strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}). Namespace templates help organize and scope memory content. Exactly one of namespace_templates or namespaces must be configured for all strategies except CUSTOM strategies using SELF_MANAGED configuration.
+status.atProvider.namespaces <[]string>	# Set of namespace identifiers where this strategy applies. Exactly one of namespaces or namespace_templates must be configured. The API treats this as a legacy parameter; prefer namespace_templates. Since the API mirrors the two fields, switching an existing configuration from namespaces to namespace_templates with the same value is an in-place no-op.
+status.atProvider.reflectionConfiguration <object>	# Configuration for the reflections created with the episodic memory strategy. Valid when type is EPISODIC, must be omitted for other types. See reflection_configuration Block below.
+status.atProvider.reflectionConfiguration.namespaceTemplates <[]string>	# Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.type <string>	# Type of memory strategy. Valid values: SEMANTIC, SUMMARIZATION, USER_PREFERENCE, EPISODIC, CUSTOM. Changing this forces a new resource. Note that only one strategy of each built-in type (SEMANTIC, SUMMARIZATION, USER_PREFERENCE, EPISODIC) can exist per memory.
 status.conditions <[]object>	# Conditions of the resource.
