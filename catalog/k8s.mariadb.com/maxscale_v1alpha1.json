@@ -936,6 +936,36 @@
           },
           "type": "array"
         },
+        "filters": {
+          "description": "Filters are the filters to load into MaxScale. They are not applied automatically, they must be\nreferenced explicitly from 'spec.services[].filters'.",
+          "items": {
+            "additionalProperties": false,
+            "description": "MaxScaleFilter defines a MaxScale filter to be applied to services.\nFilters must be referenced explicitly from 'spec.services[].filters'.",
+            "properties": {
+              "module": {
+                "description": "Module is the filter module to load.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name is the identifier of the MaxScale filter.",
+                "type": "string"
+              },
+              "params": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Params defines extra parameters to pass to the filter.\nAny parameter supported by the filter module may be specified here. See reference:\nhttps://mariadb.com/docs/maxscale/reference/maxscale-filters",
+                "type": "object"
+              }
+            },
+            "required": [
+              "module",
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
         "guiKubernetesService": {
           "additionalProperties": false,
           "description": "GuiKubernetesService defines a template for a Kubernetes Service object to connect to MaxScale's GUI.",
@@ -2464,6 +2494,13 @@
             "additionalProperties": false,
             "description": "Services define how the traffic is forwarded to the MariaDB servers.",
             "properties": {
+              "filters": {
+                "description": "Filters are the names of the filters defined in 'spec.filters' to apply to this service, in order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "listener": {
                 "additionalProperties": false,
                 "description": "MaxScaleListener defines how the MaxScale server will listen for connections.",
@@ -2949,6 +2986,161 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "volumes": {
+          "description": "Volumes to be used in the Pod.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#volume-v1-core.",
+            "properties": {
+              "configMap": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#configmapvolumesource-v1-core.",
+                "properties": {
+                  "defaultMode": {
+                    "format": "int32",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "default": "",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "csi": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#csivolumesource-v1-core.",
+                "properties": {
+                  "driver": {
+                    "type": "string"
+                  },
+                  "fsType": {
+                    "type": "string"
+                  },
+                  "nodePublishSecretRef": {
+                    "additionalProperties": false,
+                    "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#localobjectreference-v1-core.",
+                    "properties": {
+                      "name": {
+                        "default": "",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "readOnly": {
+                    "type": "boolean"
+                  },
+                  "volumeAttributes": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "driver"
+                ],
+                "type": "object"
+              },
+              "emptyDir": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#emptydirvolumesource-v1-core.",
+                "properties": {
+                  "medium": {
+                    "description": "StorageMedium defines ways that storage can be allocated to a volume.",
+                    "type": "string"
+                  },
+                  "sizeLimit": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "hostPath": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#hostpathvolumesource-v1-core",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              },
+              "name": {
+                "type": "string"
+              },
+              "nfs": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#nfsvolumesource-v1-core.",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "readOnly": {
+                    "type": "boolean"
+                  },
+                  "server": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "server"
+                ],
+                "type": "object"
+              },
+              "persistentVolumeClaim": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#persistentvolumeclaimvolumesource-v1-core.",
+                "properties": {
+                  "claimName": {
+                    "type": "string"
+                  },
+                  "readOnly": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "claimName"
+                ],
+                "type": "object"
+              },
+              "secret": {
+                "additionalProperties": false,
+                "description": "Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#secretvolumesource-v1-core.",
+                "properties": {
+                  "defaultMode": {
+                    "format": "int32",
+                    "type": "integer"
+                  },
+                  "secretName": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
         }
       },
       "type": "object"
@@ -3029,6 +3221,10 @@
             "maxScaleVersion"
           ],
           "type": "object"
+        },
+        "filtersSpec": {
+          "description": "FiltersSpec is a hashed version of spec.filters to be able to track changes during reconciliation.",
+          "type": "string"
         },
         "listeners": {
           "description": "Listeners is the state of the listeners in the MaxScale API.",

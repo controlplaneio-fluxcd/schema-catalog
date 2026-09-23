@@ -24,13 +24,13 @@
               "type": "string"
             },
             "kafkaCluster": {
-              "description": "A list of Kafka clusters which are targets of the replicator.",
+              "description": "The source and target Kafka clusters for the replicator. Exactly two blocks are required. Detailed below.",
               "items": {
                 "additionalProperties": false,
                 "properties": {
                   "amazonMskCluster": {
                     "additionalProperties": false,
-                    "description": "Details of an Amazon MSK cluster.",
+                    "description": "Details of an Amazon MSK cluster. Exactly one of amazon_msk_cluster or apache_kafka_cluster must be specified. Detailed below.",
                     "properties": {
                       "mskClusterArn": {
                         "description": "The ARN of an Amazon MSK cluster.",
@@ -127,9 +127,332 @@
                     },
                     "type": "object"
                   },
+                  "apacheKafkaCluster": {
+                    "additionalProperties": false,
+                    "description": "Details of a self-managed or on-premises Apache Kafka cluster. Exactly one of amazon_msk_cluster or apache_kafka_cluster must be specified. Detailed below.",
+                    "properties": {
+                      "apacheKafkaClusterId": {
+                        "description": "The Kafka cluster.id of the self-managed or on-premises Apache Kafka cluster (as reported by the cluster itself, e.g. via the Kafka admin tooling), not an arbitrary name. MSK Replicator validates this value against the source cluster. See Migrate third-party and self-managed Apache Kafka clusters to Amazon MSK for how to obtain the cluster ID and the other required inputs.",
+                        "type": "string"
+                      },
+                      "bootstrapBrokerString": {
+                        "description": "The bootstrap broker connection string used to connect to the Apache Kafka cluster.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "clientAuthentication": {
+                    "additionalProperties": false,
+                    "description": "Details of the client authentication used by the Kafka cluster. Only valid for an apache_kafka_cluster. Detailed below.",
+                    "properties": {
+                      "mtls": {
+                        "additionalProperties": false,
+                        "description": "Details of the mTLS client authentication used by the Kafka cluster. Detailed below.",
+                        "properties": {
+                          "secretArn": {
+                            "description": "The ARN of the AWS Secrets Manager secret that stores the private key and certificate used for mTLS authentication. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                            "type": "string"
+                          },
+                          "secretArnRef": {
+                            "additionalProperties": false,
+                            "description": "Reference to a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "name": {
+                                "description": "Name of the referenced object.",
+                                "type": "string"
+                              },
+                              "namespace": {
+                                "description": "Namespace of the referenced object",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for referencing.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          },
+                          "secretArnSelector": {
+                            "additionalProperties": false,
+                            "description": "Selector for a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "matchControllerRef": {
+                                "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                                "type": "boolean"
+                              },
+                              "matchLabels": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "description": "MatchLabels ensures an object with matching labels is selected.",
+                                "type": "object"
+                              },
+                              "namespace": {
+                                "description": "Namespace for the selector",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for selection.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "saslScram": {
+                        "additionalProperties": false,
+                        "description": "Details of the SASL/SCRAM client authentication used by the Kafka cluster. Detailed below.",
+                        "properties": {
+                          "mechanism": {
+                            "description": "The SASL/SCRAM mechanism used for authentication. Valid values are SHA256 and SHA512.",
+                            "type": "string"
+                          },
+                          "secretArn": {
+                            "description": "The ARN of the AWS Secrets Manager secret that stores the private key and certificate used for mTLS authentication. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                            "type": "string"
+                          },
+                          "secretArnRef": {
+                            "additionalProperties": false,
+                            "description": "Reference to a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "name": {
+                                "description": "Name of the referenced object.",
+                                "type": "string"
+                              },
+                              "namespace": {
+                                "description": "Namespace of the referenced object",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for referencing.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          },
+                          "secretArnSelector": {
+                            "additionalProperties": false,
+                            "description": "Selector for a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "matchControllerRef": {
+                                "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                                "type": "boolean"
+                              },
+                              "matchLabels": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "description": "MatchLabels ensures an object with matching labels is selected.",
+                                "type": "object"
+                              },
+                              "namespace": {
+                                "description": "Namespace for the selector",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for selection.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "encryptionInTransit": {
+                    "additionalProperties": false,
+                    "description": "Details of encryption in transit to the Kafka cluster. Only valid for an apache_kafka_cluster. TLS encryption in transit is always applied to an apache_kafka_cluster; this block is only required to supply a custom root CA chain (for a cluster using a private or self-signed certificate). Detailed below.",
+                    "properties": {
+                      "rootCaCertificate": {
+                        "description": "The ARN of the AWS Secrets Manager secret that stores the custom root CA certificate chain used to trust the certificate authority of the Apache Kafka cluster. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                        "type": "string"
+                      },
+                      "rootCaCertificateRef": {
+                        "additionalProperties": false,
+                        "description": "Reference to a Secret in secretsmanager to populate rootCaCertificate.",
+                        "properties": {
+                          "name": {
+                            "description": "Name of the referenced object.",
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "description": "Namespace of the referenced object",
+                            "type": "string"
+                          },
+                          "policy": {
+                            "additionalProperties": false,
+                            "description": "Policies for referencing.",
+                            "properties": {
+                              "resolution": {
+                                "default": "Required",
+                                "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                "enum": [
+                                  "Required",
+                                  "Optional"
+                                ],
+                                "type": "string"
+                              },
+                              "resolve": {
+                                "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                "enum": [
+                                  "Always",
+                                  "IfNotPresent"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "type": "object"
+                      },
+                      "rootCaCertificateSelector": {
+                        "additionalProperties": false,
+                        "description": "Selector for a Secret in secretsmanager to populate rootCaCertificate.",
+                        "properties": {
+                          "matchControllerRef": {
+                            "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                            "type": "boolean"
+                          },
+                          "matchLabels": {
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "description": "MatchLabels ensures an object with matching labels is selected.",
+                            "type": "object"
+                          },
+                          "namespace": {
+                            "description": "Namespace for the selector",
+                            "type": "string"
+                          },
+                          "policy": {
+                            "additionalProperties": false,
+                            "description": "Policies for selection.",
+                            "properties": {
+                              "resolution": {
+                                "default": "Required",
+                                "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                "enum": [
+                                  "Required",
+                                  "Optional"
+                                ],
+                                "type": "string"
+                              },
+                              "resolve": {
+                                "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                "enum": [
+                                  "Always",
+                                  "IfNotPresent"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "vpcConfig": {
                     "additionalProperties": false,
-                    "description": "Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.",
+                    "description": "Details of an Amazon VPC which has network connectivity to the Kafka cluster. Provide this on the amazon_msk_cluster entry only; the replicator reaches the Apache Kafka cluster through that VPC.",
                     "properties": {
                       "securityGroupsIds": {
                         "description": "The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.",
@@ -232,7 +555,7 @@
                         "type": "object"
                       },
                       "subnetIds": {
-                        "description": "The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.",
+                        "description": "List of subnets to connect to in the VPC. AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.",
                         "items": {
                           "type": "string"
                         },
@@ -358,6 +681,94 @@
                         "logGroup": {
                           "description": "Name of CloudWatch Logs log group. Required if enabled is true. If enabled is false, this value must not be set.",
                           "type": "string"
+                        },
+                        "logGroupRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a Group in cloudwatchlogs to populate logGroup.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "logGroupSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a Group in cloudwatchlogs to populate logGroup.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
                         }
                       },
                       "type": "object"
@@ -369,6 +780,94 @@
                         "deliveryStream": {
                           "description": "Name of the Firehose delivery stream. Required if enabled is true. If enabled is false, this value must not be set.",
                           "type": "string"
+                        },
+                        "deliveryStreamRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a DeliveryStream in firehose to populate deliveryStream.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "deliveryStreamSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a DeliveryStream in firehose to populate deliveryStream.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
                         },
                         "enabled": {
                           "description": "Boolean whether to enable log delivery to Firehose.",
@@ -384,6 +883,94 @@
                         "bucket": {
                           "description": "Name of the S3 bucket. Required if enabled is true. If enabled is false, this value must not be set.",
                           "type": "string"
+                        },
+                        "bucketRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a Bucket in s3 to populate bucket.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "bucketSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a Bucket in s3 to populate bucket.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
                         },
                         "enabled": {
                           "description": "Boolean whether to enable log delivery to S3.",
@@ -449,7 +1036,7 @@
                   "type": "array"
                 },
                 "sourceKafkaClusterArn": {
-                  "description": "The ARN of the source Kafka cluster.",
+                  "description": "The ARN of the source Kafka cluster. Use for an Amazon MSK source. Exactly one of source_kafka_cluster_arn or source_kafka_cluster_id must be specified.",
                   "type": "string"
                 },
                 "sourceKafkaClusterArnRef": {
@@ -540,12 +1127,16 @@
                   },
                   "type": "object"
                 },
+                "sourceKafkaClusterId": {
+                  "description": "The identifier of the source Kafka cluster. Use for a self-managed / on-premises Apache Kafka source (matches apache_kafka_cluster_id). Exactly one of source_kafka_cluster_arn or source_kafka_cluster_id must be specified.",
+                  "type": "string"
+                },
                 "targetCompressionType": {
                   "description": "The type of compression to use writing records to target Kafka cluster.",
                   "type": "string"
                 },
                 "targetKafkaClusterArn": {
-                  "description": "The ARN of the target Kafka cluster.",
+                  "description": "The ARN of the target Kafka cluster. Use for an Amazon MSK target. Exactly one of target_kafka_cluster_arn or target_kafka_cluster_id must be specified.",
                   "type": "string"
                 },
                 "targetKafkaClusterArnRef": {
@@ -635,6 +1226,10 @@
                     }
                   },
                   "type": "object"
+                },
+                "targetKafkaClusterId": {
+                  "description": "The identifier of the target Kafka cluster. Use for a self-managed / on-premises Apache Kafka target (matches apache_kafka_cluster_id). Exactly one of target_kafka_cluster_arn or target_kafka_cluster_id must be specified.",
+                  "type": "string"
                 },
                 "topicReplication": {
                   "description": "Configuration relating to topic replication.",
@@ -818,13 +1413,13 @@
               "type": "string"
             },
             "kafkaCluster": {
-              "description": "A list of Kafka clusters which are targets of the replicator.",
+              "description": "The source and target Kafka clusters for the replicator. Exactly two blocks are required. Detailed below.",
               "items": {
                 "additionalProperties": false,
                 "properties": {
                   "amazonMskCluster": {
                     "additionalProperties": false,
-                    "description": "Details of an Amazon MSK cluster.",
+                    "description": "Details of an Amazon MSK cluster. Exactly one of amazon_msk_cluster or apache_kafka_cluster must be specified. Detailed below.",
                     "properties": {
                       "mskClusterArn": {
                         "description": "The ARN of an Amazon MSK cluster.",
@@ -921,9 +1516,332 @@
                     },
                     "type": "object"
                   },
+                  "apacheKafkaCluster": {
+                    "additionalProperties": false,
+                    "description": "Details of a self-managed or on-premises Apache Kafka cluster. Exactly one of amazon_msk_cluster or apache_kafka_cluster must be specified. Detailed below.",
+                    "properties": {
+                      "apacheKafkaClusterId": {
+                        "description": "The Kafka cluster.id of the self-managed or on-premises Apache Kafka cluster (as reported by the cluster itself, e.g. via the Kafka admin tooling), not an arbitrary name. MSK Replicator validates this value against the source cluster. See Migrate third-party and self-managed Apache Kafka clusters to Amazon MSK for how to obtain the cluster ID and the other required inputs.",
+                        "type": "string"
+                      },
+                      "bootstrapBrokerString": {
+                        "description": "The bootstrap broker connection string used to connect to the Apache Kafka cluster.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "clientAuthentication": {
+                    "additionalProperties": false,
+                    "description": "Details of the client authentication used by the Kafka cluster. Only valid for an apache_kafka_cluster. Detailed below.",
+                    "properties": {
+                      "mtls": {
+                        "additionalProperties": false,
+                        "description": "Details of the mTLS client authentication used by the Kafka cluster. Detailed below.",
+                        "properties": {
+                          "secretArn": {
+                            "description": "The ARN of the AWS Secrets Manager secret that stores the private key and certificate used for mTLS authentication. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                            "type": "string"
+                          },
+                          "secretArnRef": {
+                            "additionalProperties": false,
+                            "description": "Reference to a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "name": {
+                                "description": "Name of the referenced object.",
+                                "type": "string"
+                              },
+                              "namespace": {
+                                "description": "Namespace of the referenced object",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for referencing.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          },
+                          "secretArnSelector": {
+                            "additionalProperties": false,
+                            "description": "Selector for a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "matchControllerRef": {
+                                "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                                "type": "boolean"
+                              },
+                              "matchLabels": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "description": "MatchLabels ensures an object with matching labels is selected.",
+                                "type": "object"
+                              },
+                              "namespace": {
+                                "description": "Namespace for the selector",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for selection.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "saslScram": {
+                        "additionalProperties": false,
+                        "description": "Details of the SASL/SCRAM client authentication used by the Kafka cluster. Detailed below.",
+                        "properties": {
+                          "mechanism": {
+                            "description": "The SASL/SCRAM mechanism used for authentication. Valid values are SHA256 and SHA512.",
+                            "type": "string"
+                          },
+                          "secretArn": {
+                            "description": "The ARN of the AWS Secrets Manager secret that stores the private key and certificate used for mTLS authentication. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                            "type": "string"
+                          },
+                          "secretArnRef": {
+                            "additionalProperties": false,
+                            "description": "Reference to a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "name": {
+                                "description": "Name of the referenced object.",
+                                "type": "string"
+                              },
+                              "namespace": {
+                                "description": "Namespace of the referenced object",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for referencing.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          },
+                          "secretArnSelector": {
+                            "additionalProperties": false,
+                            "description": "Selector for a Secret in secretsmanager to populate secretArn.",
+                            "properties": {
+                              "matchControllerRef": {
+                                "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                                "type": "boolean"
+                              },
+                              "matchLabels": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "description": "MatchLabels ensures an object with matching labels is selected.",
+                                "type": "object"
+                              },
+                              "namespace": {
+                                "description": "Namespace for the selector",
+                                "type": "string"
+                              },
+                              "policy": {
+                                "additionalProperties": false,
+                                "description": "Policies for selection.",
+                                "properties": {
+                                  "resolution": {
+                                    "default": "Required",
+                                    "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                    "enum": [
+                                      "Required",
+                                      "Optional"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "resolve": {
+                                    "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                    "enum": [
+                                      "Always",
+                                      "IfNotPresent"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "encryptionInTransit": {
+                    "additionalProperties": false,
+                    "description": "Details of encryption in transit to the Kafka cluster. Only valid for an apache_kafka_cluster. TLS encryption in transit is always applied to an apache_kafka_cluster; this block is only required to supply a custom root CA chain (for a cluster using a private or self-signed certificate). Detailed below.",
+                    "properties": {
+                      "rootCaCertificate": {
+                        "description": "The ARN of the AWS Secrets Manager secret that stores the custom root CA certificate chain used to trust the certificate authority of the Apache Kafka cluster. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                        "type": "string"
+                      },
+                      "rootCaCertificateRef": {
+                        "additionalProperties": false,
+                        "description": "Reference to a Secret in secretsmanager to populate rootCaCertificate.",
+                        "properties": {
+                          "name": {
+                            "description": "Name of the referenced object.",
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "description": "Namespace of the referenced object",
+                            "type": "string"
+                          },
+                          "policy": {
+                            "additionalProperties": false,
+                            "description": "Policies for referencing.",
+                            "properties": {
+                              "resolution": {
+                                "default": "Required",
+                                "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                "enum": [
+                                  "Required",
+                                  "Optional"
+                                ],
+                                "type": "string"
+                              },
+                              "resolve": {
+                                "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                "enum": [
+                                  "Always",
+                                  "IfNotPresent"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "type": "object"
+                      },
+                      "rootCaCertificateSelector": {
+                        "additionalProperties": false,
+                        "description": "Selector for a Secret in secretsmanager to populate rootCaCertificate.",
+                        "properties": {
+                          "matchControllerRef": {
+                            "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                            "type": "boolean"
+                          },
+                          "matchLabels": {
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "description": "MatchLabels ensures an object with matching labels is selected.",
+                            "type": "object"
+                          },
+                          "namespace": {
+                            "description": "Namespace for the selector",
+                            "type": "string"
+                          },
+                          "policy": {
+                            "additionalProperties": false,
+                            "description": "Policies for selection.",
+                            "properties": {
+                              "resolution": {
+                                "default": "Required",
+                                "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                "enum": [
+                                  "Required",
+                                  "Optional"
+                                ],
+                                "type": "string"
+                              },
+                              "resolve": {
+                                "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                "enum": [
+                                  "Always",
+                                  "IfNotPresent"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "vpcConfig": {
                     "additionalProperties": false,
-                    "description": "Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.",
+                    "description": "Details of an Amazon VPC which has network connectivity to the Kafka cluster. Provide this on the amazon_msk_cluster entry only; the replicator reaches the Apache Kafka cluster through that VPC.",
                     "properties": {
                       "securityGroupsIds": {
                         "description": "The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.",
@@ -1026,7 +1944,7 @@
                         "type": "object"
                       },
                       "subnetIds": {
-                        "description": "The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.",
+                        "description": "List of subnets to connect to in the VPC. AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.",
                         "items": {
                           "type": "string"
                         },
@@ -1152,6 +2070,94 @@
                         "logGroup": {
                           "description": "Name of CloudWatch Logs log group. Required if enabled is true. If enabled is false, this value must not be set.",
                           "type": "string"
+                        },
+                        "logGroupRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a Group in cloudwatchlogs to populate logGroup.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "logGroupSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a Group in cloudwatchlogs to populate logGroup.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
                         }
                       },
                       "type": "object"
@@ -1163,6 +2169,94 @@
                         "deliveryStream": {
                           "description": "Name of the Firehose delivery stream. Required if enabled is true. If enabled is false, this value must not be set.",
                           "type": "string"
+                        },
+                        "deliveryStreamRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a DeliveryStream in firehose to populate deliveryStream.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "deliveryStreamSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a DeliveryStream in firehose to populate deliveryStream.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
                         },
                         "enabled": {
                           "description": "Boolean whether to enable log delivery to Firehose.",
@@ -1178,6 +2272,94 @@
                         "bucket": {
                           "description": "Name of the S3 bucket. Required if enabled is true. If enabled is false, this value must not be set.",
                           "type": "string"
+                        },
+                        "bucketRef": {
+                          "additionalProperties": false,
+                          "description": "Reference to a Bucket in s3 to populate bucket.",
+                          "properties": {
+                            "name": {
+                              "description": "Name of the referenced object.",
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace of the referenced object",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for referencing.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "bucketSelector": {
+                          "additionalProperties": false,
+                          "description": "Selector for a Bucket in s3 to populate bucket.",
+                          "properties": {
+                            "matchControllerRef": {
+                              "description": "MatchControllerRef ensures an object with the same controller reference\nas the selecting object is selected.",
+                              "type": "boolean"
+                            },
+                            "matchLabels": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "MatchLabels ensures an object with matching labels is selected.",
+                              "type": "object"
+                            },
+                            "namespace": {
+                              "description": "Namespace for the selector",
+                              "type": "string"
+                            },
+                            "policy": {
+                              "additionalProperties": false,
+                              "description": "Policies for selection.",
+                              "properties": {
+                                "resolution": {
+                                  "default": "Required",
+                                  "description": "Resolution specifies whether resolution of this reference is required.\nThe default is 'Required', which means the reconcile will fail if the\nreference cannot be resolved. 'Optional' means this reference will be\na no-op if it cannot be resolved.",
+                                  "enum": [
+                                    "Required",
+                                    "Optional"
+                                  ],
+                                  "type": "string"
+                                },
+                                "resolve": {
+                                  "description": "Resolve specifies when this reference should be resolved. The default\nis 'IfNotPresent', which will attempt to resolve the reference only when\nthe corresponding field is not present. Use 'Always' to resolve the\nreference on every reconcile.",
+                                  "enum": [
+                                    "Always",
+                                    "IfNotPresent"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
                         },
                         "enabled": {
                           "description": "Boolean whether to enable log delivery to S3.",
@@ -1239,7 +2421,7 @@
                   "type": "array"
                 },
                 "sourceKafkaClusterArn": {
-                  "description": "The ARN of the source Kafka cluster.",
+                  "description": "The ARN of the source Kafka cluster. Use for an Amazon MSK source. Exactly one of source_kafka_cluster_arn or source_kafka_cluster_id must be specified.",
                   "type": "string"
                 },
                 "sourceKafkaClusterArnRef": {
@@ -1330,12 +2512,16 @@
                   },
                   "type": "object"
                 },
+                "sourceKafkaClusterId": {
+                  "description": "The identifier of the source Kafka cluster. Use for a self-managed / on-premises Apache Kafka source (matches apache_kafka_cluster_id). Exactly one of source_kafka_cluster_arn or source_kafka_cluster_id must be specified.",
+                  "type": "string"
+                },
                 "targetCompressionType": {
                   "description": "The type of compression to use writing records to target Kafka cluster.",
                   "type": "string"
                 },
                 "targetKafkaClusterArn": {
-                  "description": "The ARN of the target Kafka cluster.",
+                  "description": "The ARN of the target Kafka cluster. Use for an Amazon MSK target. Exactly one of target_kafka_cluster_arn or target_kafka_cluster_id must be specified.",
                   "type": "string"
                 },
                 "targetKafkaClusterArnRef": {
@@ -1425,6 +2611,10 @@
                     }
                   },
                   "type": "object"
+                },
+                "targetKafkaClusterId": {
+                  "description": "The identifier of the target Kafka cluster. Use for a self-managed / on-premises Apache Kafka target (matches apache_kafka_cluster_id). Exactly one of target_kafka_cluster_arn or target_kafka_cluster_id must be specified.",
+                  "type": "string"
                 },
                 "topicReplication": {
                   "description": "Configuration relating to topic replication.",
@@ -1694,13 +2884,13 @@
               "type": "string"
             },
             "kafkaCluster": {
-              "description": "A list of Kafka clusters which are targets of the replicator.",
+              "description": "The source and target Kafka clusters for the replicator. Exactly two blocks are required. Detailed below.",
               "items": {
                 "additionalProperties": false,
                 "properties": {
                   "amazonMskCluster": {
                     "additionalProperties": false,
-                    "description": "Details of an Amazon MSK cluster.",
+                    "description": "Details of an Amazon MSK cluster. Exactly one of amazon_msk_cluster or apache_kafka_cluster must be specified. Detailed below.",
                     "properties": {
                       "mskClusterArn": {
                         "description": "The ARN of an Amazon MSK cluster.",
@@ -1709,9 +2899,68 @@
                     },
                     "type": "object"
                   },
+                  "apacheKafkaCluster": {
+                    "additionalProperties": false,
+                    "description": "Details of a self-managed or on-premises Apache Kafka cluster. Exactly one of amazon_msk_cluster or apache_kafka_cluster must be specified. Detailed below.",
+                    "properties": {
+                      "apacheKafkaClusterId": {
+                        "description": "The Kafka cluster.id of the self-managed or on-premises Apache Kafka cluster (as reported by the cluster itself, e.g. via the Kafka admin tooling), not an arbitrary name. MSK Replicator validates this value against the source cluster. See Migrate third-party and self-managed Apache Kafka clusters to Amazon MSK for how to obtain the cluster ID and the other required inputs.",
+                        "type": "string"
+                      },
+                      "bootstrapBrokerString": {
+                        "description": "The bootstrap broker connection string used to connect to the Apache Kafka cluster.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "clientAuthentication": {
+                    "additionalProperties": false,
+                    "description": "Details of the client authentication used by the Kafka cluster. Only valid for an apache_kafka_cluster. Detailed below.",
+                    "properties": {
+                      "mtls": {
+                        "additionalProperties": false,
+                        "description": "Details of the mTLS client authentication used by the Kafka cluster. Detailed below.",
+                        "properties": {
+                          "secretArn": {
+                            "description": "The ARN of the AWS Secrets Manager secret that stores the private key and certificate used for mTLS authentication. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "saslScram": {
+                        "additionalProperties": false,
+                        "description": "Details of the SASL/SCRAM client authentication used by the Kafka cluster. Detailed below.",
+                        "properties": {
+                          "mechanism": {
+                            "description": "The SASL/SCRAM mechanism used for authentication. Valid values are SHA256 and SHA512.",
+                            "type": "string"
+                          },
+                          "secretArn": {
+                            "description": "The ARN of the AWS Secrets Manager secret that stores the private key and certificate used for mTLS authentication. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "encryptionInTransit": {
+                    "additionalProperties": false,
+                    "description": "Details of encryption in transit to the Kafka cluster. Only valid for an apache_kafka_cluster. TLS encryption in transit is always applied to an apache_kafka_cluster; this block is only required to supply a custom root CA chain (for a cluster using a private or self-signed certificate). Detailed below.",
+                    "properties": {
+                      "rootCaCertificate": {
+                        "description": "The ARN of the AWS Secrets Manager secret that stores the custom root CA certificate chain used to trust the certificate authority of the Apache Kafka cluster. See Set up prerequisites for MSK Replicator with self-managed Apache Kafka clusters for the required secret contents and format.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "vpcConfig": {
                     "additionalProperties": false,
-                    "description": "Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.",
+                    "description": "Details of an Amazon VPC which has network connectivity to the Kafka cluster. Provide this on the amazon_msk_cluster entry only; the replicator reaches the Apache Kafka cluster through that VPC.",
                     "properties": {
                       "securityGroupsIds": {
                         "description": "The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.",
@@ -1722,7 +2971,7 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "subnetIds": {
-                        "description": "The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.",
+                        "description": "List of subnets to connect to in the VPC. AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.",
                         "items": {
                           "type": "string"
                         },
@@ -1850,7 +3099,11 @@
                   "type": "string"
                 },
                 "sourceKafkaClusterArn": {
-                  "description": "The ARN of the source Kafka cluster.",
+                  "description": "The ARN of the source Kafka cluster. Use for an Amazon MSK source. Exactly one of source_kafka_cluster_arn or source_kafka_cluster_id must be specified.",
+                  "type": "string"
+                },
+                "sourceKafkaClusterId": {
+                  "description": "The identifier of the source Kafka cluster. Use for a self-managed / on-premises Apache Kafka source (matches apache_kafka_cluster_id). Exactly one of source_kafka_cluster_arn or source_kafka_cluster_id must be specified.",
                   "type": "string"
                 },
                 "targetCompressionType": {
@@ -1861,7 +3114,11 @@
                   "type": "string"
                 },
                 "targetKafkaClusterArn": {
-                  "description": "The ARN of the target Kafka cluster.",
+                  "description": "The ARN of the target Kafka cluster. Use for an Amazon MSK target. Exactly one of target_kafka_cluster_arn or target_kafka_cluster_id must be specified.",
+                  "type": "string"
+                },
+                "targetKafkaClusterId": {
+                  "description": "The identifier of the target Kafka cluster. Use for a self-managed / on-premises Apache Kafka target (matches apache_kafka_cluster_id). Exactly one of target_kafka_cluster_arn or target_kafka_cluster_id must be specified.",
                   "type": "string"
                 },
                 "topicReplication": {

@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.8.1 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=opensearchserverless.aws.m.upbound.io/v1beta1
 kind <string> enum=SecurityConfig
 metadata.name <string> (required)
@@ -6,18 +6,32 @@ metadata.namespace <string> (required)
 spec <object> (required)	# SecurityConfigSpec defines the desired state of SecurityConfig
 spec.forProvider <object> (required)
 spec.forProvider.description <string>	# Description of the security configuration. Description of the security configuration.
+spec.forProvider.iamFederationOptions <object>	# Configuration block for IAM Federation options. Required if type is set to iamfederation. See iam_federation_options Block below for details.
+spec.forProvider.iamFederationOptions.groupAttribute <string>	# Group attribute for this IAM federation integration. At least one of group_attribute or user_attribute must be specified. Group attribute.
+spec.forProvider.iamFederationOptions.userAttribute <string>	# User attribute for this IAM federation integration. At least one of group_attribute or user_attribute must be specified. User attribute.
+spec.forProvider.iamIdentityCenterOptions <object>	# Configuration block for IAM Identity Center options. Required if type is set to iamidentitycenter. See iam_identity_center_options Block below for details.
+spec.forProvider.iamIdentityCenterOptions.groupAttribute <string>	# Group attribute for this IAM Identity Center integration. Valid values are GroupId and GroupName. Defaults to GroupId. Group attribute.
+spec.forProvider.iamIdentityCenterOptions.instanceArn <string>	# ARN of the IAM Identity Center instance used to integrate with OpenSearch Serverless. Instance ARN.
+spec.forProvider.iamIdentityCenterOptions.userAttribute <string>	# User attribute for this IAM Identity Center integration. Valid values are UserId, UserName and Email. Defaults to UserId. User attribute.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
-spec.forProvider.samlOptions <object>	# Configuration block for SAML options.
+spec.forProvider.samlOptions <object>	# Configuration block for SAML options. Required if type is set to saml. See saml_options Block below for details.
 spec.forProvider.samlOptions.groupAttribute <string>	# Group attribute for this SAML integration. Group attribute for this SAML integration.
-spec.forProvider.samlOptions.metadata <string>	# The XML IdP metadata file generated from your identity provider. The XML IdP metadata file generated from your identity provider.
+spec.forProvider.samlOptions.metadata <string>	# XML IdP metadata file generated from your identity provider. The XML IdP metadata file generated from your identity provider.
 spec.forProvider.samlOptions.sessionTimeout <number>	# Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes. Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 spec.forProvider.samlOptions.userAttribute <string>	# User attribute for this SAML integration. User attribute for this SAML integration.
-spec.forProvider.type <string> (required)	# Type of configuration. Must be saml. Type of configuration. Must be `saml`.
+spec.forProvider.type <string> (required)	# Type of configuration. Valid values are saml, iamidentitycenter and iamfederation. Type of configuration. Valid values: `saml`, `iamidentitycenter` or `iamfederation`.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
 spec.initProvider.description <string>	# Description of the security configuration. Description of the security configuration.
-spec.initProvider.samlOptions <object>	# Configuration block for SAML options.
+spec.initProvider.iamFederationOptions <object>	# Configuration block for IAM Federation options. Required if type is set to iamfederation. See iam_federation_options Block below for details.
+spec.initProvider.iamFederationOptions.groupAttribute <string>	# Group attribute for this IAM federation integration. At least one of group_attribute or user_attribute must be specified. Group attribute.
+spec.initProvider.iamFederationOptions.userAttribute <string>	# User attribute for this IAM federation integration. At least one of group_attribute or user_attribute must be specified. User attribute.
+spec.initProvider.iamIdentityCenterOptions <object>	# Configuration block for IAM Identity Center options. Required if type is set to iamidentitycenter. See iam_identity_center_options Block below for details.
+spec.initProvider.iamIdentityCenterOptions.groupAttribute <string>	# Group attribute for this IAM Identity Center integration. Valid values are GroupId and GroupName. Defaults to GroupId. Group attribute.
+spec.initProvider.iamIdentityCenterOptions.instanceArn <string>	# ARN of the IAM Identity Center instance used to integrate with OpenSearch Serverless. Instance ARN.
+spec.initProvider.iamIdentityCenterOptions.userAttribute <string>	# User attribute for this IAM Identity Center integration. Valid values are UserId, UserName and Email. Defaults to UserId. User attribute.
+spec.initProvider.samlOptions <object>	# Configuration block for SAML options. Required if type is set to saml. See saml_options Block below for details.
 spec.initProvider.samlOptions.groupAttribute <string>	# Group attribute for this SAML integration. Group attribute for this SAML integration.
-spec.initProvider.samlOptions.metadata <string>	# The XML IdP metadata file generated from your identity provider. The XML IdP metadata file generated from your identity provider.
+spec.initProvider.samlOptions.metadata <string>	# XML IdP metadata file generated from your identity provider. The XML IdP metadata file generated from your identity provider.
 spec.initProvider.samlOptions.sessionTimeout <number>	# Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes. Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 spec.initProvider.samlOptions.userAttribute <string>	# User attribute for this SAML integration. User attribute for this SAML integration.
 spec.managementPolicies <[]string> default=["*"]	# THIS IS A BETA FIELD. It is on by default but can be opted out through a Crossplane feature flag. ManagementPolicies specify the array of actions Crossplane is allowed to take on the managed and external resources. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223 and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
@@ -30,14 +44,21 @@ status <object>	# SecurityConfigStatus defines the observed state of SecurityCon
 status.atProvider <object>
 status.atProvider.configVersion <string>	# Version of the configuration. Version of the configuration.
 status.atProvider.description <string>	# Description of the security configuration. Description of the security configuration.
+status.atProvider.iamFederationOptions <object>	# Configuration block for IAM Federation options. Required if type is set to iamfederation. See iam_federation_options Block below for details.
+status.atProvider.iamFederationOptions.groupAttribute <string>	# Group attribute for this IAM federation integration. At least one of group_attribute or user_attribute must be specified. Group attribute.
+status.atProvider.iamFederationOptions.userAttribute <string>	# User attribute for this IAM federation integration. At least one of group_attribute or user_attribute must be specified. User attribute.
+status.atProvider.iamIdentityCenterOptions <object>	# Configuration block for IAM Identity Center options. Required if type is set to iamidentitycenter. See iam_identity_center_options Block below for details.
+status.atProvider.iamIdentityCenterOptions.groupAttribute <string>	# Group attribute for this IAM Identity Center integration. Valid values are GroupId and GroupName. Defaults to GroupId. Group attribute.
+status.atProvider.iamIdentityCenterOptions.instanceArn <string>	# ARN of the IAM Identity Center instance used to integrate with OpenSearch Serverless. Instance ARN.
+status.atProvider.iamIdentityCenterOptions.userAttribute <string>	# User attribute for this IAM Identity Center integration. Valid values are UserId, UserName and Email. Defaults to UserId. User attribute.
 status.atProvider.id <string>
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
-status.atProvider.samlOptions <object>	# Configuration block for SAML options.
+status.atProvider.samlOptions <object>	# Configuration block for SAML options. Required if type is set to saml. See saml_options Block below for details.
 status.atProvider.samlOptions.groupAttribute <string>	# Group attribute for this SAML integration. Group attribute for this SAML integration.
-status.atProvider.samlOptions.metadata <string>	# The XML IdP metadata file generated from your identity provider. The XML IdP metadata file generated from your identity provider.
+status.atProvider.samlOptions.metadata <string>	# XML IdP metadata file generated from your identity provider. The XML IdP metadata file generated from your identity provider.
 status.atProvider.samlOptions.sessionTimeout <number>	# Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes. Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 status.atProvider.samlOptions.userAttribute <string>	# User attribute for this SAML integration. User attribute for this SAML integration.
-status.atProvider.type <string>	# Type of configuration. Must be saml. Type of configuration. Must be `saml`.
+status.atProvider.type <string>	# Type of configuration. Valid values are saml, iamidentitycenter and iamfederation. Type of configuration. Valid values: `saml`, `iamidentitycenter` or `iamfederation`.
 status.conditions <[]object>	# Conditions of the resource.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time this condition transitioned from one status to another.
 status.conditions[].message <string>	# A Message containing details about this condition's last transition from one status to another, if any.

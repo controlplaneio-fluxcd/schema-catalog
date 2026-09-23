@@ -1,4 +1,4 @@
-# schema source: MariaDB Operator 26.10.0 https://github.com/mariadb-operator/mariadb-operator
+# schema source: MariaDB Operator 26.10.1 https://github.com/mariadb-operator/mariadb-operator
 apiVersion <string> enum=k8s.mariadb.com/v1alpha1
 kind <string> enum=MaxScale
 metadata.name <string> (required)
@@ -149,6 +149,10 @@ spec.envFrom[].configMapRef.name <string> default=""
 spec.envFrom[].prefix <string>
 spec.envFrom[].secretRef <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#localobjectreference-v1-core.
 spec.envFrom[].secretRef.name <string> default=""
+spec.filters <[]object>	# Filters are the filters to load into MaxScale. They are not applied automatically, they must be referenced explicitly from 'spec.services[].filters'.
+spec.filters[].module <string> (required)	# Module is the filter module to load.
+spec.filters[].name <string> (required)	# Name is the identifier of the MaxScale filter.
+spec.filters[].params <map[string]string>	# Params defines extra parameters to pass to the filter. Any parameter supported by the filter module may be specified here. See reference: https://mariadb.com/docs/maxscale/reference/maxscale-filters
 spec.guiKubernetesService <object>	# GuiKubernetesService defines a template for a Kubernetes Service object to connect to MaxScale's GUI.
 spec.guiKubernetesService.allocateLoadBalancerNodePorts <boolean>	# AllocateLoadBalancerNodePorts Service field.
 spec.guiKubernetesService.externalTrafficPolicy <string>	# ExternalTrafficPolicy Service field.
@@ -396,6 +400,7 @@ spec.servers[].port <integer> format=int32	# Port is the network port of the Mar
 spec.servers[].protocol <string>	# Protocol is the MaxScale protocol to use when communicating with this MariaDB server. If not provided, it defaults to MariaDBBackend.
 spec.serviceAccountName <string>	# ServiceAccountName is the name of the ServiceAccount to be used by the Pods.
 spec.services <[]object>	# Services define how the traffic is forwarded to the MariaDB servers. It is defaulted if not provided.
+spec.services[].filters <[]string>	# Filters are the names of the filters defined in 'spec.filters' to apply to this service, in order.
 spec.services[].listener <object> (required)	# MaxScaleListener defines how the MaxScale server will listen for connections.
 spec.services[].listener.name <string>	# Name is the identifier of the listener. It is defaulted if not provided
 spec.services[].listener.params <map[string]string>	# Params defines extra parameters to pass to the listener. Any parameter supported by MaxScale may be specified here. See reference: https://mariadb.com/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/#listener_1.
@@ -478,6 +483,34 @@ spec.volumeMounts[].mountPath <string> (required)
 spec.volumeMounts[].name <string> (required)	# This must match the Name of a Volume.
 spec.volumeMounts[].readOnly <boolean>
 spec.volumeMounts[].subPath <string>
+spec.volumes <[]object>	# Volumes to be used in the Pod.
+spec.volumes[].configMap <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#configmapvolumesource-v1-core.
+spec.volumes[].configMap.defaultMode <integer> format=int32
+spec.volumes[].configMap.name <string> default=""
+spec.volumes[].csi <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#csivolumesource-v1-core.
+spec.volumes[].csi.driver <string> (required)
+spec.volumes[].csi.fsType <string>
+spec.volumes[].csi.nodePublishSecretRef <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#localobjectreference-v1-core.
+spec.volumes[].csi.nodePublishSecretRef.name <string> default=""
+spec.volumes[].csi.readOnly <boolean>
+spec.volumes[].csi.volumeAttributes <map[string]string>
+spec.volumes[].emptyDir <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#emptydirvolumesource-v1-core.
+spec.volumes[].emptyDir.medium <string>	# StorageMedium defines ways that storage can be allocated to a volume.
+spec.volumes[].emptyDir.sizeLimit <int-or-string>
+spec.volumes[].hostPath <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#hostpathvolumesource-v1-core
+spec.volumes[].hostPath.path <string> (required)
+spec.volumes[].hostPath.type <string>
+spec.volumes[].name <string> (required)
+spec.volumes[].nfs <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#nfsvolumesource-v1-core.
+spec.volumes[].nfs.path <string> (required)
+spec.volumes[].nfs.readOnly <boolean>
+spec.volumes[].nfs.server <string> (required)
+spec.volumes[].persistentVolumeClaim <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#persistentvolumeclaimvolumesource-v1-core.
+spec.volumes[].persistentVolumeClaim.claimName <string> (required)
+spec.volumes[].persistentVolumeClaim.readOnly <boolean>
+spec.volumes[].secret <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#secretvolumesource-v1-core.
+spec.volumes[].secret.defaultMode <integer> format=int32
+spec.volumes[].secret.secretName <string>
 status <object>	# MaxScaleStatus defines the observed state of MaxScale
 status.conditions <[]object>	# Conditions for the MaxScale object.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
@@ -489,6 +522,7 @@ status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0
 status.configSync <object>	# ConfigSync is the state of config sync.
 status.configSync.databaseVersion <integer> (required)
 status.configSync.maxScaleVersion <integer> (required)
+status.filtersSpec <string>	# FiltersSpec is a hashed version of spec.filters to be able to track changes during reconciliation.
 status.listeners <[]object>	# Listeners is the state of the listeners in the MaxScale API.
 status.listeners[].name <string> (required)
 status.listeners[].state <string> (required)

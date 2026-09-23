@@ -1,15 +1,15 @@
-# schema source: Upbound AWS Provider v2.7.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.8.1 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=autoscaling.aws.upbound.io/v1beta3
 kind <string> enum=AutoscalingGroup (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# AutoscalingGroupSpec defines the desired state of AutoscalingGroup
 spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
 spec.forProvider <object> (required)
-spec.forProvider.availabilityZoneDistribution <object>	# The instance capacity distribution across Availability Zones. See Availability Zone Distribution below for more details.
-spec.forProvider.availabilityZoneDistribution.capacityDistributionStrategy <string>	# The strategy to use for distributing capacity across the Availability Zones. Valid values are balanced-only and balanced-best-effort. Default is balanced-best-effort.
+spec.forProvider.availabilityZoneDistribution <object>	# The instance capacity distribution across Availability Zones. See availability_zone_distribution Block below for more details.
+spec.forProvider.availabilityZoneDistribution.capacityDistributionStrategy <string>	# The strategy to use for distributing capacity across the Availability Zones. Valid values are balanced-only, balanced-best-effort, and reservations-then-balanced. Default is balanced-best-effort. When reservations-then-balanced is set, you must also specify Capacity Reservations to prioritize through capacity_reservation_specification (or via a launch template) using a Capacity Reservation ID or Capacity Reservation resource group ARN.
 spec.forProvider.availabilityZones <[]string>	# A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the vpc_zone_identifier attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with vpc_zone_identifier.
 spec.forProvider.capacityRebalance <boolean>	# Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
-spec.forProvider.capacityReservationSpecification <object>	# Demand Capacity Reservations. See Capacity Reservation Specification below for more details.
+spec.forProvider.capacityReservationSpecification <object>	# Demand Capacity Reservations. See capacity_reservation_specification Block below for more details.
 spec.forProvider.capacityReservationSpecification.capacityReservationPreference <string>	# Capacity Reservation preference helps you use Capacity Reservations efficiently by prioritizing reserved capacity in a Capacity Reservation before using On-Demand capacity. Valid values are default, capacity-reservations-only, capacity-reservations-first and none. Default is default.
 spec.forProvider.capacityReservationSpecification.capacityReservationTarget <object>	# Describes a target Capacity Reservation or Capacity Reservation resource group.
 spec.forProvider.capacityReservationSpecification.capacityReservationTarget.capacityReservationIds <[]string>	# List of On-Demand Capacity Reservation Ids. Conflicts with capacity_reservation_resource_group_arns.
@@ -33,6 +33,9 @@ spec.forProvider.initialLifecycleHook[].name <string>	# Name of the Auto Scaling
 spec.forProvider.initialLifecycleHook[].notificationMetadata <string>
 spec.forProvider.initialLifecycleHook[].notificationTargetArn <string>	# ARN for this Auto Scaling Group
 spec.forProvider.initialLifecycleHook[].roleArn <string>	# ARN for this Auto Scaling Group
+spec.forProvider.instanceLifecyclePolicy <object>	# If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined below.
+spec.forProvider.instanceLifecyclePolicy.retentionTriggers <object>	# Conditions that trigger instance retention behavior. Defined below.
+spec.forProvider.instanceLifecyclePolicy.retentionTriggers.terminateHookAbandon <string>	# Action to take when a termination lifecycle hook is abandoned due to failure, timeout, or explicit abandonment. Valid values are retain and terminate. Set to retain to move instances to a retained state instead of terminating them. Retained instances don't count toward desired capacity and remain until you terminate them.
 spec.forProvider.instanceMaintenancePolicy <object>	# If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined below.
 spec.forProvider.instanceMaintenancePolicy.maxHealthyPercentage <number>	# Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between 100 and 200, defaults to 100.
 spec.forProvider.instanceMaintenancePolicy.minHealthyPercentage <number>	# Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to 90.
@@ -63,7 +66,7 @@ spec.forProvider.launchConfigurationSelector.matchLabels <map[string]string>	# M
 spec.forProvider.launchConfigurationSelector.policy <object>	# Policies for selection.
 spec.forProvider.launchConfigurationSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.launchConfigurationSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.launchTemplate <object>	# Nested argument with Launch template specification to use to launch instances. See Launch Template below for more details.
+spec.forProvider.launchTemplate <object>	# Nested argument with Launch template specification to use to launch instances. See launch_template Block below for more details.
 spec.forProvider.launchTemplate.id <string>	# ID of the launch template. Conflicts with name.
 spec.forProvider.launchTemplate.idRef <object>	# Reference to a LaunchTemplate in ec2 to populate id.
 spec.forProvider.launchTemplate.idRef.name <string> (required)	# Name of the referenced object.
@@ -83,7 +86,7 @@ spec.forProvider.maxSize <number>	# Maximum size of the Auto Scaling Group.
 spec.forProvider.metricsGranularity <string>	# Granularity to associate with the metrics to collect. The only valid value is 1Minute. Default is 1Minute.
 spec.forProvider.minElbCapacity <number>	# Updates will not wait on ELB instance number changes. (See also Waiting for Capacity below.)
 spec.forProvider.minSize <number>	# Minimum size of the Auto Scaling Group. (See also Waiting for Capacity below.)
-spec.forProvider.mixedInstancesPolicy <object>	# Configuration block containing settings to define launch targets for Auto Scaling groups. See Mixed Instances Policy below for more details.
+spec.forProvider.mixedInstancesPolicy <object>	# Configuration block containing settings to define launch targets for Auto Scaling groups. See mixed_instances_policy Block below for more details.
 spec.forProvider.mixedInstancesPolicy.instancesDistribution <object>	# Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
 spec.forProvider.mixedInstancesPolicy.instancesDistribution.onDemandAllocationStrategy <string>	# Strategy to use when launching on-demand instances. Valid values: prioritized, lowest-price. Default: prioritized.
 spec.forProvider.mixedInstancesPolicy.instancesDistribution.onDemandBaseCapacity <number>	# Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: 0.
@@ -195,13 +198,13 @@ spec.forProvider.serviceLinkedRoleArnSelector.policy <object>	# Policies for sel
 spec.forProvider.serviceLinkedRoleArnSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.serviceLinkedRoleArnSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.suspendedProcesses <[]string>	# List of processes to suspend for the Auto Scaling Group. The allowed values are Launch, Terminate, HealthCheck, ReplaceUnhealthy, AZRebalance, AlarmNotification, ScheduledActions, AddToLoadBalancer, InstanceRefresh. Note that if you suspend either the Launch or Terminate process types, it can prevent your Auto Scaling Group from functioning properly.
-spec.forProvider.tag <[]object>	# Configuration block(s) containing resource tags. See Tag below for more details.
+spec.forProvider.tag <[]object>	# Configuration block(s) containing resource tags. See tag Block below for more details.
 spec.forProvider.tag[].key <string>	# Key
 spec.forProvider.tag[].propagateAtLaunch <boolean>	# Enables propagation of the tag to Amazon EC2 instances launched via this ASG
 spec.forProvider.tag[].value <string>	# Value
 spec.forProvider.terminationPolicies <[]string>	# List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are OldestInstance, NewestInstance, OldestLaunchConfiguration, ClosestToNextInstanceHour, OldestLaunchTemplate, AllocationStrategy, Default. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 spec.forProvider.trafficSource <[]object>	# Attaches one or more traffic sources to the specified Auto Scaling group.
-spec.forProvider.trafficSource[].identifier <string>	# Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+spec.forProvider.trafficSource[].identifier <string>	# Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 spec.forProvider.trafficSource[].type <string>	# Provides additional context for the value of Identifier. The following lists the valid values: elb if identifier is the name of a Classic Load Balancer. elbv2 if identifier is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group. vpc-lattice if identifier is the ARN of a VPC Lattice target group.
 spec.forProvider.vpcZoneIdentifier <[]string>	# List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with availability_zones.
 spec.forProvider.vpcZoneIdentifierRefs <[]object>	# References to Subnet in ec2 to populate vpcZoneIdentifier.
@@ -224,11 +227,11 @@ spec.forProvider.warmPool.maxGroupPreparedCapacity <number>	# Total maximum numb
 spec.forProvider.warmPool.minSize <number>	# Minimum size of the Auto Scaling Group. (See also Waiting for Capacity below.)
 spec.forProvider.warmPool.poolState <string>	# Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
-spec.initProvider.availabilityZoneDistribution <object>	# The instance capacity distribution across Availability Zones. See Availability Zone Distribution below for more details.
-spec.initProvider.availabilityZoneDistribution.capacityDistributionStrategy <string>	# The strategy to use for distributing capacity across the Availability Zones. Valid values are balanced-only and balanced-best-effort. Default is balanced-best-effort.
+spec.initProvider.availabilityZoneDistribution <object>	# The instance capacity distribution across Availability Zones. See availability_zone_distribution Block below for more details.
+spec.initProvider.availabilityZoneDistribution.capacityDistributionStrategy <string>	# The strategy to use for distributing capacity across the Availability Zones. Valid values are balanced-only, balanced-best-effort, and reservations-then-balanced. Default is balanced-best-effort. When reservations-then-balanced is set, you must also specify Capacity Reservations to prioritize through capacity_reservation_specification (or via a launch template) using a Capacity Reservation ID or Capacity Reservation resource group ARN.
 spec.initProvider.availabilityZones <[]string>	# A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the vpc_zone_identifier attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with vpc_zone_identifier.
 spec.initProvider.capacityRebalance <boolean>	# Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
-spec.initProvider.capacityReservationSpecification <object>	# Demand Capacity Reservations. See Capacity Reservation Specification below for more details.
+spec.initProvider.capacityReservationSpecification <object>	# Demand Capacity Reservations. See capacity_reservation_specification Block below for more details.
 spec.initProvider.capacityReservationSpecification.capacityReservationPreference <string>	# Capacity Reservation preference helps you use Capacity Reservations efficiently by prioritizing reserved capacity in a Capacity Reservation before using On-Demand capacity. Valid values are default, capacity-reservations-only, capacity-reservations-first and none. Default is default.
 spec.initProvider.capacityReservationSpecification.capacityReservationTarget <object>	# Describes a target Capacity Reservation or Capacity Reservation resource group.
 spec.initProvider.capacityReservationSpecification.capacityReservationTarget.capacityReservationIds <[]string>	# List of On-Demand Capacity Reservation Ids. Conflicts with capacity_reservation_resource_group_arns.
@@ -252,6 +255,9 @@ spec.initProvider.initialLifecycleHook[].name <string>	# Name of the Auto Scalin
 spec.initProvider.initialLifecycleHook[].notificationMetadata <string>
 spec.initProvider.initialLifecycleHook[].notificationTargetArn <string>	# ARN for this Auto Scaling Group
 spec.initProvider.initialLifecycleHook[].roleArn <string>	# ARN for this Auto Scaling Group
+spec.initProvider.instanceLifecyclePolicy <object>	# If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined below.
+spec.initProvider.instanceLifecyclePolicy.retentionTriggers <object>	# Conditions that trigger instance retention behavior. Defined below.
+spec.initProvider.instanceLifecyclePolicy.retentionTriggers.terminateHookAbandon <string>	# Action to take when a termination lifecycle hook is abandoned due to failure, timeout, or explicit abandonment. Valid values are retain and terminate. Set to retain to move instances to a retained state instead of terminating them. Retained instances don't count toward desired capacity and remain until you terminate them.
 spec.initProvider.instanceMaintenancePolicy <object>	# If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined below.
 spec.initProvider.instanceMaintenancePolicy.maxHealthyPercentage <number>	# Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between 100 and 200, defaults to 100.
 spec.initProvider.instanceMaintenancePolicy.minHealthyPercentage <number>	# Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to 90.
@@ -282,7 +288,7 @@ spec.initProvider.launchConfigurationSelector.matchLabels <map[string]string>	# 
 spec.initProvider.launchConfigurationSelector.policy <object>	# Policies for selection.
 spec.initProvider.launchConfigurationSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.launchConfigurationSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.launchTemplate <object>	# Nested argument with Launch template specification to use to launch instances. See Launch Template below for more details.
+spec.initProvider.launchTemplate <object>	# Nested argument with Launch template specification to use to launch instances. See launch_template Block below for more details.
 spec.initProvider.launchTemplate.id <string>	# ID of the launch template. Conflicts with name.
 spec.initProvider.launchTemplate.idRef <object>	# Reference to a LaunchTemplate in ec2 to populate id.
 spec.initProvider.launchTemplate.idRef.name <string> (required)	# Name of the referenced object.
@@ -302,7 +308,7 @@ spec.initProvider.maxSize <number>	# Maximum size of the Auto Scaling Group.
 spec.initProvider.metricsGranularity <string>	# Granularity to associate with the metrics to collect. The only valid value is 1Minute. Default is 1Minute.
 spec.initProvider.minElbCapacity <number>	# Updates will not wait on ELB instance number changes. (See also Waiting for Capacity below.)
 spec.initProvider.minSize <number>	# Minimum size of the Auto Scaling Group. (See also Waiting for Capacity below.)
-spec.initProvider.mixedInstancesPolicy <object>	# Configuration block containing settings to define launch targets for Auto Scaling groups. See Mixed Instances Policy below for more details.
+spec.initProvider.mixedInstancesPolicy <object>	# Configuration block containing settings to define launch targets for Auto Scaling groups. See mixed_instances_policy Block below for more details.
 spec.initProvider.mixedInstancesPolicy.instancesDistribution <object>	# Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
 spec.initProvider.mixedInstancesPolicy.instancesDistribution.onDemandAllocationStrategy <string>	# Strategy to use when launching on-demand instances. Valid values: prioritized, lowest-price. Default: prioritized.
 spec.initProvider.mixedInstancesPolicy.instancesDistribution.onDemandBaseCapacity <number>	# Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: 0.
@@ -413,13 +419,13 @@ spec.initProvider.serviceLinkedRoleArnSelector.policy <object>	# Policies for se
 spec.initProvider.serviceLinkedRoleArnSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.serviceLinkedRoleArnSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.initProvider.suspendedProcesses <[]string>	# List of processes to suspend for the Auto Scaling Group. The allowed values are Launch, Terminate, HealthCheck, ReplaceUnhealthy, AZRebalance, AlarmNotification, ScheduledActions, AddToLoadBalancer, InstanceRefresh. Note that if you suspend either the Launch or Terminate process types, it can prevent your Auto Scaling Group from functioning properly.
-spec.initProvider.tag <[]object>	# Configuration block(s) containing resource tags. See Tag below for more details.
+spec.initProvider.tag <[]object>	# Configuration block(s) containing resource tags. See tag Block below for more details.
 spec.initProvider.tag[].key <string>	# Key
 spec.initProvider.tag[].propagateAtLaunch <boolean>	# Enables propagation of the tag to Amazon EC2 instances launched via this ASG
 spec.initProvider.tag[].value <string>	# Value
 spec.initProvider.terminationPolicies <[]string>	# List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are OldestInstance, NewestInstance, OldestLaunchConfiguration, ClosestToNextInstanceHour, OldestLaunchTemplate, AllocationStrategy, Default. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 spec.initProvider.trafficSource <[]object>	# Attaches one or more traffic sources to the specified Auto Scaling group.
-spec.initProvider.trafficSource[].identifier <string>	# Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+spec.initProvider.trafficSource[].identifier <string>	# Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 spec.initProvider.trafficSource[].type <string>	# Provides additional context for the value of Identifier. The following lists the valid values: elb if identifier is the name of a Classic Load Balancer. elbv2 if identifier is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group. vpc-lattice if identifier is the ARN of a VPC Lattice target group.
 spec.initProvider.vpcZoneIdentifier <[]string>	# List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with availability_zones.
 spec.initProvider.vpcZoneIdentifierRefs <[]object>	# References to Subnet in ec2 to populate vpcZoneIdentifier.
@@ -453,11 +459,11 @@ spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the
 status <object>	# AutoscalingGroupStatus defines the observed state of AutoscalingGroup.
 status.atProvider <object>
 status.atProvider.arn <string>	# ARN for this Auto Scaling Group
-status.atProvider.availabilityZoneDistribution <object>	# The instance capacity distribution across Availability Zones. See Availability Zone Distribution below for more details.
-status.atProvider.availabilityZoneDistribution.capacityDistributionStrategy <string>	# The strategy to use for distributing capacity across the Availability Zones. Valid values are balanced-only and balanced-best-effort. Default is balanced-best-effort.
+status.atProvider.availabilityZoneDistribution <object>	# The instance capacity distribution across Availability Zones. See availability_zone_distribution Block below for more details.
+status.atProvider.availabilityZoneDistribution.capacityDistributionStrategy <string>	# The strategy to use for distributing capacity across the Availability Zones. Valid values are balanced-only, balanced-best-effort, and reservations-then-balanced. Default is balanced-best-effort. When reservations-then-balanced is set, you must also specify Capacity Reservations to prioritize through capacity_reservation_specification (or via a launch template) using a Capacity Reservation ID or Capacity Reservation resource group ARN.
 status.atProvider.availabilityZones <[]string>	# A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the vpc_zone_identifier attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with vpc_zone_identifier.
 status.atProvider.capacityRebalance <boolean>	# Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
-status.atProvider.capacityReservationSpecification <object>	# Demand Capacity Reservations. See Capacity Reservation Specification below for more details.
+status.atProvider.capacityReservationSpecification <object>	# Demand Capacity Reservations. See capacity_reservation_specification Block below for more details.
 status.atProvider.capacityReservationSpecification.capacityReservationPreference <string>	# Capacity Reservation preference helps you use Capacity Reservations efficiently by prioritizing reserved capacity in a Capacity Reservation before using On-Demand capacity. Valid values are default, capacity-reservations-only, capacity-reservations-first and none. Default is default.
 status.atProvider.capacityReservationSpecification.capacityReservationTarget <object>	# Describes a target Capacity Reservation or Capacity Reservation resource group.
 status.atProvider.capacityReservationSpecification.capacityReservationTarget.capacityReservationIds <[]string>	# List of On-Demand Capacity Reservation Ids. Conflicts with capacity_reservation_resource_group_arns.
@@ -482,6 +488,9 @@ status.atProvider.initialLifecycleHook[].name <string>	# Name of the Auto Scalin
 status.atProvider.initialLifecycleHook[].notificationMetadata <string>
 status.atProvider.initialLifecycleHook[].notificationTargetArn <string>	# ARN for this Auto Scaling Group
 status.atProvider.initialLifecycleHook[].roleArn <string>	# ARN for this Auto Scaling Group
+status.atProvider.instanceLifecyclePolicy <object>	# If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined below.
+status.atProvider.instanceLifecyclePolicy.retentionTriggers <object>	# Conditions that trigger instance retention behavior. Defined below.
+status.atProvider.instanceLifecyclePolicy.retentionTriggers.terminateHookAbandon <string>	# Action to take when a termination lifecycle hook is abandoned due to failure, timeout, or explicit abandonment. Valid values are retain and terminate. Set to retain to move instances to a retained state instead of terminating them. Retained instances don't count toward desired capacity and remain until you terminate them.
 status.atProvider.instanceMaintenancePolicy <object>	# If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined below.
 status.atProvider.instanceMaintenancePolicy.maxHealthyPercentage <number>	# Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between 100 and 200, defaults to 100.
 status.atProvider.instanceMaintenancePolicy.minHealthyPercentage <number>	# Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to 90.
@@ -501,7 +510,7 @@ status.atProvider.instanceRefresh.preferences.standbyInstances <string>	# Behavi
 status.atProvider.instanceRefresh.strategy <string>	# Strategy to use for instance refresh. The only allowed value is Rolling. See StartInstanceRefresh Action for more information.
 status.atProvider.instanceRefresh.triggers <[]string>	# Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of launch_configuration, launch_template, or mixed_instances_policy.
 status.atProvider.launchConfiguration <string>	# Name of the launch configuration to use.
-status.atProvider.launchTemplate <object>	# Nested argument with Launch template specification to use to launch instances. See Launch Template below for more details.
+status.atProvider.launchTemplate <object>	# Nested argument with Launch template specification to use to launch instances. See launch_template Block below for more details.
 status.atProvider.launchTemplate.id <string>	# ID of the launch template. Conflicts with name.
 status.atProvider.launchTemplate.name <string>	# Name of the launch template. Conflicts with id.
 status.atProvider.launchTemplate.version <string>	# Template version. Can be version number, $Latest, or $Default. (Default: $Default).
@@ -511,7 +520,7 @@ status.atProvider.maxSize <number>	# Maximum size of the Auto Scaling Group.
 status.atProvider.metricsGranularity <string>	# Granularity to associate with the metrics to collect. The only valid value is 1Minute. Default is 1Minute.
 status.atProvider.minElbCapacity <number>	# Updates will not wait on ELB instance number changes. (See also Waiting for Capacity below.)
 status.atProvider.minSize <number>	# Minimum size of the Auto Scaling Group. (See also Waiting for Capacity below.)
-status.atProvider.mixedInstancesPolicy <object>	# Configuration block containing settings to define launch targets for Auto Scaling groups. See Mixed Instances Policy below for more details.
+status.atProvider.mixedInstancesPolicy <object>	# Configuration block containing settings to define launch targets for Auto Scaling groups. See mixed_instances_policy Block below for more details.
 status.atProvider.mixedInstancesPolicy.instancesDistribution <object>	# Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
 status.atProvider.mixedInstancesPolicy.instancesDistribution.onDemandAllocationStrategy <string>	# Strategy to use when launching on-demand instances. Valid values: prioritized, lowest-price. Default: prioritized.
 status.atProvider.mixedInstancesPolicy.instancesDistribution.onDemandBaseCapacity <number>	# Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: 0.
@@ -580,14 +589,14 @@ status.atProvider.protectFromScaleIn <boolean>	# Whether newly launched instance
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.serviceLinkedRoleArn <string>	# ARN of the service-linked role that the ASG will use to call other AWS services
 status.atProvider.suspendedProcesses <[]string>	# List of processes to suspend for the Auto Scaling Group. The allowed values are Launch, Terminate, HealthCheck, ReplaceUnhealthy, AZRebalance, AlarmNotification, ScheduledActions, AddToLoadBalancer, InstanceRefresh. Note that if you suspend either the Launch or Terminate process types, it can prevent your Auto Scaling Group from functioning properly.
-status.atProvider.tag <[]object>	# Configuration block(s) containing resource tags. See Tag below for more details.
+status.atProvider.tag <[]object>	# Configuration block(s) containing resource tags. See tag Block below for more details.
 status.atProvider.tag[].key <string>	# Key
 status.atProvider.tag[].propagateAtLaunch <boolean>	# Enables propagation of the tag to Amazon EC2 instances launched via this ASG
 status.atProvider.tag[].value <string>	# Value
 status.atProvider.targetGroupArns <[]string>	# Set of aws_lb_target_group ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
 status.atProvider.terminationPolicies <[]string>	# List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are OldestInstance, NewestInstance, OldestLaunchConfiguration, ClosestToNextInstanceHour, OldestLaunchTemplate, AllocationStrategy, Default. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 status.atProvider.trafficSource <[]object>	# Attaches one or more traffic sources to the specified Auto Scaling group.
-status.atProvider.trafficSource[].identifier <string>	# Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+status.atProvider.trafficSource[].identifier <string>	# Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 status.atProvider.trafficSource[].type <string>	# Provides additional context for the value of Identifier. The following lists the valid values: elb if identifier is the name of a Classic Load Balancer. elbv2 if identifier is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group. vpc-lattice if identifier is the ARN of a VPC Lattice target group.
 status.atProvider.vpcZoneIdentifier <[]string>	# List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with availability_zones.
 status.atProvider.waitForCapacityTimeout <string>	# (See also Waiting for Capacity below.
