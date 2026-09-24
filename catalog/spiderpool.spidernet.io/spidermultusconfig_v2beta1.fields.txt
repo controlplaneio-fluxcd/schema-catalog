@@ -1,11 +1,11 @@
-# schema source: Spiderpool v1.2.3 https://github.com/spidernet-io/spiderpool
+# schema source: Spiderpool v1.3.0-rc0 https://github.com/spidernet-io/spiderpool
 apiVersion <string> enum=spiderpool.spidernet.io/v2beta1
 kind <string> enum=SpiderMultusConfig
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# Spec is the specification of the MultusCNIConfig
 spec.chainCNIJsonData <[]string>	# ChainCNIJsonData is used to configure the configuration of chain CNI. format in json.
-spec.cniType <string> enum=macvlan|ipvlan|vlan|sriov|ovs|ib-sriov|ipoib|custom default="custom"
+spec.cniType <string> enum=macvlan|ipvlan|vlan|eni-vlan|sriov|ovs|ib-sriov|ipoib|custom default="custom"
 spec.coordinator <object>	# CoordinationSpec defines the desired state of SpiderCoordinator.
 spec.coordinator.hijackCIDR <[]string>	# HijackCIDR configure static routing tables in the pod that target these subnets to ensure that when the pod accesses these subnets, packets are forwarded through the host network stack, such as nodelocaldns(169.254.0.0/16)
 spec.coordinator.hostRuleTable <integer> default=500	# HostRuleTable specifies the table number of the routing table used to configure the communication between the pod and the local node.
@@ -30,6 +30,16 @@ spec.coordinator.vethMTU <integer> min=1	# VethMTU configures the MTU of veth0 d
 spec.customCNI <string>	# OtherCniTypeConfig only used for CniType custom, valid json format, can be empty
 spec.disableIPAM <boolean> default=false	# Deprecated: use spec.ipam.enabled instead. If spec.ipam.enabled is set, it takes precedence over this field.
 spec.enableCoordinator <boolean> default=true	# if CniType was set to custom, we'll mutate this field to be false
+spec.enivlan <object>	# EniVlanConfig configures the eni-vlan CNI, which serves the IaaS sub-ENI scenario: the VLAN ID and MAC address are dynamically allocated by the IaaS provider through the spiderpool IPAM plugin.
+spec.enivlan.ippools <object>	# SpiderpoolPools could specify the IPAM spiderpool CNI configuration default IPv4&IPv6 pools.
+spec.enivlan.ippools.ipv4 <[]string>
+spec.enivlan.ippools.ipv6 <[]string>
+spec.enivlan.ippools.matchMasterSubnet <boolean> enum=true|false default=false	# enable IPAM to check if the IPPools of the pod if matched the master subnet
+spec.enivlan.master <[]string> (required)	# The parent NIC(s) on the node used to create the VLAN sub-interface. At least one master interface must be specified.
+spec.enivlan.mtu <integer> default=0 format=int32 min=0	# explicitly set MTU to the specified value. Defaults('0' or no value provided) to the value chosen by the kernel.
+spec.enivlan.validateIaasNetConfig <boolean> default=false	# ValidateIaasNetConfig controls whether the eni-vlan plugin performs the pre-flight validation of the cloud-assigned IP/VLAN/MAC triple (ARP probe with the real IP/MAC) before configuring the Pod IP. Default false, aligned with the eni-vlan plugin default.
+spec.enivlan.validationRetries <integer> default=3 format=int32 min=1	# ValidationRetries is the number of ARP probe attempts before failing. Default 3.
+spec.enivlan.validationTimeoutMs <integer> default=500 format=int32 min=1	# ValidationTimeoutMs is the per-probe reply timeout in milliseconds. Default 500.
 spec.ibsriov <object>
 spec.ibsriov.enableIbKubernetes <boolean> default=false	# Enforces ib-sriov-cni to work with ib-kubernetes.
 spec.ibsriov.ippools <object>	# SpiderpoolPools could specify the IPAM spiderpool CNI configuration default IPv4&IPv6 pools.
@@ -115,5 +125,4 @@ spec.vlan.ippools.matchMasterSubnet <boolean> enum=true|false default=false	# en
 spec.vlan.master <[]string> (required)	# The master interface(s) for the CNI configuration. At least one master interface must be specified. If multiple master interfaces are specified, the spiderpool will create a bond device with the bondConfig by the ifacer plugin.
 spec.vlan.mtu <integer> default=0 format=int32 min=0	# explicitly set MTU to the specified value. Defaults('0' or no value provided) to the value chosen by the kernel.
 spec.vlan.rdmaResourceName <string>	# The RDMA resource name of the nic. the RDMA resource is often reported to kubelet by the k8s-rdma-shared-dev-plugin. when it is not empty and spiderpool podResourceInject feature is enabled, spiderpool can automatically inject it into the container's resources via webhook.
-spec.vlan.vlanID <integer> format=int32 min=0 max=4094	# The VLAN ID for the CNI configuration and must be within the specified range: [0,4094]. Required when vlanMode is manual and forbidden when vlanMode is auto.
-spec.vlan.vlanMode <string> enum=manual|auto default="manual"	# VlanMode controls how the vlan CNI obtains vlanID. manual requires vlanID, auto forbids vlanID.
+spec.vlan.vlanID <integer> format=int32 min=0 max=4094	# The static VLAN ID for the CNI configuration, required and must be within the specified range: [0,4094].
