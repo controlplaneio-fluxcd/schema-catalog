@@ -1,4 +1,4 @@
-# schema source: Altinity ClickHouse Operator 0.27.3 https://github.com/Altinity/clickhouse-operator
+# schema source: Altinity ClickHouse Operator 0.27.4 https://github.com/Altinity/clickhouse-operator
 apiVersion <string> enum=clickhouse.altinity.com/v1
 kind <string> enum=ClickHouseOperatorConfiguration
 metadata.name <string> (required)
@@ -56,6 +56,7 @@ spec.clickhouse.metrics.excludeRegexp <[]string>	# List of regexps to match Clic
 spec.clickhouse.metrics.tablesRegexp <string>	# Regexp to match tables in system database to fetch metrics from. Multiple tables can be matched using regexp. Matched tables are merged using merge() table function. Default is "^(metrics|custom_metrics)$". 
 spec.clickhouse.metrics.timeouts <object>	# Timeouts used to limit connection and queries from the metrics exporter to ClickHouse instances Specified in seconds. 
 spec.clickhouse.metrics.timeouts.collect <integer> min=1 max=600	# Timeout used to limit metrics collection request. In seconds. Upon reaching this timeout metrics collection is aborted and no more metrics are collected in this cycle. All collected metrics are returned. 
+spec.keeper <object (free-form)>	# Keeper-side counterparts of the `clickhouse` section - config-file paths and the default Keeper user/network settings the operator generates for ClickHouseKeeperInstallation resources. Declared preserve-unknown-fields rather than fully modelled: without this the API server PRUNES the whole section from a ClickHouseOperatorConfiguration CR and the operator silently falls back to built-in defaults. The ConfigMap path was never affected. Modelling the leaves properly would also buy validation - see the coverage test in pkg/apis/clickhouse.altinity.com/v1. 
 spec.label <object>	# defines which metadata.labels will include or exclude during render StatefulSet, Pod, PVC resources
 spec.label.appendScope <any>	# Whether to append *Scope* labels to StatefulSet and Pod - "LabelShardScopeIndex" - "LabelReplicaScopeIndex" - "LabelCHIScopeIndex" - "LabelCHIScopeCycleSize" - "LabelCHIScopeCycleIndex" - "LabelCHIScopeCycleOffset" - "LabelClusterScopeIndex" - "LabelClusterScopeCycleSize" - "LabelClusterScopeCycleIndex" - "LabelClusterScopeCycleOffset" 
 spec.label.exclude <[]string>	# When propagating labels from the chi's `metadata.labels` section to child objects' `metadata.labels`, exclude labels from the following list 
@@ -85,6 +86,8 @@ spec.reconcile.host.drop.replicas.onDelete <any>	# Whether the operator during r
 spec.reconcile.host.drop.replicas.onLostVolume <any>	# Whether the operator during reconcile procedure should drop replicas when replica volume is lost 
 spec.reconcile.host.hooks <object>	# default host-level hooks to execute before and after host reconcile
 spec.reconcile.host.hooks.post <[]object>	# actions to execute after host reconcile
+spec.reconcile.host.hooks.post[].events <[]string> min=1	# Reconcile lifecycle events that trigger this hook. Required, must be non-empty. The hook is skipped on any reconcile whose classifier does not emit at least one of the listed events. Supported values: Any - wildcard match: fires on every hook-evaluation point, including the pre-delete sweep on the dying host HostCreate - first reconcile that creates a host (no ancestor); best paired with POST hooks because PRE hooks on first creation are skipped (no live pod yet) HostUpdate - reconcile that has prior state for the host; catch-all for ongoing reconciles HostStart - host transitions from stopped to running HostStop - host is being stopped (current spec marks it stopped) HostConfigRestart - in-place software restart for a configuration change HostRollout - pod-template change forces a StatefulSet rollout HostShutdown - aggregate: fires whenever the pod is going down for any reason (Stop, ConfigRestart, Rollout, or Delete) HostDelete - host is being removed from the cluster (downsize); fires on the dying host before tear-down. Always emitted alongside HostShutdown. 
+spec.reconcile.host.hooks.post[].failurePolicy <string> enum=Fail|fail|Ignore|ignore	# Controls what happens when this hook returns an error. Fail (default): error propagates — pre-hook aborts reconcile / host deletion. Ignore: error is logged and the reconcile continues. 
 spec.reconcile.host.hooks.post[].http <object>
 spec.reconcile.host.hooks.post[].http.method <string>
 spec.reconcile.host.hooks.post[].http.url <string>
@@ -95,6 +98,8 @@ spec.reconcile.host.hooks.post[].sql <object>
 spec.reconcile.host.hooks.post[].sql.queries <[]string>
 spec.reconcile.host.hooks.post[].target <string> enum=|FirstHost|firsthost|AllHosts|allhosts|AllShards|allshards	# where to execute hook: FirstHost (default), AllHosts, AllShards
 spec.reconcile.host.hooks.pre <[]object>	# actions to execute before host reconcile
+spec.reconcile.host.hooks.pre[].events <[]string> min=1	# Reconcile lifecycle events that trigger this hook. Required, must be non-empty. The hook is skipped on any reconcile whose classifier does not emit at least one of the listed events. Supported values: Any - wildcard match: fires on every hook-evaluation point, including the pre-delete sweep on the dying host HostCreate - first reconcile that creates a host (no ancestor); best paired with POST hooks because PRE hooks on first creation are skipped (no live pod yet) HostUpdate - reconcile that has prior state for the host; catch-all for ongoing reconciles HostStart - host transitions from stopped to running HostStop - host is being stopped (current spec marks it stopped) HostConfigRestart - in-place software restart for a configuration change HostRollout - pod-template change forces a StatefulSet rollout HostShutdown - aggregate: fires whenever the pod is going down for any reason (Stop, ConfigRestart, Rollout, or Delete) HostDelete - host is being removed from the cluster (downsize); fires on the dying host before tear-down. Always emitted alongside HostShutdown. 
+spec.reconcile.host.hooks.pre[].failurePolicy <string> enum=Fail|fail|Ignore|ignore	# Controls what happens when this hook returns an error. Fail (default): error propagates — pre-hook aborts reconcile / host deletion. Ignore: error is logged and the reconcile continues. 
 spec.reconcile.host.hooks.pre[].http <object>
 spec.reconcile.host.hooks.pre[].http.method <string>
 spec.reconcile.host.hooks.pre[].http.url <string>
