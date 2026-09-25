@@ -284,6 +284,11 @@
           },
           "type": "object"
         },
+        "keeper": {
+          "description": "Keeper-side counterparts of the `clickhouse` section - config-file paths and the\ndefault Keeper user/network settings the operator generates for\nClickHouseKeeperInstallation resources.\nDeclared preserve-unknown-fields rather than fully modelled: without this the API\nserver PRUNES the whole section from a ClickHouseOperatorConfiguration CR and the\noperator silently falls back to built-in defaults. The ConfigMap path was never\naffected. Modelling the leaves properly would also buy validation - see the\ncoverage test in pkg/apis/clickhouse.altinity.com/v1.\n",
+          "type": "object",
+          "x-kubernetes-preserve-unknown-fields": true
+        },
         "label": {
           "description": "defines which metadata.labels will include or exclude during render StatefulSet, Pod, PVC resources",
           "properties": {
@@ -430,6 +435,44 @@
                       "description": "actions to execute after host reconcile",
                       "items": {
                         "properties": {
+                          "events": {
+                            "description": "Reconcile lifecycle events that trigger this hook. Required, must be non-empty.\nThe hook is skipped on any reconcile whose classifier does not emit at least one\nof the listed events. Supported values:\n  Any               - wildcard match: fires on every hook-evaluation point,\n                      including the pre-delete sweep on the dying host\n  HostCreate        - first reconcile that creates a host (no ancestor); best\n                      paired with POST hooks because PRE hooks on first creation\n                      are skipped (no live pod yet)\n  HostUpdate        - reconcile that has prior state for the host; catch-all\n                      for ongoing reconciles\n  HostStart         - host transitions from stopped to running\n  HostStop          - host is being stopped (current spec marks it stopped)\n  HostConfigRestart - in-place software restart for a configuration change\n  HostRollout       - pod-template change forces a StatefulSet rollout\n  HostShutdown      - aggregate: fires whenever the pod is going down for any\n                      reason (Stop, ConfigRestart, Rollout, or Delete)\n  HostDelete        - host is being removed from the cluster (downsize); fires\n                      on the dying host before tear-down. Always emitted\n                      alongside HostShutdown.\n",
+                            "items": {
+                              "enum": [
+                                "Any",
+                                "any",
+                                "HostCreate",
+                                "hostcreate",
+                                "HostDelete",
+                                "hostdelete",
+                                "HostUpdate",
+                                "hostupdate",
+                                "HostStart",
+                                "hoststart",
+                                "HostStop",
+                                "hoststop",
+                                "HostConfigRestart",
+                                "hostconfigrestart",
+                                "HostRollout",
+                                "hostrollout",
+                                "HostShutdown",
+                                "hostshutdown"
+                              ],
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array"
+                          },
+                          "failurePolicy": {
+                            "description": "Controls what happens when this hook returns an error.\nFail (default): error propagates — pre-hook aborts reconcile / host deletion.\nIgnore: error is logged and the reconcile continues.\n",
+                            "enum": [
+                              "Fail",
+                              "fail",
+                              "Ignore",
+                              "ignore"
+                            ],
+                            "type": "string"
+                          },
                           "http": {
                             "properties": {
                               "method": {
@@ -491,6 +534,44 @@
                       "description": "actions to execute before host reconcile",
                       "items": {
                         "properties": {
+                          "events": {
+                            "description": "Reconcile lifecycle events that trigger this hook. Required, must be non-empty.\nThe hook is skipped on any reconcile whose classifier does not emit at least one\nof the listed events. Supported values:\n  Any               - wildcard match: fires on every hook-evaluation point,\n                      including the pre-delete sweep on the dying host\n  HostCreate        - first reconcile that creates a host (no ancestor); best\n                      paired with POST hooks because PRE hooks on first creation\n                      are skipped (no live pod yet)\n  HostUpdate        - reconcile that has prior state for the host; catch-all\n                      for ongoing reconciles\n  HostStart         - host transitions from stopped to running\n  HostStop          - host is being stopped (current spec marks it stopped)\n  HostConfigRestart - in-place software restart for a configuration change\n  HostRollout       - pod-template change forces a StatefulSet rollout\n  HostShutdown      - aggregate: fires whenever the pod is going down for any\n                      reason (Stop, ConfigRestart, Rollout, or Delete)\n  HostDelete        - host is being removed from the cluster (downsize); fires\n                      on the dying host before tear-down. Always emitted\n                      alongside HostShutdown.\n",
+                            "items": {
+                              "enum": [
+                                "Any",
+                                "any",
+                                "HostCreate",
+                                "hostcreate",
+                                "HostDelete",
+                                "hostdelete",
+                                "HostUpdate",
+                                "hostupdate",
+                                "HostStart",
+                                "hoststart",
+                                "HostStop",
+                                "hoststop",
+                                "HostConfigRestart",
+                                "hostconfigrestart",
+                                "HostRollout",
+                                "hostrollout",
+                                "HostShutdown",
+                                "hostshutdown"
+                              ],
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array"
+                          },
+                          "failurePolicy": {
+                            "description": "Controls what happens when this hook returns an error.\nFail (default): error propagates — pre-hook aborts reconcile / host deletion.\nIgnore: error is logged and the reconcile continues.\n",
+                            "enum": [
+                              "Fail",
+                              "fail",
+                              "Ignore",
+                              "ignore"
+                            ],
+                            "type": "string"
+                          },
                           "http": {
                             "properties": {
                               "method": {
