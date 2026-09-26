@@ -1130,6 +1130,9 @@
         },
         "confMgmt": {
           "additionalProperties": false,
+          "default": {
+            "smartScaler": true
+          },
           "description": "ConfMgmt defines which additional services will be deployed",
           "properties": {
             "VerUpdate": {
@@ -3138,7 +3141,7 @@
                   "type": "boolean"
                 },
                 "enableHotReload": {
-                  "description": "Enable hot reloading of TLS certificates. When enabled, certificates are mounted as directories instead of using subPath, allowing Kubernetes to update certificate files when secrets are updated.",
+                  "description": "Enable hot reloading of OpenSearch node TLS certificates so nodes pick up renewed certificates without a restart. Requires OpenSearch >= 2.19.1. Defaults to true on OpenSearch 3.x and above. Not used for Dashboards TLS.",
                   "type": "boolean"
                 },
                 "generate": {
@@ -3870,7 +3873,7 @@
               "type": "string"
             },
             "drainDataNodes": {
-              "description": "Drain data nodes controls whether to drain data notes on rolling restart operations",
+              "description": "Drain data nodes controls whether to drain data nodes on rolling restart operations",
               "type": "boolean"
             },
             "grpc": {
@@ -4044,11 +4047,149 @@
                   },
                   "type": "object"
                 },
+                "metricRelabelings": {
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                    "properties": {
+                      "action": {
+                        "default": "replace",
+                        "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                        "enum": [
+                          "replace",
+                          "Replace",
+                          "keep",
+                          "Keep",
+                          "drop",
+                          "Drop",
+                          "hashmod",
+                          "HashMod",
+                          "labelmap",
+                          "LabelMap",
+                          "labeldrop",
+                          "LabelDrop",
+                          "labelkeep",
+                          "LabelKeep",
+                          "lowercase",
+                          "Lowercase",
+                          "uppercase",
+                          "Uppercase",
+                          "keepequal",
+                          "KeepEqual",
+                          "dropequal",
+                          "DropEqual"
+                        ],
+                        "type": "string"
+                      },
+                      "modulus": {
+                        "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                        "format": "int64",
+                        "type": "integer"
+                      },
+                      "regex": {
+                        "description": "Regular expression against which the extracted value is matched.",
+                        "type": "string"
+                      },
+                      "replacement": {
+                        "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                        "type": "string"
+                      },
+                      "separator": {
+                        "description": "Separator is the string between concatenated SourceLabels.",
+                        "type": "string"
+                      },
+                      "sourceLabels": {
+                        "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                        "items": {
+                          "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
+                          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "targetLabel": {
+                        "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
                 "monitoringUserSecret": {
                   "type": "string"
                 },
                 "pluginUrl": {
                   "type": "string"
+                },
+                "relabelings": {
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                    "properties": {
+                      "action": {
+                        "default": "replace",
+                        "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                        "enum": [
+                          "replace",
+                          "Replace",
+                          "keep",
+                          "Keep",
+                          "drop",
+                          "Drop",
+                          "hashmod",
+                          "HashMod",
+                          "labelmap",
+                          "LabelMap",
+                          "labeldrop",
+                          "LabelDrop",
+                          "labelkeep",
+                          "LabelKeep",
+                          "lowercase",
+                          "Lowercase",
+                          "uppercase",
+                          "Uppercase",
+                          "keepequal",
+                          "KeepEqual",
+                          "dropequal",
+                          "DropEqual"
+                        ],
+                        "type": "string"
+                      },
+                      "modulus": {
+                        "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                        "format": "int64",
+                        "type": "integer"
+                      },
+                      "regex": {
+                        "description": "Regular expression against which the extracted value is matched.",
+                        "type": "string"
+                      },
+                      "replacement": {
+                        "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                        "type": "string"
+                      },
+                      "separator": {
+                        "description": "Separator is the string between concatenated SourceLabels.",
+                        "type": "string"
+                      },
+                      "sourceLabels": {
+                        "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                        "items": {
+                          "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
+                          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "targetLabel": {
+                        "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
                 },
                 "scrapeInterval": {
                   "type": "string"
@@ -4068,6 +4209,30 @@
               },
               "type": "object"
             },
+            "nodeAttributes": {
+              "description": "NodeAttributes derives OpenSearch node attributes (node.attr.*) from\nKubernetes node labels at runtime. For each entry the operator injects an\ninit container that reads the label off the node hosting the pod and\nexposes its value to OpenSearch, enabling shard allocation awareness\n(e.g. zone or rack awareness) without splitting topology into separate\nnode pools. The pods' ServiceAccount must be allowed to \"get\" nodes.",
+              "items": {
+                "additionalProperties": false,
+                "description": "NodeAttribute maps a Kubernetes node label onto an OpenSearch node attribute\nso that shard allocation awareness can follow the cluster's physical topology.",
+                "properties": {
+                  "name": {
+                    "description": "Name is the OpenSearch node attribute, i.e. the suffix after \"node.attr.\".\nFor zone awareness configured with\ncluster.routing.allocation.awareness.attributes: zone this is \"zone\",\nyielding the node.attr.zone setting.",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$",
+                    "type": "string"
+                  },
+                  "nodeLabel": {
+                    "description": "NodeLabel is the Kubernetes node label whose value is copied into the\nattribute, e.g. \"topology.kubernetes.io/zone\".",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "nodeLabel"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
             "opensearchHome": {
               "description": "OpenSearch installation directory inside the container. Defaults to /usr/share/opensearch if not set.",
               "type": "string"
@@ -4075,6 +4240,21 @@
             "operatorClusterURL": {
               "description": "Operator cluster URL. If set, the operator will use this URL to communicate with OpenSearch\ninstead of the default internal Kubernetes service DNS name.",
               "type": "string"
+            },
+            "persistentVolumeClaimRetentionPolicy": {
+              "additionalProperties": false,
+              "description": "Set the retention policy for the cluster PVCs",
+              "properties": {
+                "whenDeleted": {
+                  "description": "WhenDeleted specifies what happens to PVCs created from StatefulSet\nVolumeClaimTemplates when the StatefulSet is deleted. The default policy\nof `Retain` causes PVCs to not be affected by StatefulSet deletion. The\n`Delete` policy causes those PVCs to be deleted.",
+                  "type": "string"
+                },
+                "whenScaled": {
+                  "description": "WhenScaled specifies what happens to PVCs created from StatefulSet\nVolumeClaimTemplates when the StatefulSet is scaled down. The default\npolicy of `Retain` causes PVCs to not be affected by a scaledown. The\n`Delete` policy causes the associated PVCs for any excess pods above\nthe replica count to be deleted.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
             },
             "pluginsList": {
               "items": {
@@ -4515,6 +4695,150 @@
                     ]
                   },
                   "description": "Requests describes the minimum amount of compute resources required.\nIf Requests is omitted for a container, it defaults to Limits if that is explicitly specified,\notherwise to an implementation-defined value. Requests cannot exceed Limits.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "securityContext": {
+              "additionalProperties": false,
+              "description": "SecurityContext replaces the default security context of the init helper containers.\nNote that the chown init container needs to run as root and the sysctl init container\nneeds to run privileged, so an override must provide equivalent permissions for those\ncontainers to keep working.",
+              "properties": {
+                "allowPrivilegeEscalation": {
+                  "description": "AllowPrivilegeEscalation controls whether a process can gain more\nprivileges than its parent process. This bool directly controls if\nthe no_new_privs flag will be set on the container process.\nAllowPrivilegeEscalation is true always when the container is:\n1) run as Privileged\n2) has CAP_SYS_ADMIN\nNote that this field cannot be set when spec.os.name is windows.",
+                  "type": "boolean"
+                },
+                "appArmorProfile": {
+                  "additionalProperties": false,
+                  "description": "appArmorProfile is the AppArmor options to use by this container. If set, this profile\noverrides the pod's appArmorProfile.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "properties": {
+                    "localhostProfile": {
+                      "description": "localhostProfile indicates a profile loaded on the node that should be used.\nThe profile must be preconfigured on the node to work.\nMust match the loaded name of the profile.\nMust be set if and only if type is \"Localhost\".",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "type indicates which kind of AppArmor profile will be applied.\nValid options are:\n  Localhost - a profile pre-loaded on the node.\n  RuntimeDefault - the container runtime's default profile.\n  Unconfined - no AppArmor enforcement.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "capabilities": {
+                  "additionalProperties": false,
+                  "description": "The capabilities to add/drop when running containers.\nDefaults to the default set of capabilities granted by the container runtime.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "properties": {
+                    "add": {
+                      "description": "Added capabilities",
+                      "items": {
+                        "description": "Capability represent POSIX capabilities type",
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
+                    },
+                    "drop": {
+                      "description": "Removed capabilities",
+                      "items": {
+                        "description": "Capability represent POSIX capabilities type",
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
+                    }
+                  },
+                  "type": "object"
+                },
+                "privileged": {
+                  "description": "Run container in privileged mode.\nProcesses in privileged containers are essentially equivalent to root on the host.\nDefaults to false.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "type": "boolean"
+                },
+                "procMount": {
+                  "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "type": "string"
+                },
+                "readOnlyRootFilesystem": {
+                  "description": "Whether this container has a read-only root filesystem.\nDefault is false.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "type": "boolean"
+                },
+                "runAsGroup": {
+                  "description": "The GID to run the entrypoint of the container process.\nUses runtime default if unset.\nMay also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "runAsNonRoot": {
+                  "description": "Indicates that the container must run as a non-root user.\nIf true, the Kubelet will validate the image at runtime to ensure that it\ndoes not run as UID 0 (root) and fail to start the container if it does.\nIf unset or false, no such validation will be performed.\nMay also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.",
+                  "type": "boolean"
+                },
+                "runAsUser": {
+                  "description": "The UID to run the entrypoint of the container process.\nDefaults to user specified in image metadata if unspecified.\nMay also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "seLinuxOptions": {
+                  "additionalProperties": false,
+                  "description": "The SELinux context to be applied to the container.\nIf unspecified, the container runtime will allocate a random SELinux context for each\ncontainer.  May also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "properties": {
+                    "level": {
+                      "description": "Level is SELinux level label that applies to the container.",
+                      "type": "string"
+                    },
+                    "role": {
+                      "description": "Role is a SELinux role label that applies to the container.",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "Type is a SELinux type label that applies to the container.",
+                      "type": "string"
+                    },
+                    "user": {
+                      "description": "User is a SELinux user label that applies to the container.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "seccompProfile": {
+                  "additionalProperties": false,
+                  "description": "The seccomp options to use by this container. If seccomp options are\nprovided at both the pod & container level, the container options\noverride the pod options.\nNote that this field cannot be set when spec.os.name is windows.",
+                  "properties": {
+                    "localhostProfile": {
+                      "description": "localhostProfile indicates a profile defined in a file on the node should be used.\nThe profile must be preconfigured on the node to work.\nMust be a descending path, relative to the kubelet's configured seccomp profile location.\nMust be set if type is \"Localhost\". Must NOT be set for any other type.",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "type indicates which kind of seccomp profile will be applied.\nValid options are:\n\nLocalhost - a profile defined in a file on the node should be used.\nRuntimeDefault - the container runtime default profile should be used.\nUnconfined - no profile should be applied.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "windowsOptions": {
+                  "additionalProperties": false,
+                  "description": "The Windows specific settings applied to all containers.\nIf unspecified, the options from the PodSecurityContext will be used.\nIf set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is linux.",
+                  "properties": {
+                    "gmsaCredentialSpec": {
+                      "description": "GMSACredentialSpec is where the GMSA admission webhook\n(https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the\nGMSA credential spec named by the GMSACredentialSpecName field.",
+                      "type": "string"
+                    },
+                    "gmsaCredentialSpecName": {
+                      "description": "GMSACredentialSpecName is the name of the GMSA credential spec to use.",
+                      "type": "string"
+                    },
+                    "hostProcess": {
+                      "description": "HostProcess determines if a container should be run as a 'Host Process' container.\nAll of a Pod's containers must have the same effective HostProcess value\n(it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).\nIn addition, if HostProcess is true then HostNetwork must also be set to true.",
+                      "type": "boolean"
+                    },
+                    "runAsUserName": {
+                      "description": "The UserName in Windows to run the entrypoint of the container process.\nDefaults to the user specified in image metadata if unspecified.\nMay also be set in PodSecurityContext. If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.",
+                      "type": "string"
+                    }
+                  },
                   "type": "object"
                 }
               },
@@ -5470,6 +5794,29 @@
                 },
                 "type": "array"
               },
+              "image": {
+                "type": "string"
+              },
+              "imagePullPolicy": {
+                "description": "PullPolicy describes a policy for if/when to pull a container image",
+                "type": "string"
+              },
+              "imagePullSecrets": {
+                "items": {
+                  "additionalProperties": false,
+                  "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
+                  "properties": {
+                    "name": {
+                      "default": "",
+                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "type": "array"
+              },
               "initContainers": {
                 "x-kubernetes-preserve-unknown-fields": true
               },
@@ -5933,6 +6280,23 @@
                   },
                   "type": "object",
                   "x-kubernetes-map-type": "atomic"
+                },
+                "operatorClientCert": {
+                  "additionalProperties": false,
+                  "description": "Optional kubernetes.io/tls secret (tls.crt, tls.key, optional ca.crt) used by the operator's runtime REST client to authenticate to the OpenSearch HTTP API via mTLS instead of basic auth.\nThe certificate's DN must be mapped to a user/role with the necessary privileges in the OpenSearch security configuration (e.g. via plugins.security.authcz.admin_dn or a clientcert auth domain).\nWhen set, the operator omits basic-auth credentials from outgoing requests. If ca.crt is present in the secret, it is used to verify the OpenSearch HTTP server certificate; otherwise TLS verification is skipped.",
+                  "properties": {
+                    "name": {
+                      "default": "",
+                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "operatorClientServerName": {
+                  "description": "Optional. Overrides the TLS SNI / ServerName used when verifying the OpenSearch HTTP server certificate.\nDefaults to the host portion of the cluster URL.",
+                  "type": "string"
                 },
                 "securityConfigSecret": {
                   "additionalProperties": false,
@@ -6890,7 +7254,7 @@
                       "type": "string"
                     },
                     "enableHotReload": {
-                      "description": "Enable hot reloading of TLS certificates. When enabled, certificates are mounted as directories instead of using subPath, allowing Kubernetes to update certificate files when secrets are updated.",
+                      "description": "Enable hot reloading of OpenSearch node TLS certificates so nodes pick up renewed certificates without a restart. Requires OpenSearch >= 2.19.1. Defaults to true on OpenSearch 3.x and above. Not used for Dashboards TLS.",
                       "type": "boolean"
                     },
                     "enabled": {
@@ -6902,8 +7266,8 @@
                       "type": "boolean"
                     },
                     "rotateDaysBeforeExpiry": {
-                      "default": -1,
-                      "description": "Automatically rotate certificates before they expire, set to -1 to disable",
+                      "default": 30,
+                      "description": "Automatically rotate certificates this many days before they expire, set to -1 to disable.\nOnly applies to operator-generated certificates. Expired or unparseable certificates are\nalways regenerated regardless of this setting.",
                       "type": "integer"
                     },
                     "secret": {
@@ -6951,7 +7315,7 @@
                       "type": "string"
                     },
                     "enableHotReload": {
-                      "description": "Enable hot reloading of TLS certificates. When enabled, certificates are mounted as directories instead of using subPath, allowing Kubernetes to update certificate files when secrets are updated.",
+                      "description": "Enable hot reloading of OpenSearch node TLS certificates so nodes pick up renewed certificates without a restart. Requires OpenSearch >= 2.19.1. Defaults to true on OpenSearch 3.x and above. Not used for Dashboards TLS.",
                       "type": "boolean"
                     },
                     "enabled": {
@@ -6974,8 +7338,8 @@
                       "type": "boolean"
                     },
                     "rotateDaysBeforeExpiry": {
-                      "default": -1,
-                      "description": "Automatically rotate certificates before they expire, set to -1 to disable",
+                      "default": 30,
+                      "description": "Automatically rotate certificates this many days before they expire, set to -1 to disable.\nOnly applies to operator-generated certificates. Expired or unparseable certificates are\nalways regenerated regardless of this setting.",
                       "type": "integer"
                     },
                     "secret": {

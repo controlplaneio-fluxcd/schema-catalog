@@ -53,50 +53,9 @@
           "type": "boolean"
         },
         "dnsConfig": {
-          "additionalProperties": false,
           "description": "Specifies the DNS parameters of a pod.\nParameters specified here will be merged to the generated DNS\nconfiguration based on DNSPolicy.",
-          "items": {
-            "x-kubernetes-preserve-unknown-fields": true
-          },
-          "properties": {
-            "nameservers": {
-              "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.\nDuplicated nameservers will be removed.",
-              "items": {
-                "type": "string"
-              },
-              "type": "array",
-              "x-kubernetes-list-type": "atomic"
-            },
-            "options": {
-              "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nDuplicated entries will be removed. Resolution options given in Options\nwill override those that appear in the base DNSPolicy.",
-              "items": {
-                "additionalProperties": false,
-                "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
-                "properties": {
-                  "name": {
-                    "description": "Name is this DNS resolver option's name.\nRequired.",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "Value is this DNS resolver option's value.",
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array",
-              "x-kubernetes-list-type": "atomic"
-            },
-            "searches": {
-              "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.\nDuplicated search paths will be removed.",
-              "items": {
-                "type": "string"
-              },
-              "type": "array",
-              "x-kubernetes-list-type": "atomic"
-            }
-          },
-          "type": "object"
+          "type": "object",
+          "x-kubernetes-preserve-unknown-fields": true
         },
         "dnsPolicy": {
           "description": "DNSPolicy sets DNS policy for the pod",
@@ -188,6 +147,101 @@
           "description": "FutureRetention for the stored traces\nLog entries with timestamps bigger than now+futureRetention are rejected during data ingestion;\nsee https://docs.victoriametrics.com/victoriatraces/#configure-victoriatraces",
           "pattern": "^[0-9]+(h|d|y)?$",
           "type": "string"
+        },
+        "grpcSpec": {
+          "additionalProperties": false,
+          "description": "GRPCSpec defines OTLP gRPC ingestion listener configuration",
+          "properties": {
+            "listenPort": {
+              "description": "ListenPort defines listen port for OTLP gRPC requests",
+              "format": "int32",
+              "type": "integer"
+            },
+            "tlsConfig": {
+              "additionalProperties": false,
+              "description": "TLSConfig enables TLS for incoming gRPC requests at the given ListenPort.\nIf unset, TLS is disabled for the gRPC listener.",
+              "properties": {
+                "certFile": {
+                  "description": "CertFile defines path to the pre-mounted file with certificate\nmutually exclusive with CertSecret",
+                  "type": "string"
+                },
+                "certSecret": {
+                  "additionalProperties": false,
+                  "description": "CertSecretRef defines reference for secret with certificate content under given key\nmutually exclusive with CertFile",
+                  "properties": {
+                    "key": {
+                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "default": "",
+                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                      "type": "string"
+                    },
+                    "optional": {
+                      "description": "Specify whether the Secret or its key must be defined",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "cipherSuites": {
+                  "description": "CipherSuites is an optional list of TLS cipher suites for the server.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "keyFile": {
+                  "description": "KeyFile defines path to the pre-mounted file with certificate key\nmutually exclusive with KeySecretRef",
+                  "type": "string"
+                },
+                "keySecret": {
+                  "additionalProperties": false,
+                  "description": "Key defines reference for secret with certificate key content under given key\nmutually exclusive with KeyFile",
+                  "properties": {
+                    "key": {
+                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "default": "",
+                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                      "type": "string"
+                    },
+                    "optional": {
+                      "description": "Specify whether the Secret or its key must be defined",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "key"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-map-type": "atomic"
+                },
+                "minVersion": {
+                  "description": "MinVersion is the minimum TLS version to use for the server.",
+                  "enum": [
+                    "TLS10",
+                    "TLS11",
+                    "TLS12",
+                    "TLS13"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "listenPort"
+          ],
+          "type": "object"
         },
         "hostAliases": {
           "description": "HostAliases provides mapping for ip and hostname,\nthat would be propagated to pod,\ncannot be used with HostNetwork.",
@@ -772,6 +826,10 @@
           "type": "object",
           "x-kubernetes-preserve-unknown-fields": true
         },
+        "removePvcAfterDelete": {
+          "description": "RemovePvcAfterDelete - if true, controller adds ownership to pvc\nand after VTSingle object deletion - pvc will be garbage collected\nby controller manager",
+          "type": "boolean"
+        },
         "replicaCount": {
           "description": "ReplicaCount is the expected size of the Application.",
           "format": "int32",
@@ -878,9 +936,6 @@
         },
         "serviceScrapeSpec": {
           "description": "ServiceScrapeSpec that will be added to vtsingle VMServiceScrape spec",
-          "required": [
-            "endpoints"
-          ],
           "type": "object",
           "x-kubernetes-preserve-unknown-fields": true
         },
@@ -947,7 +1002,7 @@
             },
             "dataSource": {
               "additionalProperties": false,
-              "description": "dataSource field can be used to specify either:\n* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)\n* An existing PVC (PersistentVolumeClaim)\nIf the provisioner or an external controller can support the specified data source,\nit will create a new volume based on the contents of the specified data source.\nWhen the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,\nand dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.\nIf the namespace is specified, then dataSourceRef will not be copied to dataSource.",
+              "description": "dataSource field can be used to specify either:\n* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)\n* An existing PVC (PersistentVolumeClaim)\nIf the provisioner or an external controller can support the specified data source,\nit will create a new volume based on the contents of the specified data source.\ndataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be\ncopied to dataSource when dataSourceRef.namespace is not specified.\nIf the namespace is specified, then dataSourceRef will not be copied to dataSource.",
               "properties": {
                 "apiGroup": {
                   "description": "APIGroup is the group for the resource being referenced.\nIf APIGroup is not specified, the specified Kind must be in the core API group.\nFor any other third-party types, APIGroup is required.",
@@ -971,7 +1026,7 @@
             },
             "dataSourceRef": {
               "additionalProperties": false,
-              "description": "dataSourceRef specifies the object from which to populate the volume with data, if a non-empty\nvolume is desired. This may be any object from a non-empty API group (non\ncore object) or a PersistentVolumeClaim object.\nWhen this field is specified, volume binding will only succeed if the type of\nthe specified object matches some installed volume populator or dynamic\nprovisioner.\nThis field will replace the functionality of the dataSource field and as such\nif both fields are non-empty, they must have the same value. For backwards\ncompatibility, when namespace isn't specified in dataSourceRef,\nboth fields (dataSource and dataSourceRef) will be set to the same\nvalue automatically if one of them is empty and the other is non-empty.\nWhen namespace is specified in dataSourceRef,\ndataSource isn't set to the same value and must be empty.\nThere are three important differences between dataSource and dataSourceRef:\n* While dataSource only allows two specific types of objects, dataSourceRef\n  allows any non-core object, as well as PersistentVolumeClaim objects.\n* While dataSource ignores disallowed values (dropping them), dataSourceRef\n  preserves all values, and generates an error if a disallowed value is\n  specified.\n* While dataSource only allows local objects, dataSourceRef allows objects\n  in any namespaces.\n(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.\n(Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.",
+              "description": "dataSourceRef specifies the object from which to populate the volume with data, if a non-empty\nvolume is desired. This may be any object from a non-empty API group (non\ncore object) or a PersistentVolumeClaim object.\nWhen this field is specified, volume binding will only succeed if the type of\nthe specified object matches some installed volume populator or dynamic\nprovisioner.\nThis field will replace the functionality of the dataSource field and as such\nif both fields are non-empty, they must have the same value. For backwards\ncompatibility, when namespace isn't specified in dataSourceRef,\nboth fields (dataSource and dataSourceRef) will be set to the same\nvalue automatically if one of them is empty and the other is non-empty.\nWhen namespace is specified in dataSourceRef,\ndataSource isn't set to the same value and must be empty.\nThere are three important differences between dataSource and dataSourceRef:\n* While dataSource only allows two specific types of objects, dataSourceRef\n  allows any non-core object, as well as PersistentVolumeClaim objects.\n* While dataSource ignores disallowed values (dropping them), dataSourceRef\n  preserves all values, and generates an error if a disallowed value is\n  specified.\n* While dataSource only allows local objects, dataSourceRef allows objects\n  in any namespaces.\n(Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.",
               "properties": {
                 "apiGroup": {
                   "description": "APIGroup is the group for the resource being referenced.\nIf APIGroup is not specified, the specified Kind must be in the core API group.\nFor any other third-party types, APIGroup is required.",
@@ -1098,7 +1153,7 @@
           "type": "object"
         },
         "storageDataPath": {
-          "description": "StorageDataPath disables spec.storage option and overrides arg for victoria-traces binary --storageDataPath,\nits users responsibility to mount proper device into given path.",
+          "description": "StorageDataPath overrides the default mount path used for the `data` volume and the arg\nfor victoria-traces binary --storageDataPath. If spec.storage is set, its PVC is mounted\nat this path instead of the default one; otherwise it's the user's responsibility to mount\na proper device into the given path via spec.volumes and spec.volumeMounts.",
           "type": "string"
         },
         "storageMetadata": {
@@ -1195,8 +1250,16 @@
             "additionalProperties": false,
             "description": "VolumeMount describes a mounting of a Volume within a container.",
             "properties": {
+              "bindMountOptions": {
+                "description": "bindMountOptions is the list of additional bind mount options to apply when\nmounting this volume into the container. Allowed values are noexec,\nnodev, and nosuid. These are Linux mount options and have no effect on\nWindows nodes.\nThis field is not supported with image volumes.\nThis is an alpha field and requires enabling the VolumeBindMountOptions feature gate.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "x-kubernetes-list-type": "set"
+              },
               "mountPath": {
-                "description": "Path within the container at which the volume should be mounted.  Must\nnot contain ':'.",
+                "description": "Path within the container at which the volume should be mounted.",
                 "type": "string"
               },
               "mountPropagation": {
