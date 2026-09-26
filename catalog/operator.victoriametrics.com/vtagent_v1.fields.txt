@@ -1,11 +1,11 @@
 # schema source: VictoriaMetrics Operator v0.75.0 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1
-kind <string> enum=VLAgent
+kind <string> enum=VTAgent
 metadata.name <string> (required)
 metadata.namespace <string> (required)
-spec <object>	# VLAgentSpec defines the desired state of VLAgent
+spec <object>	# VTAgentSpec defines the desired state of VTAgent
 spec.affinity <object (free-form)>	# Affinity If specified, the pod's scheduling constraints.
-spec.claimTemplates <[]object>	# ClaimTemplates allows adding additional VolumeClaimTemplates for VLAgent in Mode: StatefulSet
+spec.claimTemplates <[]object>	# ClaimTemplates allows adding additional VolumeClaimTemplates for VTAgent
 spec.claimTemplates[].apiVersion <string>	# APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
 spec.claimTemplates[].kind <string> (immutable)	# Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 spec.claimTemplates[].metadata <object (free-form)>	# Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
@@ -76,6 +76,21 @@ spec.extraEnvsFrom[].prefix <string>	# Optional text to prepend to the name of e
 spec.extraEnvsFrom[].secretRef <object>	# The Secret to select from
 spec.extraEnvsFrom[].secretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.extraEnvsFrom[].secretRef.optional <boolean>	# Specify whether the Secret must be defined
+spec.grpcSpec <object>	# GRPCSpec defines OTLP gRPC ingestion listener configuration
+spec.grpcSpec.listenPort <integer> (required) format=int32	# ListenPort defines listen port for OTLP gRPC requests
+spec.grpcSpec.tlsConfig <object>	# TLSConfig enables TLS for incoming gRPC requests at the given ListenPort. If unset, TLS is disabled for the gRPC listener.
+spec.grpcSpec.tlsConfig.certFile <string>	# CertFile defines path to the pre-mounted file with certificate mutually exclusive with CertSecret
+spec.grpcSpec.tlsConfig.certSecret <object>	# CertSecretRef defines reference for secret with certificate content under given key mutually exclusive with CertFile
+spec.grpcSpec.tlsConfig.certSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.grpcSpec.tlsConfig.certSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.grpcSpec.tlsConfig.certSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.grpcSpec.tlsConfig.cipherSuites <[]string>	# CipherSuites is an optional list of TLS cipher suites for the server.
+spec.grpcSpec.tlsConfig.keyFile <string>	# KeyFile defines path to the pre-mounted file with certificate key mutually exclusive with KeySecretRef
+spec.grpcSpec.tlsConfig.keySecret <object>	# Key defines reference for secret with certificate key content under given key mutually exclusive with KeyFile
+spec.grpcSpec.tlsConfig.keySecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.grpcSpec.tlsConfig.keySecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.grpcSpec.tlsConfig.keySecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.grpcSpec.tlsConfig.minVersion <string> enum=TLS10|TLS11|TLS12|TLS13	# MinVersion is the minimum TLS version to use for the server.
 spec.hostAliases <[]object>	# HostAliases provides mapping for ip and hostname, that would be propagated to pod, cannot be used with HostNetwork.
 spec.hostAliases[].hostnames <[]string>	# Hostnames for the above IP address.
 spec.hostAliases[].ip <string> (required)	# IP address of the host file entry.
@@ -90,33 +105,9 @@ spec.image.tag <string>	# Tag contains desired docker image version. It may be a
 spec.imagePullSecrets <[]object>	# ImagePullSecrets An optional list of references to secrets in the same namespace to use for pulling images from registries see https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
 spec.imagePullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.initContainers <[]object>	# InitContainers allows adding initContainers to the pod definition. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-spec.k8sCollector <object>	# K8sCollector configures VLAgent logs collection from K8s pods
-spec.k8sCollector.checkpointsPath <string>	# CheckpointsPath configures path to file where logs checkpoints are stored. By default it's stored at host's /var/lib/vlagent-data/checkpoints.json.
-spec.k8sCollector.decolorizeFields <[]string>	# DecolorizeFields defines fields to remove ANSI color codes across logs ingested from Kubernetes
-spec.k8sCollector.enabled <boolean>	# Enabled switches VLAgent to log collection mode. Note, for this purpose operator uses DaemonSet, while by default VLAgent uses StatefulSet. Switching this option will drop all persisted data.
-spec.k8sCollector.excludeFilter <string>	# ExcludeFilter defines logsql expression that allows to filter out containers to collect logs from
-spec.k8sCollector.extraFields <string>	# ExtraFields defines extra fields as JSON string which should be added to each collected log line Example: '{"env":"dev","cluster":"staging"}'
-spec.k8sCollector.ignoreFields <[]string>	# IgnoreFields defines fields to ignore across logs ingested from Kubernetes
-spec.k8sCollector.includeNodeAnnotations <boolean>	# IncludeNodeAnnotations enables attachment of node annotations to log entries
-spec.k8sCollector.includeNodeLabels <boolean>	# IncludeNodeLabels enables attachment of node labels to log entries
-spec.k8sCollector.includePodAnnotations <boolean>	# IncludePodAnnotations enables attachment of pod annotations to log entries
-spec.k8sCollector.includePodLabels <boolean>	# IncludePodLabels enables attachment of pod labels to log entries
-spec.k8sCollector.logsPath <string>	# LogsPath configures root for logs path By default VLAgent collects logs from /var/log/containers
-spec.k8sCollector.msgFields <[]string>	# MsgField defines fields that may contain the _msg field
-spec.k8sCollector.streamFields <[]string>	# StreamFields defines list of fields to use as log stream fields for logs ingested from Kubernetes Pods
-spec.k8sCollector.tenantID <string>	# TenantID defines default tenant ID to use for logs collected from pods in format: <accountID>:<projectID>
-spec.k8sCollector.timeFields <[]string>	# TimeFields defines fields that may contain the _time field
-spec.license <object>	# License allows to configure license key to be used for enterprise features. See [here](https://docs.victoriametrics.com/victoriametrics/enterprise/#victorialogs-enterprise-features)
-spec.license.forceOffline <boolean>	# Enforce offline verification of the license key.
-spec.license.key <string>	# Enterprise license key. This flag is available only in [VictoriaMetrics enterprise](https://docs.victoriametrics.com/victoriametrics/enterprise/). To request a trial license, [go to](https://victoriametrics.com/products/enterprise/trial)
-spec.license.keyRef <object>	# KeyRef is reference to secret with license key for enterprise features.
-spec.license.keyRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
-spec.license.keyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.license.keyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.license.reloadInterval <string>	# Interval to be used for checking for license key changes. Note that this is only applicable when using KeyRef.
 spec.livenessProbe <object (free-form)>	# LivenessProbe that will be added to CR pod
-spec.logFormat <string> enum=default|json	# LogFormat for VLAgent to be configured with.
-spec.logLevel <string> enum=INFO|WARN|ERROR|FATAL|PANIC	# LogLevel for VLAgent to be configured with. INFO, WARN, ERROR, FATAL, PANIC
+spec.logFormat <string> enum=default|json	# LogFormat for VTAgent to be configured with.
+spec.logLevel <string> enum=INFO|WARN|ERROR|FATAL|PANIC	# LogLevel for VTAgent to be configured with. INFO, WARN, ERROR, FATAL, PANIC
 spec.managedMetadata <object>	# ManagedMetadata defines metadata that will be added to the all objects created by operator for the given CustomResource
 spec.managedMetadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
 spec.managedMetadata.labels <map[string]string>	# Labels Map of string keys and values that can be used to organize and categorize (scope and select) objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
@@ -174,7 +165,7 @@ spec.podDisruptionBudget.maxUnavailable <int-or-string>	# An eviction is allowed
 spec.podDisruptionBudget.minAvailable <int-or-string>	# An eviction is allowed if at least "minAvailable" pods selected by "selector" will still be available after the eviction, i.e. even in the absence of the evicted pod. So for example you can prevent all voluntary evictions by specifying "100%".
 spec.podDisruptionBudget.selectorLabels <map[string]string>	# replaces default labels selector generated by operator it's useful when you need to create custom budget
 spec.podDisruptionBudget.unhealthyPodEvictionPolicy <string> enum=IfHealthyBudget|AlwaysAllow	# UnhealthyPodEvictionPolicy defines the criteria for when unhealthy pods Valid policies are IfHealthyBudget and AlwaysAllow. If no policy is specified, the default behavior will be used, which corresponds to the IfHealthyBudget policy.
-spec.podMetadata <object>	# PodMetadata configures Labels and Annotations which are propagated to the vlagent pods.
+spec.podMetadata <object>	# PodMetadata configures Labels and Annotations which are propagated to the vtagent pods.
 spec.podMetadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
 spec.podMetadata.labels <map[string]string>	# Labels Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
 spec.podMetadata.name <string> (immutable)	# Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names
@@ -184,8 +175,8 @@ spec.priorityClassName <string>	# PriorityClassName class assigned to the Pods
 spec.readinessGates <[]object>	# ReadinessGates defines pod readiness gates
 spec.readinessGates[].conditionType <string> (required)	# ConditionType refers to a condition in the pod's condition list with matching type.
 spec.readinessProbe <object (free-form)>	# ReadinessProbe that will be added to CR pod
-spec.remoteWrite <[]object> (required)	# RemoteWrite list of victoria logs endpoints for victorialogs it must looks like: http://victoria-logs-single:9428/ or for cluster different url https://docs.victoriametrics.com/victorialogs/vlagent/#replication-and-high-availability
-spec.remoteWrite[].basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication. Available starting vlagent v1.52.0.
+spec.remoteWrite <[]object> (required)	# RemoteWrite list of VictoriaTraces endpoints to replicate ingested trace spans to. The url must point to the `/insert/native` API of a VictoriaTraces instance, e.g. http://vtsingle-example:10428/insert/native See https://docs.victoriametrics.com/victoriatraces/vtagent/
+spec.remoteWrite[].basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication.
 spec.remoteWrite[].basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
 spec.remoteWrite[].basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.remoteWrite[].basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -200,6 +191,7 @@ spec.remoteWrite[].bearerTokenSecret <object>	# Optional bearer auth token to us
 spec.remoteWrite[].bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.remoteWrite[].bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.remoteWrite[].bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.remoteWrite[].format <string> enum=native|jsonline	# Format defines the wire format used to send data to the given url.
 spec.remoteWrite[].headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName: headerValue
 spec.remoteWrite[].maxDiskUsage <any>	# MaxDiskUsage defines the maximum file-based buffer size in bytes for the given remoteWrite It overrides global configuration defined at remoteWriteSettings.maxDiskUsagePerURL
 spec.remoteWrite[].oauth2 <object>	# OAuth2 defines auth configuration
@@ -236,14 +228,14 @@ spec.remoteWrite[].tlsConfig.keySecretKeyRef.key <string> (required)	# The key o
 spec.remoteWrite[].tlsConfig.keySecretKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.remoteWrite[].tlsConfig.keySecretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
 spec.remoteWrite[].tlsConfig.serverName <string>	# Used to verify the hostname for the targets.
-spec.remoteWrite[].url <string> (required)	# URL of the endpoint to send samples to.
+spec.remoteWrite[].url <string> (required)	# URL of the VictoriaTraces `/insert/native` endpoint to send trace spans to.
 spec.remoteWriteSettings <object>	# RemoteWriteSettings defines global settings for all remoteWrite urls.
 spec.remoteWriteSettings.flushInterval <string> pattern="[0-9]+(ms|s|m|h)"	# Interval for flushing the data to remote storage. (default 1s)
 spec.remoteWriteSettings.maxBlockSize <any>	# The maximum size of unpacked request to send to remote storage
 spec.remoteWriteSettings.maxDiskUsagePerURL <any>	# The maximum file-based buffer size in bytes at -remoteWrite.tmpDataPath
 spec.remoteWriteSettings.queues <integer> format=int32	# The number of concurrent queues
 spec.remoteWriteSettings.showURL <boolean>	# Whether to show -remoteWrite.url in the exported metrics. It is hidden by default, since it can contain sensitive auth info
-spec.remoteWriteSettings.tmpDataPath <string>	# Path to directory where temporary data for remote write component is stored. Defaults to /vlagent-data/vlagent-remotewrite-data or /var/lib/vlagent-data/vlagent-remotewrite-data in collector mode
+spec.remoteWriteSettings.tmpDataPath <string>	# Path to directory where temporary data for remote write component is stored. Defaults to /vtagent-data/vtagent-remotewrite-data
 spec.replicaCount <integer> format=int32	# ReplicaCount is the expected size of the Application.
 spec.resources <object>	# Resources container resource request and limits, https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ if not defined default resources from operator config will be used
 spec.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.
@@ -258,8 +250,194 @@ spec.schedulerName <string>	# SchedulerName - defines kubernetes scheduler name
 spec.secrets <[]string>	# Secrets is a list of Secrets in the same namespace as the Application object, which shall be mounted into the Application container at /etc/vm/secrets/SECRET_NAME folder
 spec.securityContext <object (free-form)>	# SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext.
 spec.serviceAccountName <string>	# ServiceAccountName is the name of the ServiceAccount to use to run the pods
-spec.serviceScrapeSpec <object (free-form)>	# ServiceScrapeSpec that will be added to vlagent VMServiceScrape spec
-spec.serviceSpec <object>	# ServiceSpec that will be added to vlagent service spec
+spec.serviceScrapeSpec <object>	# ServiceScrapeSpec that will be added to vtagent VMServiceScrape spec
+spec.serviceScrapeSpec.attach_metadata <object>	# AttachMetadata configures metadata attaching from service discovery
+spec.serviceScrapeSpec.attach_metadata.namespace <boolean>	# Namespace instructs vmagent or vmsingle to add namespace specific metadata from service discovery Valid for roles: pod, service, endpoints, endpointslice, ingress.
+spec.serviceScrapeSpec.attach_metadata.node <boolean>	# Node instructs vmagent or vmsingle to add node specific metadata from service discovery Valid for roles: pod, endpoints, endpointslice.
+spec.serviceScrapeSpec.discoveryRole <string> enum=endpoints|service|endpointslices|endpointslice	# DiscoveryRole - defines kubernetes_sd role for objects discovery. by default, its endpoints. can be changed to service or endpointslices. note, that with service setting, you have to use port: "name" and cannot use targetPort for endpoints.
+spec.serviceScrapeSpec.endpoints <[]object> (required)	# A list of endpoints allowed as part of this ServiceScrape.
+spec.serviceScrapeSpec.endpoints[].attach_metadata <object>	# AttachMetadata configures metadata attaching from service discovery
+spec.serviceScrapeSpec.endpoints[].attach_metadata.namespace <boolean>	# Namespace instructs vmagent or vmsingle to add namespace specific metadata from service discovery Valid for roles: pod, service, endpoints, endpointslice, ingress.
+spec.serviceScrapeSpec.endpoints[].attach_metadata.node <boolean>	# Node instructs vmagent or vmsingle to add node specific metadata from service discovery Valid for roles: pod, endpoints, endpointslice.
+spec.serviceScrapeSpec.endpoints[].authorization <object>	# Authorization with http header Authorization
+spec.serviceScrapeSpec.endpoints[].authorization.credentials <object>	# Reference to the secret with value for authorization
+spec.serviceScrapeSpec.endpoints[].authorization.credentials.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].authorization.credentials.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].authorization.credentials.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].authorization.credentialsFile <string>	# File with value for authorization
+spec.serviceScrapeSpec.endpoints[].authorization.type <string>	# Type of authorization, default to bearer
+spec.serviceScrapeSpec.endpoints[].basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication
+spec.serviceScrapeSpec.endpoints[].basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.serviceScrapeSpec.endpoints[].basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].basicAuth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].basicAuth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].basicAuth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.serviceScrapeSpec.endpoints[].basicAuth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.serviceScrapeSpec.endpoints[].basicAuth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].basicAuth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].basicAuth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].bearerTokenFile <string>	# File to read bearer token for scraping targets.
+spec.serviceScrapeSpec.endpoints[].bearerTokenSecret <object>	# Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the scrape object and accessible by the victoria-metrics operator.
+spec.serviceScrapeSpec.endpoints[].bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].follow_redirects <boolean>	# FollowRedirects controls redirects for scraping.
+spec.serviceScrapeSpec.endpoints[].honorLabels <boolean>	# HonorLabels chooses the metric's labels on collisions with target labels.
+spec.serviceScrapeSpec.endpoints[].honorTimestamps <boolean>	# HonorTimestamps controls whether vmagent or vmsingle respects the timestamps present in scraped data.
+spec.serviceScrapeSpec.endpoints[].interval <string>	# Interval at which metrics should be scraped
+spec.serviceScrapeSpec.endpoints[].max_scrape_size <string>	# MaxScrapeSize defines a maximum size of scraped data for a job
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs <[]object>	# MetricRelabelConfigs to apply to samples after scrapping.
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].action <string>	# Action to perform based on regex matching. Default is 'replace'
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].if <any>	# If represents metricsQL match expression (or list of expressions): '{__name__=~"foo_.*"}'
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].labels <map[string]string>	# Labels is used together with Match for `action: graphite`
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].match <string>	# Match is used together with Labels for `action: graphite`
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].modulus <integer> format=int64	# Modulus to take of the hash of the source label values.
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].regex <any>	# Regular expression against which the extracted value is matched. Default is '(.*)' victoriaMetrics supports multiline regex joined with | https://docs.victoriametrics.com/victoriametrics/vmagent/#relabeling-enhancements
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].replacement <string>	# Replacement value against which a regex replace is performed if the regular expression matches. Regex capture groups are available. Default is '$1'
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].separator <string>	# Separator placed between concatenated source label values. default is ';'.
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].sourceLabels <[]string>	# The source labels select values from existing labels. Their content is concatenated using the configured separator and matched against the configured regular expression for the replace, keep, and drop actions.
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].source_labels <[]string>	# UnderScoreSourceLabels - additional form of source labels source_labels for compatibility with original relabel config. if set both sourceLabels and source_labels, sourceLabels has priority. for details https://github.com/VictoriaMetrics/operator/issues/131
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].targetLabel <string>	# Label to which the resulting value is written in a replace action. It is mandatory for replace actions. Regex capture groups are available.
+spec.serviceScrapeSpec.endpoints[].metricRelabelConfigs[].target_label <string>	# UnderScoreTargetLabel - additional form of target label - target_label for compatibility with original relabel config. if set both targetLabel and target_label, targetLabel has priority. for details https://github.com/VictoriaMetrics/operator/issues/131
+spec.serviceScrapeSpec.endpoints[].oauth2 <object>	# OAuth2 defines auth configuration
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id <object> (required)	# The secret or configmap containing the OAuth2 client id
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.configMap.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.secret <object>	# Secret containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].oauth2.client_id.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].oauth2.client_secret <object>	# The secret containing the OAuth2 client secret
+spec.serviceScrapeSpec.endpoints[].oauth2.client_secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].oauth2.client_secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].oauth2.client_secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].oauth2.client_secret_file <string>	# ClientSecretFile defines path for client secret file.
+spec.serviceScrapeSpec.endpoints[].oauth2.endpoint_params <map[string]string>	# Parameters to append to the token URL
+spec.serviceScrapeSpec.endpoints[].oauth2.proxy_url <string>	# The proxy URL for token_url connection Is only supported by Scrape objects family
+spec.serviceScrapeSpec.endpoints[].oauth2.scopes <[]string>	# OAuth2 scopes used for the token request
+spec.serviceScrapeSpec.endpoints[].oauth2.tls_config <any>	# TLSConfig for token_url connection Is only supported by Scrape objects family
+spec.serviceScrapeSpec.endpoints[].oauth2.token_url <string> (required) min=1	# The URL to fetch the token from
+spec.serviceScrapeSpec.endpoints[].params <map[string]array>	# Optional HTTP URL parameters
+spec.serviceScrapeSpec.endpoints[].path <string>	# HTTP path to scrape for metrics.
+spec.serviceScrapeSpec.endpoints[].port <string>	# Name of the port exposed at Service.
+spec.serviceScrapeSpec.endpoints[].proxyURL <string>	# ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
+spec.serviceScrapeSpec.endpoints[].relabelConfigs <[]object>	# RelabelConfigs to apply to samples during service discovery.
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].action <string>	# Action to perform based on regex matching. Default is 'replace'
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].if <any>	# If represents metricsQL match expression (or list of expressions): '{__name__=~"foo_.*"}'
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].labels <map[string]string>	# Labels is used together with Match for `action: graphite`
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].match <string>	# Match is used together with Labels for `action: graphite`
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].modulus <integer> format=int64	# Modulus to take of the hash of the source label values.
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].regex <any>	# Regular expression against which the extracted value is matched. Default is '(.*)' victoriaMetrics supports multiline regex joined with | https://docs.victoriametrics.com/victoriametrics/vmagent/#relabeling-enhancements
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].replacement <string>	# Replacement value against which a regex replace is performed if the regular expression matches. Regex capture groups are available. Default is '$1'
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].separator <string>	# Separator placed between concatenated source label values. default is ';'.
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].sourceLabels <[]string>	# The source labels select values from existing labels. Their content is concatenated using the configured separator and matched against the configured regular expression for the replace, keep, and drop actions.
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].source_labels <[]string>	# UnderScoreSourceLabels - additional form of source labels source_labels for compatibility with original relabel config. if set both sourceLabels and source_labels, sourceLabels has priority. for details https://github.com/VictoriaMetrics/operator/issues/131
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].targetLabel <string>	# Label to which the resulting value is written in a replace action. It is mandatory for replace actions. Regex capture groups are available.
+spec.serviceScrapeSpec.endpoints[].relabelConfigs[].target_label <string>	# UnderScoreTargetLabel - additional form of target label - target_label for compatibility with original relabel config. if set both targetLabel and target_label, targetLabel has priority. for details https://github.com/VictoriaMetrics/operator/issues/131
+spec.serviceScrapeSpec.endpoints[].sampleLimit <integer>	# SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+spec.serviceScrapeSpec.endpoints[].scheme <string> enum=http|https|HTTPS|HTTP	# HTTP scheme to use for scraping.
+spec.serviceScrapeSpec.endpoints[].scrapeTimeout <string>	# Timeout after which the scrape is ended
+spec.serviceScrapeSpec.endpoints[].scrape_interval <string>	# ScrapeInterval is the same as Interval and has priority over it. one of scrape_interval or interval can be used
+spec.serviceScrapeSpec.endpoints[].seriesLimit <integer>	# SeriesLimit defines per-scrape limit on number of unique time series a single target can expose during all the scrapes on the time window of 24h.
+spec.serviceScrapeSpec.endpoints[].targetPort <int-or-string>	# TargetPort Name or number of the pod port this endpoint refers to. Mutually exclusive with port.
+spec.serviceScrapeSpec.endpoints[].tlsConfig <object>	# TLSConfig configuration to use when scraping the endpoint
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca <object>	# Struct containing the CA cert to use for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.configMap.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.secret <object>	# Secret containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].tlsConfig.ca.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].tlsConfig.caFile <string>	# Path to the CA cert in the container to use for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert <object>	# Struct containing the client cert file for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.configMap.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.secret <object>	# Secret containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].tlsConfig.cert.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].tlsConfig.certFile <string>	# Path to the client cert file in the container for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.insecureSkipVerify <boolean>	# Disable target certificate validation.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.keyFile <string>	# Path to the client key file in the container for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.keySecret <object>	# Secret containing the client key file for the targets.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.keySecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].tlsConfig.keySecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].tlsConfig.keySecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].tlsConfig.serverName <string>	# Used to verify the hostname for the targets.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params <object>	# VMScrapeParams defines VictoriaMetrics specific scrape parameters
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.disable_compression <boolean>	# DisableCompression
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.disable_keep_alive <boolean>	# disable_keepalive allows disabling HTTP keep-alive when scraping targets. By default, HTTP keep-alive is enabled, so TCP connections to scrape targets could be reused. See https://docs.victoriametrics.com/victoriametrics/vmagent/#scrape_config-enhancements
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.headers <[]string>	# Headers allows sending custom headers to scrape targets must be in of semicolon separated header with it's value eg: headerName: headerValue vmagent and vmsingle support since 1.79.0 version
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.no_stale_markers <boolean>
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config <object>	# ProxyClientConfig configures proxy auth settings for scraping See feature description https://docs.victoriametrics.com/victoriametrics/vmagent/#scraping-targets-via-a-proxy
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization <object>	# Authorization with http header Authorization
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials <object>	# Reference to the secret with value for authorization
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentials.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization.credentialsFile <string>	# File with value for authorization
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.authorization.type <string>	# Type of authorization, default to bearer
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth <object>	# BasicAuth allows proxy to authenticate over basic authentication
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.password_file <string>	# PasswordFile defines path to password file at disk must be pre-mounted
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username <object>	# Username defines reference for secret with username value The secret needs to be in the same namespace as scrape object
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.basic_auth.username.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token <object>	# Secret to mount to read bearer token for scraping targets proxy auth. The secret needs to be in the same namespace as the scrape object and accessible by the victoria-metrics operator.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.bearer_token_file <string>	# BearerTokenFile defines file to read bearer token from for proxy auth.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2 <object>	# OAuth2 defines auth configuration
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id <object> (required)	# The secret or configmap containing the OAuth2 client id
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret <object>	# Secret containing data to use for the targets.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_id.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret <object>	# The secret containing the OAuth2 client secret
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.client_secret_file <string>	# ClientSecretFile defines path for client secret file.
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.endpoint_params <map[string]string>	# Parameters to append to the token URL
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.proxy_url <string>	# The proxy URL for token_url connection Is only supported by Scrape objects family
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.scopes <[]string>	# OAuth2 scopes used for the token request
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.tls_config <any>	# TLSConfig for token_url connection Is only supported by Scrape objects family
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.oauth2.token_url <string> (required) min=1	# The URL to fetch the token from
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.proxy_client_config.tls_config <any>	# TLSConfig configuration to use when scraping the endpoint
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.scrape_align_interval <string>
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.scrape_offset <string>
+spec.serviceScrapeSpec.endpoints[].vm_scrape_params.stream_parse <boolean>
+spec.serviceScrapeSpec.jobLabel <string>	# The label to use to retrieve the job name from.
+spec.serviceScrapeSpec.namespaceSelector <object>	# Selector to select which namespaces the Endpoints objects are discovered from.
+spec.serviceScrapeSpec.namespaceSelector.any <boolean>	# Boolean describing whether all namespaces are selected in contrast to a list restricting them.
+spec.serviceScrapeSpec.namespaceSelector.matchNames <[]string>	# List of namespace names.
+spec.serviceScrapeSpec.podTargetLabels <[]string>	# PodTargetLabels transfers labels on the Kubernetes Pod onto the target.
+spec.serviceScrapeSpec.sampleLimit <integer>	# SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+spec.serviceScrapeSpec.scrapeClass <string>	# ScrapeClass defined scrape class to apply
+spec.serviceScrapeSpec.selector <object>	# Selector to select Endpoints objects by corresponding Service labels.
+spec.serviceScrapeSpec.selector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.serviceScrapeSpec.selector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.serviceScrapeSpec.selector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.serviceScrapeSpec.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.serviceScrapeSpec.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.serviceScrapeSpec.seriesLimit <integer>	# SeriesLimit defines per-scrape limit on number of unique time series a single target can expose during all the scrapes on the time window of 24h.
+spec.serviceScrapeSpec.targetLabels <[]string>	# TargetLabels transfers labels on the Kubernetes Service onto the target.
+spec.serviceSpec <object>	# ServiceSpec that will be added to vtagent service spec
 spec.serviceSpec.metadata <object>	# EmbeddedObjectMetadata defines objectMeta for additional service.
 spec.serviceSpec.metadata.annotations <map[string]string>	# Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations
 spec.serviceSpec.metadata.labels <map[string]string>	# Labels Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
@@ -326,36 +504,8 @@ spec.storage.volumeClaimTemplate.status.modifyVolumeStatus <object>	# ModifyVolu
 spec.storage.volumeClaimTemplate.status.modifyVolumeStatus.status <string> (required)	# status is the status of the ControllerModifyVolume operation. It can be in any of following states: - Pending Pending indicates that the PersistentVolumeClaim cannot be modified due to unmet requirements, such as the specified VolumeAttributesClass not existing. - InProgress InProgress indicates that the volume is being modified. - Infeasible Infeasible indicates that the request has been rejected as invalid by the CSI driver. To resolve the error, a valid VolumeAttributesClass needs to be specified. Note: New statuses can be added in the future. Consumers should check for unknown statuses and fail appropriately.
 spec.storage.volumeClaimTemplate.status.modifyVolumeStatus.targetVolumeAttributesClassName <string>	# targetVolumeAttributesClassName is the name of the VolumeAttributesClass the PVC currently being reconciled
 spec.storage.volumeClaimTemplate.status.phase <string>	# phase represents the current phase of PersistentVolumeClaim.
-spec.syslogSpec <object>	# SyslogSpec defines syslog listener configuration
-spec.syslogSpec.tcpListeners <[]object>	# TCPListeners defines syslog server TCP listener configuration
-spec.syslogSpec.tcpListeners[].compressMethod <string> pattern="^(none|zstd|gzip|deflate)$"	# CompressMethod for syslog messages see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#compression
-spec.syslogSpec.tcpListeners[].decolorizeFields <string>	# DecolorizeFields to remove ANSI color codes across logs see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#decolorizing-fields
-spec.syslogSpec.tcpListeners[].ignoreFields <string>	# IgnoreFields to ignore at logs see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#dropping-fields
-spec.syslogSpec.tcpListeners[].listenPort <integer> (required) format=int32	# ListenPort defines listen port
-spec.syslogSpec.tcpListeners[].streamFields <string>	# StreamFields to use as log stream labels see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#stream-fields
-spec.syslogSpec.tcpListeners[].tenantID <string>	# TenantID for logs ingested in form of accountID:projectID see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#multiple-configs
-spec.syslogSpec.tcpListeners[].tlsConfig <object>	# TLSServerConfig defines VictoriaMetrics TLS configuration for the application's server
-spec.syslogSpec.tcpListeners[].tlsConfig.certFile <string>	# CertFile defines path to the pre-mounted file with certificate mutually exclusive with CertSecret
-spec.syslogSpec.tcpListeners[].tlsConfig.certSecret <object>	# CertSecretRef defines reference for secret with certificate content under given key mutually exclusive with CertFile
-spec.syslogSpec.tcpListeners[].tlsConfig.certSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
-spec.syslogSpec.tcpListeners[].tlsConfig.certSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.syslogSpec.tcpListeners[].tlsConfig.certSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.syslogSpec.tcpListeners[].tlsConfig.cipherSuites <[]string>	# CipherSuites is an optional list of TLS cipher suites for the server.
-spec.syslogSpec.tcpListeners[].tlsConfig.keyFile <string>	# KeyFile defines path to the pre-mounted file with certificate key mutually exclusive with KeySecretRef
-spec.syslogSpec.tcpListeners[].tlsConfig.keySecret <object>	# Key defines reference for secret with certificate key content under given key mutually exclusive with KeyFile
-spec.syslogSpec.tcpListeners[].tlsConfig.keySecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
-spec.syslogSpec.tcpListeners[].tlsConfig.keySecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-spec.syslogSpec.tcpListeners[].tlsConfig.keySecret.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.syslogSpec.tcpListeners[].tlsConfig.minVersion <string> enum=TLS10|TLS11|TLS12|TLS13	# MinVersion is the minimum TLS version to use for the server.
-spec.syslogSpec.udpListeners <[]object>	# UDPListeners defines syslog server UDP listener configuration
-spec.syslogSpec.udpListeners[].compressMethod <string> pattern="^(none|zstd|gzip|deflate)$"	# CompressMethod for syslog messages see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#compression
-spec.syslogSpec.udpListeners[].decolorizeFields <string>	# DecolorizeFields to remove ANSI color codes across logs see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#decolorizing-fields
-spec.syslogSpec.udpListeners[].ignoreFields <string>	# IgnoreFields to ignore at logs see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#dropping-fields
-spec.syslogSpec.udpListeners[].listenPort <integer> (required) format=int32	# ListenPort defines listen port
-spec.syslogSpec.udpListeners[].streamFields <string>	# StreamFields to use as log stream labels see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#stream-fields
-spec.syslogSpec.udpListeners[].tenantID <string>	# TenantID for logs ingested in form of accountID:projectID see https://docs.victoriametrics.com/victorialogs/data-ingestion/syslog/#multiple-configs
 spec.terminationGracePeriodSeconds <integer> format=int64	# TerminationGracePeriodSeconds period for container graceful termination
-spec.tmpDataPath <string>	# Path to directory where temporary data for vlagent stored Defaults to /vlagent-data or /var/lib/vlagent-data in collector mode If defined, operator ignores spec.storage field and skips adding volume and volumeMount for tmp data
+spec.tmpDataPath <string>	# Path to directory where temporary data for vtagent stored Defaults to /vtagent-data If defined, operator ignores spec.storage field and skips adding volume and volumeMount for tmp data
 spec.tolerations <[]object>	# Tolerations If specified, the pod's tolerations.
 spec.tolerations[].effect <string>	# Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
 spec.tolerations[].key <string>	# Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.
@@ -364,7 +514,6 @@ spec.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds 
 spec.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
 spec.topologySpreadConstraints <[]object>	# TopologySpreadConstraints embedded kubernetes pod configuration option, controls how pods are spread across your cluster among failure-domains such as regions, zones, nodes, and other user-defined topology domains https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
 spec.useDefaultResources <boolean>	# UseDefaultResources controls resource settings By default, operator sets built-in resource requirements
-spec.useLegacyNaming <boolean>	# UseLegacyNaming uses standalone Helm chart naming for managed resources: the CR name is used directly instead of the default "<type>-<name>" convention.
 spec.useStrictSecurity <boolean>	# UseStrictSecurity enables strict security mode for component it restricts disk writes access uses non-root user out of the box drops not needed security permissions
 spec.volumeMounts <[]object>	# VolumeMounts allows configuration of additional VolumeMounts on the output Deployment/StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the Application container
 spec.volumeMounts[].bindMountOptions <[]string>	# bindMountOptions is the list of additional bind mount options to apply when mounting this volume into the container. Allowed values are noexec, nodev, and nosuid. These are Linux mount options and have no effect on Windows nodes. This field is not supported with image volumes. This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
@@ -404,7 +553,7 @@ spec.vpa.updatePolicy.evictionRequirements[].changeRequirement <string> (require
 spec.vpa.updatePolicy.evictionRequirements[].resources <[]string> (required)	# Resources is a list of one or more resources that the condition applies to. If more than one resource is given, the EvictionRequirement is fulfilled if at least one resource meets `changeRequirement`.
 spec.vpa.updatePolicy.minReplicas <integer> format=int32	# Minimal number of replicas which need to be alive for Updater to attempt pod eviction (pending other checks like PDB). Only positive values are allowed. Overrides global '--min-replicas' flag.
 spec.vpa.updatePolicy.updateMode <string> enum=Off|Initial|Recreate|InPlaceOrRecreate|InPlace|Auto	# Controls when autoscaler applies changes to the pod resources. The default is 'Recreate'.
-status <object>	# VLAgentStatus defines the observed state of VLAgent
+status <object>	# VTAgentStatus defines the observed state of VTAgent
 status.conditions <[]object>	# Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another.
 status.conditions[].lastUpdateTime <string> (required) format=date-time	# LastUpdateTime is the last time of given type update. This value is used for status TTL update and removal
@@ -416,6 +565,6 @@ status.conditions[].type <string> (required) max=316	# Type of condition in Came
 status.lastAppliedSpec <any>
 status.observedGeneration <integer> format=int64	# ObservedGeneration defines current generation picked by operator for the reconcile
 status.reason <string>	# Reason defines human readable error reason
-status.replicas <integer> format=int32	# ReplicaCount Total number of pods targeted by this VLAgent
+status.replicas <integer> format=int32	# ReplicaCount Total number of pods targeted by this VTAgent
 status.selector <string>	# Selector string form of label value set for autoscaling
 status.updateStatus <string>	# UpdateStatus defines a status for update rollout
