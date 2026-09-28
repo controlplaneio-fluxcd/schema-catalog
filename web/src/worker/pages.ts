@@ -142,6 +142,18 @@ export function rewritePageTags(shell: string, meta: PageMeta): string {
     .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
 }
 
+export async function serveAssets(req: Request, env: Env): Promise<Response> {
+  const resp = await env.ASSETS.fetch(req);
+  if (resp.status !== 404 || (req.method !== "GET" && req.method !== "HEAD")) {
+    return resp;
+  }
+
+  // The root serves the shell directly; /index.html can redirect under
+  // Workers Assets' force-trailing-slash policy.
+  const shell = await env.ASSETS.fetch(new Request("https://assets.local/", { method: req.method }));
+  return stripHead(req, shell);
+}
+
 export async function servePage(
   req: Request,
   env: Env,
@@ -154,7 +166,7 @@ export async function servePage(
 
   const route = parsePagePath(new URL(req.url).pathname);
   if (route === undefined) {
-    return env.ASSETS.fetch(req);
+    return serveAssets(req, env);
   }
 
   const canonicalPath = buildCanonicalPath(route);
@@ -167,12 +179,12 @@ export async function servePage(
   const index = await loadIndex(env);
   const meta = buildPageMeta(index, route);
   if (meta === undefined) {
-    return env.ASSETS.fetch(req);
+    return serveAssets(req, env);
   }
 
-  const shellResp = await env.ASSETS.fetch(new Request("https://assets.local/index.html"));
+  const shellResp = await env.ASSETS.fetch(new Request("https://assets.local/"));
   if (!shellResp.ok) {
-    return env.ASSETS.fetch(req);
+    return stripHead(req, shellResp);
   }
 
   const html = rewritePageTags(await shellResp.text(), meta);

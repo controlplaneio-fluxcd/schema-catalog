@@ -1,7 +1,7 @@
 # Web runtime
 
 Cloudflare Worker that serves <https://schemas.fluxoperator.dev> with three
-surfaces: `/catalog/*` streams schema files from R2 for `flux-schema validate
+surfaces: `/catalog/*` serves schema files for `flux-schema validate
 --schema-location https://schemas.fluxoperator.dev/catalog`, `/` serves the
 catalog explorer web UI, and `/mcp` exposes a stateless MCP server for AI
 agents.
@@ -11,7 +11,8 @@ agents.
 One Worker handles all dynamic traffic. The R2 bucket `schema-catalog` holds the
 generated `catalog/` tree under a `latest/` prefix and the per-source
 provenance manifests under a `history/` prefix, both synced by CI with rclone;
-the Worker serves them as `/catalog/*` and `/history/<source>.json`.
+R2 backs catalog lookups from MCP and the Worker's fallback for catalog asset
+misses, plus `/history/<source>.json` provenance requests.
 
 The bucket's third prefix, `versions/`, holds pinnable per-minor snapshots of
 the sources allowlisted in the Makefile's `web-archive` target:
@@ -32,10 +33,17 @@ forced rebuild that changes schemas re-syncs the snapshot in place, and the
 snapshot's `manifest.json` records the exact patch and file digests it holds.
 
 Static assets are served from Workers Assets: the dependency-free UI bundle,
-copied files from `static/`, and the generated `index.json`. `wrangler.jsonc`
-lists the dynamic paths in `assets.run_worker_first` (`/catalog/*`,
-`/history/*`, `/mcp`, `/mcp/server-card`, `/.well-known/mcp/*`), so those
-requests enter the Worker while UI assets stay on the static path.
+copied files from `static/`, the generated `index.json`, and the latest catalog
+packaged by `web-build` into `dist/assets/catalog/`. Latest schema GET/HEAD
+requests are served as assets without invoking the Worker. `wrangler.jsonc`
+lists the dynamic paths in `assets.run_worker_first`
+(`/catalog/versions/*`, `/history/*`, `/p/*`, `/k/*`, `/mcp`,
+`/mcp/server-card`, `/.well-known/mcp/*`). Asset misses also reach the Worker:
+`not_found_handling: none` lets it return cacheable catalog 404s instead of
+an HTML shell, including requests with `Sec-Fetch-Mode: navigate`.
+
+Workers Paid allows 100,000 asset files per version and 25 MiB per file; the
+catalog and UI share that budget.
 
 The `/`, `/catalog`, `/agents`, and `/cli` pages are prerendered at build time
 with page-specific meta/OG tags, and `scripts/build-ui.ts` generates
@@ -44,7 +52,8 @@ with page-specific meta/OG tags, and `scripts/build-ui.ts` generates
 Worker first, which rewrites the app shell with route-specific title,
 description, canonical URL, and OG tags from the generated index before
 caching the HTML at the edge. Other UI paths fall back to the app shell via
-the assets `not_found_handling` single-page-application mode.
+the Worker: a GET or HEAD asset 404 is answered with the shell from `/` (not
+`/index.html`, which `force-trailing-slash` redirects).
 
 For agent discovery (MCP SEP-2127), the Worker serves a static Server Card at
 `/mcp/server-card` (the spec-reserved location) and
@@ -53,13 +62,20 @@ MCP Catalog entrypoint at `/.well-known/mcp/catalog.json`. The card mirrors
 the live server's identity and capabilities and points at the `/mcp`
 endpoint; all three responses carry open CORS and an hour of caching.
 
-`/catalog/*` uses the edge Cache API. Cache keys include
+Worker-served catalog and history responses use the edge Cache API. Cache keys include
 `?v=${CATALOG_VERSION}`, and deployment sets `CATALOG_VERSION` from the commit
 SHA, so each deploy rotates into a fresh keyspace without purging. Both hits and
 404s are cached: `flux-schema` probes fallback schema names, so negative cache
-entries avoid repeated R2 misses. Every `/catalog/*` response, including
-preflight and 404, carries permissive CORS because the catalog is a public schema
-location.
+entries avoid repeated R2 misses. Catalog GET/HEAD responses, including 404s,
+carry permissive CORS because the catalog is a public schema location.
+
+`static/_headers` adds open CORS and `Cache-Control: public, max-age=3600` to
+catalog assets. The rule matches `/catalog/:group/*` so the `/catalog/`
+explorer page keeps the default revalidating cache policy.
+
+Assets returns 405 for `OPTIONS` on existing files. This is accepted:
+`flux-schema` and simple cross-origin GETs do not preflight. Missing schema
+OPTIONS requests reach the Worker and return 204 with permissive CORS.
 
 ## Module map
 
@@ -67,13 +83,14 @@ location.
 |-------------------------------|--------------------------------------------------------------------------------------------|
 | `scripts/gen-index.ts`        | `build/history` + `sources.yaml` -> `dist/assets/index.json`                               |
 | `scripts/build-ui.ts`         | Bundles `src/ui/main.ts`, copies `static/`, prerenders pages, and writes `sitemap.xml`     |
+| `scripts/copy-catalog.ts`     | Replaces `dist/assets/catalog/` with the latest `catalog/` tree for deployment              |
 | `scripts/archive-versions.ts` | Archives per-minor snapshots of allowlisted sources to the bucket's `versions/` prefix     |
 | `scripts/dev.ts`              | Local dev: catalog file server + `wrangler dev`, rebundles UI on `src` change              |
 | `scripts/serve.ts`            | Local dev without wrangler: static UI + `catalog/` server, UI watch, SSE reload            |
 | `scripts/dev-versions.ts`     | Dev stand-in for the bucket's `versions/` prefix, synthesized from `build/history`         |
 | `src/worker/index.ts`         | Worker router for `/catalog/*`, `/p/*`, `/k/*`, `/mcp`, discovery docs, and Workers Assets |
 | `src/worker/catalog.ts`       | R2/dev-origin catalog object lookup, CORS, Cache API, HEAD/OPTIONS handling                |
-| `src/worker/pages.ts`         | Dynamic social/SEO metadata rewrite for history-routed project and kind pages              |
+| `src/worker/pages.ts`         | Dynamic social/SEO metadata for project and kind pages, plus Worker-owned SPA fallback      |
 | `src/worker/mcp.ts`           | Streamable HTTP MCP server and tool registration                                           |
 | `src/worker/server-card.ts`   | MCP Server Card and Catalog discovery documents (SEP-2127)                                 |
 | `src/worker/mcp-core.ts`      | Pure catalog/MCP result formatting and schema/fields lookup helpers                        |
@@ -88,6 +105,11 @@ location.
 `scripts/dev.ts` is credential-free: it serves the repo-local `catalog/` tree on
 a side port and passes `CATALOG_DEV_ORIGIN` into local Wrangler, so R2 is not
 needed for `make web-run`.
+
+Only `make web-build` copies the catalog into assets. `make web-run` skips the
+copy, so local catalog requests miss the assets and reach the Worker's
+`CATALOG_DEV_ORIGIN`. A copy left in `dist/assets/catalog/` by an earlier
+`bun run copy-catalog` is served as assets until removed.
 
 ## Index contract
 
@@ -181,7 +203,7 @@ claude mcp add --transport http flux-schema-catalog https://schemas.fluxoperator
 From the repo root:
 
 ```shell
-make web-build   # install, lint, test, generate index, bundle UI
+make web-build   # install, lint, test, generate index, bundle UI, copy catalog assets
 make web-run     # local Worker + local catalog/ file server, no CF credentials
 make web-dev     # UI-only dev server, no wrangler; watches src and live-reloads (no /mcp)
 make web-sync    # rclone sync catalog/ to r2:schema-catalog/latest
@@ -192,10 +214,11 @@ make web-archive # archive versioned minor snapshots of allowlisted sources to R
 Inside `web/`:
 
 ```shell
-bun run lint       # tsc -p tsconfig.worker.json && tsc -p tsconfig.ui.json
+bun run lint        # tsc -p tsconfig.worker.json && tsc -p tsconfig.ui.json
 bun test
 bun run gen-index
-bun run build
+bun run build       # generate index and bundle UI only; preserves existing assets
+bun run copy-catalog # replace catalog assets after build, for deployment or smoke tests
 bun run dev         # wrangler dev (Worker + MCP)
 bun run serve       # wrangler-free UI dev server (PORT overrides :8787)
 bun run deploy
@@ -282,15 +305,26 @@ cd web
 bun run lint
 bun test
 bun run build
+bun run copy-catalog
 ```
 
 HTTP smoke matrix:
 
 ```shell
 curl -fsS https://schemas.fluxoperator.dev/
+curl -fsS https://schemas.fluxoperator.dev/catalog/
+curl -sSI https://schemas.fluxoperator.dev/catalog
+curl -fsS https://schemas.fluxoperator.dev/p/flux/
+curl -fsS https://schemas.fluxoperator.dev/k/kustomize.toolkit.fluxcd.io/kustomization/v1/
+curl -fsSI https://schemas.fluxoperator.dev/mcp-server
 curl -fsSI https://schemas.fluxoperator.dev/catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 curl -fsSI https://schemas.fluxoperator.dev/catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.fields.txt
 curl -sS -o /dev/null -w '%{http_code}\n' https://schemas.fluxoperator.dev/catalog/missing.example.io/missing_v1.json
+curl -sSI -H 'Sec-Fetch-Mode: navigate' https://schemas.fluxoperator.dev/catalog/missing.example.io/missing_v1.json
+curl -sS -D - -o /dev/null -X OPTIONS https://schemas.fluxoperator.dev/catalog/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+curl -fsS -D - -o /dev/null -X OPTIONS https://schemas.fluxoperator.dev/catalog/missing.example.io/missing_v1.json
+curl -fsSI https://schemas.fluxoperator.dev/catalog/versions/kubernetes/v1.35/apps/deployment_v1.json
+curl -fsSI https://schemas.fluxoperator.dev/history/flux.json
 curl -fsS https://schemas.fluxoperator.dev/mcp \
   -H 'content-type: application/json' \
   -H 'accept: application/json, text/event-stream' \
@@ -303,7 +337,12 @@ curl -fsS https://schemas.fluxoperator.dev/mcp \
   --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"curl","version":"dev"}}}}'
 ```
 
-The smoke matrix has a scripted superset in `scripts/mcp-e2e-test.ts`
+To check asset routing locally, run `bun run copy-catalog` before `bun run dev`
+and start Wrangler with `CHOKIDAR_USEPOLLING=true`: watching the copied catalog
+exhausts macOS file watchers (`spawn EBADF`). OPTIONS on an existing schema
+returns the accepted 405.
+
+The full MCP and discovery protocol suite is in `scripts/mcp-e2e-test.ts`
 (`bun run mcp-e2e`). This post-deploy helper checks the modern 2026-07-28 lane,
 the legacy lane, error semantics, and the discovery documents against
 production by default. Pass a base URL to target a local Wrangler dev session.

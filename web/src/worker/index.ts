@@ -3,7 +3,7 @@
 
 import { serveCatalog } from "./catalog.ts";
 import { handleMcp } from "./mcp.ts";
-import { redirectToCanonicalSlash, servePage } from "./pages.ts";
+import { redirectToCanonicalSlash, serveAssets, servePage } from "./pages.ts";
 import { serveMcpCatalog, serveServerCard } from "./server-card.ts";
 
 /**
@@ -40,8 +40,8 @@ export default {
       return env.ASSETS.fetch(req);
     }
 
-    // `/catalog/<group>/<file>` streams catalog objects and
-    // `/history/<source>.json` the provenance manifests; the bare `/catalog`
+    // Latest catalog asset misses and versioned schemas use catalog lookup,
+    // as do `/history/<source>.json` provenance manifests. The bare `/catalog`
     // path is the explorer page and falls through to Workers Assets.
     if (pathname.startsWith("/catalog/") || pathname.startsWith("/history/")) {
       return serveCatalog(req, env, ctx);
@@ -61,6 +61,6 @@ export default {
       return serveMcpCatalog(req);
     }
 
-    return env.ASSETS.fetch(req);
+    return serveAssets(req, env);
   },
 } satisfies ExportedHandler<Env>;

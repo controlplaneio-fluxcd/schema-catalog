@@ -43,12 +43,12 @@ RCLONE_VERSION := v1.74.3
 RCLONE := $(or $(shell command -v rclone 2>/dev/null),/tmp/rclone-$(RCLONE_VERSION)-linux-amd64/rclone)
 
 .PHONY: web-build
-web-build: ## Install, lint, test and bundle the web app.
+web-build: ## Install, lint, test, bundle the web app and copy the catalog into assets.
 	# The web lint and index generator type-check ../build/src (gen-index.ts
 	# imports the config parser and history readers), so the build system's
 	# dev dependencies must be installed too or tsc resolves the wrong types.
 	cd build && bun install --frozen-lockfile
-	cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build
+	cd web && bun install --frozen-lockfile && bun run lint && bun test && bun run build && bun run copy-catalog
 
 .PHONY: web-dev
 web-dev: ## Serve the UI on :8787 without wrangler; watches src and live-reloads (no /mcp).
