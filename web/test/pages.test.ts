@@ -56,6 +56,17 @@ const index: CatalogIndex = {
       ],
       groups: [{ g: "acme.example.io", kinds: [["bucket", ["v1"], 1, "Bucket"]], src: [1] }],
     },
+    {
+      name: "flux",
+      alias: "Flux",
+      cat: 0,
+      repo: "fluxcd/flux2",
+      version: "v2.9.0",
+      builtAt: "2026-07-06",
+      groups: [
+        { g: "kustomize.toolkit.fluxcd.io", kinds: [["kustomization", ["v1"], 1, "Kustomization"]] },
+      ],
+    },
   ],
 };
 
@@ -107,7 +118,10 @@ function createCtx(): { ctx: ExecutionContext; waitAll: () => Promise<void> } {
   };
 }
 
-function createEnv(version = "pages-test"): { env: Env; assetUrls: string[] } {
+function createEnv(
+  version = "pages-test",
+  { assetStatus = 404, shellStatus = 200 } = {},
+): { env: Env; assetUrls: string[] } {
   const assetUrls: string[] = [];
   const assets = {
     async fetch(input: RequestInfo | URL): Promise<Response> {
@@ -120,7 +134,12 @@ function createEnv(version = "pages-test"): { env: Env; assetUrls: string[] } {
       }
 
       if (pathname === "/index.html") {
+        return Response.redirect("https://assets.local/", 307);
+      }
+
+      if (pathname === "/") {
         return new Response(shell, {
+          status: shellStatus,
           headers: {
             "Content-Type": "text/html",
             "Content-Length": String(shell.length),
@@ -130,6 +149,7 @@ function createEnv(version = "pages-test"): { env: Env; assetUrls: string[] } {
       }
 
       return new Response(`fallback:${pathname}`, {
+        status: assetStatus,
         headers: { "X-Fallback-Path": pathname },
       });
     },
@@ -252,7 +272,7 @@ describe("servePage", () => {
     expect(first.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
     expect(first.headers.get("ETag")).toBeNull();
     expect(await first.text()).toContain("<title>Karpenter | Flux Schema Catalog</title>");
-    expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/index.json", "/index.html"]);
+    expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/index.json", "/"]);
 
     await firstCtx.waitAll();
 
@@ -262,16 +282,86 @@ describe("servePage", () => {
     expect(head.status).toBe(200);
     expect(head.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
     expect(await head.text()).toBe("");
-    expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/index.json", "/index.html"]);
+    expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/index.json", "/"]);
   });
 
-  test("falls through to Workers Assets unchanged on lookup misses", async () => {
-    const { env } = createEnv("pages-miss-v1");
+  test("renders Flux project and kind pages without an index.html redirect", async () => {
+    for (const [path, title] of [
+      ["/p/flux/", "Flux | Flux Schema Catalog"],
+      ["/k/kustomize.toolkit.fluxcd.io/kustomization/v1/", "Kustomization (kustomize.toolkit.fluxcd.io/v1) | Flux Schema Catalog"],
+    ] as const) {
+      for (const method of ["GET", "HEAD"]) {
+        const { env, assetUrls } = createEnv(`pages-flux-${path}-${method}`);
+        const { ctx, waitAll } = createCtx();
+        const resp = await servePage(req(path, { method }), env, ctx, new MemoryCache());
+
+        expect(resp.status).toBe(200);
+        expect(resp.headers.get("Location")).toBeNull();
+        expect(resp.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
+        const body = await resp.text();
+        if (method === "HEAD") {
+          expect(body).toBe("");
+        } else {
+          expect(body).toContain(`<title>${title}</title>`);
+          expect(body).toContain(`<link rel="canonical" href="https://schemas.fluxoperator.dev${path}">`);
+        }
+        expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/index.json", "/"]);
+        await waitAll();
+      }
+    }
+  });
+
+  test("falls through to existing Workers Assets unchanged on lookup misses", async () => {
+    const { env } = createEnv("pages-miss-v1", { assetStatus: 200 });
     const { ctx } = createCtx();
     const resp = await servePage(req("/p/missing/"), env, ctx, new MemoryCache());
 
     expect(resp.headers.get("X-Fallback-Path")).toBe("/p/missing/");
     expect(await resp.text()).toBe("fallback:/p/missing/");
+  });
+
+  test("serves the shell for missing metadata and unmatched page routes", async () => {
+    for (const path of [
+      "/p/missing/",
+      "/k/kustomize.toolkit.fluxcd.io/kustomization/v2/",
+      "/p/flux/extra/",
+    ]) {
+      for (const method of ["GET", "HEAD"]) {
+        const { env, assetUrls } = createEnv(`pages-fallback-${path}-${method}`);
+        const { ctx } = createCtx();
+        const resp = await servePage(req(path, { method }), env, ctx, new MemoryCache());
+
+        expect(resp.status).toBe(200);
+        expect(await resp.text()).toBe(method === "HEAD" ? "" : shell);
+        expect(assetUrls.slice(-2).map((url) => new URL(url).pathname)).toEqual([path, "/"]);
+      }
+    }
+  });
+
+  test("preserves shell failures and HEAD semantics without caching them", async () => {
+    for (const status of [404, 503]) {
+      for (const method of ["GET", "HEAD"]) {
+        const { env, assetUrls } = createEnv(`pages-shell-${status}-${method}`, { shellStatus: status });
+        const { ctx, waitAll } = createCtx();
+        const cache = new MemoryCache();
+        const resp = await servePage(req("/p/flux/", { method }), env, ctx, cache);
+
+        expect(resp.status).toBe(status);
+        expect(await resp.text()).toBe(method === "HEAD" ? "" : shell);
+        expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/index.json", "/"]);
+        await waitAll();
+        expect(cache.entries.size).toBe(0);
+      }
+    }
+  });
+
+  test("does not serve the shell for unsupported methods", async () => {
+    const { env, assetUrls } = createEnv("pages-post");
+    const { ctx } = createCtx();
+    const resp = await servePage(req("/p/flux/", { method: "POST" }), env, ctx, new MemoryCache());
+
+    expect(resp.status).toBe(404);
+    expect(assetUrls.map((url) => new URL(url).pathname)).toEqual(["/p/flux/"]);
   });
 });
 
