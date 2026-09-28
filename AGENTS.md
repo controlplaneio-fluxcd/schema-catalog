@@ -6,13 +6,13 @@ schemas power `flux-schema validate`; the `.fields.txt` indexes are an
 offline `kubectl explain` replacement for AI agents (one greppable line per
 field: dotted path, type, constraints, description).
 
-Two subsystems, each with its own reference doc — read the relevant one before
+Two subsystems, each with its own reference doc; read the relevant one before
 changing that subsystem:
 
-- **`build/`** — the Bun/TypeScript builder that generates `catalog/` from
+- **`build/`**: the Bun/TypeScript builder that generates `catalog/` from
   `sources.yaml`. Dataflow, module map, extraction model, history-manifest
   invariants and the add-a-source recipe: [build/README.md](build/README.md).
-- **`web/`** — the Cloudflare Worker that serves the catalog, explorer UI and
+- **`web/`**: the Cloudflare Worker that serves the catalog, explorer UI and
   MCP endpoint. Architecture, routing, caching and index generation:
   [web/README.md](web/README.md).
 
@@ -21,13 +21,13 @@ changing that subsystem:
 | Path                        | What it is                                                       |
 | --------------------------- | ---------------------------------------------------------------- |
 | `catalog/<group>/`          | **Generated.** `<kind>_<version>.json` + `.fields.txt` siblings  |
-| `build/config/sources.yaml` | Catalog sources config — the only file to edit to add a project  |
+| `build/config/sources.yaml` | Catalog sources config, the only file to edit to add a project   |
 | `build/history/*.json`      | **Generated.** Per-source provenance manifests                   |
 | `build/`                    | The Bun build system ([build/README.md](build/README.md))        |
 | `web/`                      | The Cloudflare Worker: catalog serving, UI, MCP ([web/README.md](web/README.md)) |
 | `README.md`                 | Versions table between markers is **generated**                  |
-| `.github/workflows/`        | `test.yaml` (lint+test), `update-catalog.yaml` (daily build+PR)  |
-| `plans/`                    | Git-ignored local scratch — never reference it in committed files |
+| `.github/workflows/`        | `test.yaml` (lint, test, web build), `update-catalog.yaml` (daily build+PR) |
+| `plans/`                    | Git-ignored local scratch; never reference it in committed files |
 
 ## Rules
 
@@ -49,8 +49,14 @@ changing that subsystem:
   path), else PATH. Locally, Bun auto-loads the git-ignored `build/.env`;
   CI installs a released CLI via `fluxcd/flux-schema/actions/setup`.
 - **GitHub Actions are pinned to commit SHAs** (with a `# vX.Y.Z` comment).
-  When bumping a pin, dereference annotated tags to the underlying commit —
+  When bumping a pin, dereference annotated tags to the underlying commit;
   the tag object SHA will not resolve.
+- **Keep catalog reads off the Worker**: the latest `catalog/` ships as
+  Workers static assets, which are free, while every Worker invocation is
+  billed. Never add `/catalog/*` back to `run_worker_first` or reintroduce
+  Assets SPA fallback; the Worker sees only misses, `versions/`, `history/`,
+  MCP and pages. Packaged assets must stay under 90% of the 100k file limit
+  (`copy-catalog` enforces it).
 - **Commits**: signed off (`git commit -s`), compact and logically split;
   generated catalog and history files stay out of local commits and ship
   through the `update-catalog` PR instead.
@@ -60,7 +66,7 @@ changing that subsystem:
 ```shell
 make deps    # bun install (needed before lint)
 make lint    # tsc --noEmit against build/tsconfig.json
-make test    # bun test — pure logic only, needs no Flux CLIs or network
+make test    # bun test: pure logic only, needs no Flux CLIs or network
 make build   # full catalog build; FORCE_BUILD=1 and BUILD_SUMMARY=<path> opt in
 ```
 
@@ -88,10 +94,12 @@ run, dev, sync, deploy, archive) are listed in
 
 ## CI
 
-`test.yaml` runs lint+test on PRs and main, path-filtered to the build
-system. `update-catalog.yaml` runs daily and on dispatch (optional force
-input): it builds the catalog, and only when the build signals
-`changed=true` it smoke-tests the result by validating
+`test.yaml` runs on PRs and main, path-filtered to `build/`, `web/` and the
+Makefile: lint+test for the build system, and `make web-build` for the web
+app (lint, test, bundle, and the asset file budget check).
+`update-catalog.yaml` runs daily and on dispatch (optional force input): it
+builds the catalog, and only when the build signals `changed=true` it checks
+the asset file budget, smoke-tests the result by validating
 `fluxcd/flux2-kustomize-helm-example` against the local catalog, then opens
 a PR whose body is the build's own `--summary` output (only changed sources,
 never the full list).
