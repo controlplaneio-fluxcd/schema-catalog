@@ -43,7 +43,8 @@ lists the dynamic paths in `assets.run_worker_first`
 an HTML shell, including requests with `Sec-Fetch-Mode: navigate`.
 
 Workers Paid allows 100,000 asset files per version and 25 MiB per file; the
-catalog and UI share that budget.
+catalog and UI share that budget. `copy-catalog` fails at 90% of the file
+limit. The `update-catalog` workflow runs this check on catalog changes.
 
 The `/`, `/catalog`, `/agents`, and `/cli` pages are prerendered at build time
 with page-specific meta/OG tags, and `scripts/build-ui.ts` generates
