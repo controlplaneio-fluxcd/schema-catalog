@@ -1,11 +1,11 @@
-# schema source: Cluster API k0smotron Bootstrap v2.1.1 https://github.com/k0sproject/k0smotron
+# schema source: Cluster API k0smotron Bootstrap v2.2.0 https://github.com/k0sproject/k0smotron
 apiVersion <string> enum=bootstrap.cluster.x-k8s.io/v1beta2
 kind <string> enum=K0sControllerConfig
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# K0sControllerConfigSpec describes a k0s controller configuration's spec.
 spec.args <[]string>	# Args specifies extra arguments to be passed to k0s controller. See: https://docs.k0sproject.io/stable/cli/k0s_controller/
-spec.downloadURL <string>	# DownloadURL specifies the URL from which to download the k0s binary. If the version field is specified, it is ignored, and whatever version is downloaded from the URL is used. Supported protocols are: http, https, oci. Using 'oci' scheme requires 'oras' to be installed on the target system. If 'oci' schema is used and the OCI registry requires authentication, make sure to set up the authentication beforehand by adding a file to the Files section that contains the necessary config for ORAS. See: https://oras.land/docs/how_to_guides/authentication/ The file must be placed at `/root` directory (HOME for cloud-init execution time) and named `config.json`. NOTE: use `.preStartCommands` to set DOCKER_CONFIG environment variable in order to let ORAS pick up your custom config file. When no value is specified, k0smotron will use the default URL: https://get.k0s.sh
+spec.downloadURL <string>	# DownloadURL specifies the URL from which to download the k0s binary. If the version field is specified, it is ignored, and whatever version is downloaded from the URL is used. Supported protocols are: http, https, oci. Using 'oci' scheme requires 'oras' to be installed on the target system. If 'oci' schema is used and the OCI registry requires authentication, make sure to set up the authentication beforehand by adding a file to the Files section that contains the necessary config for ORAS. See: https://oras.land/docs/how_to_guides/authentication/ The file must be placed at `/root` directory (HOME for cloud-init execution time) and named `config.json`. NOTE: use `.preK0sCommands` to set DOCKER_CONFIG environment variable in order to let ORAS pick up your custom config file. When no value is specified, k0smotron will use the default URL: https://get.k0s.sh
 spec.files <[]object>	# Files specifies extra files to be passed to user_data upon creation.
 spec.files[].append <boolean>	# Append specifies whether Content is appended to an existing file rather than replacing it. If the file does not exist it is created either way.
 spec.files[].content <string>
@@ -52,7 +52,7 @@ spec.useSystemHostname <boolean> default=false	# UseSystemHostname specifies whe
 spec.version <string>	# Version is the version of k0s to use. In case this is not set, k0smotron will use a version field of the Machine object. If it's empty, the latest version is used. Make sure the version is compatible with the k0s version running on the control plane. For reference see the Kubernetes version skew policy: https://kubernetes.io/docs/setup/release/version-skew-policy/
 spec.workingDir <string>	# WorkingDir specifies the working directory where k0smotron will place its files.
 status <object>	# K0sControllerConfigStatus defines the observed state of K0sControllerConfig
-status.conditions <[]object>	# Conditions defines current service state of the K0sControllerConfig.
+status.conditions <[]object> max=32	# Conditions defines current service state of the K0sControllerConfig.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
 status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
 status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
@@ -62,3 +62,4 @@ status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0
 status.dataSecretName <string>	# DataSecretName is the name of the secret that stores the bootstrap data script.
 status.initialization <object>	# Initialization represents the initialization status of the worker node
 status.initialization.dataSecretCreated <boolean>
+status.observedGeneration <integer> format=int64 min=1	# observedGeneration is the latest generation observed by the controller.

@@ -1,4 +1,4 @@
-# schema source: Cluster API k0smotron Control Plane v2.1.1 https://github.com/k0sproject/k0smotron
+# schema source: Cluster API k0smotron Control Plane v2.2.0 https://github.com/k0sproject/k0smotron
 apiVersion <string> enum=controlplane.cluster.x-k8s.io/v1beta2
 kind <string> enum=K0sControlPlane
 metadata.name <string> (required)
@@ -6,7 +6,7 @@ metadata.namespace <string> (required)
 spec <object>	# K0sControlPlaneSpec defines the desired state of K0sControlPlane
 spec.k0sConfigSpec <object> (required)	# K0sConfigSpec defines the k0s configuration specification.
 spec.k0sConfigSpec.args <[]string>	# Args specifies extra arguments to be passed to k0s controller. See: https://docs.k0sproject.io/stable/cli/k0s_controller/
-spec.k0sConfigSpec.downloadURL <string>	# DownloadURL specifies the URL from which to download the k0s binary. If the version field is specified, it is ignored, and whatever version is downloaded from the URL is used. Supported protocols are: http, https, oci. Using 'oci' scheme requires 'oras' to be installed on the target system. If 'oci' schema is used and the OCI registry requires authentication, make sure to set up the authentication beforehand by adding a file to the Files section that contains the necessary config for ORAS. See: https://oras.land/docs/how_to_guides/authentication/ The file must be placed at `/root` directory (HOME for cloud-init execution time) and named `config.json`. NOTE: use `.preStartCommands` to set DOCKER_CONFIG environment variable in order to let ORAS pick up your custom config file. When no value is specified, k0smotron will use the default URL: https://get.k0s.sh
+spec.k0sConfigSpec.downloadURL <string>	# DownloadURL specifies the URL from which to download the k0s binary. If the version field is specified, it is ignored, and whatever version is downloaded from the URL is used. Supported protocols are: http, https, oci. Using 'oci' scheme requires 'oras' to be installed on the target system. If 'oci' schema is used and the OCI registry requires authentication, make sure to set up the authentication beforehand by adding a file to the Files section that contains the necessary config for ORAS. See: https://oras.land/docs/how_to_guides/authentication/ The file must be placed at `/root` directory (HOME for cloud-init execution time) and named `config.json`. NOTE: use `.preK0sCommands` to set DOCKER_CONFIG environment variable in order to let ORAS pick up your custom config file. When no value is specified, k0smotron will use the default URL: https://get.k0s.sh
 spec.k0sConfigSpec.files <[]object>	# Files specifies extra files to be passed to user_data upon creation.
 spec.k0sConfigSpec.files[].append <boolean>	# Append specifies whether Content is appended to an existing file rather than replacing it. If the file does not exist it is created either way.
 spec.k0sConfigSpec.files[].content <string>
@@ -71,7 +71,7 @@ spec.updateStrategy <string> enum=InPlace|Recreate|RecreateDeleteFirst default="
 spec.version <string>	# Version defines the k0s version to be deployed. You can use a specific k0s version (e.g. v1.27.1+k0s.0) or just the Kubernetes version (e.g. v1.27.1). If left empty, k0smotron will select one automatically.
 status <object> default={"initialization":{"controlPlaneInitialized":false},"version":""}	# K0sControlPlaneStatus defines the observed state of K0sControlPlane
 status.availableReplicas <integer> format=int32	# availableReplicas is the number of available replicas for this K0sControlPlane. A machine is considered available when Machine's Available condition is true.
-status.conditions <[]object>	# Conditions defines current service state of the K0sControlPlane.
+status.conditions <[]object> max=32	# Conditions defines current service state of the K0sControlPlane.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
 status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
 status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
@@ -81,6 +81,7 @@ status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0
 status.externalManagedControlPlane <boolean>	# externalManagedControlPlane is a bool that should be set to true if the Node objects do not exist in the cluster.
 status.initialization <object>	# initialization represents the initialization status of the control plane NOTE: Fields in this struct are part of the Cluster API contract and are used to orchestrate initial Machine provisioning.
 status.initialization.controlPlaneInitialized <boolean>	# controlPlaneInitialized indicates whether the control plane is initialized
+status.observedGeneration <integer> format=int64 min=1	# observedGeneration is the latest generation observed by the controller.
 status.readyReplicas <integer> format=int32	# readyReplicas is the number of ready replicas for this K0sControlPlane. A machine is considered ready when Machine's Ready condition is true.
 status.replicas <integer> format=int32	# replicas is the total number of non-terminated machines targeted by this control plane (their labels match the selector).
 status.selector <string>	# selector is the label selector in string format to avoid introspection by clients, and is used to provide the CRD-based integration for the scale subresource and additional integrations for things like kubectl describe.. The string will be in the same format as the query-param syntax. More info about label selectors: http://kubernetes.io/docs/user-guide/labels#label-selectors
