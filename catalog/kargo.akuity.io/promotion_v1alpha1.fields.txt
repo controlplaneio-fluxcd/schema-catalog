@@ -1,4 +1,4 @@
-# schema source: Kargo v1.11.4 https://github.com/akuity/kargo
+# schema source: Kargo v1.12.0 https://github.com/akuity/kargo
 apiVersion <string> enum=kargo.akuity.io/v1alpha1
 kind <string> enum=Promotion
 metadata.name <string> (required)
@@ -24,6 +24,7 @@ spec.steps[].uses <string> min=1	# Uses identifies a runner that can execute thi
 spec.steps[].vars <[]object>	# Vars is a list of variables that can be referenced by expressions in the step's Config. The values override the values specified in the PromotionSpec.
 spec.steps[].vars[].name <string> (required) pattern="^[a-zA-Z_]\\w*$" min=1	# Name is the name of the variable.
 spec.steps[].vars[].value <string>	# Value is the value of the variable. It is allowed to utilize expressions in the value. See https://docs.kargo.io/user-guide/reference-docs/expressions for details.
+spec.target <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Target optionally names the Target, within the Promotion's own Project (namespace), that this Promotion promotes Freight to. Targets allow a single Stage to govern -- and promote Freight to -- multiple destinations. When set, the named Target must be one that the referenced Stage governs, i.e. one selected by the Stage's targets.selectors. When empty (the default), the Promotion promotes to the Stage itself. This preserves the behavior of Promotions created before Targets existed: classic Stages -- those without a targets block -- govern no Targets, so their Promotions leave this field empty.
 spec.vars <[]object>	# Vars is a list of variables that can be referenced by expressions in promotion steps.
 spec.vars[].name <string> (required) pattern="^[a-zA-Z_]\\w*$" min=1	# Name is the name of the variable.
 spec.vars[].value <string>	# Value is the value of the variable. It is allowed to utilize expressions in the value. See https://docs.kargo.io/user-guide/reference-docs/expressions for details.
@@ -39,6 +40,7 @@ status.freight.artifacts[].version <string> (required) min=1	# Version identifie
 status.freight.charts <[]object>	# Charts describes specific versions of specific Helm charts.
 status.freight.charts[].name <string>	# Name specifies the name of the chart.
 status.freight.charts[].repoURL <string>	# RepoURL specifies the URL of a Helm chart repository. Classic chart repositories (using HTTP/S) can contain differently named charts. When this field points to such a repository, the Name field will specify the name of the chart within the repository. In the case of a repository within an OCI registry, the URL implicitly points to a specific chart and the Name field will be empty.
+status.freight.charts[].subscriptionName <string>	# SubscriptionName is the name of the subscription that discovered this chart. This field is only populated if the subscription was assigned a name.
 status.freight.charts[].version <string>	# Version specifies a particular version of the chart.
 status.freight.commits <[]object>	# Commits describes specific Git repository commits.
 status.freight.commits[].author <string>	# Author is the author of the commit.
@@ -47,11 +49,13 @@ status.freight.commits[].committer <string>	# Committer is the person who commit
 status.freight.commits[].id <string>	# ID is the ID of a specific commit in the Git repository specified by RepoURL.
 status.freight.commits[].message <string>	# Message is the message associated with the commit. At present, this only contains the first line (subject) of the commit message.
 status.freight.commits[].repoURL <string>	# RepoURL is the URL of a Git repository.
+status.freight.commits[].subscriptionName <string>	# SubscriptionName is the name of the subscription that discovered this commit. This field is only populated if the subscription was assigned a name.
 status.freight.commits[].tag <string>	# Tag denotes a tag in the repository that matched selection criteria and resolved to this commit.
 status.freight.images <[]object>	# Images describes specific versions of specific container images.
 status.freight.images[].annotations <map[string]string>	# Annotations is a map of arbitrary metadata for the image.
 status.freight.images[].digest <string>	# Digest identifies a specific version of the image in the repository specified by RepoURL. This is a more precise identifier than Tag.
 status.freight.images[].repoURL <string>	# RepoURL describes the repository in which the image can be found.
+status.freight.images[].subscriptionName <string>	# SubscriptionName is the name of the subscription that discovered this image. This field is only populated if the subscription was assigned a name.
 status.freight.images[].tag <string>	# Tag identifies a specific version of the image in the repository specified by RepoURL.
 status.freight.name <string>	# Name is a system-assigned identifier derived deterministically from the contents of the Freight. I.e., two pieces of Freight can be compared for equality by comparing their Names.
 status.freight.origin <object>	# Origin describes a kind of Freight in terms of its origin.
@@ -68,6 +72,7 @@ status.freightCollection.items.<key>.artifacts[].version <string> (required) min
 status.freightCollection.items.<key>.charts <[]object>	# Charts describes specific versions of specific Helm charts.
 status.freightCollection.items.<key>.charts[].name <string>	# Name specifies the name of the chart.
 status.freightCollection.items.<key>.charts[].repoURL <string>	# RepoURL specifies the URL of a Helm chart repository. Classic chart repositories (using HTTP/S) can contain differently named charts. When this field points to such a repository, the Name field will specify the name of the chart within the repository. In the case of a repository within an OCI registry, the URL implicitly points to a specific chart and the Name field will be empty.
+status.freightCollection.items.<key>.charts[].subscriptionName <string>	# SubscriptionName is the name of the subscription that discovered this chart. This field is only populated if the subscription was assigned a name.
 status.freightCollection.items.<key>.charts[].version <string>	# Version specifies a particular version of the chart.
 status.freightCollection.items.<key>.commits <[]object>	# Commits describes specific Git repository commits.
 status.freightCollection.items.<key>.commits[].author <string>	# Author is the author of the commit.
@@ -76,11 +81,13 @@ status.freightCollection.items.<key>.commits[].committer <string>	# Committer is
 status.freightCollection.items.<key>.commits[].id <string>	# ID is the ID of a specific commit in the Git repository specified by RepoURL.
 status.freightCollection.items.<key>.commits[].message <string>	# Message is the message associated with the commit. At present, this only contains the first line (subject) of the commit message.
 status.freightCollection.items.<key>.commits[].repoURL <string>	# RepoURL is the URL of a Git repository.
+status.freightCollection.items.<key>.commits[].subscriptionName <string>	# SubscriptionName is the name of the subscription that discovered this commit. This field is only populated if the subscription was assigned a name.
 status.freightCollection.items.<key>.commits[].tag <string>	# Tag denotes a tag in the repository that matched selection criteria and resolved to this commit.
 status.freightCollection.items.<key>.images <[]object>	# Images describes specific versions of specific container images.
 status.freightCollection.items.<key>.images[].annotations <map[string]string>	# Annotations is a map of arbitrary metadata for the image.
 status.freightCollection.items.<key>.images[].digest <string>	# Digest identifies a specific version of the image in the repository specified by RepoURL. This is a more precise identifier than Tag.
 status.freightCollection.items.<key>.images[].repoURL <string>	# RepoURL describes the repository in which the image can be found.
+status.freightCollection.items.<key>.images[].subscriptionName <string>	# SubscriptionName is the name of the subscription that discovered this image. This field is only populated if the subscription was assigned a name.
 status.freightCollection.items.<key>.images[].tag <string>	# Tag identifies a specific version of the image in the repository specified by RepoURL.
 status.freightCollection.items.<key>.name <string>	# Name is a system-assigned identifier derived deterministically from the contents of the Freight. I.e., two pieces of Freight can be compared for equality by comparing their Names.
 status.freightCollection.items.<key>.origin <object>	# Origin describes a kind of Freight in terms of its origin.
