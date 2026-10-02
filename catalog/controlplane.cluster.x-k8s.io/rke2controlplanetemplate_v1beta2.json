@@ -20,6 +20,28 @@
           "additionalProperties": false,
           "description": "template defines the desired state of RKE2ControlPlaneTemplate.",
           "properties": {
+            "metadata": {
+              "additionalProperties": false,
+              "description": "Standard object's metadata.",
+              "minProperties": 1,
+              "properties": {
+                "annotations": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: http://kubernetes.io/docs/user-guide/annotations",
+                  "type": "object"
+                },
+                "labels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "labels is a map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: http://kubernetes.io/docs/user-guide/labels",
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
             "spec": {
               "additionalProperties": false,
               "description": "Spec is the specification of the desired behavior of the control plane.",
@@ -255,7 +277,7 @@
                     },
                     "resolvConf": {
                       "additionalProperties": false,
-                      "description": "ResolvConf is a reference to a ConfigMap containing resolv.conf content for the node.",
+                      "description": "ResolvConf is a reference to a ConfigMap containing resolv.conf content for the node.\nThe content is written to /etc/rancher/rke2/resolv.conf, and RKE2 is pointed at that file.\nMutually exclusive with ResolvConfPath.",
                       "properties": {
                         "apiVersion": {
                           "description": "API version of the referent.",
@@ -289,6 +311,11 @@
                       "type": "object",
                       "x-kubernetes-map-type": "atomic"
                     },
+                    "resolvConfPath": {
+                      "description": "ResolvConfPath is the path of a resolv.conf file that already exists on the node, passed to\nRKE2 as the kubelet resolver configuration (for example /run/systemd/resolve/resolv.conf on\nsystemd-resolved based distributions). Unlike ResolvConf, no file is created on the node.\nMutually exclusive with ResolvConf.",
+                      "pattern": "^/.*",
+                      "type": "string"
+                    },
                     "runtimeImage": {
                       "description": "RuntimeImage override image to use for runtime binaries (containerd, kubectl, crictl, etc).",
                       "type": "string"
@@ -302,7 +329,13 @@
                       "type": "string"
                     }
                   },
-                  "type": "object"
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "only one of resolvConf or resolvConfPath may be set",
+                      "rule": "!has(self.resolvConf) || !has(self.resolvConfPath)"
+                    }
+                  ]
                 },
                 "files": {
                   "description": "Files specifies extra files to be passed to user_data upon creation.",
@@ -494,6 +527,60 @@
                             "name"
                           ],
                           "type": "object"
+                        },
+                        "taints": {
+                          "description": "taints are the node taints managed by CAPRKE2, propagated without replacing Machines.\nOther node taints are preserved. Requires the MachineTaintPropagation feature gate.",
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "MachineTaint defines a taint equivalent to corev1.Taint, but additionally having a propagation field.",
+                            "properties": {
+                              "effect": {
+                                "description": "effect is the effect for the taint. Valid values are NoSchedule, PreferNoSchedule and NoExecute.",
+                                "enum": [
+                                  "NoSchedule",
+                                  "PreferNoSchedule",
+                                  "NoExecute"
+                                ],
+                                "type": "string"
+                              },
+                              "key": {
+                                "description": "key is the taint key to be applied to a node.\nMust be a valid qualified name of maximum size 63 characters\nwith an optional subdomain prefix of maximum size 253 characters,\nseparated by a `/`.",
+                                "maxLength": 317,
+                                "minLength": 1,
+                                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\\/)?([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$",
+                                "type": "string"
+                              },
+                              "propagation": {
+                                "description": "propagation defines how this taint should be propagated to nodes.\nValid values are 'Always' and 'OnInitialization'.\nAlways: The taint will be continuously reconciled. If it is not set for a node, it will be added during reconciliation.\nOnInitialization: The taint will be added during node initialization. If it gets removed from the node later on it will not get added again.",
+                                "enum": [
+                                  "Always",
+                                  "OnInitialization"
+                                ],
+                                "type": "string"
+                              },
+                              "value": {
+                                "description": "value is the taint value corresponding to the taint key.\nIt must be a valid label value of maximum size 63 characters.",
+                                "maxLength": 63,
+                                "minLength": 1,
+                                "pattern": "^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "effect",
+                              "key",
+                              "propagation"
+                            ],
+                            "type": "object"
+                          },
+                          "maxItems": 64,
+                          "minItems": 1,
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "key",
+                            "effect"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         }
                       },
                       "required": [
@@ -917,7 +1004,11 @@
                               "rke2-metrics-server",
                               "rke2-snapshot-controller",
                               "rke2-snapshot-controller-crd",
-                              "rke2-snapshot-validation-webhook"
+                              "rke2-snapshot-validation-webhook",
+                              "rke2-traefik",
+                              "rke2-traefik-crd",
+                              "rke2-security-responder",
+                              "rke2-gateway-api-crd"
                             ],
                             "type": "string"
                           },
@@ -1137,6 +1228,19 @@
                       },
                       "type": "object",
                       "x-kubernetes-map-type": "atomic"
+                    },
+                    "ingressController": {
+                      "description": "IngressController describes the ingress controllers to deploy, one of none, traefik, ingress-nginx.\nAll selected ingress controllers are deployed, and the first value is set as the default ingress\nclass. A single value of none disables all packaged ingress controllers.\nThe RKE2 default is traefik as of v1.36, and ingress-nginx before that.",
+                      "items": {
+                        "description": "IngressController defines the ingress controller options for deploying RKE2.",
+                        "enum": [
+                          "none",
+                          "traefik",
+                          "ingress-nginx"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
                     },
                     "kubeAPIServer": {
                       "additionalProperties": false,

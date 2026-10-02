@@ -1,18 +1,19 @@
-# schema source: Calico v3.32.2 https://github.com/projectcalico/calico
+# schema source: Calico v3.33.0 https://github.com/projectcalico/calico
 apiVersion <string> enum=crd.projectcalico.org/v1
 kind <string> enum=IPAMBlock (cluster-scoped)
 metadata.name <string> (required)
-spec <object>
-spec.affinity <string>
+spec <object>	# IPAMBlockSpec contains the specification for an IPAMBlock resource.
+spec.affinity <string>	# Affinity of the block, if this block has one. If set, it will be of the form "host:<hostname>". If not set, this block is not affine to a host.
 spec.affinityClaimTime <string> format=date-time
-spec.allocations <[]integer> (required)
-spec.attributes <[]object> (required)
-spec.attributes[].alternateOwnerAttrs <map[string]string>
-spec.attributes[].handle_id <string>
-spec.attributes[].secondary <map[string]string>
-spec.cidr <string> (required)
-spec.deleted <boolean>
-spec.sequenceNumber <integer> default=0 format=int64
-spec.sequenceNumberForAllocation <map[string]integer>
-spec.strictAffinity <boolean> (required)
-spec.unallocated <[]integer> (required)
+spec.allocations <[]integer> (required)	# Array of allocations in-use within this block. nil entries mean the allocation is free. For non-nil entries at index i, the index is the ordinal of the allocation within this block and the value is the index of the associated attributes in the Attributes array.
+spec.attributes <[]object> (required)	# Attributes is an array of arbitrary metadata associated with allocations in the block. To find attributes for a given allocation, use the value of the allocation's entry in the Allocations array as the index of the element in this array.
+spec.attributes[].alternateOwnerAttrs <map[string]string>	# AlternateOwnerAttrs contains attributes of the previous or potential owner (used during live migration to track the source or target pod).
+spec.attributes[].handle_id <string>	# HandleID is the primary identifier for the allocation.
+spec.attributes[].releasedAt <string> format=date-time	# ReleasedAt is the time this allocation was released, and is set during the allocation's "cooldown" phase. After `IPCooldownSeconds` have elapsed, the IP is deallocated (moved from `Allocated` to `Unallocated`).
+spec.attributes[].secondary <map[string]string>	# ActiveOwnerAttrs contains attributes of the active owner (the pod currently using the IP).
+spec.cidr <string> (required)	# The block's CIDR.
+spec.deleted <boolean>	# Deleted is an internal boolean used to workaround a limitation in the Kubernetes API whereby deletion will not return a conflict error if the block has been updated. It should not be set manually.
+spec.sequenceNumber <integer> default=0 format=int64	# We store a sequence number that is updated each time the block is written. Each allocation will also store the sequence number of the block at the time of its creation. When releasing an IP, passing the sequence number associated with the allocation allows us to protect against a race condition and ensure the IP hasn't been released and re-allocated since the release request.
+spec.sequenceNumberForAllocation <map[string]integer>	# Map of allocated ordinal within the block to sequence number of the block at the time of allocation. Kubernetes does not allow numerical keys for maps, so the key is cast to a string.
+spec.strictAffinity <boolean> (required)	# StrictAffinity on the IPAMBlock is deprecated and no longer used by the code. Use IPAMConfig StrictAffinity instead.
+spec.unallocated <[]integer> (required)	# Unallocated is an ordered list of allocations which are free in the block.
