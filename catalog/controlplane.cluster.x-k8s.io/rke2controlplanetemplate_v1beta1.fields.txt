@@ -1,10 +1,13 @@
-# schema source: Cluster API RKE2 Control Plane v0.25.2 https://github.com/rancher/cluster-api-provider-rke2
+# schema source: Cluster API RKE2 Control Plane v0.26.0 https://github.com/rancher/cluster-api-provider-rke2
 apiVersion <string> enum=controlplane.cluster.x-k8s.io/v1beta1
 kind <string> enum=RKE2ControlPlaneTemplate
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# Spec is the control plane specification for the template resource.
 spec.template <object> (required)	# RKE2ControlPlaneTemplateResource contains spec for RKE2ControlPlaneTemplate.
+spec.template.metadata <object>	# Standard object's metadata.
+spec.template.metadata.annotations <map[string]string>	# annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+spec.template.metadata.labels <map[string]string>	# labels is a map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
 spec.template.spec <object> (required)	# Spec is the specification of the desired behavior of the control plane.
 spec.template.spec.agentConfig <object>	# AgentConfig specifies configuration for the agent nodes.
 spec.template.spec.agentConfig.additionalUserData <object>	# AdditionalUserData is a field that allows users to specify additional cloud-init or ignition configuration to be included in the generated cloud-init/ignition script.
@@ -47,7 +50,7 @@ spec.template.spec.agentConfig.ntp.enabled <boolean>	# Enabled specifies whether
 spec.template.spec.agentConfig.ntp.servers <[]string>	# Servers specifies which NTP servers to use
 spec.template.spec.agentConfig.podSecurityAdmissionConfigFile <string>	# PodSecurityPolicyConfigFile contains the path to the PodSecurityPolicy configuration file. The file can be passed through spec.Files field.
 spec.template.spec.agentConfig.protectKernelDefaults <boolean>	# ProtectKernelDefaults defines Kernel tuning behavior. If true, error if kernel tunables are different than kubelet defaults. if false, kernel tunable can be different from kubelet defaults
-spec.template.spec.agentConfig.resolvConf <object>	# ResolvConf is a reference to a ConfigMap containing resolv.conf content for the node.
+spec.template.spec.agentConfig.resolvConf <object>	# ResolvConf is a reference to a ConfigMap containing resolv.conf content for the node. The content is written to /etc/rancher/rke2/resolv.conf, and RKE2 is pointed at that file. Mutually exclusive with ResolvConfPath.
 spec.template.spec.agentConfig.resolvConf.apiVersion <string>	# API version of the referent.
 spec.template.spec.agentConfig.resolvConf.fieldPath <string>	# If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object.
 spec.template.spec.agentConfig.resolvConf.kind <string>	# Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
@@ -55,6 +58,7 @@ spec.template.spec.agentConfig.resolvConf.name <string>	# Name of the referent. 
 spec.template.spec.agentConfig.resolvConf.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 spec.template.spec.agentConfig.resolvConf.resourceVersion <string>	# Specific resourceVersion to which this reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
 spec.template.spec.agentConfig.resolvConf.uid <string>	# UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+spec.template.spec.agentConfig.resolvConfPath <string> pattern="^/.*"	# ResolvConfPath is the path of a resolv.conf file that already exists on the node, passed to RKE2 as the kubelet resolver configuration (for example /run/systemd/resolve/resolv.conf on systemd-resolved based distributions). Unlike ResolvConf, no file is created on the node. Mutually exclusive with ResolvConf.
 spec.template.spec.agentConfig.runtimeImage <string>	# RuntimeImage override image to use for runtime binaries (containerd, kubectl, crictl, etc).
 spec.template.spec.agentConfig.snapshotter <string>	# Snapshotter override default containerd snapshotter (default: "overlayfs").
 spec.template.spec.agentConfig.systemDefaultRegistry <string>	# SystemDefaultRegistry Private registry to be used for all system images.
@@ -218,6 +222,7 @@ spec.template.spec.serverConfig.externalDatastoreSecret.name <string>	# Name of 
 spec.template.spec.serverConfig.externalDatastoreSecret.namespace <string>	# Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 spec.template.spec.serverConfig.externalDatastoreSecret.resourceVersion <string>	# Specific resourceVersion to which this reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
 spec.template.spec.serverConfig.externalDatastoreSecret.uid <string>	# UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+spec.template.spec.serverConfig.ingressController <[]string>	# IngressController describes the ingress controllers to deploy, one of none, traefik, ingress-nginx. All selected ingress controllers are deployed, and the first value is set as the default ingress class. A single value of none disables all packaged ingress controllers. The RKE2 default is traefik as of v1.36, and ingress-nginx before that.
 spec.template.spec.serverConfig.kubeAPIServer <object>	# KubeAPIServer defines optional custom configuration of the Kube API Server.
 spec.template.spec.serverConfig.kubeAPIServer.extraArgs <[]string>	# ExtraArgs is a list of command line arguments (format: flag=value) to pass to a Kubernetes Component command.
 spec.template.spec.serverConfig.kubeAPIServer.extraEnv <map[string]string>	# ExtraEnv is a map of environment variables to pass on to a Kubernetes Component command.

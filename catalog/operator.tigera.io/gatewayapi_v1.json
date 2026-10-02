@@ -40,6 +40,28 @@
           ],
           "type": "object"
         },
+        "extensions": {
+          "additionalProperties": false,
+          "description": "Extensions enables and configures Tigera-built add-ons that sit on top of the\nGateway API data plane.  Each add-on is opt-in: an unset Extensions, an unset\nadd-on field, and an empty add-on object all leave the add-on disabled.",
+          "properties": {
+            "waf": {
+              "additionalProperties": false,
+              "description": "WAF enables and configures the Tigera Web Application Firewall (Coraza WASM\nwhen WAF.State is nil, and when WAF.State is \"Disabled\", the operator does\nnot render the WAF env vars or RBAC on calico-kube-controllers.  Set\nWAF.State = \"Enabled\" to turn the feature on.  See design\n`tigera/designs#25` (PMREQ-384) for the full surface.",
+              "properties": {
+                "state": {
+                  "description": "State turns the WAF Gateway API add-on on or off.  Default (nil or\n\"Disabled\") means the operator does not render the WAF surface on\ncalico-kube-controllers.  Set to \"Enabled\" to opt in.",
+                  "enum": [
+                    "Enabled",
+                    "Disabled"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
         "gatewayCertgenJob": {
           "additionalProperties": false,
           "description": "Allows customization of the gateway certgen job.",
@@ -892,11 +914,65 @@
                             "additionalProperties": false,
                             "description": "GatewayCertgenJobContainer allows customization of the gateway certgen job's resource\nrequirements.",
                             "properties": {
+                              "livenessProbe": {
+                                "additionalProperties": false,
+                                "description": "LivenessProbe allows customization of the liveness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                "properties": {
+                                  "failureThreshold": {
+                                    "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "initialDelaySeconds": {
+                                    "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "periodSeconds": {
+                                    "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "timeoutSeconds": {
+                                    "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
+                              },
                               "name": {
                                 "enum": [
                                   "envoy-gateway-certgen"
                                 ],
                                 "type": "string"
+                              },
+                              "readinessProbe": {
+                                "additionalProperties": false,
+                                "description": "ReadinessProbe allows customization of the readiness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                "properties": {
+                                  "failureThreshold": {
+                                    "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "initialDelaySeconds": {
+                                    "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "periodSeconds": {
+                                    "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "timeoutSeconds": {
+                                    "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
                               },
                               "resources": {
                                 "additionalProperties": false,
@@ -1871,15 +1947,69 @@
                                   "additionalProperties": false,
                                   "description": "GatewayDaemonSetContainer allows customization of the resource requirements of gateway\ndaemonsets.",
                                   "properties": {
+                                    "livenessProbe": {
+                                      "additionalProperties": false,
+                                      "description": "LivenessProbe allows customization of the liveness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                      "properties": {
+                                        "failureThreshold": {
+                                          "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "initialDelaySeconds": {
+                                          "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "periodSeconds": {
+                                          "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "timeoutSeconds": {
+                                          "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
                                     "name": {
                                       "enum": [
                                         "envoy"
                                       ],
                                       "type": "string"
                                     },
+                                    "readinessProbe": {
+                                      "additionalProperties": false,
+                                      "description": "ReadinessProbe allows customization of the readiness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                      "properties": {
+                                        "failureThreshold": {
+                                          "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "initialDelaySeconds": {
+                                          "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "periodSeconds": {
+                                          "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "timeoutSeconds": {
+                                          "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
                                     "resources": {
                                       "additionalProperties": false,
-                                      "description": "If non-nil, Resources sets the ResourceRequirements of the daemonset's \"envoy\"\ncontainer.",
+                                      "description": "container.",
                                       "properties": {
                                         "claims": {
                                           "description": "Claims lists the names of resources, defined in spec.resourceClaims,\nthat are used by this container.\nThis field depends on the\nDynamicResourceAllocation feature gate.\nThis field is immutable. It can only be set for containers.",
@@ -2966,11 +3096,65 @@
                                   "additionalProperties": false,
                                   "description": "GatewayDeploymentContainer allows customization of the resource requirements of gateway\ndeployments.",
                                   "properties": {
+                                    "livenessProbe": {
+                                      "additionalProperties": false,
+                                      "description": "LivenessProbe allows customization of the liveness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                      "properties": {
+                                        "failureThreshold": {
+                                          "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "initialDelaySeconds": {
+                                          "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "periodSeconds": {
+                                          "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "timeoutSeconds": {
+                                          "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
                                     "name": {
                                       "enum": [
                                         "envoy"
                                       ],
                                       "type": "string"
+                                    },
+                                    "readinessProbe": {
+                                      "additionalProperties": false,
+                                      "description": "ReadinessProbe allows customization of the readiness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                      "properties": {
+                                        "failureThreshold": {
+                                          "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "initialDelaySeconds": {
+                                          "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "periodSeconds": {
+                                          "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        },
+                                        "timeoutSeconds": {
+                                          "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                          "format": "int32",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
                                     },
                                     "resources": {
                                       "additionalProperties": false,
@@ -3240,6 +3424,24 @@
                           "type": "string"
                         },
                         "type": "array"
+                      },
+                      "patch": {
+                        "additionalProperties": false,
+                        "description": "Patch allows the Service for a gateway to be patched in ways that aren't more explicitly\nsupported by the fields above.  For example, the following YAML could be used to set the\nService's healthCheckNodePort:\n  patch:\n    type: StrategicMerge\n    value:\n      spec:\n        healthCheckNodePort: 12345",
+                        "properties": {
+                          "type": {
+                            "description": "Type is the type of merge operation to perform\nBy default, StrategicMerge is used as the patch type.",
+                            "type": "string"
+                          },
+                          "value": {
+                            "description": "Object contains the raw configuration for merged object",
+                            "x-kubernetes-preserve-unknown-fields": true
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "type": "object"
                       }
                     },
                     "type": "object"
@@ -4123,11 +4325,65 @@
                             "additionalProperties": false,
                             "description": "GatewayControllerDeploymentContainer allows customization of the gateway controller's resource\nrequirements.",
                             "properties": {
+                              "livenessProbe": {
+                                "additionalProperties": false,
+                                "description": "LivenessProbe allows customization of the liveness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                "properties": {
+                                  "failureThreshold": {
+                                    "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "initialDelaySeconds": {
+                                    "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "periodSeconds": {
+                                    "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "timeoutSeconds": {
+                                    "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
+                              },
                               "name": {
                                 "enum": [
                                   "envoy-gateway"
                                 ],
                                 "type": "string"
+                              },
+                              "readinessProbe": {
+                                "additionalProperties": false,
+                                "description": "ReadinessProbe allows customization of the readiness probe timing parameters.\nThe probe handler is set by the operator and cannot be overridden.",
+                                "properties": {
+                                  "failureThreshold": {
+                                    "description": "FailureThreshold is the minimum consecutive failures for the probe\nto be considered failed after having succeeded.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "initialDelaySeconds": {
+                                    "description": "InitialDelaySeconds is the number of seconds after the container\nstarts before the probe is initiated.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "periodSeconds": {
+                                    "description": "PeriodSeconds is how often (in seconds) to perform the probe.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "timeoutSeconds": {
+                                    "description": "TimeoutSeconds is the number of seconds after which the probe times out.",
+                                    "format": "int32",
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
                               },
                               "resources": {
                                 "additionalProperties": false,
