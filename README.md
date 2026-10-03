@@ -104,7 +104,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
 | [1Password Operator](https://schemas.fluxoperator.dev/p/onepassword-operator) | `onepassword-operator` | v1.12.0 | 1 | 2026-07-09 |
-| [Accurate](https://schemas.fluxoperator.dev/p/accurate) | `accurate` | v2.0.0 | 1 | 2026-09-18 |
+| [Accurate](https://schemas.fluxoperator.dev/p/accurate) | `accurate` | v2.1.0 | 1 | 2026-10-03 |
 | [AWS ACK Runtime](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-runtime` | v0.64.0 | 2 | 2026-09-16 |
 | [AWS ACM Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-acm` | v1.9.2 | 4 | 2026-09-23 |
 | [AWS API Gateway v2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-apigatewayv2` | v1.6.1 | 9 | 2026-09-19 |
@@ -124,9 +124,9 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS KMS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kms` | v1.5.1 | 3 | 2026-09-19 |
 | [AWS Lambda Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-lambda` | v1.17.3 | 7 | 2026-09-19 |
 | [AWS MemoryDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-memorydb` | v1.7.1 | 6 | 2026-09-19 |
-| [AWS OpenSearch Service Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-opensearchservice` | v1.7.1 | 3 | 2026-09-30 |
+| [AWS OpenSearch Service Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-opensearchservice` | v1.7.2 | 3 | 2026-10-03 |
 | [AWS Prometheus Service Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-prometheusservice` | v1.7.1 | 4 | 2026-09-19 |
-| [AWS RDS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-rds` | v1.12.1 | 10 | 2026-09-23 |
+| [AWS RDS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-rds` | v1.12.2 | 10 | 2026-10-03 |
 | [AWS Route 53 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-route53` | v1.6.1 | 3 | 2026-09-19 |
 | [AWS S3 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-s3` | v1.12.2 | 1 | 2026-09-19 |
 | [AWS SageMaker Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sagemaker` | v1.10.1 | 26 | 2026-09-19 |
@@ -207,7 +207,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
-| [Agentgateway](https://schemas.fluxoperator.dev/p/agentgateway) | `agentgateway` | v1.5.0 | 4 | 2026-08-28 |
+| [Agentgateway](https://schemas.fluxoperator.dev/p/agentgateway) | `agentgateway` | v1.6.0 | 4 | 2026-10-03 |
 | [AWS Load Balancer Controller](https://schemas.fluxoperator.dev/p/aws-load-balancer-controller) | `aws-load-balancer-controller` | v3.5.0 | 11 | 2026-08-04 |
 | [Cluster Inventory API](https://schemas.fluxoperator.dev/p/cluster-inventory-api) | `cluster-inventory-api` | v0.1.3 | 2 | 2026-07-09 |
 | [Envoy Gateway](https://schemas.fluxoperator.dev/p/envoy-gateway) | `envoy-gateway` | v1.9.2 | 8 | 2026-09-29 |
@@ -261,7 +261,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.6 | 15 | 2026-10-02 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.61.0 | 4 | 2026-10-02 |
 | [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.9 | 2 | 2026-09-23 |
-| [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.0 | 11 | 2026-10-01 |
+| [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.1 | 11 | 2026-10-03 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.23.0 | 20 | 2026-07-29 |
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.23.0 | 12 | 2026-07-30 |
 | [KServe](https://schemas.fluxoperator.dev/p/kserve) | `kserve` | v0.21.0 | 6 | 2026-09-26 |
