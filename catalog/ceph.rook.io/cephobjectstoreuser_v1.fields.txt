@@ -1,12 +1,13 @@
-# schema source: Rook v1.20.8 https://github.com/rook/rook
+# schema source: Rook v1.21.0 https://github.com/rook/rook
 apiVersion <string> enum=ceph.rook.io/v1
 kind <string> enum=CephObjectStoreUser
 metadata.name <string> (required)
 metadata.namespace <string> (required)
-spec <object> (required)	# ObjectStoreUserSpec represent the spec of an Objectstoreuser
+spec <object> (required)	# ObjectStoreUserSpec represents the spec of a CephObjectStoreUser
 spec.accountRef <object> (immutable)	# AccountRef is a reference to a CephObjectStoreAccount to associate this user with. The referenced account must be in the same namespace as the user. When set, the user is created as an account user with no default permissions, and resources created by this user are owned by the account.
 spec.accountRef.name <string> (required) pattern="^[a-zA-Z0-9 ._-]+$" min=1 max=2048	# Name of the CephObjectStoreAccount CR
 spec.capabilities <object>	# Additional admin-level capabilities for the Ceph object store user
+spec.capabilities.accounts <string> enum=*|read|write|"read, write"	# Add capabilities for user to manage accounts. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities Note: Only supported from Ceph Squid (v19.2.3) onwards
 spec.capabilities.amz-cache <string> enum=*|read|write|"read, write"	# Add capabilities for user to send request to RGW Cache API header. Documented in https://docs.ceph.com/en/latest/radosgw/rgw-cache/#cache-api
 spec.capabilities.bilog <string> enum=*|read|write|"read, write"	# Add capabilities for user to change bucket index logging. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
 spec.capabilities.bucket <string> enum=*|read|write|"read, write"	# Admin capabilities to read/write Ceph object store buckets. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
@@ -21,9 +22,12 @@ spec.capabilities.roles <string> enum=*|read|write|"read, write"	# Admin capabil
 spec.capabilities.usage <string> enum=*|read|write|"read, write"	# Admin capabilities to read/write Ceph object store usage. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
 spec.capabilities.user <string> enum=*|read|write|"read, write"	# Admin capabilities to read/write Ceph object store users. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
 spec.capabilities.user-policy <string> enum=*|read|write|"read, write"	# Add capabilities for user to change user policies. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
+spec.capabilities.userInfoWithoutKeys <string> enum=*|read|write|"read, write"	# Add capabilities for user to fetch user info without keys. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities Note: Only supported from Ceph Squid (v19.2.0) onwards
 spec.capabilities.users <string> enum=*|read|write|"read, write"	# Admin capabilities to read/write Ceph object store users. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
 spec.capabilities.zone <string> enum=*|read|write|"read, write"	# Admin capabilities to read/write Ceph object store zones. Documented in https://docs.ceph.com/en/latest/radosgw/admin/?#add-remove-admin-capabilities
 spec.clusterNamespace <string>	# The namespace where the parent CephCluster and CephObjectStore are found
+spec.defaultPlacement <string> pattern="^[a-zA-Z0-9._-]+$" min=1 max=2048	# DefaultPlacement sets the default pool placement target for buckets created by this user. It must name a placement target known to the zonegroup serving the referenced object store; RGW rejects unknown targets. If this field is absent the controller does not manage the user's placement: an existing value (set previously through this field, or outside of Rook) is left in place.
+spec.defaultStorageClass <string> pattern="^[a-zA-Z0-9._-]+$" min=1 max=2048	# DefaultStorageClass sets the default storage class for objects created by this user, within the placement set by DefaultPlacement (which must also be set). The storage class must exist on that placement target; RGW rejects unknown storage classes. If this field is absent the controller does not manage the user's storage class: an existing value is preserved, except when DefaultPlacement changes, which resets the storage class to the new target's default (STANDARD).
 spec.displayName <string>	# The display name for the ceph user.
 spec.keys <[]object>	# Allows specifying credentials for the user. If not provided, the operator will generate them.
 spec.keys[].accessKeyRef <object>	# Secret key selector for the access_key (commonly referred to as AWS_ACCESS_KEY_ID).
