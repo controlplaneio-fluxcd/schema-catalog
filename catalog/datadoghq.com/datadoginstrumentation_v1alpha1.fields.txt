@@ -1,10 +1,37 @@
-# schema source: Datadog Operator v1.30.0 https://github.com/DataDog/datadog-operator
+# schema source: Datadog Operator v1.31.0 https://github.com/DataDog/datadog-operator
 apiVersion <string> enum=datadoghq.com/v1alpha1
 kind <string> enum=DatadogInstrumentation
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# DatadogInstrumentationSpec defines the desired state of DatadogInstrumentation.
 spec.config <object> (required)	# Config defines the Datadog instrumentation configuration to apply to the target workload.
+spec.config.apm <object>	# APM configures the APM product through Single Step Instrumentation for the target workload.
+spec.config.apm.ddTraceConfigs <[]object>	# TracerConfigs is a list of configuration options to use for the installed SDKs. These options will be added as environment variables to the workload in addition to the configured SDKs.
+spec.config.apm.ddTraceConfigs[].name <string> (required)	# Name of the environment variable. May consist of any printable ASCII characters except '='.
+spec.config.apm.ddTraceConfigs[].value <string>	# Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".
+spec.config.apm.ddTraceConfigs[].valueFrom <object>	# Source for the environment variable's value. Cannot be used if value is not empty.
+spec.config.apm.ddTraceConfigs[].valueFrom.configMapKeyRef <object>	# Selects a key of a ConfigMap.
+spec.config.apm.ddTraceConfigs[].valueFrom.configMapKeyRef.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.config.apm.ddTraceConfigs[].valueFrom.configMapKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.config.apm.ddTraceConfigs[].valueFrom.configMapKeyRef.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.config.apm.ddTraceConfigs[].valueFrom.fieldRef <object>	# Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+spec.config.apm.ddTraceConfigs[].valueFrom.fieldRef.apiVersion <string>	# Version of the schema the FieldPath is written in terms of, defaults to "v1".
+spec.config.apm.ddTraceConfigs[].valueFrom.fieldRef.fieldPath <string> (required)	# Path of the field to select in the specified API version.
+spec.config.apm.ddTraceConfigs[].valueFrom.fileKeyRef <object>	# FileKeyRef selects a key of the env file. Requires the EnvFiles feature gate to be enabled.
+spec.config.apm.ddTraceConfigs[].valueFrom.fileKeyRef.key <string> (required)	# The key within the env file. An invalid key will prevent the pod from starting. The keys defined within a source may consist of any printable ASCII characters except '='. During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+spec.config.apm.ddTraceConfigs[].valueFrom.fileKeyRef.optional <boolean> default=false	# Specify whether the file or its key must be defined. If the file or key does not exist, then the env var is not published. If optional is set to true and the specified key does not exist, the environment variable will not be set in the Pod's containers. If optional is set to false and the specified key does not exist, an error will be returned during Pod creation.
+spec.config.apm.ddTraceConfigs[].valueFrom.fileKeyRef.path <string> (required)	# The path within the volume from which to select the file. Must be relative and may not contain the '..' path or start with '..'.
+spec.config.apm.ddTraceConfigs[].valueFrom.fileKeyRef.volumeName <string> (required)	# The name of the volume mount containing the env file.
+spec.config.apm.ddTraceConfigs[].valueFrom.resourceFieldRef <object>	# Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+spec.config.apm.ddTraceConfigs[].valueFrom.resourceFieldRef.containerName <string>	# Container name: required for volumes, optional for env vars
+spec.config.apm.ddTraceConfigs[].valueFrom.resourceFieldRef.divisor <int-or-string>	# Specifies the output format of the exposed resources, defaults to "1"
+spec.config.apm.ddTraceConfigs[].valueFrom.resourceFieldRef.resource <string> (required)	# Required: resource to select
+spec.config.apm.ddTraceConfigs[].valueFrom.secretKeyRef <object>	# Selects a key of a secret in the pod's namespace
+spec.config.apm.ddTraceConfigs[].valueFrom.secretKeyRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.config.apm.ddTraceConfigs[].valueFrom.secretKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.config.apm.ddTraceConfigs[].valueFrom.secretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.config.apm.ddTraceVersions <map[string]string>	# TracerVersions is a map of SDK versions to install for target workload. The key is the language name and the value is the version to use. If omitted, all default supported SDKs will be added to the application runtime.
+spec.config.apm.enabled <boolean> default=true	# Enabled turns on APM via Single Step Instrumentation to automatically install the Datadog SDKs for supported languages with no additional configuration required.
 spec.config.checks <[]object>	# Checks configures Datadog Agent Autodiscovery checks for the target workload.
 spec.config.checks[].containerName <string>	# ContainerName identifies the container name this check applies to.
 spec.config.checks[].initConfig <object (free-form)>	# InitConfig is the integration-specific Autodiscovery init_config payload.

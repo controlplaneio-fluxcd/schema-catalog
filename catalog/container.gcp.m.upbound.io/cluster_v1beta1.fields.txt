@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.1.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=container.gcp.m.upbound.io/v1beta1
 kind <string> enum=Cluster
 metadata.name <string> (required)
@@ -23,6 +23,8 @@ spec.forProvider.addonsConfig.gcsFuseCsiDriverConfig <object>	# The status of th
 spec.forProvider.addonsConfig.gcsFuseCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.forProvider.addonsConfig.gkeBackupAgentConfig <object>	# . The status of the Backup for GKE agent addon. It is disabled by default; Set enabled = true to enable.
 spec.forProvider.addonsConfig.gkeBackupAgentConfig.enabled <boolean>	# Whether writable cgroups are enabled.
+spec.forProvider.addonsConfig.highScaleCheckpointingConfig <object>	# The status of the High Scale Checkpointing addon, which enables Multi-Tier Checkpointing for Machine Learning workloads. Structure is documented below.
+spec.forProvider.addonsConfig.highScaleCheckpointingConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.forProvider.addonsConfig.horizontalPodAutoscaling <object>	# The status of the Horizontal Pod Autoscaling addon, which increases or decreases the number of replica pods a replication controller has based on the resource usage of the existing pods. It is enabled by default; set disabled = true to disable.
 spec.forProvider.addonsConfig.horizontalPodAutoscaling.disabled <boolean>	# The status of the Istio addon, which makes it easy to set up Istio for services in a cluster. It is disabled by default. Set disabled = false to enable.
 spec.forProvider.addonsConfig.httpLoadBalancing <object>	# The status of the HTTP (L7) load balancing controller addon, which makes it easy to set up HTTP load balancers for services in a cluster. It is enabled by default; set disabled = true to disable.
@@ -33,6 +35,8 @@ spec.forProvider.addonsConfig.lustreCsiDriverConfig.enableLegacyLustrePort <bool
 spec.forProvider.addonsConfig.lustreCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.forProvider.addonsConfig.networkPolicyConfig <object>	# Whether we should enable the network policy addon for the master. This must be enabled in order to enable network policy for the nodes. To enable this, you must also define a network_policy block, otherwise nothing will happen. It can only be disabled if the nodes already do not have network policies enabled. Defaults to disabled; set disabled = false to enable.
 spec.forProvider.addonsConfig.networkPolicyConfig.disabled <boolean>	# The status of the Istio addon, which makes it easy to set up Istio for services in a cluster. It is disabled by default. Set disabled = false to enable.
+spec.forProvider.addonsConfig.nodeReadinessConfig <object>	# The status of the Node Readiness Controller addon. It is disabled by default. Set enabled = true to enable. Structure is documented below.
+spec.forProvider.addonsConfig.nodeReadinessConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.forProvider.addonsConfig.parallelstoreCsiDriverConfig <object>	# The status of the Parallelstore CSI driver addon, which allows the usage of a Parallelstore instances as volumes. It is disabled by default for Standard clusters; set enabled = true to enable. It is enabled by default for Autopilot clusters with version 1.29 or later; set enabled = true to enable it explicitly. See Enable the Parallelstore CSI driver for more information.
 spec.forProvider.addonsConfig.parallelstoreCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.forProvider.addonsConfig.podSnapshotConfig <object>	# The status of the Pod Snapshot addon. It is disabled by default. Set enabled = true to enable.
@@ -120,6 +124,7 @@ spec.forProvider.defaultSnatStatus <object>	# GKE SNAT DefaultSnatStatus contain
 spec.forProvider.defaultSnatStatus.disabled <boolean>	# Whether the cluster disables default in-node sNAT rules. In-node sNAT rules will be disabled when defaultSnatStatus is disabled.When disabled is set to false, default IP masquerade rules will be applied to the nodes to prevent sNAT on cluster internal traffic
 spec.forProvider.deletionProtection <boolean>
 spec.forProvider.description <string>	# Description of the cluster.
+spec.forProvider.desiredEmulatedVersion <string>	# The desired emulated version for the cluster. Used to complete a rollback-safe upgrade after a soak period. Must be in major.minor format (e.g., "1.31"). To complete the upgrade declaratively, set this field to the target minor version. Removing this field from your configuration will not trigger completion.
 spec.forProvider.disableL4LbFirewallReconciliation <boolean>	# Disable L4 load balancer VPC firewalls to enable firewall policies.
 spec.forProvider.dnsConfig <object>	# Configuration for Using Cloud DNS for GKE. Structure is documented below.
 spec.forProvider.dnsConfig.additiveVpcScopeDnsDomain <string>	# This will enable Cloud DNS additive VPC scope. Must provide a domain name that is unique within the VPC. For this to work cluster_dns = "CLOUD_DNS" and cluster_dns_scope = "CLUSTER_SCOPE" must both be set as well.
@@ -187,9 +192,20 @@ spec.forProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions <obje
 spec.forProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions.endTimeBehavior <string>	# The exclusion window end time behavior. One of: UNTIL_END_OF_SUPPORT. One and and one of end_time_behavior and end_time should be specified.
 spec.forProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions.scope <string>	# The Topology Manager scope, defining the granularity at which policy decisions are applied. Valid values are "container" (resources are aligned per container within a pod which is set by default) or "pod" (resources are aligned for the entire pod). If unset (or set to the empty string ""), the API will treat the field as if set to "container".
 spec.forProvider.maintenancePolicy.maintenanceExclusion[].startTime <string>
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow <object>	# structure documented below
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil <object>	# : Specifies the initial date when the recurring window can start.
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.day <number>	# : The day of the month (integer value between 1 and 31).
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.month <number>	# : The month of the year (integer value between 1 and 12).
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.year <number>	# : The year (integer value).
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.recurrence <string>	# : Defines when the window recurs, using the RFC5545 RRULE format.
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.windowDuration <string>	# : The length of each maintenance window instance. Specified as a sequence of decimal numbers, each with an optional fraction and a unit suffix, such as "300s", "1.5m", and "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". The value must be a positive duration.
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime <object>	# : The time of day when each maintenance window instance begins.
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.hours <number>	# : The hour of the day (integer value between 0 and 23).
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.minutes <number>	# : The minute of the hour (integer value between 0 and 59).
+spec.forProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.seconds <number>	# : The second of the minute (integer value between 0 and 59).
 spec.forProvider.maintenancePolicy.recurringWindow <object>	# structure documented below
 spec.forProvider.maintenancePolicy.recurringWindow.endTime <string>
-spec.forProvider.maintenancePolicy.recurringWindow.recurrence <string>
+spec.forProvider.maintenancePolicy.recurringWindow.recurrence <string>	# : Defines when the window recurs, using the RFC5545 RRULE format.
 spec.forProvider.maintenancePolicy.recurringWindow.startTime <string>
 spec.forProvider.masterAuth <object>	# The authentication information for accessing the Kubernetes master. Some values in this block are only returned by the API if your service account has permission to get credentials for your GKE cluster. If you see an unexpected diff unsetting your client cert, ensure you have the container.clusters.getCredentials permission. Structure is documented below.
 spec.forProvider.masterAuth.clientCertificateConfig <object>	# Whether client certificate authorization is enabled for this cluster. For example:
@@ -257,13 +273,13 @@ spec.forProvider.nodeConfig.containerdConfig.privateRegistryAccessConfig.enabled
 spec.forProvider.nodeConfig.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts <[]object>
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca <[]object>
-spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client <[]object>
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].header <[]object>
 spec.forProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -296,8 +312,8 @@ spec.forProvider.nodeConfig.guestAccelerator[].gpuSharingConfig.maxSharedClients
 spec.forProvider.nodeConfig.guestAccelerator[].type <string>	# Which sandbox to use for pods in the node pool. Accepted values are:
 spec.forProvider.nodeConfig.gvnic <object>	# Google Virtual NIC (gVNIC) is a virtual network interface. Installing the gVNIC driver allows for more efficient traffic transmission across the Google network infrastructure. gVNIC is an alternative to the virtIO-based ethernet driver. GKE nodes must use a Container-Optimized OS node image. GKE node version 1.15.11-gke.15 or later Structure is documented below.
 spec.forProvider.nodeConfig.gvnic.enabled <boolean>	# Whether writable cgroups are enabled.
-spec.forProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy to use for the cluster. Structure is documented below.
-spec.forProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
+spec.forProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy for the hosts on which the GKE VMs run on. Structure is documented below.
+spec.forProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>	# Specifies the frequency of planned maintenance events. Possible values are MAINTENANCE_INTERVAL_UNSPECIFIED, AS_NEEDED, and PERIODIC.
 spec.forProvider.nodeConfig.imageType <string>	# The image type to use for this node. Note that changing the image type will delete and recreate all nodes in the node pool.
 spec.forProvider.nodeConfig.kubeletConfig <object>	# Kubelet configuration, currently supported attributes can be found here. Structure is documented below.
 spec.forProvider.nodeConfig.kubeletConfig.allowedUnsafeSysctls <[]string>	# Defines a comma-separated allowlist of unsafe sysctls or sysctl patterns which can be set on the Pods. The allowed sysctl groups are kernel.shm*, kernel.msg*, kernel.sem, fs.mqueue.*, and net.*.
@@ -350,6 +366,11 @@ spec.forProvider.nodeConfig.linuxNodeConfig <object>	# Parameters that can be co
 spec.forProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig <object>	# Accurate time configuration for the node. Structure is documented below.
 spec.forProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>	# Whether to enable accurate time synchronization with PTP-KVM.
 spec.forProvider.nodeConfig.linuxNodeConfig.cgroupMode <string>	# Possible cgroup modes that can be used. Accepted values are:
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit <object>	# Custom node init settings. Structure is documented below.
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>	# The init script configuration. Structure is documented below.
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>	# The generation of the init script in Google Cloud Storage. If gcs_uri is used, gcs_generation is required.
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>	# The Google Cloud Storage URI for storing the init script. Format: gs://BUCKET_NAME/OBJECT_NAME. The service account on the nodepool must have read access to the object. Conflicts with gcp_secret_manager_secret_uri. If gcs_uri is used, gcs_generation is required.
 spec.forProvider.nodeConfig.linuxNodeConfig.hugepagesConfig <object>	# Amounts for 2M and 1G hugepages. Structure is documented below.
 spec.forProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>	# Amount of 1G hugepages.
 spec.forProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>	# Amount of 2M hugepages.
@@ -381,8 +402,8 @@ spec.forProvider.nodeConfig.metadata <map[string]string>	# The metadata key/valu
 spec.forProvider.nodeConfig.minCpuPlatform <string>	# Minimum CPU platform to be used by this instance. The instance may be scheduled on the specified or newer CPU platform. Applicable values are the friendly names of CPU platforms, such as Intel Haswell. See the official documentation for more information.
 spec.forProvider.nodeConfig.nodeGroup <string>	# Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes.
 spec.forProvider.nodeConfig.nodeImageConfig <[]object>	# The node image configuration to use for this node pool. Structure is documented below.
-spec.forProvider.nodeConfig.nodeImageConfig[].image <string>	# The name of the image to use for this node.
-spec.forProvider.nodeConfig.nodeImageConfig[].imageProject <string>	# The project containing the image to use for this node.
+spec.forProvider.nodeConfig.nodeImageConfig[].image <string>	# The Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
+spec.forProvider.nodeConfig.nodeImageConfig[].imageProject <string>	# The GCP project storing the Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
 spec.forProvider.nodeConfig.oauthScopes <[]string>	# The set of Google API scopes to be made available on all of the node VMs under the "default" service account. Use the "https://www.googleapis.com/auth/cloud-platform" scope to grant access to all APIs. It is recommended that you set service_account to a non-default service account and grant IAM roles to that service account for only the resources that it needs.
 spec.forProvider.nodeConfig.preemptible <boolean>	# A boolean that represents whether or not the underlying node VMs are preemptible. See the official documentation for more information. Defaults to false.
 spec.forProvider.nodeConfig.reservationAffinity <object>	# The configuration of the desired reservation which instances could take capacity from. Structure is documented below.
@@ -457,13 +478,13 @@ spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.privateReg
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts <[]object>
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca <[]object>
-spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client <[]object>
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].header <[]object>
 spec.forProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -520,6 +541,8 @@ spec.forProvider.resourceUsageExportConfig.bigqueryDestination <object>	# Parame
 spec.forProvider.resourceUsageExportConfig.bigqueryDestination.datasetId <string>	# The ID of a BigQuery Dataset. For Example:
 spec.forProvider.resourceUsageExportConfig.enableNetworkEgressMetering <boolean>	# Whether to enable network egress metering for this cluster. If enabled, a daemonset will be created in the cluster to meter network egress traffic.
 spec.forProvider.resourceUsageExportConfig.enableResourceConsumptionMetering <boolean>	# Whether to enable resource consumption metering on this cluster. When enabled, a table will be created in the resource export BigQuery dataset to store resource consumption data. The resulting table can be joined with the resource usage table or with BigQuery billing export. Defaults to true.
+spec.forProvider.rollbackSafeUpgrade <object>	# Configuration for rollback-safe (two-step) upgrades. Structure is documented below.
+spec.forProvider.rollbackSafeUpgrade.controlPlaneSoakDuration <string>	# A user-defined period that the cluster remains in the rollbackable state. A duration in seconds with up to nine fractional digits, ending with 's'. Example: "604800s" for 7 days. Minimum is 6 hours, maximum is 7 days. If omitted, the two-step upgrade is skipped and a standard one-step upgrade is performed.
 spec.forProvider.secretManagerConfig <object>	# Configuration for the SecretManagerConfig feature. Structure is documented below.
 spec.forProvider.secretManagerConfig.enabled <boolean>	# Enable the Secret Manager add-on for this cluster.
 spec.forProvider.secretManagerConfig.rotationConfig <object>	# config for secret manager auto rotation. Structure is documented below
@@ -582,6 +605,8 @@ spec.initProvider.addonsConfig.gcsFuseCsiDriverConfig <object>	# The status of t
 spec.initProvider.addonsConfig.gcsFuseCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.initProvider.addonsConfig.gkeBackupAgentConfig <object>	# . The status of the Backup for GKE agent addon. It is disabled by default; Set enabled = true to enable.
 spec.initProvider.addonsConfig.gkeBackupAgentConfig.enabled <boolean>	# Whether writable cgroups are enabled.
+spec.initProvider.addonsConfig.highScaleCheckpointingConfig <object>	# The status of the High Scale Checkpointing addon, which enables Multi-Tier Checkpointing for Machine Learning workloads. Structure is documented below.
+spec.initProvider.addonsConfig.highScaleCheckpointingConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.initProvider.addonsConfig.horizontalPodAutoscaling <object>	# The status of the Horizontal Pod Autoscaling addon, which increases or decreases the number of replica pods a replication controller has based on the resource usage of the existing pods. It is enabled by default; set disabled = true to disable.
 spec.initProvider.addonsConfig.horizontalPodAutoscaling.disabled <boolean>	# The status of the Istio addon, which makes it easy to set up Istio for services in a cluster. It is disabled by default. Set disabled = false to enable.
 spec.initProvider.addonsConfig.httpLoadBalancing <object>	# The status of the HTTP (L7) load balancing controller addon, which makes it easy to set up HTTP load balancers for services in a cluster. It is enabled by default; set disabled = true to disable.
@@ -592,6 +617,8 @@ spec.initProvider.addonsConfig.lustreCsiDriverConfig.enableLegacyLustrePort <boo
 spec.initProvider.addonsConfig.lustreCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.initProvider.addonsConfig.networkPolicyConfig <object>	# Whether we should enable the network policy addon for the master. This must be enabled in order to enable network policy for the nodes. To enable this, you must also define a network_policy block, otherwise nothing will happen. It can only be disabled if the nodes already do not have network policies enabled. Defaults to disabled; set disabled = false to enable.
 spec.initProvider.addonsConfig.networkPolicyConfig.disabled <boolean>	# The status of the Istio addon, which makes it easy to set up Istio for services in a cluster. It is disabled by default. Set disabled = false to enable.
+spec.initProvider.addonsConfig.nodeReadinessConfig <object>	# The status of the Node Readiness Controller addon. It is disabled by default. Set enabled = true to enable. Structure is documented below.
+spec.initProvider.addonsConfig.nodeReadinessConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.initProvider.addonsConfig.parallelstoreCsiDriverConfig <object>	# The status of the Parallelstore CSI driver addon, which allows the usage of a Parallelstore instances as volumes. It is disabled by default for Standard clusters; set enabled = true to enable. It is enabled by default for Autopilot clusters with version 1.29 or later; set enabled = true to enable it explicitly. See Enable the Parallelstore CSI driver for more information.
 spec.initProvider.addonsConfig.parallelstoreCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 spec.initProvider.addonsConfig.podSnapshotConfig <object>	# The status of the Pod Snapshot addon. It is disabled by default. Set enabled = true to enable.
@@ -679,6 +706,7 @@ spec.initProvider.defaultSnatStatus <object>	# GKE SNAT DefaultSnatStatus contai
 spec.initProvider.defaultSnatStatus.disabled <boolean>	# Whether the cluster disables default in-node sNAT rules. In-node sNAT rules will be disabled when defaultSnatStatus is disabled.When disabled is set to false, default IP masquerade rules will be applied to the nodes to prevent sNAT on cluster internal traffic
 spec.initProvider.deletionProtection <boolean>
 spec.initProvider.description <string>	# Description of the cluster.
+spec.initProvider.desiredEmulatedVersion <string>	# The desired emulated version for the cluster. Used to complete a rollback-safe upgrade after a soak period. Must be in major.minor format (e.g., "1.31"). To complete the upgrade declaratively, set this field to the target minor version. Removing this field from your configuration will not trigger completion.
 spec.initProvider.disableL4LbFirewallReconciliation <boolean>	# Disable L4 load balancer VPC firewalls to enable firewall policies.
 spec.initProvider.dnsConfig <object>	# Configuration for Using Cloud DNS for GKE. Structure is documented below.
 spec.initProvider.dnsConfig.additiveVpcScopeDnsDomain <string>	# This will enable Cloud DNS additive VPC scope. Must provide a domain name that is unique within the VPC. For this to work cluster_dns = "CLOUD_DNS" and cluster_dns_scope = "CLUSTER_SCOPE" must both be set as well.
@@ -745,9 +773,20 @@ spec.initProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions <obj
 spec.initProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions.endTimeBehavior <string>	# The exclusion window end time behavior. One of: UNTIL_END_OF_SUPPORT. One and and one of end_time_behavior and end_time should be specified.
 spec.initProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions.scope <string>	# The Topology Manager scope, defining the granularity at which policy decisions are applied. Valid values are "container" (resources are aligned per container within a pod which is set by default) or "pod" (resources are aligned for the entire pod). If unset (or set to the empty string ""), the API will treat the field as if set to "container".
 spec.initProvider.maintenancePolicy.maintenanceExclusion[].startTime <string>
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow <object>	# structure documented below
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil <object>	# : Specifies the initial date when the recurring window can start.
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.day <number>	# : The day of the month (integer value between 1 and 31).
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.month <number>	# : The month of the year (integer value between 1 and 12).
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.year <number>	# : The year (integer value).
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.recurrence <string>	# : Defines when the window recurs, using the RFC5545 RRULE format.
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.windowDuration <string>	# : The length of each maintenance window instance. Specified as a sequence of decimal numbers, each with an optional fraction and a unit suffix, such as "300s", "1.5m", and "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". The value must be a positive duration.
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime <object>	# : The time of day when each maintenance window instance begins.
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.hours <number>	# : The hour of the day (integer value between 0 and 23).
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.minutes <number>	# : The minute of the hour (integer value between 0 and 59).
+spec.initProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.seconds <number>	# : The second of the minute (integer value between 0 and 59).
 spec.initProvider.maintenancePolicy.recurringWindow <object>	# structure documented below
 spec.initProvider.maintenancePolicy.recurringWindow.endTime <string>
-spec.initProvider.maintenancePolicy.recurringWindow.recurrence <string>
+spec.initProvider.maintenancePolicy.recurringWindow.recurrence <string>	# : Defines when the window recurs, using the RFC5545 RRULE format.
 spec.initProvider.maintenancePolicy.recurringWindow.startTime <string>
 spec.initProvider.masterAuth <object>	# The authentication information for accessing the Kubernetes master. Some values in this block are only returned by the API if your service account has permission to get credentials for your GKE cluster. If you see an unexpected diff unsetting your client cert, ensure you have the container.clusters.getCredentials permission. Structure is documented below.
 spec.initProvider.masterAuth.clientCertificateConfig <object>	# Whether client certificate authorization is enabled for this cluster. For example:
@@ -815,13 +854,13 @@ spec.initProvider.nodeConfig.containerdConfig.privateRegistryAccessConfig.enable
 spec.initProvider.nodeConfig.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts <[]object>
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca <[]object>
-spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client <[]object>
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].header <[]object>
 spec.initProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -854,8 +893,8 @@ spec.initProvider.nodeConfig.guestAccelerator[].gpuSharingConfig.maxSharedClient
 spec.initProvider.nodeConfig.guestAccelerator[].type <string>	# Which sandbox to use for pods in the node pool. Accepted values are:
 spec.initProvider.nodeConfig.gvnic <object>	# Google Virtual NIC (gVNIC) is a virtual network interface. Installing the gVNIC driver allows for more efficient traffic transmission across the Google network infrastructure. gVNIC is an alternative to the virtIO-based ethernet driver. GKE nodes must use a Container-Optimized OS node image. GKE node version 1.15.11-gke.15 or later Structure is documented below.
 spec.initProvider.nodeConfig.gvnic.enabled <boolean>	# Whether writable cgroups are enabled.
-spec.initProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy to use for the cluster. Structure is documented below.
-spec.initProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
+spec.initProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy for the hosts on which the GKE VMs run on. Structure is documented below.
+spec.initProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>	# Specifies the frequency of planned maintenance events. Possible values are MAINTENANCE_INTERVAL_UNSPECIFIED, AS_NEEDED, and PERIODIC.
 spec.initProvider.nodeConfig.imageType <string>	# The image type to use for this node. Note that changing the image type will delete and recreate all nodes in the node pool.
 spec.initProvider.nodeConfig.kubeletConfig <object>	# Kubelet configuration, currently supported attributes can be found here. Structure is documented below.
 spec.initProvider.nodeConfig.kubeletConfig.allowedUnsafeSysctls <[]string>	# Defines a comma-separated allowlist of unsafe sysctls or sysctl patterns which can be set on the Pods. The allowed sysctl groups are kernel.shm*, kernel.msg*, kernel.sem, fs.mqueue.*, and net.*.
@@ -908,6 +947,11 @@ spec.initProvider.nodeConfig.linuxNodeConfig <object>	# Parameters that can be c
 spec.initProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig <object>	# Accurate time configuration for the node. Structure is documented below.
 spec.initProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>	# Whether to enable accurate time synchronization with PTP-KVM.
 spec.initProvider.nodeConfig.linuxNodeConfig.cgroupMode <string>	# Possible cgroup modes that can be used. Accepted values are:
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit <object>	# Custom node init settings. Structure is documented below.
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>	# The init script configuration. Structure is documented below.
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>	# The generation of the init script in Google Cloud Storage. If gcs_uri is used, gcs_generation is required.
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>	# The Google Cloud Storage URI for storing the init script. Format: gs://BUCKET_NAME/OBJECT_NAME. The service account on the nodepool must have read access to the object. Conflicts with gcp_secret_manager_secret_uri. If gcs_uri is used, gcs_generation is required.
 spec.initProvider.nodeConfig.linuxNodeConfig.hugepagesConfig <object>	# Amounts for 2M and 1G hugepages. Structure is documented below.
 spec.initProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>	# Amount of 1G hugepages.
 spec.initProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>	# Amount of 2M hugepages.
@@ -939,8 +983,8 @@ spec.initProvider.nodeConfig.metadata <map[string]string>	# The metadata key/val
 spec.initProvider.nodeConfig.minCpuPlatform <string>	# Minimum CPU platform to be used by this instance. The instance may be scheduled on the specified or newer CPU platform. Applicable values are the friendly names of CPU platforms, such as Intel Haswell. See the official documentation for more information.
 spec.initProvider.nodeConfig.nodeGroup <string>	# Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes.
 spec.initProvider.nodeConfig.nodeImageConfig <[]object>	# The node image configuration to use for this node pool. Structure is documented below.
-spec.initProvider.nodeConfig.nodeImageConfig[].image <string>	# The name of the image to use for this node.
-spec.initProvider.nodeConfig.nodeImageConfig[].imageProject <string>	# The project containing the image to use for this node.
+spec.initProvider.nodeConfig.nodeImageConfig[].image <string>	# The Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
+spec.initProvider.nodeConfig.nodeImageConfig[].imageProject <string>	# The GCP project storing the Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
 spec.initProvider.nodeConfig.oauthScopes <[]string>	# The set of Google API scopes to be made available on all of the node VMs under the "default" service account. Use the "https://www.googleapis.com/auth/cloud-platform" scope to grant access to all APIs. It is recommended that you set service_account to a non-default service account and grant IAM roles to that service account for only the resources that it needs.
 spec.initProvider.nodeConfig.preemptible <boolean>	# A boolean that represents whether or not the underlying node VMs are preemptible. See the official documentation for more information. Defaults to false.
 spec.initProvider.nodeConfig.reservationAffinity <object>	# The configuration of the desired reservation which instances could take capacity from. Structure is documented below.
@@ -1015,13 +1059,13 @@ spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.privateRe
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts <[]object>
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca <[]object>
-spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client <[]object>
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].header <[]object>
 spec.initProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -1078,6 +1122,8 @@ spec.initProvider.resourceUsageExportConfig.bigqueryDestination <object>	# Param
 spec.initProvider.resourceUsageExportConfig.bigqueryDestination.datasetId <string>	# The ID of a BigQuery Dataset. For Example:
 spec.initProvider.resourceUsageExportConfig.enableNetworkEgressMetering <boolean>	# Whether to enable network egress metering for this cluster. If enabled, a daemonset will be created in the cluster to meter network egress traffic.
 spec.initProvider.resourceUsageExportConfig.enableResourceConsumptionMetering <boolean>	# Whether to enable resource consumption metering on this cluster. When enabled, a table will be created in the resource export BigQuery dataset to store resource consumption data. The resulting table can be joined with the resource usage table or with BigQuery billing export. Defaults to true.
+spec.initProvider.rollbackSafeUpgrade <object>	# Configuration for rollback-safe (two-step) upgrades. Structure is documented below.
+spec.initProvider.rollbackSafeUpgrade.controlPlaneSoakDuration <string>	# A user-defined period that the cluster remains in the rollbackable state. A duration in seconds with up to nine fractional digits, ending with 's'. Example: "604800s" for 7 days. Minimum is 6 hours, maximum is 7 days. If omitted, the two-step upgrade is skipped and a standard one-step upgrade is performed.
 spec.initProvider.secretManagerConfig <object>	# Configuration for the SecretManagerConfig feature. Structure is documented below.
 spec.initProvider.secretManagerConfig.enabled <boolean>	# Enable the Secret Manager add-on for this cluster.
 spec.initProvider.secretManagerConfig.rotationConfig <object>	# config for secret manager auto rotation. Structure is documented below
@@ -1147,6 +1193,8 @@ status.atProvider.addonsConfig.gcsFuseCsiDriverConfig <object>	# The status of t
 status.atProvider.addonsConfig.gcsFuseCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 status.atProvider.addonsConfig.gkeBackupAgentConfig <object>	# . The status of the Backup for GKE agent addon. It is disabled by default; Set enabled = true to enable.
 status.atProvider.addonsConfig.gkeBackupAgentConfig.enabled <boolean>	# Whether writable cgroups are enabled.
+status.atProvider.addonsConfig.highScaleCheckpointingConfig <object>	# The status of the High Scale Checkpointing addon, which enables Multi-Tier Checkpointing for Machine Learning workloads. Structure is documented below.
+status.atProvider.addonsConfig.highScaleCheckpointingConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 status.atProvider.addonsConfig.horizontalPodAutoscaling <object>	# The status of the Horizontal Pod Autoscaling addon, which increases or decreases the number of replica pods a replication controller has based on the resource usage of the existing pods. It is enabled by default; set disabled = true to disable.
 status.atProvider.addonsConfig.horizontalPodAutoscaling.disabled <boolean>	# The status of the Istio addon, which makes it easy to set up Istio for services in a cluster. It is disabled by default. Set disabled = false to enable.
 status.atProvider.addonsConfig.httpLoadBalancing <object>	# The status of the HTTP (L7) load balancing controller addon, which makes it easy to set up HTTP load balancers for services in a cluster. It is enabled by default; set disabled = true to disable.
@@ -1157,6 +1205,8 @@ status.atProvider.addonsConfig.lustreCsiDriverConfig.enableLegacyLustrePort <boo
 status.atProvider.addonsConfig.lustreCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 status.atProvider.addonsConfig.networkPolicyConfig <object>	# Whether we should enable the network policy addon for the master. This must be enabled in order to enable network policy for the nodes. To enable this, you must also define a network_policy block, otherwise nothing will happen. It can only be disabled if the nodes already do not have network policies enabled. Defaults to disabled; set disabled = false to enable.
 status.atProvider.addonsConfig.networkPolicyConfig.disabled <boolean>	# The status of the Istio addon, which makes it easy to set up Istio for services in a cluster. It is disabled by default. Set disabled = false to enable.
+status.atProvider.addonsConfig.nodeReadinessConfig <object>	# The status of the Node Readiness Controller addon. It is disabled by default. Set enabled = true to enable. Structure is documented below.
+status.atProvider.addonsConfig.nodeReadinessConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 status.atProvider.addonsConfig.parallelstoreCsiDriverConfig <object>	# The status of the Parallelstore CSI driver addon, which allows the usage of a Parallelstore instances as volumes. It is disabled by default for Standard clusters; set enabled = true to enable. It is enabled by default for Autopilot clusters with version 1.29 or later; set enabled = true to enable it explicitly. See Enable the Parallelstore CSI driver for more information.
 status.atProvider.addonsConfig.parallelstoreCsiDriverConfig.enabled <boolean>	# Whether writable cgroups are enabled.
 status.atProvider.addonsConfig.podSnapshotConfig <object>	# The status of the Pod Snapshot addon. It is disabled by default. Set enabled = true to enable.
@@ -1248,6 +1298,7 @@ status.atProvider.defaultSnatStatus.disabled <boolean>	# Whether the cluster dis
 status.atProvider.deletionPolicy <string>	# Defaults to "DELETE". When set to "DELETE", deleting the resource is allowed.
 status.atProvider.deletionProtection <boolean>
 status.atProvider.description <string>	# Description of the cluster.
+status.atProvider.desiredEmulatedVersion <string>	# The desired emulated version for the cluster. Used to complete a rollback-safe upgrade after a soak period. Must be in major.minor format (e.g., "1.31"). To complete the upgrade declaratively, set this field to the target minor version. Removing this field from your configuration will not trigger completion.
 status.atProvider.disableL4LbFirewallReconciliation <boolean>	# Disable L4 load balancer VPC firewalls to enable firewall policies.
 status.atProvider.dnsConfig <object>	# Configuration for Using Cloud DNS for GKE. Structure is documented below.
 status.atProvider.dnsConfig.additiveVpcScopeDnsDomain <string>	# This will enable Cloud DNS additive VPC scope. Must provide a domain name that is unique within the VPC. For this to work cluster_dns = "CLOUD_DNS" and cluster_dns_scope = "CLUSTER_SCOPE" must both be set as well.
@@ -1255,6 +1306,7 @@ status.atProvider.dnsConfig.clusterDns <string>	# Which in-cluster DNS provider 
 status.atProvider.dnsConfig.clusterDnsDomain <string>	# The suffix used for all cluster service records.
 status.atProvider.dnsConfig.clusterDnsScope <string>	# The scope of access to cluster DNS records. DNS_SCOPE_UNSPECIFIED or CLUSTER_SCOPE or VPC_SCOPE. If the cluster_dns field is set to CLOUD_DNS, DNS_SCOPE_UNSPECIFIED and empty/null behave like CLUSTER_SCOPE.
 status.atProvider.effectiveLabels <map[string]string>
+status.atProvider.emulatedVersion <string>	# The current emulated Kubernetes version running on the GKE cluster control plane.
 status.atProvider.enableAutopilot <boolean>	# Enable Autopilot for this cluster. Defaults to false. Note that when this option is enabled, certain features of Standard GKE are not available. See the official documentation for available features.
 status.atProvider.enableCiliumClusterwideNetworkPolicy <boolean>	# Whether CiliumClusterWideNetworkPolicy is enabled on this cluster. Defaults to false.
 status.atProvider.enableFqdnNetworkPolicy <boolean>	# Whether FQDN Network Policy is enabled on this cluster. Users who enable this feature for existing Standard clusters must restart the GKE Dataplane V2 anetd DaemonSet after enabling it. See the Enable FQDN Network Policy in an existing cluster for more information.
@@ -1327,9 +1379,20 @@ status.atProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions <obj
 status.atProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions.endTimeBehavior <string>	# The exclusion window end time behavior. One of: UNTIL_END_OF_SUPPORT. One and and one of end_time_behavior and end_time should be specified.
 status.atProvider.maintenancePolicy.maintenanceExclusion[].exclusionOptions.scope <string>	# The Topology Manager scope, defining the granularity at which policy decisions are applied. Valid values are "container" (resources are aligned per container within a pod which is set by default) or "pod" (resources are aligned for the entire pod). If unset (or set to the empty string ""), the API will treat the field as if set to "container".
 status.atProvider.maintenancePolicy.maintenanceExclusion[].startTime <string>
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow <object>	# structure documented below
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil <object>	# : Specifies the initial date when the recurring window can start.
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.day <number>	# : The day of the month (integer value between 1 and 31).
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.month <number>	# : The month of the year (integer value between 1 and 12).
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.delayUntil.year <number>	# : The year (integer value).
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.recurrence <string>	# : Defines when the window recurs, using the RFC5545 RRULE format.
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.windowDuration <string>	# : The length of each maintenance window instance. Specified as a sequence of decimal numbers, each with an optional fraction and a unit suffix, such as "300s", "1.5m", and "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". The value must be a positive duration.
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime <object>	# : The time of day when each maintenance window instance begins.
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.hours <number>	# : The hour of the day (integer value between 0 and 23).
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.minutes <number>	# : The minute of the hour (integer value between 0 and 59).
+status.atProvider.maintenancePolicy.recurringMaintenanceWindow.windowStartTime.seconds <number>	# : The second of the minute (integer value between 0 and 59).
 status.atProvider.maintenancePolicy.recurringWindow <object>	# structure documented below
 status.atProvider.maintenancePolicy.recurringWindow.endTime <string>
-status.atProvider.maintenancePolicy.recurringWindow.recurrence <string>
+status.atProvider.maintenancePolicy.recurringWindow.recurrence <string>	# : Defines when the window recurs, using the RFC5545 RRULE format.
 status.atProvider.maintenancePolicy.recurringWindow.startTime <string>
 status.atProvider.masterAuth <object>	# The authentication information for accessing the Kubernetes master. Some values in this block are only returned by the API if your service account has permission to get credentials for your GKE cluster. If you see an unexpected diff unsetting your client cert, ensure you have the container.clusters.getCredentials permission. Structure is documented below.
 status.atProvider.masterAuth.clientCertificate <string>	# Base64 encoded public certificate used by clients to authenticate to the cluster endpoint.
@@ -1387,13 +1450,13 @@ status.atProvider.nodeConfig.containerdConfig.privateRegistryAccessConfig.enable
 status.atProvider.nodeConfig.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts <[]object>
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca <[]object>
-status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client <[]object>
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].header <[]object>
 status.atProvider.nodeConfig.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -1430,8 +1493,8 @@ status.atProvider.nodeConfig.guestAccelerator[].gpuSharingConfig.maxSharedClient
 status.atProvider.nodeConfig.guestAccelerator[].type <string>	# Which sandbox to use for pods in the node pool. Accepted values are:
 status.atProvider.nodeConfig.gvnic <object>	# Google Virtual NIC (gVNIC) is a virtual network interface. Installing the gVNIC driver allows for more efficient traffic transmission across the Google network infrastructure. gVNIC is an alternative to the virtIO-based ethernet driver. GKE nodes must use a Container-Optimized OS node image. GKE node version 1.15.11-gke.15 or later Structure is documented below.
 status.atProvider.nodeConfig.gvnic.enabled <boolean>	# Whether writable cgroups are enabled.
-status.atProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy to use for the cluster. Structure is documented below.
-status.atProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
+status.atProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy for the hosts on which the GKE VMs run on. Structure is documented below.
+status.atProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>	# Specifies the frequency of planned maintenance events. Possible values are MAINTENANCE_INTERVAL_UNSPECIFIED, AS_NEEDED, and PERIODIC.
 status.atProvider.nodeConfig.imageType <string>	# The image type to use for this node. Note that changing the image type will delete and recreate all nodes in the node pool.
 status.atProvider.nodeConfig.kubeletConfig <object>	# Kubelet configuration, currently supported attributes can be found here. Structure is documented below.
 status.atProvider.nodeConfig.kubeletConfig.allowedUnsafeSysctls <[]string>	# Defines a comma-separated allowlist of unsafe sysctls or sysctl patterns which can be set on the Pods. The allowed sysctl groups are kernel.shm*, kernel.msg*, kernel.sem, fs.mqueue.*, and net.*.
@@ -1484,6 +1547,11 @@ status.atProvider.nodeConfig.linuxNodeConfig <object>	# Parameters that can be c
 status.atProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig <object>	# Accurate time configuration for the node. Structure is documented below.
 status.atProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>	# Whether to enable accurate time synchronization with PTP-KVM.
 status.atProvider.nodeConfig.linuxNodeConfig.cgroupMode <string>	# Possible cgroup modes that can be used. Accepted values are:
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit <object>	# Custom node init settings. Structure is documented below.
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>	# The init script configuration. Structure is documented below.
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>	# The generation of the init script in Google Cloud Storage. If gcs_uri is used, gcs_generation is required.
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>	# The Google Cloud Storage URI for storing the init script. Format: gs://BUCKET_NAME/OBJECT_NAME. The service account on the nodepool must have read access to the object. Conflicts with gcp_secret_manager_secret_uri. If gcs_uri is used, gcs_generation is required.
 status.atProvider.nodeConfig.linuxNodeConfig.hugepagesConfig <object>	# Amounts for 2M and 1G hugepages. Structure is documented below.
 status.atProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>	# Amount of 1G hugepages.
 status.atProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>	# Amount of 2M hugepages.
@@ -1515,8 +1583,8 @@ status.atProvider.nodeConfig.metadata <map[string]string>	# The metadata key/val
 status.atProvider.nodeConfig.minCpuPlatform <string>	# Minimum CPU platform to be used by this instance. The instance may be scheduled on the specified or newer CPU platform. Applicable values are the friendly names of CPU platforms, such as Intel Haswell. See the official documentation for more information.
 status.atProvider.nodeConfig.nodeGroup <string>	# Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes.
 status.atProvider.nodeConfig.nodeImageConfig <[]object>	# The node image configuration to use for this node pool. Structure is documented below.
-status.atProvider.nodeConfig.nodeImageConfig[].image <string>	# The name of the image to use for this node.
-status.atProvider.nodeConfig.nodeImageConfig[].imageProject <string>	# The project containing the image to use for this node.
+status.atProvider.nodeConfig.nodeImageConfig[].image <string>	# The Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
+status.atProvider.nodeConfig.nodeImageConfig[].imageProject <string>	# The GCP project storing the Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
 status.atProvider.nodeConfig.oauthScopes <[]string>	# The set of Google API scopes to be made available on all of the node VMs under the "default" service account. Use the "https://www.googleapis.com/auth/cloud-platform" scope to grant access to all APIs. It is recommended that you set service_account to a non-default service account and grant IAM roles to that service account for only the resources that it needs.
 status.atProvider.nodeConfig.preemptible <boolean>	# A boolean that represents whether or not the underlying node VMs are preemptible. See the official documentation for more information. Defaults to false.
 status.atProvider.nodeConfig.reservationAffinity <object>	# The configuration of the desired reservation which instances could take capacity from. Structure is documented below.
@@ -1566,6 +1634,11 @@ status.atProvider.nodePool[].autoscaling.totalMinNodeCount <number>
 status.atProvider.nodePool[].ignoreNodeCountChanges <boolean>	# Whether to ignore external changes (drift) to the GKE node count (e.g. from GKE autoscaling). Setting this to true skips querying Compute Engine Instance Group Managers (IGMs) to determine the current node count on read, which can save API quota and speed up plans on large clusters.
 status.atProvider.nodePool[].initialNodeCount <number>	# The number of nodes to create in this cluster's default node pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Must be set if node_pool is not set. If you're using google_container_node_pool objects with no default node pool, you'll need to set this to a value of at least 1, alongside setting remove_default_node_pool to true.
 status.atProvider.nodePool[].instanceGroupUrls <[]string>
+status.atProvider.nodePool[].maintenancePolicy <[]object>	# The maintenance policy to use for the cluster. Structure is documented below.
+status.atProvider.nodePool[].maintenancePolicy[].exclusionUntilEndOfSupport <[]object>
+status.atProvider.nodePool[].maintenancePolicy[].exclusionUntilEndOfSupport[].enabled <boolean>	# Whether writable cgroups are enabled.
+status.atProvider.nodePool[].maintenancePolicy[].exclusionUntilEndOfSupport[].endTime <string>
+status.atProvider.nodePool[].maintenancePolicy[].exclusionUntilEndOfSupport[].startTime <string>
 status.atProvider.nodePool[].managedInstanceGroupUrls <[]string>
 status.atProvider.nodePool[].management <object>	# NodeManagement configuration for this NodePool. Structure is documented below.
 status.atProvider.nodePool[].management.autoRepair <boolean>	# Specifies whether the node auto-repair is enabled for the node pool. If enabled, the nodes in this node pool will be monitored and, if they fail health checks too many times, an automatic repair action will be triggered.
@@ -1615,13 +1688,13 @@ status.atProvider.nodePool[].nodeConfig.containerdConfig.privateRegistryAccessCo
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts <[]object>
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].ca <[]object>
-status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client <[]object>
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].header <[]object>
 status.atProvider.nodePool[].nodeConfig.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -1658,8 +1731,8 @@ status.atProvider.nodePool[].nodeConfig.guestAccelerator[].gpuSharingConfig.maxS
 status.atProvider.nodePool[].nodeConfig.guestAccelerator[].type <string>	# Which sandbox to use for pods in the node pool. Accepted values are:
 status.atProvider.nodePool[].nodeConfig.gvnic <object>	# Google Virtual NIC (gVNIC) is a virtual network interface. Installing the gVNIC driver allows for more efficient traffic transmission across the Google network infrastructure. gVNIC is an alternative to the virtIO-based ethernet driver. GKE nodes must use a Container-Optimized OS node image. GKE node version 1.15.11-gke.15 or later Structure is documented below.
 status.atProvider.nodePool[].nodeConfig.gvnic.enabled <boolean>	# Whether writable cgroups are enabled.
-status.atProvider.nodePool[].nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy to use for the cluster. Structure is documented below.
-status.atProvider.nodePool[].nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
+status.atProvider.nodePool[].nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy for the hosts on which the GKE VMs run on. Structure is documented below.
+status.atProvider.nodePool[].nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>	# Specifies the frequency of planned maintenance events. Possible values are MAINTENANCE_INTERVAL_UNSPECIFIED, AS_NEEDED, and PERIODIC.
 status.atProvider.nodePool[].nodeConfig.imageType <string>	# The image type to use for this node. Note that changing the image type will delete and recreate all nodes in the node pool.
 status.atProvider.nodePool[].nodeConfig.kubeletConfig <object>	# Node kubelet configs. Structure is documented below.
 status.atProvider.nodePool[].nodeConfig.kubeletConfig.allowedUnsafeSysctls <[]string>	# Defines a comma-separated allowlist of unsafe sysctls or sysctl patterns which can be set on the Pods. The allowed sysctl groups are kernel.shm*, kernel.msg*, kernel.sem, fs.mqueue.*, and net.*.
@@ -1712,6 +1785,11 @@ status.atProvider.nodePool[].nodeConfig.linuxNodeConfig <object>	# Linux system 
 status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.accurateTimeConfig <object>	# Accurate time configuration for the node. Structure is documented below.
 status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>	# Whether to enable accurate time synchronization with PTP-KVM.
 status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.cgroupMode <string>	# Possible cgroup modes that can be used. Accepted values are:
+status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.customNodeInit <object>	# Custom node init settings. Structure is documented below.
+status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>	# The init script configuration. Structure is documented below.
+status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
+status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>	# The generation of the init script in Google Cloud Storage. If gcs_uri is used, gcs_generation is required.
+status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>	# The Google Cloud Storage URI for storing the init script. Format: gs://BUCKET_NAME/OBJECT_NAME. The service account on the nodepool must have read access to the object. Conflicts with gcp_secret_manager_secret_uri. If gcs_uri is used, gcs_generation is required.
 status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.hugepagesConfig <object>	# Amounts for 2M and 1G hugepages. Structure is documented below.
 status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>	# Amount of 1G hugepages.
 status.atProvider.nodePool[].nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>	# Amount of 2M hugepages.
@@ -1743,8 +1821,8 @@ status.atProvider.nodePool[].nodeConfig.metadata <map[string]string>	# The metad
 status.atProvider.nodePool[].nodeConfig.minCpuPlatform <string>	# Minimum CPU platform to be used by this instance. The instance may be scheduled on the specified or newer CPU platform. Applicable values are the friendly names of CPU platforms, such as Intel Haswell. See the official documentation for more information.
 status.atProvider.nodePool[].nodeConfig.nodeGroup <string>	# Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes.
 status.atProvider.nodePool[].nodeConfig.nodeImageConfig <[]object>	# The node image configuration to use for this node pool. Structure is documented below.
-status.atProvider.nodePool[].nodeConfig.nodeImageConfig[].image <string>	# The name of the image to use for this node.
-status.atProvider.nodePool[].nodeConfig.nodeImageConfig[].imageProject <string>	# The project containing the image to use for this node.
+status.atProvider.nodePool[].nodeConfig.nodeImageConfig[].image <string>	# The Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
+status.atProvider.nodePool[].nodeConfig.nodeImageConfig[].imageProject <string>	# The GCP project storing the Operating System image for the node pool. This is a private feature, please contact your Google account team for allowlisting this feature.
 status.atProvider.nodePool[].nodeConfig.oauthScopes <[]string>	# The set of Google API scopes to be made available on all of the node VMs under the "default" service account. Use the "https://www.googleapis.com/auth/cloud-platform" scope to grant access to all APIs. It is recommended that you set service_account to a non-default service account and grant IAM roles to that service account for only the resources that it needs.
 status.atProvider.nodePool[].nodeConfig.preemptible <boolean>	# A boolean that represents whether or not the underlying node VMs are preemptible. See the official documentation for more information. Defaults to false.
 status.atProvider.nodePool[].nodeConfig.reservationAffinity <object>	# The configuration of the desired reservation which instances could take capacity from. Structure is documented below.
@@ -1826,13 +1904,13 @@ status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.privateRe
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts <[]object>	# Defines containerd registry host configuration. Each registry_hosts entry represents a hosts.toml file. See customize containerd configuration in GKE nodes for more detail. Example:
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts <[]object>
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca <[]object>
-status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>
+status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].ca[].gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].capabilities <[]string>
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client <[]object>
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert <object>
-status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>
+status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].cert.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key <object>	# Key for taint.
-status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>
+status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].client[].key.gcpSecretManagerSecretUri <string>	# The Google Cloud Secret Manager secret version URI for storing the init script. Format: projects/PROJECT_ID/secrets/SECRET_NAME/versions/VERSION. The service account on the nodepool must have access to the secret version. Conflicts with gcs_uri.
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].dialTimeout <string>
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].header <[]object>
 status.atProvider.nodePoolDefaults.nodeConfigDefaults.containerdConfig.registryHosts[].hosts[].header[].key <string>	# Key for taint.
@@ -1880,6 +1958,8 @@ status.atProvider.resourceUsageExportConfig.bigqueryDestination <object>	# Param
 status.atProvider.resourceUsageExportConfig.bigqueryDestination.datasetId <string>	# The ID of a BigQuery Dataset. For Example:
 status.atProvider.resourceUsageExportConfig.enableNetworkEgressMetering <boolean>	# Whether to enable network egress metering for this cluster. If enabled, a daemonset will be created in the cluster to meter network egress traffic.
 status.atProvider.resourceUsageExportConfig.enableResourceConsumptionMetering <boolean>	# Whether to enable resource consumption metering on this cluster. When enabled, a table will be created in the resource export BigQuery dataset to store resource consumption data. The resulting table can be joined with the resource usage table or with BigQuery billing export. Defaults to true.
+status.atProvider.rollbackSafeUpgrade <object>	# Configuration for rollback-safe (two-step) upgrades. Structure is documented below.
+status.atProvider.rollbackSafeUpgrade.controlPlaneSoakDuration <string>	# A user-defined period that the cluster remains in the rollbackable state. A duration in seconds with up to nine fractional digits, ending with 's'. Example: "604800s" for 7 days. Minimum is 6 hours, maximum is 7 days. If omitted, the two-step upgrade is skipped and a standard one-step upgrade is performed.
 status.atProvider.secretManagerConfig <object>	# Configuration for the SecretManagerConfig feature. Structure is documented below.
 status.atProvider.secretManagerConfig.enabled <boolean>	# Enable the Secret Manager add-on for this cluster.
 status.atProvider.secretManagerConfig.rotationConfig <object>	# config for secret manager auto rotation. Structure is documented below
