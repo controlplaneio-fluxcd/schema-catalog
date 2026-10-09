@@ -1,4 +1,4 @@
-# schema source: Upbound GCP Provider v3.0.0 https://github.com/crossplane-contrib/provider-upjet-gcp
+# schema source: Upbound GCP Provider v3.1.0 https://github.com/crossplane-contrib/provider-upjet-gcp
 apiVersion <string> enum=container.gcp.upbound.io/v1beta2
 kind <string> enum=NodePool (cluster-scoped)
 metadata.name <string> (required)
@@ -26,6 +26,9 @@ spec.forProvider.clusterSelector.policy.resolve <string> enum=Always|IfNotPresen
 spec.forProvider.ignoreNodeCountChanges <boolean>	# Whether to ignore external changes (drift) to the node count (e.g. from GKE autoscaling). Setting this to true skips querying Compute Engine Instance Group Managers (IGMs) to determine the current node count on read, which can save API quota and speed up plans on large clusters.
 spec.forProvider.initialNodeCount <number>	# The initial number of nodes for the pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Changing this will force recreation of the resource. If you don't need this value, don't set it. If you do need it, you can use a lifecycle block to ignore subsequent changes to this field.
 spec.forProvider.location <string>	# The location (region or zone) of the cluster.
+spec.forProvider.maintenancePolicy <[]object>	# The maintenance policy of the pool. Structure is documented below.
+spec.forProvider.maintenancePolicy[].exclusionUntilEndOfSupport <[]object>	# When enabled, the node pool will not be automatically upgraded by GKE until the node pool version's end of support date. Structure is documented below.
+spec.forProvider.maintenancePolicy[].exclusionUntilEndOfSupport[].enabled <boolean>	# When true, the node pool will not be automatically upgraded by GKE until the node pool version's end of support date.
 spec.forProvider.management <object>	# Node management configuration, wherein auto-repair and auto-upgrade is configured. Structure is documented below.
 spec.forProvider.management.autoRepair <boolean>	# Whether the nodes will be automatically repaired. Enabled by default.
 spec.forProvider.management.autoUpgrade <boolean>	# Whether the nodes will be automatically upgraded. Enabled by default.
@@ -111,7 +114,7 @@ spec.forProvider.nodeConfig.guestAccelerator[].gpuSharingConfig.maxSharedClients
 spec.forProvider.nodeConfig.guestAccelerator[].type <string>	# The type of the policy. Supports a single value: COMPACT. Specifying COMPACT placement policy type places node pool's nodes in a closer physical proximity in order to reduce network latency between nodes.
 spec.forProvider.nodeConfig.gvnic <object>
 spec.forProvider.nodeConfig.gvnic.enabled <boolean>	# Makes nodes obtainable through the ProvisioningRequest API exclusively.
-spec.forProvider.nodeConfig.hostMaintenancePolicy <object>
+spec.forProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy of the pool. Structure is documented below.
 spec.forProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
 spec.forProvider.nodeConfig.imageType <string>
 spec.forProvider.nodeConfig.kubeletConfig <object>	# Node kubelet configs. Structure is documented below.
@@ -165,6 +168,11 @@ spec.forProvider.nodeConfig.linuxNodeConfig <object>	# Parameters used in creati
 spec.forProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig <object>
 spec.forProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>
 spec.forProvider.nodeConfig.linuxNodeConfig.cgroupMode <string>
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit <object>
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>
+spec.forProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>
 spec.forProvider.nodeConfig.linuxNodeConfig.hugepagesConfig <object>
 spec.forProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>
 spec.forProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>
@@ -278,6 +286,9 @@ spec.initProvider.autoscaling.totalMaxNodeCount <number>	# Total maximum number 
 spec.initProvider.autoscaling.totalMinNodeCount <number>	# Total minimum number of nodes in the NodePool. Must be >=0 and <= total_max_node_count. Cannot be used with per zone limits. Total size limits are supported only in 1.24.1+ clusters.
 spec.initProvider.ignoreNodeCountChanges <boolean>	# Whether to ignore external changes (drift) to the node count (e.g. from GKE autoscaling). Setting this to true skips querying Compute Engine Instance Group Managers (IGMs) to determine the current node count on read, which can save API quota and speed up plans on large clusters.
 spec.initProvider.initialNodeCount <number>	# The initial number of nodes for the pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Changing this will force recreation of the resource. If you don't need this value, don't set it. If you do need it, you can use a lifecycle block to ignore subsequent changes to this field.
+spec.initProvider.maintenancePolicy <[]object>	# The maintenance policy of the pool. Structure is documented below.
+spec.initProvider.maintenancePolicy[].exclusionUntilEndOfSupport <[]object>	# When enabled, the node pool will not be automatically upgraded by GKE until the node pool version's end of support date. Structure is documented below.
+spec.initProvider.maintenancePolicy[].exclusionUntilEndOfSupport[].enabled <boolean>	# When true, the node pool will not be automatically upgraded by GKE until the node pool version's end of support date.
 spec.initProvider.management <object>	# Node management configuration, wherein auto-repair and auto-upgrade is configured. Structure is documented below.
 spec.initProvider.management.autoRepair <boolean>	# Whether the nodes will be automatically repaired. Enabled by default.
 spec.initProvider.management.autoUpgrade <boolean>	# Whether the nodes will be automatically upgraded. Enabled by default.
@@ -363,7 +374,7 @@ spec.initProvider.nodeConfig.guestAccelerator[].gpuSharingConfig.maxSharedClient
 spec.initProvider.nodeConfig.guestAccelerator[].type <string>	# The type of the policy. Supports a single value: COMPACT. Specifying COMPACT placement policy type places node pool's nodes in a closer physical proximity in order to reduce network latency between nodes.
 spec.initProvider.nodeConfig.gvnic <object>
 spec.initProvider.nodeConfig.gvnic.enabled <boolean>	# Makes nodes obtainable through the ProvisioningRequest API exclusively.
-spec.initProvider.nodeConfig.hostMaintenancePolicy <object>
+spec.initProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy of the pool. Structure is documented below.
 spec.initProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
 spec.initProvider.nodeConfig.imageType <string>
 spec.initProvider.nodeConfig.kubeletConfig <object>	# Node kubelet configs. Structure is documented below.
@@ -417,6 +428,11 @@ spec.initProvider.nodeConfig.linuxNodeConfig <object>	# Parameters used in creat
 spec.initProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig <object>
 spec.initProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>
 spec.initProvider.nodeConfig.linuxNodeConfig.cgroupMode <string>
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit <object>
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>
+spec.initProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>
 spec.initProvider.nodeConfig.linuxNodeConfig.hugepagesConfig <object>
 spec.initProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>
 spec.initProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>
@@ -545,6 +561,11 @@ status.atProvider.ignoreNodeCountChanges <boolean>	# Whether to ignore external 
 status.atProvider.initialNodeCount <number>	# The initial number of nodes for the pool. In regional or multi-zonal clusters, this is the number of nodes per zone. Changing this will force recreation of the resource. If you don't need this value, don't set it. If you do need it, you can use a lifecycle block to ignore subsequent changes to this field.
 status.atProvider.instanceGroupUrls <[]string>	# The resource URLs of the managed instance groups associated with this node pool.
 status.atProvider.location <string>	# The location (region or zone) of the cluster.
+status.atProvider.maintenancePolicy <[]object>	# The maintenance policy of the pool. Structure is documented below.
+status.atProvider.maintenancePolicy[].exclusionUntilEndOfSupport <[]object>	# When enabled, the node pool will not be automatically upgraded by GKE until the node pool version's end of support date. Structure is documented below.
+status.atProvider.maintenancePolicy[].exclusionUntilEndOfSupport[].enabled <boolean>	# When true, the node pool will not be automatically upgraded by GKE until the node pool version's end of support date.
+status.atProvider.maintenancePolicy[].exclusionUntilEndOfSupport[].endTime <string>	# The time when the maintenance policy is no longer effective, i.e., the node pool version's end of support date.
+status.atProvider.maintenancePolicy[].exclusionUntilEndOfSupport[].startTime <string>	# The time when the maintenance policy is first created.
 status.atProvider.managedInstanceGroupUrls <[]string>	# List of instance group URLs which have been assigned to this node pool.
 status.atProvider.management <object>	# Node management configuration, wherein auto-repair and auto-upgrade is configured. Structure is documented below.
 status.atProvider.management.autoRepair <boolean>	# Whether the nodes will be automatically repaired. Enabled by default.
@@ -635,7 +656,7 @@ status.atProvider.nodeConfig.guestAccelerator[].gpuSharingConfig.maxSharedClient
 status.atProvider.nodeConfig.guestAccelerator[].type <string>	# The type of the policy. Supports a single value: COMPACT. Specifying COMPACT placement policy type places node pool's nodes in a closer physical proximity in order to reduce network latency between nodes.
 status.atProvider.nodeConfig.gvnic <object>
 status.atProvider.nodeConfig.gvnic.enabled <boolean>	# Makes nodes obtainable through the ProvisioningRequest API exclusively.
-status.atProvider.nodeConfig.hostMaintenancePolicy <object>
+status.atProvider.nodeConfig.hostMaintenancePolicy <object>	# The maintenance policy of the pool. Structure is documented below.
 status.atProvider.nodeConfig.hostMaintenancePolicy.maintenanceInterval <string>
 status.atProvider.nodeConfig.imageType <string>
 status.atProvider.nodeConfig.kubeletConfig <object>	# Node kubelet configs. Structure is documented below.
@@ -689,6 +710,11 @@ status.atProvider.nodeConfig.linuxNodeConfig <object>	# Parameters used in creat
 status.atProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig <object>
 status.atProvider.nodeConfig.linuxNodeConfig.accurateTimeConfig.enablePtpKvmTimeSync <boolean>
 status.atProvider.nodeConfig.linuxNodeConfig.cgroupMode <string>
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit <object>
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript <object>
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcpSecretManagerSecretUri <string>
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsGeneration <number>
+status.atProvider.nodeConfig.linuxNodeConfig.customNodeInit.initScript.gcsUri <string>
 status.atProvider.nodeConfig.linuxNodeConfig.hugepagesConfig <object>
 status.atProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize1G <number>
 status.atProvider.nodeConfig.linuxNodeConfig.hugepagesConfig.hugepageSize2M <number>

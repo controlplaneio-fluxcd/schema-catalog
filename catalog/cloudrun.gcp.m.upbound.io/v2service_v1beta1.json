@@ -185,6 +185,14 @@
               },
               "type": "object"
             },
+            "tags": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of resource manager tags.\nResource manager tag keys and values have the same definition as resource manager tags.\nKeys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
             "template": {
               "additionalProperties": false,
               "description": "The template used to create revisions for this Service.\nStructure is documented below.",
@@ -203,7 +211,7 @@
                     "additionalProperties": false,
                     "properties": {
                       "args": {
-                        "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided. Variable references are not supported in Cloud Run.",
+                        "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided.",
                         "items": {
                           "type": "string"
                         },
@@ -214,7 +222,7 @@
                         "type": "string"
                       },
                       "command": {
-                        "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell",
+                        "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.",
                         "items": {
                           "type": "string"
                         },
@@ -228,7 +236,7 @@
                         "type": "array"
                       },
                       "env": {
-                        "description": "List of environment variables to set in the container.\nStructure is documented below.",
+                        "description": "List of environment variables to set in the sandbox.\nStructure is documented below.",
                         "items": {
                           "additionalProperties": false,
                           "properties": {
@@ -356,7 +364,7 @@
                         "type": "array"
                       },
                       "image": {
-                        "description": "URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images",
+                        "description": "Name of the container image in Dockerhub or Artifact Registry. If the host is not provided, Dockerhub is assumed.",
                         "type": "string"
                       },
                       "livenessProbe": {
@@ -536,6 +544,10 @@
                         },
                         "type": "object"
                       },
+                      "sandboxLauncher": {
+                        "description": "Indicates that this container can act as a sandbox supervisor and launch sandboxes.",
+                        "type": "boolean"
+                      },
                       "startupProbe": {
                         "additionalProperties": false,
                         "description": "Startup probe of application within the container. All other probes are disabled if a startup probe is provided, until it succeeds. Container will not be added to service endpoints if the probe fails. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes\nStructure is documented below.",
@@ -691,6 +703,89 @@
                 "revision": {
                   "description": "The unique name for the revision. If this field is omitted, it will be automatically generated based on the Service name.",
                   "type": "string"
+                },
+                "sandboxes": {
+                  "additionalProperties": false,
+                  "description": "Configuration for sandboxes.\nStructure is documented below.",
+                  "properties": {
+                    "templates": {
+                      "description": "Sandbox templates that can be launched through the sandbox CLI.\nStructure is documented below.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "command": {
+                            "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "env": {
+                            "description": "List of environment variables to set in the sandbox.\nStructure is documented below.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "name": {
+                                  "description": "Volume's name.",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "description": "The header field value",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "image": {
+                            "description": "Name of the container image in Dockerhub or Artifact Registry. If the host is not provided, Dockerhub is assumed.",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Volume's name.",
+                            "type": "string"
+                          },
+                          "volumeMounts": {
+                            "description": "Volume to mount into the container's filesystem.\nStructure is documented below.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "mountPath": {
+                                  "description": "Path within the container at which the volume should be mounted. Must not contain ':'. For Cloud SQL volumes, it can be left empty, or must otherwise be /cloudsql. All instances defined in the Volume will be available as /cloudsql/[instance]. For more information on Cloud SQL volumes, visit https://cloud.google.com/sql/docs/mysql/connect-run",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Volume's name.",
+                                  "type": "string"
+                                },
+                                "subPath": {
+                                  "description": "Path within the volume from which the container's volume should be mounted.",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "workingDir": {
+                            "description": "Container's working directory. If not specified, the container runtime's default will be used, which might be configured in the container image.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
                 },
                 "scaling": {
                   "additionalProperties": false,
@@ -1135,7 +1230,7 @@
                             "type": "string"
                           },
                           "tags": {
-                            "description": "Network tags applied to this Cloud Run service.",
+                            "description": "A map of resource manager tags.\nResource manager tag keys and values have the same definition as resource manager tags.\nKeys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
                             "items": {
                               "type": "string"
                             },
@@ -1350,6 +1445,14 @@
               },
               "type": "object"
             },
+            "tags": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of resource manager tags.\nResource manager tag keys and values have the same definition as resource manager tags.\nKeys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
             "template": {
               "additionalProperties": false,
               "description": "The template used to create revisions for this Service.\nStructure is documented below.",
@@ -1368,7 +1471,7 @@
                     "additionalProperties": false,
                     "properties": {
                       "args": {
-                        "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided. Variable references are not supported in Cloud Run.",
+                        "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided.",
                         "items": {
                           "type": "string"
                         },
@@ -1379,7 +1482,7 @@
                         "type": "string"
                       },
                       "command": {
-                        "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell",
+                        "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.",
                         "items": {
                           "type": "string"
                         },
@@ -1393,7 +1496,7 @@
                         "type": "array"
                       },
                       "env": {
-                        "description": "List of environment variables to set in the container.\nStructure is documented below.",
+                        "description": "List of environment variables to set in the sandbox.\nStructure is documented below.",
                         "items": {
                           "additionalProperties": false,
                           "properties": {
@@ -1521,7 +1624,7 @@
                         "type": "array"
                       },
                       "image": {
-                        "description": "URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images",
+                        "description": "Name of the container image in Dockerhub or Artifact Registry. If the host is not provided, Dockerhub is assumed.",
                         "type": "string"
                       },
                       "livenessProbe": {
@@ -1701,6 +1804,10 @@
                         },
                         "type": "object"
                       },
+                      "sandboxLauncher": {
+                        "description": "Indicates that this container can act as a sandbox supervisor and launch sandboxes.",
+                        "type": "boolean"
+                      },
                       "startupProbe": {
                         "additionalProperties": false,
                         "description": "Startup probe of application within the container. All other probes are disabled if a startup probe is provided, until it succeeds. Container will not be added to service endpoints if the probe fails. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes\nStructure is documented below.",
@@ -1856,6 +1963,89 @@
                 "revision": {
                   "description": "The unique name for the revision. If this field is omitted, it will be automatically generated based on the Service name.",
                   "type": "string"
+                },
+                "sandboxes": {
+                  "additionalProperties": false,
+                  "description": "Configuration for sandboxes.\nStructure is documented below.",
+                  "properties": {
+                    "templates": {
+                      "description": "Sandbox templates that can be launched through the sandbox CLI.\nStructure is documented below.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "command": {
+                            "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "env": {
+                            "description": "List of environment variables to set in the sandbox.\nStructure is documented below.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "name": {
+                                  "description": "Volume's name.",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "description": "The header field value",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "image": {
+                            "description": "Name of the container image in Dockerhub or Artifact Registry. If the host is not provided, Dockerhub is assumed.",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Volume's name.",
+                            "type": "string"
+                          },
+                          "volumeMounts": {
+                            "description": "Volume to mount into the container's filesystem.\nStructure is documented below.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "mountPath": {
+                                  "description": "Path within the container at which the volume should be mounted. Must not contain ':'. For Cloud SQL volumes, it can be left empty, or must otherwise be /cloudsql. All instances defined in the Volume will be available as /cloudsql/[instance]. For more information on Cloud SQL volumes, visit https://cloud.google.com/sql/docs/mysql/connect-run",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Volume's name.",
+                                  "type": "string"
+                                },
+                                "subPath": {
+                                  "description": "Path within the volume from which the container's volume should be mounted.",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "workingDir": {
+                            "description": "Container's working directory. If not specified, the container runtime's default will be used, which might be configured in the container image.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
                 },
                 "scaling": {
                   "additionalProperties": false,
@@ -2300,7 +2490,7 @@
                             "type": "string"
                           },
                           "tags": {
-                            "description": "Network tags applied to this Cloud Run service.",
+                            "description": "A map of resource manager tags.\nResource manager tag keys and values have the same definition as resource manager tags.\nKeys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
                             "items": {
                               "type": "string"
                             },
@@ -2703,6 +2893,14 @@
               },
               "type": "object"
             },
+            "tags": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of resource manager tags.\nResource manager tag keys and values have the same definition as resource manager tags.\nKeys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
+              "type": "object",
+              "x-kubernetes-map-type": "granular"
+            },
             "template": {
               "additionalProperties": false,
               "description": "The template used to create revisions for this Service.\nStructure is documented below.",
@@ -2721,7 +2919,7 @@
                     "additionalProperties": false,
                     "properties": {
                       "args": {
-                        "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided. Variable references are not supported in Cloud Run.",
+                        "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided.",
                         "items": {
                           "type": "string"
                         },
@@ -2750,7 +2948,7 @@
                         "type": "array"
                       },
                       "command": {
-                        "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell",
+                        "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.",
                         "items": {
                           "type": "string"
                         },
@@ -2764,7 +2962,7 @@
                         "type": "array"
                       },
                       "env": {
-                        "description": "List of environment variables to set in the container.\nStructure is documented below.",
+                        "description": "List of environment variables to set in the sandbox.\nStructure is documented below.",
                         "items": {
                           "additionalProperties": false,
                           "properties": {
@@ -2804,7 +3002,7 @@
                         "type": "array"
                       },
                       "image": {
-                        "description": "URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images",
+                        "description": "Name of the container image in Dockerhub or Artifact Registry. If the host is not provided, Dockerhub is assumed.",
                         "type": "string"
                       },
                       "livenessProbe": {
@@ -2984,6 +3182,10 @@
                         },
                         "type": "object"
                       },
+                      "sandboxLauncher": {
+                        "description": "Indicates that this container can act as a sandbox supervisor and launch sandboxes.",
+                        "type": "boolean"
+                      },
                       "startupProbe": {
                         "additionalProperties": false,
                         "description": "Startup probe of application within the container. All other probes are disabled if a startup probe is provided, until it succeeds. Container will not be added to service endpoints if the probe fails. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes\nStructure is documented below.",
@@ -3139,6 +3341,89 @@
                 "revision": {
                   "description": "The unique name for the revision. If this field is omitted, it will be automatically generated based on the Service name.",
                   "type": "string"
+                },
+                "sandboxes": {
+                  "additionalProperties": false,
+                  "description": "Configuration for sandboxes.\nStructure is documented below.",
+                  "properties": {
+                    "templates": {
+                      "description": "Sandbox templates that can be launched through the sandbox CLI.\nStructure is documented below.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "description": "Arguments to the entrypoint. The docker image's CMD is used if this is not provided.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "command": {
+                            "description": "Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "env": {
+                            "description": "List of environment variables to set in the sandbox.\nStructure is documented below.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "name": {
+                                  "description": "Volume's name.",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "description": "The header field value",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "image": {
+                            "description": "Name of the container image in Dockerhub or Artifact Registry. If the host is not provided, Dockerhub is assumed.",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Volume's name.",
+                            "type": "string"
+                          },
+                          "volumeMounts": {
+                            "description": "Volume to mount into the container's filesystem.\nStructure is documented below.",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "mountPath": {
+                                  "description": "Path within the container at which the volume should be mounted. Must not contain ':'. For Cloud SQL volumes, it can be left empty, or must otherwise be /cloudsql. All instances defined in the Volume will be available as /cloudsql/[instance]. For more information on Cloud SQL volumes, visit https://cloud.google.com/sql/docs/mysql/connect-run",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Volume's name.",
+                                  "type": "string"
+                                },
+                                "subPath": {
+                                  "description": "Path within the volume from which the container's volume should be mounted.",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "workingDir": {
+                            "description": "Container's working directory. If not specified, the container runtime's default will be used, which might be configured in the container image.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
                 },
                 "scaling": {
                   "additionalProperties": false,
@@ -3315,7 +3600,7 @@
                             "type": "string"
                           },
                           "tags": {
-                            "description": "Network tags applied to this Cloud Run service.",
+                            "description": "A map of resource manager tags.\nResource manager tag keys and values have the same definition as resource manager tags.\nKeys must be in the format tagKeys/{tag_key_id}, and values are in the format tagValues/{tag_value_id}.",
                             "items": {
                               "type": "string"
                             },
