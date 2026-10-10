@@ -217,7 +217,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Istio](https://schemas.fluxoperator.dev/p/istio) | `istio` | 1.31.1 | 33 | 2026-09-23 |
 | [JobSet](https://schemas.fluxoperator.dev/p/jobset) | `jobset` | v0.12.0 | 1 | 2026-07-09 |
 | [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.19.0 | 19 | 2026-09-01 |
-| [Karpenter](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter` | v1.14.1 | 4 | 2026-08-22 |
+| [Karpenter](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter` | v1.15.0 | 4 | 2026-10-10 |
 | [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.14.1 | 1 | 2026-08-22 |
 | [Karpenter Azure](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-azure` | v1.14.3 | 2 | 2026-09-29 |
 | [Karpenter Cluster API](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-cluster-api` | v0.2.0 | 1 | 2026-07-09 |
@@ -251,11 +251,11 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.5.4 | 3 | 2026-10-08 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.11 | 3 | 2026-07-14 |
 | [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.10.0 | 5 | 2026-08-28 |
-| [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.1.4 | 8 | 2026-09-19 |
+| [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.1.5 | 8 | 2026-10-10 |
 | [CloudNativePG](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `cloudnative-pg` | v1.30.1 | 11 | 2026-09-24 |
 | [CNPG Barman Cloud Plugin](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `plugin-barman-cloud` | v0.15.1 | 1 | 2026-10-01 |
 | [Crunchy Postgres Operator](https://schemas.fluxoperator.dev/p/crunchy-postgres-operator) | `crunchy-postgres-operator` | v6.0.2 | 4 | 2026-07-09 |
-| [Dapr](https://schemas.fluxoperator.dev/p/dapr) | `dapr` | v1.18.5 | 8 | 2026-10-09 |
+| [Dapr](https://schemas.fluxoperator.dev/p/dapr) | `dapr` | v1.18.7 | 8 | 2026-10-10 |
 | [Dragonfly Operator](https://schemas.fluxoperator.dev/p/dragonfly-operator) | `dragonfly-operator` | v1.7.0 | 1 | 2026-09-29 |
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.45.0 | 3 | 2026-09-02 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.9.6 | 15 | 2026-10-02 |
