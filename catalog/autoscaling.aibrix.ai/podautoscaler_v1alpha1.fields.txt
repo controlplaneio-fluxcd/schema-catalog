@@ -1,4 +1,4 @@
-# schema source: AIBrix v0.7.0 https://github.com/vllm-project/aibrix
+# schema source: AIBrix v0.8.0 https://github.com/vllm-project/aibrix
 apiVersion <string> enum=autoscaling.aibrix.ai/v1alpha1
 kind <string> enum=PodAutoscaler
 metadata.name <string> (required)
@@ -14,6 +14,11 @@ spec.metricsSources[].protocolType <string> enum=http|https
 spec.metricsSources[].targetMetric <string> (required)
 spec.metricsSources[].targetValue <string> (required)
 spec.minReplicas <integer> format=int32
+spec.observeWindowSeconds <integer> format=int64 min=1 max=3600
+spec.panicWindowSeconds <integer> format=int64 min=1 max=3600
+spec.predictive <object>
+spec.predictive.horizonSeconds <integer> format=int64 min=1 max=3600
+spec.predictive.mode <string> enum=Preview|Auto
 spec.scaleTargetRef <object> (required)
 spec.scaleTargetRef.apiVersion <string>
 spec.scaleTargetRef.fieldPath <string>
@@ -23,6 +28,14 @@ spec.scaleTargetRef.namespace <string>
 spec.scaleTargetRef.resourceVersion <string>
 spec.scaleTargetRef.uid <string>
 spec.scalingStrategy <string> (required) enum=HPA|KPA|APA
+spec.schedules <[]object> min=1
+spec.schedules[].daysOfWeek <[]string> min=1
+spec.schedules[].endTime <string> (required) pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+spec.schedules[].maxReplicas <integer> format=int32
+spec.schedules[].minReplicas <integer> format=int32
+spec.schedules[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1
+spec.schedules[].startTime <string> (required) pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+spec.schedules[].timezone <string>
 spec.subTargetSelector <object>
 spec.subTargetSelector.roleName <string>
 status <object>
@@ -36,6 +49,15 @@ status.conditions[].status <string> (required) enum=True|False|Unknown
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316
 status.desiredScale <integer> format=int32
 status.lastScaleTime <string> format=date-time
+status.predictive <object>
+status.predictive.lastUpdated <string> format=date-time
+status.predictive.metric <string>
+status.predictive.mode <string>
+status.predictive.observedValue <string>
+status.predictive.predictedReplicas <integer> format=int32
+status.predictive.predictedValue <string>
+status.predictive.reactiveReplicas <integer> format=int32
+status.predictive.wouldBeReplicas <integer> format=int32
 status.scalingHistory <[]object> max=5
 status.scalingHistory[].error <string>
 status.scalingHistory[].newScale <integer> (required) format=int32
@@ -43,3 +65,7 @@ status.scalingHistory[].previousScale <integer> (required) format=int32
 status.scalingHistory[].reason <string> (required)
 status.scalingHistory[].success <boolean> (required)
 status.scalingHistory[].timestamp <string> (required) format=date-time
+status.scheduledBounds <object>
+status.scheduledBounds.activeSchedule <string>
+status.scheduledBounds.effectiveMaxReplicas <integer> (required) format=int32
+status.scheduledBounds.effectiveMinReplicas <integer> (required) format=int32
