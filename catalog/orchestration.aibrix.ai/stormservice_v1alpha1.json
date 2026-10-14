@@ -28,8 +28,21 @@
           },
           "type": "object"
         },
+        "mode": {
+          "enum": [
+            "Replica",
+            "Pooled"
+          ],
+          "type": "string"
+        },
         "paused": {
           "type": "boolean"
+        },
+        "progressDeadlineSeconds": {
+          "default": 600,
+          "format": "int32",
+          "minimum": 1,
+          "type": "integer"
         },
         "replicas": {
           "format": "int32",
@@ -138,7 +151,21 @@
                         },
                         "type": "object"
                       },
+                      "drain": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "timeoutSeconds": {
+                            "format": "int32",
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      },
                       "name": {
+                        "maxLength": 63,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
                         "type": "string"
                       },
                       "podGroupSize": {
@@ -149,6 +176,7 @@
                       },
                       "replicas": {
                         "format": "int32",
+                        "minimum": 0,
                         "type": "integer"
                       },
                       "schedulingStrategy": {
@@ -6174,6 +6202,33 @@
                                 "type": "integer"
                               }
                             ]
+                          },
+                          "replacementScheduling": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "historicalNode": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "mode": {
+                                    "default": "Preferred",
+                                    "enum": [
+                                      "Preferred"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": {
+                            "default": "Recreate",
+                            "enum": [
+                              "Recreate",
+                              "InPlaceIfPossible"
+                            ],
+                            "type": "string"
                           }
                         },
                         "type": "object"
@@ -6184,9 +6239,17 @@
                         "type": "integer"
                       }
                     },
+                    "required": [
+                      "name"
+                    ],
                     "type": "object"
                   },
-                  "type": "array"
+                  "minItems": 1,
+                  "type": "array",
+                  "x-kubernetes-list-map-keys": [
+                    "name"
+                  ],
+                  "x-kubernetes-list-type": "map"
                 },
                 "schedulingStrategy": {
                   "additionalProperties": false,
@@ -6442,6 +6505,38 @@
                   },
                   "type": "object"
                 },
+                "topologyPolicy": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "key": {
+                      "maxLength": 317,
+                      "minLength": 1,
+                      "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                      "type": "string"
+                    },
+                    "mode": {
+                      "default": "Preferred",
+                      "enum": [
+                        "Preferred",
+                        "Required"
+                      ],
+                      "type": "string"
+                    },
+                    "scope": {
+                      "enum": [
+                        "StormService",
+                        "RoleSet",
+                        "Role"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "scope"
+                  ],
+                  "type": "object"
+                },
                 "updateStrategy": {
                   "default": "Sequential",
                   "enum": [
@@ -6452,9 +6547,15 @@
                   "type": "string"
                 }
               },
+              "required": [
+                "roles"
+              ],
               "type": "object"
             }
           },
+          "required": [
+            "spec"
+          ],
           "type": "object"
         },
         "updateStrategy": {

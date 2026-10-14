@@ -1,4 +1,4 @@
-# schema source: AIBrix v0.7.0 https://github.com/vllm-project/aibrix
+# schema source: AIBrix v0.8.0 https://github.com/vllm-project/aibrix
 apiVersion <string> enum=orchestration.aibrix.ai/v1alpha1
 kind <string> enum=StormService
 metadata.name <string> (required)
@@ -6,7 +6,9 @@ metadata.namespace <string> (required)
 spec <object>
 spec.disruptionTolerance <object>
 spec.disruptionTolerance.maxUnavailable <int-or-string>
+spec.mode <string> enum=Replica|Pooled
 spec.paused <boolean>
+spec.progressDeadlineSeconds <integer> default=600 format=int32 min=1
 spec.replicas <integer> format=int32
 spec.revisionHistoryLimit <integer> format=int32
 spec.selector <object> (required)
@@ -23,13 +25,15 @@ spec.template.metadata.finalizers <[]string>
 spec.template.metadata.labels <map[string]string>
 spec.template.metadata.name <string>
 spec.template.metadata.namespace <string>
-spec.template.spec <object>
-spec.template.spec.roles <[]object>
+spec.template.spec <object> (required)
+spec.template.spec.roles <[]object> (required) min=1
 spec.template.spec.roles[].disruptionTolerance <object>
 spec.template.spec.roles[].disruptionTolerance.maxUnavailable <int-or-string>
-spec.template.spec.roles[].name <string>
+spec.template.spec.roles[].drain <object>
+spec.template.spec.roles[].drain.timeoutSeconds <integer> format=int32 min=0
+spec.template.spec.roles[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63
 spec.template.spec.roles[].podGroupSize <integer> format=int32 min=1 max=100
-spec.template.spec.roles[].replicas <integer> format=int32
+spec.template.spec.roles[].replicas <integer> format=int32 min=0
 spec.template.spec.roles[].schedulingStrategy <object>
 spec.template.spec.roles[].schedulingStrategy.coschedulingSchedulingStrategy <object>
 spec.template.spec.roles[].schedulingStrategy.coschedulingSchedulingStrategy.minMember <integer> format=int32 min=1
@@ -1106,6 +1110,10 @@ spec.template.spec.roles[].template.spec.volumes[].vsphereVolume.volumePath <str
 spec.template.spec.roles[].updateStrategy <object>
 spec.template.spec.roles[].updateStrategy.maxSurge <int-or-string>
 spec.template.spec.roles[].updateStrategy.maxUnavailable <int-or-string>
+spec.template.spec.roles[].updateStrategy.replacementScheduling <object>
+spec.template.spec.roles[].updateStrategy.replacementScheduling.historicalNode <object>
+spec.template.spec.roles[].updateStrategy.replacementScheduling.historicalNode.mode <string> enum=Preferred default="Preferred"
+spec.template.spec.roles[].updateStrategy.type <string> enum=Recreate|InPlaceIfPossible default="Recreate"
 spec.template.spec.roles[].upgradeOrder <integer> format=int32 min=1
 spec.template.spec.schedulingStrategy <object>
 spec.template.spec.schedulingStrategy.coschedulingSchedulingStrategy <object>
@@ -1148,6 +1156,10 @@ spec.template.spec.schedulingStrategy.volcanoSchedulingStrategy.minResources <ob
 spec.template.spec.schedulingStrategy.volcanoSchedulingStrategy.minTaskMember <map[string]integer>
 spec.template.spec.schedulingStrategy.volcanoSchedulingStrategy.priorityClassName <string>
 spec.template.spec.schedulingStrategy.volcanoSchedulingStrategy.queue <string>
+spec.template.spec.topologyPolicy <object>
+spec.template.spec.topologyPolicy.key <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" min=1 max=317
+spec.template.spec.topologyPolicy.mode <string> enum=Preferred|Required default="Preferred"
+spec.template.spec.topologyPolicy.scope <string> (required) enum=StormService|RoleSet|Role
 spec.template.spec.updateStrategy <string> enum=Parallel|Sequential|Interleave default="Sequential"
 spec.updateStrategy <object>
 spec.updateStrategy.maxSurge <int-or-string>

@@ -1,0 +1,262 @@
+{
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactURL": {
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "artifactURL is immutable; create a new ModelClaim instead",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "engine": {
+          "default": "vllm",
+          "enum": [
+            "vllm",
+            "sglang"
+          ],
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "engine is immutable; create a new ModelClaim instead",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "engineConfig": {
+          "additionalProperties": false,
+          "properties": {
+            "args": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "modelName": {
+          "type": "string"
+        },
+        "perGPU": {
+          "additionalProperties": false,
+          "properties": {
+            "kvFloor": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "maximumFootprint": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kvFloor",
+            "maximumFootprint"
+          ],
+          "type": "object"
+        },
+        "podSelector": {
+          "additionalProperties": false,
+          "properties": {
+            "matchExpressions": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "atomic"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator"
+                ],
+                "type": "object"
+              },
+              "type": "array",
+              "x-kubernetes-list-type": "atomic"
+            },
+            "matchLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "x-kubernetes-map-type": "atomic",
+          "x-kubernetes-validations": [
+            {
+              "message": "podSelector is immutable; create a new ModelClaim instead",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "replicas": {
+          "default": 1,
+          "format": "int32",
+          "maximum": 1,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifactURL",
+        "podSelector"
+      ],
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "fieldPath": ".modelName",
+          "message": "modelName is immutable; create a new ModelClaim instead",
+          "rule": "has(self.modelName) == has(oldSelf.modelName) && (!has(self.modelName) || self.modelName == oldSelf.modelName)"
+        },
+        {
+          "fieldPath": ".engineConfig",
+          "message": "engineConfig is immutable; create a new ModelClaim instead",
+          "rule": "has(self.engineConfig) == has(oldSelf.engineConfig) && (!has(self.engineConfig) || self.engineConfig == oldSelf.engineConfig)"
+        }
+      ]
+    },
+    "status": {
+      "additionalProperties": false,
+      "properties": {
+        "candidates": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "conditions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "lastTransitionTime": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "observedGeneration": {
+                "format": "int64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "reason": {
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "desiredReplicas": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "instances": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "kvLimitBytes": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "phase": {
+                "type": "string"
+              },
+              "pod": {
+                "type": "string"
+              },
+              "port": {
+                "format": "int32",
+                "type": "integer"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pod"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "readyReplicas": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-flux-schema-type": "ModelClaim",
+  "x-kubernetes-validations": [
+    {
+      "message": "name must be at most 63 characters, since it is part of an annotation key on the warm-pool Pod",
+      "rule": "self.metadata.name.size() <= 63"
+    }
+  ]
+}
