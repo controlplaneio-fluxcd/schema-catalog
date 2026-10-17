@@ -1,18 +1,13 @@
-# schema source: Kuma v2.14.6 https://github.com/kumahq/kuma
+# schema source: Kuma v3.0.0 https://github.com/kumahq/kuma
 apiVersion <string> enum=kuma.io/v1alpha1
 kind <string> enum=MeshHealthCheck
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# Spec is the specification of the Kuma MeshHealthCheck resource.
 spec.targetRef <object>	# TargetRef is a reference to the resource the policy takes an effect on. The resource could be either a real store object or virtual resource defined inplace.
-spec.targetRef.kind <string> (required) enum=Mesh|MeshSubset|MeshGateway|MeshService|MeshExternalService|MeshMultiZoneService|MeshServiceSubset|MeshHTTPRoute|Dataplane	# Kind of the referenced resource
-spec.targetRef.labels <map[string]string>	# Labels are used to select group of MeshServices that match labels. Either Labels or Name and Namespace can be used.
-spec.targetRef.mesh <string>	# Mesh is reserved for future use to identify cross mesh resources.
-spec.targetRef.name <string>	# Name of the referenced resource. Can only be used with kinds: `MeshService`, `MeshServiceSubset` and `MeshGatewayRoute`
-spec.targetRef.namespace <string>	# Namespace specifies the namespace of target resource. If empty only resources in policy namespace will be targeted.
-spec.targetRef.proxyTypes <[]string>	# ProxyTypes specifies the data plane types that are subject to the policy. When not specified, all data plane types are targeted by the policy.
+spec.targetRef.kind <string> (required) enum=Mesh|Dataplane	# Kind of the referenced resource
+spec.targetRef.labels <map[string]string>	# Labels are used to select referenced real resources and to carry legacy service identity when a common TargetRef must still target old service-tag based paths.
 spec.targetRef.sectionName <string>	# SectionName is used to target specific section of resource. For example, you can target port from MeshService.ports[] by its name. Only traffic to this port will be affected.
-spec.targetRef.tags <map[string]string>	# Tags used to select a subset of proxies by tags. Can only be used with kinds `MeshSubset` and `MeshServiceSubset`
 spec.to <[]object>	# To list makes a match between the consumed services and corresponding configurations
 spec.to[].default <object>	# Default is a configuration specific to the group of destinations referenced in 'targetRef'
 spec.to[].default.alwaysLogHealthCheckFailures <boolean>	# If set to true, health check failure events will always be logged. If set to false, only the initial health check failure event will be logged. The default value is false.
@@ -22,7 +17,6 @@ spec.to[].default.grpc <object>	# GrpcHealthCheck defines gRPC configuration whi
 spec.to[].default.grpc.authority <string>	# The value of the :authority header in the gRPC health check request, by default name of the cluster this health check is associated with
 spec.to[].default.grpc.disabled <boolean>	# If true the GrpcHealthCheck is disabled
 spec.to[].default.grpc.serviceName <string>	# Service name parameter which will be sent to gRPC service
-spec.to[].default.healthyPanicThreshold <int-or-string>	# Allows to configure panic threshold for Envoy cluster. If not specified, the default is 50%. To disable panic mode, set to 0%. Either int or decimal represented as string. Deprecated: the setting has been moved to MeshCircuitBreaker policy, please use MeshCircuitBreaker policy instead.
 spec.to[].default.healthyThreshold <integer> format=int32	# Number of consecutive healthy checks before considering a host healthy. If not specified then the default value is 1
 spec.to[].default.http <object>	# HttpHealthCheck defines HTTP configuration which will instruct the service the health check will be made for is an HTTP service.
 spec.to[].default.http.disabled <boolean>	# If true the HttpHealthCheck is disabled
@@ -48,11 +42,6 @@ spec.to[].default.tcp.send <string>	# Base64 encoded content of the message whic
 spec.to[].default.timeout <string>	# Maximum time to wait for a health check response. If not specified then the default value is 15s
 spec.to[].default.unhealthyThreshold <integer> format=int32	# Number of consecutive unhealthy checks before considering a host unhealthy. If not specified then the default value is 5
 spec.to[].targetRef <object> (required)	# TargetRef is a reference to the resource that represents a group of destinations.
-spec.to[].targetRef.kind <string> (required) enum=Mesh|MeshSubset|MeshGateway|MeshService|MeshExternalService|MeshMultiZoneService|MeshServiceSubset|MeshHTTPRoute|Dataplane	# Kind of the referenced resource
-spec.to[].targetRef.labels <map[string]string>	# Labels are used to select group of MeshServices that match labels. Either Labels or Name and Namespace can be used.
-spec.to[].targetRef.mesh <string>	# Mesh is reserved for future use to identify cross mesh resources.
-spec.to[].targetRef.name <string>	# Name of the referenced resource. Can only be used with kinds: `MeshService`, `MeshServiceSubset` and `MeshGatewayRoute`
-spec.to[].targetRef.namespace <string>	# Namespace specifies the namespace of target resource. If empty only resources in policy namespace will be targeted.
-spec.to[].targetRef.proxyTypes <[]string>	# ProxyTypes specifies the data plane types that are subject to the policy. When not specified, all data plane types are targeted by the policy.
+spec.to[].targetRef.kind <string> (required) enum=Mesh|MeshService|MeshExternalService|MeshMultiZoneService|MeshHTTPRoute	# Kind of the referenced resource
+spec.to[].targetRef.labels <map[string]string>	# Labels are used to select referenced real resources and to carry legacy service identity when a common TargetRef must still target old service-tag based paths.
 spec.to[].targetRef.sectionName <string>	# SectionName is used to target specific section of resource. For example, you can target port from MeshService.ports[] by its name. Only traffic to this port will be affected.
-spec.to[].targetRef.tags <map[string]string>	# Tags used to select a subset of proxies by tags. Can only be used with kinds `MeshSubset` and `MeshServiceSubset`

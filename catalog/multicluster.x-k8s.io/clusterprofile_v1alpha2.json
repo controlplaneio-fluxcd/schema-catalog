@@ -1,0 +1,283 @@
+{
+  "description": "ClusterProfile represents a single cluster in a multi-cluster deployment.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "ClusterProfileSpec defines the desired state of ClusterProfile.",
+      "properties": {
+        "clusterManager": {
+          "additionalProperties": false,
+          "description": "ClusterManager defines which cluster manager owns this ClusterProfile resource",
+          "properties": {
+            "name": {
+              "description": "Name defines the name of the cluster manager.\nIt must be a valid Kubernetes label value.",
+              "maxLength": 63,
+              "minLength": 1,
+              "type": "string",
+              "x-kubernetes-validations": [
+                {
+                  "message": "must be a valid Kubernetes label value",
+                  "rule": "!format.labelValue().validate(self).hasValue()"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "ClusterManager is immutable",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "displayName": {
+          "description": "DisplayName defines a human-readable name of the ClusterProfile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "clusterManager"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "ClusterProfileStatus defines the observed state of ClusterProfile.",
+      "properties": {
+        "accessProviders": {
+          "description": "AccessProviders is a list of cluster access providers that can provide access\ninformation for clusters.",
+          "items": {
+            "additionalProperties": false,
+            "description": "AccessProvider describes one way a consumer can connect to the cluster.",
+            "properties": {
+              "cluster": {
+                "additionalProperties": false,
+                "description": "Cluster contains the cluster connection details, such as the server\naddress and certificate authority data.",
+                "properties": {
+                  "certificate-authority-data": {
+                    "description": "CertificateAuthorityData contains PEM-encoded CA certificate bytes.\nIn YAML or JSON, these bytes must be base64-encoded.",
+                    "format": "byte",
+                    "type": "string"
+                  },
+                  "disable-compression": {
+                    "description": "DisableCompression disables response compression for requests to the\ncluster. This can reduce CPU usage when network bandwidth is sufficient.",
+                    "type": "boolean"
+                  },
+                  "extensions": {
+                    "description": "Extensions contains provider-specific cluster configuration. For example,\nan extension named \"client.authentication.k8s.io/exec\" supplies\nconfiguration to an exec credential plugin.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "NamedExtension associates a name with provider-specific configuration.",
+                      "properties": {
+                        "extension": {
+                          "description": "Extension contains the provider-specific configuration.",
+                          "type": "object",
+                          "x-kubernetes-preserve-unknown-fields": true
+                        },
+                        "name": {
+                          "description": "Name identifies the extension, for example,\n\"client.authentication.k8s.io/exec\".",
+                          "maxLength": 253,
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "extension",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
+                  },
+                  "insecure-skip-tls-verify": {
+                    "description": "InsecureSkipTLSVerify disables server certificate verification.\nEnabling this field makes HTTPS connections insecure.",
+                    "type": "boolean"
+                  },
+                  "proxy-url": {
+                    "description": "ProxyURL is the proxy URL used for requests to the cluster. Supported\nschemes are \"http\", \"https\", and \"socks5\". If empty, the ClusterProfile\ndoes not specify a proxy.\n\nSOCKS5 proxying does not support SPDY streaming endpoints such as exec,\nattach, and port-forward.",
+                    "maxLength": 2048,
+                    "type": "string",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "proxy-url must be a valid URL with scheme http, https, or socks5 and a host",
+                        "rule": "self == '' || (isURL(self) && url(self).getScheme() in ['http', 'https', 'socks5'] && url(self).getHost() != '')"
+                      }
+                    ]
+                  },
+                  "server": {
+                    "description": "Server is the URL of the Kubernetes API server, for example,\n\"https://api.example.com:6443\".",
+                    "maxLength": 2048,
+                    "type": "string",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "server must be a valid absolute URL with a host",
+                        "rule": "isURL(self) && url(self).getHost() != ''"
+                      }
+                    ]
+                  },
+                  "tls-server-name": {
+                    "description": "TLSServerName is the server name used to verify the server certificate.\nIf empty, the hostname in Server is used.",
+                    "maxLength": 253,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "server"
+                ],
+                "type": "object"
+              },
+              "name": {
+                "description": "Name matches one of the consumer's configured access provider names.",
+                "maxLength": 253,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "cluster",
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 64,
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "conditions": {
+          "description": "Conditions contains the different condition statuses for this cluster.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "properties": {
+          "description": "Properties defines cluster characteristics through a list of Property objects.\nEach Property can be one of:\n1. A ClusterProperty resource (as defined in KEP-2149)\n2. Custom information from cluster manager implementations\nProperty names support both:\n- Standard names from ClusterProperty resources\n- Custom names defined by cluster managers",
+          "items": {
+            "additionalProperties": false,
+            "description": "Property defines the data structure to represent a property of a cluster.\nIt contains a name/value pair and the last observed time of the property on the cluster.\nThis property can store various configurable details and metrics of a cluster,\nwhich may include information such as the entry point of the cluster, types of nodes, location,\netc. according to KEP 4322.",
+            "properties": {
+              "lastObservedTime": {
+                "description": "LastObservedTime is the last time the property was observed on the corresponding cluster.\nThe value is the timestamp when the property was observed not the time when the property\nwas updated in the cluster-profile.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name is the name of a property resource on cluster. It's a well-known\nor customized name to identify the property.",
+                "maxLength": 253,
+                "minLength": 1,
+                "type": "string"
+              },
+              "value": {
+                "description": "Value is a property-dependent string",
+                "maxLength": 1024,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "version": {
+          "additionalProperties": false,
+          "description": "Version defines the version information of the cluster.",
+          "properties": {
+            "kubernetes": {
+              "description": "Kubernetes is the kubernetes version of the cluster.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object",
+  "x-flux-schema-type": "ClusterProfile"
+}

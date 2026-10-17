@@ -1,18 +1,13 @@
-# schema source: Kuma v2.14.6 https://github.com/kumahq/kuma
+# schema source: Kuma v3.0.0 https://github.com/kumahq/kuma
 apiVersion <string> enum=kuma.io/v1alpha1
 kind <string> enum=MeshRetry
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# Spec is the specification of the Kuma MeshRetry resource.
 spec.targetRef <object>	# TargetRef is a reference to the resource the policy takes an effect on. The resource could be either a real store object or virtual resource defined inplace.
-spec.targetRef.kind <string> (required) enum=Mesh|MeshSubset|MeshGateway|MeshService|MeshExternalService|MeshMultiZoneService|MeshServiceSubset|MeshHTTPRoute|Dataplane	# Kind of the referenced resource
-spec.targetRef.labels <map[string]string>	# Labels are used to select group of MeshServices that match labels. Either Labels or Name and Namespace can be used.
-spec.targetRef.mesh <string>	# Mesh is reserved for future use to identify cross mesh resources.
-spec.targetRef.name <string>	# Name of the referenced resource. Can only be used with kinds: `MeshService`, `MeshServiceSubset` and `MeshGatewayRoute`
-spec.targetRef.namespace <string>	# Namespace specifies the namespace of target resource. If empty only resources in policy namespace will be targeted.
-spec.targetRef.proxyTypes <[]string>	# ProxyTypes specifies the data plane types that are subject to the policy. When not specified, all data plane types are targeted by the policy.
+spec.targetRef.kind <string> (required) enum=Mesh|Dataplane	# Kind of the referenced resource
+spec.targetRef.labels <map[string]string>	# Labels are used to select referenced real resources and to carry legacy service identity when a common TargetRef must still target old service-tag based paths.
 spec.targetRef.sectionName <string>	# SectionName is used to target specific section of resource. For example, you can target port from MeshService.ports[] by its name. Only traffic to this port will be affected.
-spec.targetRef.tags <map[string]string>	# Tags used to select a subset of proxies by tags. Can only be used with kinds `MeshSubset` and `MeshServiceSubset`
 spec.to <[]object>	# To list makes a match between the consumed services and corresponding configurations
 spec.to[].default <object>	# Default is a configuration specific to the group of destinations referenced in 'targetRef'
 spec.to[].default.grpc <object>	# GRPC defines a configuration of retries for GRPC traffic
@@ -45,21 +40,16 @@ spec.to[].default.http.rateLimitedBackOff.resetHeaders[].format <string> (requir
 spec.to[].default.http.rateLimitedBackOff.resetHeaders[].name <string> (required) pattern="^[a-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# The Name of the reset header.
 spec.to[].default.http.retriableRequestHeaders <[]object>	# RetriableRequestHeaders is an HTTP headers which must be present in the request for retries to be attempted.
 spec.to[].default.http.retriableRequestHeaders[].name <string> (required) pattern="^[a-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name is the name of the HTTP Header to be matched. Name MUST be lower case as they will be handled with case insensitivity (See https://tools.ietf.org/html/rfc7230#section-3.2).
-spec.to[].default.http.retriableRequestHeaders[].type <string> enum=Exact|Present|RegularExpression|Absent|Prefix default="Exact"	# Type specifies how to match against the value of the header.
+spec.to[].default.http.retriableRequestHeaders[].type <string> enum=Exact|Present|RegularExpression|Absent|Prefix	# Type specifies how to match against the value of the header.
 spec.to[].default.http.retriableRequestHeaders[].value <string>	# Value is the value of HTTP Header to be matched.
 spec.to[].default.http.retriableResponseHeaders <[]object>	# RetriableResponseHeaders is an HTTP response headers that trigger a retry if present in the response. A retry will be triggered if any of the header matches the upstream response headers.
 spec.to[].default.http.retriableResponseHeaders[].name <string> (required) pattern="^[a-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name is the name of the HTTP Header to be matched. Name MUST be lower case as they will be handled with case insensitivity (See https://tools.ietf.org/html/rfc7230#section-3.2).
-spec.to[].default.http.retriableResponseHeaders[].type <string> enum=Exact|Present|RegularExpression|Absent|Prefix default="Exact"	# Type specifies how to match against the value of the header.
+spec.to[].default.http.retriableResponseHeaders[].type <string> enum=Exact|Present|RegularExpression|Absent|Prefix	# Type specifies how to match against the value of the header.
 spec.to[].default.http.retriableResponseHeaders[].value <string>	# Value is the value of HTTP Header to be matched.
 spec.to[].default.http.retryOn <[]string>	# RetryOn is a list of conditions which will cause a retry. Available values are: [5XX, GatewayError, Reset, Retriable4xx, ConnectFailure, EnvoyRatelimited, RefusedStream, Http3PostConnectFailure, HttpMethodConnect, HttpMethodDelete, HttpMethodGet, HttpMethodHead, HttpMethodOptions, HttpMethodPatch, HttpMethodPost, HttpMethodPut, HttpMethodTrace]. Also, any HTTP status code (500, 503, etc.).
 spec.to[].default.tcp <object>	# TCP defines a configuration of retries for TCP traffic
 spec.to[].default.tcp.maxConnectAttempt <integer> format=int32	# MaxConnectAttempt is a maximal amount of TCP connection attempts which will be made before giving up
 spec.to[].targetRef <object> (required)	# TargetRef is a reference to the resource that represents a group of destinations.
-spec.to[].targetRef.kind <string> (required) enum=Mesh|MeshSubset|MeshGateway|MeshService|MeshExternalService|MeshMultiZoneService|MeshServiceSubset|MeshHTTPRoute|Dataplane	# Kind of the referenced resource
-spec.to[].targetRef.labels <map[string]string>	# Labels are used to select group of MeshServices that match labels. Either Labels or Name and Namespace can be used.
-spec.to[].targetRef.mesh <string>	# Mesh is reserved for future use to identify cross mesh resources.
-spec.to[].targetRef.name <string>	# Name of the referenced resource. Can only be used with kinds: `MeshService`, `MeshServiceSubset` and `MeshGatewayRoute`
-spec.to[].targetRef.namespace <string>	# Namespace specifies the namespace of target resource. If empty only resources in policy namespace will be targeted.
-spec.to[].targetRef.proxyTypes <[]string>	# ProxyTypes specifies the data plane types that are subject to the policy. When not specified, all data plane types are targeted by the policy.
+spec.to[].targetRef.kind <string> (required) enum=Mesh|MeshService|MeshExternalService|MeshMultiZoneService|MeshHTTPRoute	# Kind of the referenced resource
+spec.to[].targetRef.labels <map[string]string>	# Labels are used to select referenced real resources and to carry legacy service identity when a common TargetRef must still target old service-tag based paths.
 spec.to[].targetRef.sectionName <string>	# SectionName is used to target specific section of resource. For example, you can target port from MeshService.ports[] by its name. Only traffic to this port will be affected.
-spec.to[].targetRef.tags <map[string]string>	# Tags used to select a subset of proxies by tags. Can only be used with kinds `MeshSubset` and `MeshServiceSubset`
