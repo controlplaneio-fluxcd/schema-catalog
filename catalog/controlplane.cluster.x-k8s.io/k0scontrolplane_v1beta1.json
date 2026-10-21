@@ -291,7 +291,7 @@
           "properties": {
             "infrastructureRef": {
               "additionalProperties": false,
-              "description": "InfrastructureRef is a required reference to a custom resource\noffered by an infrastructure provider.",
+              "description": "Deprecated: use spec.infrastructureRef instead. Setting this still works and the admission\nwebhook copies it across, but it will be removed in a future API version.",
               "properties": {
                 "apiVersion": {
                   "description": "API version of the referent.",
@@ -346,11 +346,109 @@
                 }
               },
               "type": "object"
+            },
+            "spec": {
+              "additionalProperties": false,
+              "description": "spec defines the spec for Machines in a K0sControlPlane object.",
+              "properties": {
+                "deletion": {
+                  "additionalProperties": false,
+                  "description": "deletion contains configuration options for Machine deletion.",
+                  "minProperties": 1,
+                  "properties": {
+                    "nodeDeletionTimeoutSeconds": {
+                      "description": "nodeDeletionTimeoutSeconds defines how long the machine controller will attempt to delete the Node that the Machine\nhosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely.\nIf no value is provided, the default value for this property of the Machine resource will be used.",
+                      "format": "int32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "nodeDrainTimeoutSeconds": {
+                      "description": "nodeDrainTimeoutSeconds is the total amount of time that the controller will spend on draining a controlplane node\nThe default value is 0, meaning that the node can be drained without any time limitations.\nNOTE: nodeDrainTimeoutSeconds is different from `kubectl drain --timeout`",
+                      "format": "int32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "nodeVolumeDetachTimeoutSeconds": {
+                      "description": "nodeVolumeDetachTimeoutSeconds is the total amount of time that the controller will spend on waiting for all volumes\nto be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
+                      "format": "int32",
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "infrastructureRef": {
+                  "additionalProperties": false,
+                  "description": "infrastructureRef is a reference to a custom resource offered by an infrastructure provider.\nOptional in the schema only, since the deprecated field may carry it and admission requires one.",
+                  "properties": {
+                    "apiGroup": {
+                      "description": "apiGroup is the group of the resource being referenced.\napiGroup must be fully qualified domain name.\nThe corresponding version for this reference will be looked up from the contract\nlabels of the corresponding CRD of the resource being referenced.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                      "type": "string"
+                    },
+                    "kind": {
+                      "description": "kind of the resource being referenced.\nkind must consist of alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "name of the resource being referenced.\nname must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "apiGroup",
+                    "kind",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "readinessGates": {
+                  "description": "readinessGates specifies additional conditions to include when evaluating Machine Ready condition.\n\nThis field can be used e.g. to instruct the machine controller to include in the computation for Machine's ready\ncomputation a condition, managed by an external controllers, reporting the status of special software/hardware installed on the Machine.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "MachineReadinessGate contains the type of a Machine condition to be used as a readiness gate.",
+                    "properties": {
+                      "conditionType": {
+                        "description": "conditionType refers to a condition with matching type in the Machine's condition list.\nIf the conditions doesn't exist, it will be treated as unknown.\nNote: Both Cluster API conditions or conditions added by 3rd party controllers can be used as readiness gates.",
+                        "maxLength": 316,
+                        "minLength": 1,
+                        "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                        "type": "string"
+                      },
+                      "polarity": {
+                        "description": "polarity of the conditionType specified in this readinessGate.\nValid values are Positive, Negative and omitted.\nWhen omitted, the default behaviour will be Positive.\nA positive polarity means that the condition should report a true status under normal conditions.\nA negative polarity means that the condition should report a false status under normal conditions.",
+                        "enum": [
+                          "Positive",
+                          "Negative"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "conditionType"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 32,
+                  "minItems": 1,
+                  "type": "array",
+                  "x-kubernetes-list-map-keys": [
+                    "conditionType"
+                  ],
+                  "x-kubernetes-list-type": "map"
+                }
+              },
+              "type": "object"
             }
           },
-          "required": [
-            "infrastructureRef"
-          ],
           "type": "object"
         },
         "replicas": {

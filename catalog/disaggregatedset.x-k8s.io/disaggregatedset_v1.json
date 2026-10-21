@@ -38,7 +38,7 @@
           "type": "object"
         },
         "roles": {
-          "description": "Roles defines the list of roles (at least 2 required).\nEach role has a unique name and its own configuration.",
+          "description": "Roles defines the list of roles (at least 1 required).\nEach role has a unique name and its own configuration.",
           "items": {
             "additionalProperties": false,
             "description": "DisaggregatedRoleSpec defines the configuration for a disaggregated role.\nThis structure embeds LeaderWorkerSetTemplateSpec from sigs.k8s.io/lws, with validation\nto reject unsupported fields (RolloutStrategy.Type must be RollingUpdate,\nRolloutStrategy.RollingUpdateConfiguration.Partition must not be set).",
@@ -7541,6 +7541,12 @@
                         },
                         "type": "object"
                       },
+                      "maxGroupRestarts": {
+                        "description": "maxGroupRestarts bounds how many times the controller can recreate a group\nunder RecreateGroupOnPodRestart or RecreateGroupAfterStart. Once exhausted,\nthe controller terminates the group, retains Pod API objects that can still\nreceive finalizers, and stops automatic group recreation. Setting\nleaderworkerset.sigs.k8s.io/recover=true on the retained leader Pod resets\nthat revision/group's budget and allows recovery. Changing this value does\nnot resume an exhausted group. It is opt-in: when unset (nil), group\nrecreation is unlimited.\nBudget exhaustion handling requires Kubernetes 1.27 or later because it\nrelies on deleted Pods reaching a terminal phase while finalizers retain\ntheir API objects.",
+                        "format": "int32",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
                       "persistentVolumeClaimRetentionPolicy": {
                         "additionalProperties": false,
                         "description": "persistentVolumeClaimRetentionPolicy describes the policy used for PVCs created from\nthe VolumeClaimTemplates.",
@@ -7552,6 +7558,27 @@
                           "whenScaled": {
                             "description": "WhenScaled specifies what happens to PVCs created from StatefulSet\nVolumeClaimTemplates when the StatefulSet is scaled down. The default\npolicy of `Retain` causes PVCs to not be affected by a scaledown. The\n`Delete` policy causes the associated PVCs for any excess pods above\nthe replica count to be deleted.",
                             "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "restartBackoff": {
+                        "additionalProperties": false,
+                        "description": "restartBackoff bounds group restart frequency under RecreateGroupOnPodRestart\nor RecreateGroupAfterStart. When specified, the controller applies an exponential\nbackoff delay between group recreations.\nThe semantic is that a group must have existed for at least min(baseSeconds * 2^count, capSeconds)\nbefore it can be recreated. The delay is measured from leader pod creation time,\nnot from the failure time, so a group that has run stably for longer than the backoff\ndelay recovers immediately on failure.\nIt is opt-in: when unset (nil), group recreation happens immediately.",
+                        "properties": {
+                          "baseSeconds": {
+                            "default": 10,
+                            "description": "baseSeconds is the initial backoff delay in seconds before group recreation.\nDefaults to 10.",
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "capSeconds": {
+                            "default": 300,
+                            "description": "capSeconds is the maximum backoff delay in seconds before group recreation.\nDefaults to 300.",
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
                           }
                         },
                         "type": "object"
@@ -15422,6 +15449,15 @@
                     ],
                     "type": "object"
                   },
+                  "podTerminationPolicy": {
+                    "default": "Sequential",
+                    "description": "podTerminationPolicy determines the termination policy for pods in a group.\nSequential (default) keeps the sequential termination behavior: worker pods wait for the\nleader pod to be fully deleted before terminating.\nParallel terminates leader and worker pods concurrently when a group is deleted,\nrecreated, or when the LeaderWorkerSet is deleted.\nThis field is immutable.",
+                    "enum": [
+                      "Sequential",
+                      "Parallel"
+                    ],
+                    "type": "string"
+                  },
                   "replicas": {
                     "default": 1,
                     "description": "replicas is the number of leader-workers groups. A scale subresource is available to enable HPA. The\nselector for HPA will be that of the leader pod, and so practically HPA will be looking up the\nleader pod metrics. Note that the leader pod could aggregate metrics from\nthe rest of the group and expose them as a summary custom metric representing the whole\ngroup.\nOn scale down, the leader pod as well as the workers statefulset will be deleted.\nDefault to 1.",
@@ -15432,11 +15468,15 @@
                   },
                   "rolloutStrategy": {
                     "additionalProperties": false,
-                    "description": "rolloutStrategy defines the strategy that will be applied to update replicas\nwhen a revision is made to the leaderWorkerTemplate.",
+                    "default": {
+                      "type": "RollingUpdate"
+                    },
+                    "description": "rolloutStrategy defines the strategy that will be applied to update replicas\nwhen a revision is made to the leaderWorkerTemplate. It defaults to a\nRollingUpdate strategy whose configuration takes its own defaults.",
                     "properties": {
                       "rollingUpdateConfiguration": {
                         "additionalProperties": false,
-                        "description": "rollingUpdateConfiguration defines the parameters to be used when type is RollingUpdateStrategyType.",
+                        "default": {},
+                        "description": "rollingUpdateConfiguration defines the parameters to be used when type is RollingUpdateStrategyType.\nIt defaults to an object whose fields take their own defaults: maxUnavailable 1,\nmaxSurge 0 and partition 0.",
                         "properties": {
                           "maxSurge": {
                             "default": 0,
@@ -15845,6 +15885,83 @@
                   "leaderWorkerTemplate"
                 ],
                 "type": "object"
+              },
+              "subRoles": {
+                "description": "SubRoles partitions one LWS into pools sharing its templates.\nChild targets sum to parent replicas; omit parent scaling. Parent spec.replicas is ignored.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "DisaggregatedSubRoleSpec defines a scaling and routing pool sharing its parent's templates.",
+                  "properties": {
+                    "maxSurge": {
+                      "description": "MaxSurge overrides the parent's rollout surge budget for this sub-role.\nAccepts a non-negative integer or a percentage up to 100%, rounded up\nagainst this sub-role's replica target. Omitted values inherit the parent;\nwith no parent rollout configuration, the default is 0.",
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "integer"
+                        }
+                      ]
+                    },
+                    "maxUnavailable": {
+                      "description": "MaxUnavailable overrides the parent's rollout unavailability budget for\nthis sub-role. Accepts a non-negative integer or a percentage up to 100%,\nrounded down against this sub-role's replica target. Omitted values inherit\nthe parent; with no parent rollout configuration, the default is 1. Zero is explicit.",
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "integer"
+                        }
+                      ]
+                    },
+                    "name": {
+                      "description": "Name is unique within the parent role.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                      "type": "string"
+                    },
+                    "replicas": {
+                      "description": "Replicas counts groups (Static default: 1); omit it for External scaling.",
+                      "format": "int32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "scaling": {
+                      "additionalProperties": false,
+                      "description": "Scaling selects this pool's replica source.",
+                      "properties": {
+                        "mode": {
+                          "default": "Static",
+                          "description": "Mode controls the source of the replica count. Static (default) uses\ninline spec.replicas; External uses the auto-created scaler CR.",
+                          "enum": [
+                            "Static",
+                            "External"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "replicas must be omitted when scaling.mode is External",
+                      "rule": "!has(self.scaling) || self.scaling.mode != 'External' || !has(self.replicas)"
+                    }
+                  ]
+                },
+                "maxItems": 32,
+                "minItems": 1,
+                "type": "array",
+                "x-kubernetes-list-map-keys": [
+                  "name"
+                ],
+                "x-kubernetes-list-type": "map"
               }
             },
             "required": [
@@ -15853,12 +15970,28 @@
             "type": "object"
           },
           "maxItems": 10,
-          "minItems": 2,
+          "minItems": 1,
           "type": "array",
           "x-kubernetes-list-map-keys": [
             "name"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "scalingPolicy": {
+          "additionalProperties": false,
+          "description": "ScalingPolicy controls scale-down during rolling updates. Omit it to\npreserve the default Deferred behavior.",
+          "properties": {
+            "scaleDownDuringRollout": {
+              "default": "Deferred",
+              "description": "ScaleDownDuringRollout controls demand-driven target replica reductions.\nDeferred waits until old revisions finish draining. Immediate considers\nreductions during the rollout, preferring safe old-revision drains.\nBoth policies allow scale-up and old-revision drains within rollout bounds.",
+              "enum": [
+                "Deferred",
+                "Immediate"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
         },
         "slices": {
           "default": 1,
@@ -15875,8 +16008,8 @@
       "type": "object",
       "x-kubernetes-validations": [
         {
-          "message": "replicas must be zero for all non-External roles or non-zero for all non-External roles",
-          "rule": "self.roles.filter(r, !has(r.scaling) || r.scaling.mode != 'External').all(r, !has(r.spec.replicas) || r.spec.replicas == 0) || self.roles.filter(r, !has(r.scaling) || r.scaling.mode != 'External').all(r, has(r.spec.replicas) && r.spec.replicas > 0)"
+          "message": "replicas must be zero for all non-External unpartitioned roles or non-zero for all non-External unpartitioned roles",
+          "rule": "self.roles.filter(r, (!has(r.subRoles) || size(r.subRoles) == 0) && (!has(r.scaling) || r.scaling.mode != 'External')).all(r, !has(r.spec.replicas) || r.spec.replicas == 0) || self.roles.filter(r, (!has(r.subRoles) || size(r.subRoles) == 0) && (!has(r.scaling) || r.scaling.mode != 'External')).all(r, has(r.spec.replicas) && r.spec.replicas > 0)"
         }
       ]
     },
@@ -15950,17 +16083,22 @@
           "type": "integer"
         },
         "roleStatuses": {
-          "description": "RoleStatuses contains the status for each role currently in spec.roles.\nThe order matches spec.roles. A role removed from spec.roles has no entry\nhere, even if LeaderWorkerSets for that role still exist while draining.",
+          "description": "RoleStatuses lists current parent roles in spec order, with nested sub-role statuses.\nParent counts include historical layouts and may exceed the visible child sum.\nRemoved roles are omitted even while their groups drain.",
           "items": {
             "additionalProperties": false,
-            "description": "RoleStatus defines the observed state of a single role.",
+            "description": "RoleStatus defines the observed state of a single parent role.",
             "properties": {
+              "desiredReplicas": {
+                "description": "DesiredReplicas is the number of replicas the controller is driving this role\ntoward, totalled across slices: its replicas, or the target of its\nDisaggregatedSetRoleScaler when its scaling mode is External. A partitioned\nrole reports the sum of its sub-role targets. It is unset while any of those\ntargets is unknown, for example before the scaler exists, so it is never\nmistaken for a requested zero. The Available condition is judged against it.",
+                "format": "int32",
+                "type": "integer"
+              },
               "name": {
-                "description": "Name is the name of the role (matches spec.roles[].name).",
+                "description": "Name is the parent role name.",
                 "type": "string"
               },
               "readyReplicas": {
-                "description": "ReadyReplicas is the number of ready replicas for this role.",
+                "description": "ReadyReplicas is the number of ready replicas for this role.\nSub-role readiness requires a coherent assignment across the whole group.",
                 "format": "int32",
                 "type": "integer"
               },
@@ -15968,6 +16106,48 @@
                 "description": "Replicas is the total number of replicas for this role.",
                 "format": "int32",
                 "type": "integer"
+              },
+              "subRoleStatuses": {
+                "description": "SubRoleStatuses lists the current sub-roles in spec order.\nRemoved sub-roles are omitted, but their groups remain in the parent counts\nwhile draining. Do not add child counts to their parent aggregate.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "SubRoleStatus defines the observed state of a sub-role within its parent.",
+                  "properties": {
+                    "desiredReplicas": {
+                      "description": "DesiredReplicas is the number of replica groups the controller is driving\nthis sub-role toward, totalled across slices: its replicas, or the target of\nits DisaggregatedSetRoleScaler when its scaling mode is External. It is unset\nwhile that target is unknown.",
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "name": {
+                      "description": "Name is the sub-role name, without the parent prefix.",
+                      "type": "string"
+                    },
+                    "readyReplicas": {
+                      "description": "ReadyReplicas counts Ready groups with a coherent whole-group assignment.",
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "replicas": {
+                      "description": "Replicas is the number of replica groups assigned to this sub-role.",
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "updatedReplicas": {
+                      "description": "UpdatedReplicas counts groups belonging to the latest revision.",
+                      "format": "int32",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array",
+                "x-kubernetes-list-map-keys": [
+                  "name"
+                ],
+                "x-kubernetes-list-type": "map"
               },
               "updatedReplicas": {
                 "description": "UpdatedReplicas is the number of replicas updated to the latest revision.",

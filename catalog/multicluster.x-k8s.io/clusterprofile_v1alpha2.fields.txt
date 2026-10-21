@@ -1,0 +1,35 @@
+# schema source: Cluster Inventory API v0.2.0 https://github.com/kubernetes-sigs/cluster-inventory-api
+apiVersion <string> enum=multicluster.x-k8s.io/v1alpha2
+kind <string> enum=ClusterProfile
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# ClusterProfileSpec defines the desired state of ClusterProfile.
+spec.clusterManager <object> (required) (immutable)	# ClusterManager defines which cluster manager owns this ClusterProfile resource
+spec.clusterManager.name <string> (required) min=1 max=63	# Name defines the name of the cluster manager. It must be a valid Kubernetes label value.
+spec.displayName <string>	# DisplayName defines a human-readable name of the ClusterProfile
+status <object>	# ClusterProfileStatus defines the observed state of ClusterProfile.
+status.accessProviders <[]object> max=64	# AccessProviders is a list of cluster access providers that can provide access information for clusters.
+status.accessProviders[].cluster <object> (required)	# Cluster contains the cluster connection details, such as the server address and certificate authority data.
+status.accessProviders[].cluster.certificate-authority-data <string> format=byte	# CertificateAuthorityData contains PEM-encoded CA certificate bytes. In YAML or JSON, these bytes must be base64-encoded.
+status.accessProviders[].cluster.disable-compression <boolean>	# DisableCompression disables response compression for requests to the cluster. This can reduce CPU usage when network bandwidth is sufficient.
+status.accessProviders[].cluster.extensions <[]object>	# Extensions contains provider-specific cluster configuration. For example, an extension named "client.authentication.k8s.io/exec" supplies configuration to an exec credential plugin.
+status.accessProviders[].cluster.extensions[].extension <object (free-form)> (required)	# Extension contains the provider-specific configuration.
+status.accessProviders[].cluster.extensions[].name <string> (required) min=1 max=253	# Name identifies the extension, for example, "client.authentication.k8s.io/exec".
+status.accessProviders[].cluster.insecure-skip-tls-verify <boolean>	# InsecureSkipTLSVerify disables server certificate verification. Enabling this field makes HTTPS connections insecure.
+status.accessProviders[].cluster.proxy-url <string> max=2048	# ProxyURL is the proxy URL used for requests to the cluster. Supported schemes are "http", "https", and "socks5". If empty, the ClusterProfile does not specify a proxy. SOCKS5 proxying does not support SPDY streaming endpoints such as exec, attach, and port-forward.
+status.accessProviders[].cluster.server <string> (required) max=2048	# Server is the URL of the Kubernetes API server, for example, "https://api.example.com:6443".
+status.accessProviders[].cluster.tls-server-name <string> max=253	# TLSServerName is the server name used to verify the server certificate. If empty, the hostname in Server is used.
+status.accessProviders[].name <string> (required) min=1 max=253	# Name matches one of the consumer's configured access provider names.
+status.conditions <[]object>	# Conditions contains the different condition statuses for this cluster.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.properties <[]object>	# Properties defines cluster characteristics through a list of Property objects. Each Property can be one of: 1. A ClusterProperty resource (as defined in KEP-2149) 2. Custom information from cluster manager implementations Property names support both: - Standard names from ClusterProperty resources - Custom names defined by cluster managers
+status.properties[].lastObservedTime <string> format=date-time	# LastObservedTime is the last time the property was observed on the corresponding cluster. The value is the timestamp when the property was observed not the time when the property was updated in the cluster-profile.
+status.properties[].name <string> (required) min=1 max=253	# Name is the name of a property resource on cluster. It's a well-known or customized name to identify the property.
+status.properties[].value <string> (required) min=1 max=1024	# Value is a property-dependent string
+status.version <object>	# Version defines the version information of the cluster.
+status.version.kubernetes <string>	# Kubernetes is the kubernetes version of the cluster.
