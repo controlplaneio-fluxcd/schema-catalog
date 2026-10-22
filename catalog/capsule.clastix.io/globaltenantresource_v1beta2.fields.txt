@@ -1,4 +1,4 @@
-# schema source: Capsule v0.14.6 https://github.com/projectcapsule/capsule
+# schema source: Capsule v0.15.0 https://github.com/projectcapsule/capsule
 apiVersion <string> enum=capsule.clastix.io/v1beta2
 kind <string> enum=GlobalTenantResource (cluster-scoped)
 metadata.name <string> (required)
@@ -6,7 +6,7 @@ spec <object> (required)	# GlobalTenantResourceSpec defines the desired state of
 spec.cordoned <boolean> default=false	# When cordoning a replication it will no longer execute any applies or deletions (paused). This is useful for maintenances
 spec.dependsOn <[]object>	# DependsOn may contain a meta.NamespacedObjectReference slice with references to TenantResource resources that must be ready before this TenantResource can be reconciled.
 spec.dependsOn[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# Name of the referent.
-spec.pruningOnDelete <boolean> default=true	# When the replicated resource manifest is deleted, all the objects replicated so far will be automatically deleted. Disable this to keep replicated resources although the deletion of the replication manifest.
+spec.pruningOnDelete <boolean> default=true	# When the replicated resource manifest is deleted, all the objects replicated so far will be automatically deleted. Disable this to keep replicated resources although the deletion of the replication manifest. Deprecated: use resources[].policy.deletion instead. Retained for blocks without a policy.
 spec.resources <[]object> (required)	# Defines the rules to select targeting Namespace, along with the objects that must be replicated.
 spec.resources[].additionalMetadata <object>	# Besides the Capsule metadata required by TenantResource controller, defines additional metadata that must be added to the replicated resources.
 spec.resources[].additionalMetadata.annotations <map[string]string>
@@ -46,15 +46,21 @@ spec.resources[].namespacedItems[].selector.matchExpressions[].key <string> (req
 spec.resources[].namespacedItems[].selector.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
 spec.resources[].namespacedItems[].selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.resources[].namespacedItems[].selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.resources[].policy <object>	# Policy controls creation, admission protection, SSA conflict ownership, and deletion for every raw item, namespaced item, and generator in this block. An explicit policy replaces the deprecated spec.settings for this block. When omitted, admission converts legacy settings and pruningOnDelete into a policy.
+spec.resources[].policy.condition <string> min=1 max=4096	# Condition is an optional CEL boolean expression checked before each target is applied. object is the existing destination object, or null when absent; now is the evaluation timestamp. False skips rendered content without pruning or releasing an already managed object. Policy and protection are still reconciled for managed objects. Evaluation errors prevent writes. Rendering still occurs before evaluation. Omitting Condition preserves the existing apply behavior. Conditions do not affect deletion or orphaning.
+spec.resources[].policy.creation <string> enum=Owner|Merge default="Owner"	# Creation controls how an existing target is handled. Owner requires the resource to have been created by the applying controller and otherwise returns an error. Merge adopts an existing resource when possible and creates the resource when it does not exist.
+spec.resources[].policy.deletion <string> enum=Remove|Orphan default="Remove"	# Deletion controls what happens when the parent stops managing the target. Remove deletes resources created for the parent and relinquishes adopted resources. Orphan keeps the resource and removes Capsule's lifecycle metadata. Removal is the default.
+spec.resources[].policy.force <boolean> default=false	# Force allows server-side apply to acquire conflicting field ownership.
+spec.resources[].policy.protect <boolean> default=true	# Protect prevents users from changing or deleting the target through admission while it is managed. Protection is enabled by default.
 spec.resources[].rawItems <[]object>	# List of raw resources that must be replicated.
 spec.resyncPeriod <string> (required) default="60s"	# Define the period of time upon a second reconciliation must be invoked. Keep in mind that any change to the manifests will trigger a new reconciliation.
 spec.scope <string> enum=Namespace|Tenant|None default="Namespace"	# Resource Scope, Can either be - Tenant: Create Resources for each tenant in selected Tenants - Namespace: Create Resources for each namespace in selected Tenants
 spec.serviceAccount <object>	# Local ServiceAccount which will perform all the actions defined in the TenantResource You must provide permissions accordingly to that ServiceAccount
 spec.serviceAccount.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# Name of the referent.
 spec.serviceAccount.namespace <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Namespace of the referent.
-spec.settings <object> (required) default={}	# Provide additional settings
-spec.settings.adopt <boolean> default=false	# Enabling this allows TenanResources to interact with objects which were not created by a TenantResource. In this case on prune no deletion of the entire object is made.
-spec.settings.force <boolean> default=false	# Force indicates that in case of conflicts with server-side apply, the client should acquire ownership of the conflicting field. You may create collisions with this.
+spec.settings <object> (required) default={}	# Deprecated: configure resources[].policy instead. Admission converts Settings into policies for blocks without one. Retained as a compatibility fallback for stored resources that have not passed through admission again.
+spec.settings.adopt <boolean> default=false	# Enabling this allows TenanResources to interact with objects which were not created by a TenantResource. In this case on prune no deletion of the entire object is made. Deprecated: use resources[].policy.creation: Merge instead.
+spec.settings.force <boolean> default=false	# Force indicates that in case of conflicts with server-side apply, the client should acquire ownership of the conflicting field. You may create collisions with this. Deprecated: use resources[].policy.force instead.
 spec.tenantSelector <object>	# Defines the Tenant selector used target the tenants on which resources must be propagated.
 spec.tenantSelector.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
 spec.tenantSelector.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
@@ -70,7 +76,7 @@ status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]
 status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.observedGeneration <integer> format=int64	# ObservedGeneration is the most recent generation the controller has observed.
-status.processedItems <[]object>	# List of the replicated resources for the given TenantResource.
+status.processedItems <[]object>	# List of resources managed by the API object.
 status.processedItems[].group <string>
 status.processedItems[].kind <string>
 status.processedItems[].name <string>
@@ -81,6 +87,11 @@ status.processedItems[].status.clusterScoped <boolean>	# Indicates whether the r
 status.processedItems[].status.created <boolean>	# Indicates wether the resource was created or adopted
 status.processedItems[].status.lastApply <string> format=date-time	# An opaque value that represents the internal version of this object that can be used by clients to determine when objects have changed. May be used for optimistic concurrency, change detection, and the watch operation on a resource or set of resources. Clients must treat these values as opaque and passed unmodified back to the server. They may only be valid for a particular resource or set of resources. Populated by the system. Read-only. Value must be treated as opaque by clients and . More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
 status.processedItems[].status.message <string> max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.processedItems[].status.policy <object>	# Policy is a lifecycle snapshot for protection and cleanup. Conditions are evaluated from the source block and omitted here. Failed updates retain the previous snapshot; a first successful content write records its policy even if metadata reconciliation fails, so cleanup respects explicit retention. An absent policy on an already applied item preserves legacy behavior.
+status.processedItems[].status.policy.creation <string> enum=Owner|Merge default="Owner"	# Creation controls how an existing target is handled. Owner requires the resource to have been created by the applying controller and otherwise returns an error. Merge adopts an existing resource when possible and creates the resource when it does not exist.
+status.processedItems[].status.policy.deletion <string> enum=Remove|Orphan default="Remove"	# Deletion controls what happens when the parent stops managing the target. Remove deletes resources created for the parent and relinquishes adopted resources. Orphan keeps the resource and removes Capsule's lifecycle metadata. Removal is the default.
+status.processedItems[].status.policy.force <boolean> default=false	# Force allows server-side apply to acquire conflicting field ownership.
+status.processedItems[].status.policy.protect <boolean> default=true	# Protect prevents users from changing or deleting the target through admission while it is managed. Protection is enabled by default.
 status.processedItems[].status.status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
 status.processedItems[].status.type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.processedItems[].tenant <string>
@@ -89,4 +100,4 @@ status.selectedTenants <[]string>	# List of Tenants addressed by the GlobalTenan
 status.serviceAccount <object>	# Serviceaccount used for impersonation
 status.serviceAccount.name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# Name of the referent.
 status.serviceAccount.namespace <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Namespace of the referent.
-status.size <integer> (required)	# How many items are being replicated by the TenantResource.
+status.size <integer> (required)	# Number of managed resources.
