@@ -1819,14 +1819,14 @@
             "type": "object"
           },
           "mutate": {
-            "description": "Mutate applies ordered typed mutations before enforcement. It shares the\nrule's namespace selection and audience. Workload mutations apply on Pod creation.",
+            "description": "Mutate applies ordered typed mutations before enforcement. It shares the\nrule's namespace selection and audience. Workload mutations apply on Pod creation;\nListenerSet parent references apply on main-resource creation and update.",
             "items": {
               "additionalProperties": false,
               "description": "NamespaceRuleMutation applies typed mutations independently of enforce.action.\nMutated values remain subject to all applicable enforcement rules.",
               "properties": {
                 "action": {
                   "default": "merge",
-                  "description": "Action chooses how explicitly supplied properties are applied.\nMerge fills an empty schedulerName and absent security profiles, sets hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy,\nand map keys, adds missing imagePullSecrets by name, upserts lists, and conjoins required affinity.\nReplace replaces each supplied property in full: scheduler, hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy, nodeSelector,\nregistries.imagePullSecrets, tolerations, topologySpreadConstraints, affinity, or security profiles. Omitted properties are\nretained. Supplying affinity replaces all its branches, including omitted ones.",
+                  "description": "Action chooses how explicitly supplied properties are applied.\nMerge fills an empty schedulerName and absent security profiles, sets hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy,\nand map keys, adds missing imagePullSecrets by name, upserts lists, and conjoins required affinity.\nReplace replaces each supplied property in full: scheduler, hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy, nodeSelector,\nregistries.imagePullSecrets, tolerations, topologySpreadConstraints, affinity, or security profiles. Omitted properties are\nretained. Supplying affinity replaces all its branches, including omitted ones.\nListenerSet parent references are atomic: merge fills an absent or null\nreference, while replace replaces the entire supplied reference.",
                   "enum": [
                     "merge",
                     "replace"
@@ -1859,6 +1859,55 @@
                   "maxItems": 64,
                   "type": "array",
                   "x-kubernetes-list-type": "atomic"
+                },
+                "ingress": {
+                  "additionalProperties": false,
+                  "description": "Ingress configures Kubernetes ingress and Gateway API resource mutations.",
+                  "properties": {
+                    "listenerSets": {
+                      "additionalProperties": false,
+                      "description": "ListenerSets configures gateway.networking.k8s.io/v1 ListenerSets.",
+                      "properties": {
+                        "parentRef": {
+                          "additionalProperties": false,
+                          "description": "ParentRef supplies the complete spec.parentRef. Merge fills only an absent\nor null reference; any supplied reference is retained, including an omitted\nnamespace. Replace replaces the entire reference. Nil leaves it unchanged.\nThe first applicable merge wins; later replacements can override it.\nAttachment remains subject to the parent's allowedListeners configuration.",
+                          "properties": {
+                            "group": {
+                              "default": "gateway.networking.k8s.io",
+                              "description": "Group identifies the parent's API group. An explicit empty string selects\nthe core API group, following Gateway API reference semantics.",
+                              "maxLength": 4096,
+                              "type": "string"
+                            },
+                            "kind": {
+                              "default": "Gateway",
+                              "description": "Kind identifies the parent's kind.",
+                              "maxLength": 4096,
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "name": {
+                              "description": "Name identifies the parent resource.",
+                              "maxLength": 4096,
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "namespace": {
+                              "description": "Namespace identifies the parent's namespace. Omitted means the\nListenerSet's namespace; an explicit empty string is invalid.",
+                              "maxLength": 4096,
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
                 },
                 "workloads": {
                   "additionalProperties": false,
@@ -4893,14 +4942,14 @@
               "type": "object"
             },
             "mutate": {
-              "description": "Mutate applies ordered typed mutations before enforcement. It shares the\nrule's namespace selection and audience. Workload mutations apply on Pod creation.",
+              "description": "Mutate applies ordered typed mutations before enforcement. It shares the\nrule's namespace selection and audience. Workload mutations apply on Pod creation;\nListenerSet parent references apply on main-resource creation and update.",
               "items": {
                 "additionalProperties": false,
                 "description": "NamespaceRuleMutation applies typed mutations independently of enforce.action.\nMutated values remain subject to all applicable enforcement rules.",
                 "properties": {
                   "action": {
                     "default": "merge",
-                    "description": "Action chooses how explicitly supplied properties are applied.\nMerge fills an empty schedulerName and absent security profiles, sets hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy,\nand map keys, adds missing imagePullSecrets by name, upserts lists, and conjoins required affinity.\nReplace replaces each supplied property in full: scheduler, hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy, nodeSelector,\nregistries.imagePullSecrets, tolerations, topologySpreadConstraints, affinity, or security profiles. Omitted properties are\nretained. Supplying affinity replaces all its branches, including omitted ones.",
+                    "description": "Action chooses how explicitly supplied properties are applied.\nMerge fills an empty schedulerName and absent security profiles, sets hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy,\nand map keys, adds missing imagePullSecrets by name, upserts lists, and conjoins required affinity.\nReplace replaces each supplied property in full: scheduler, hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy, nodeSelector,\nregistries.imagePullSecrets, tolerations, topologySpreadConstraints, affinity, or security profiles. Omitted properties are\nretained. Supplying affinity replaces all its branches, including omitted ones.\nListenerSet parent references are atomic: merge fills an absent or null\nreference, while replace replaces the entire supplied reference.",
                     "enum": [
                       "merge",
                       "replace"
@@ -4933,6 +4982,55 @@
                     "maxItems": 64,
                     "type": "array",
                     "x-kubernetes-list-type": "atomic"
+                  },
+                  "ingress": {
+                    "additionalProperties": false,
+                    "description": "Ingress configures Kubernetes ingress and Gateway API resource mutations.",
+                    "properties": {
+                      "listenerSets": {
+                        "additionalProperties": false,
+                        "description": "ListenerSets configures gateway.networking.k8s.io/v1 ListenerSets.",
+                        "properties": {
+                          "parentRef": {
+                            "additionalProperties": false,
+                            "description": "ParentRef supplies the complete spec.parentRef. Merge fills only an absent\nor null reference; any supplied reference is retained, including an omitted\nnamespace. Replace replaces the entire reference. Nil leaves it unchanged.\nThe first applicable merge wins; later replacements can override it.\nAttachment remains subject to the parent's allowedListeners configuration.",
+                            "properties": {
+                              "group": {
+                                "default": "gateway.networking.k8s.io",
+                                "description": "Group identifies the parent's API group. An explicit empty string selects\nthe core API group, following Gateway API reference semantics.",
+                                "maxLength": 4096,
+                                "type": "string"
+                              },
+                              "kind": {
+                                "default": "Gateway",
+                                "description": "Kind identifies the parent's kind.",
+                                "maxLength": 4096,
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "name": {
+                                "description": "Name identifies the parent resource.",
+                                "maxLength": 4096,
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "namespace": {
+                                "description": "Namespace identifies the parent's namespace. Omitted means the\nListenerSet's namespace; an explicit empty string is invalid.",
+                                "maxLength": 4096,
+                                "minLength": 1,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
                   },
                   "workloads": {
                     "additionalProperties": false,
@@ -7902,14 +8000,14 @@
                 "type": "object"
               },
               "mutate": {
-                "description": "Mutate applies ordered typed mutations before enforcement. It shares the\nrule's namespace selection and audience. Workload mutations apply on Pod creation.",
+                "description": "Mutate applies ordered typed mutations before enforcement. It shares the\nrule's namespace selection and audience. Workload mutations apply on Pod creation;\nListenerSet parent references apply on main-resource creation and update.",
                 "items": {
                   "additionalProperties": false,
                   "description": "NamespaceRuleMutation applies typed mutations independently of enforce.action.\nMutated values remain subject to all applicable enforcement rules.",
                   "properties": {
                     "action": {
                       "default": "merge",
-                      "description": "Action chooses how explicitly supplied properties are applied.\nMerge fills an empty schedulerName and absent security profiles, sets hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy,\nand map keys, adds missing imagePullSecrets by name, upserts lists, and conjoins required affinity.\nReplace replaces each supplied property in full: scheduler, hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy, nodeSelector,\nregistries.imagePullSecrets, tolerations, topologySpreadConstraints, affinity, or security profiles. Omitted properties are\nretained. Supplying affinity replaces all its branches, including omitted ones.",
+                      "description": "Action chooses how explicitly supplied properties are applied.\nMerge fills an empty schedulerName and absent security profiles, sets hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy,\nand map keys, adds missing imagePullSecrets by name, upserts lists, and conjoins required affinity.\nReplace replaces each supplied property in full: scheduler, hostUsers, readOnlyRootFilesystem, registries.imagePullPolicy, nodeSelector,\nregistries.imagePullSecrets, tolerations, topologySpreadConstraints, affinity, or security profiles. Omitted properties are\nretained. Supplying affinity replaces all its branches, including omitted ones.\nListenerSet parent references are atomic: merge fills an absent or null\nreference, while replace replaces the entire supplied reference.",
                       "enum": [
                         "merge",
                         "replace"
@@ -7942,6 +8040,55 @@
                       "maxItems": 64,
                       "type": "array",
                       "x-kubernetes-list-type": "atomic"
+                    },
+                    "ingress": {
+                      "additionalProperties": false,
+                      "description": "Ingress configures Kubernetes ingress and Gateway API resource mutations.",
+                      "properties": {
+                        "listenerSets": {
+                          "additionalProperties": false,
+                          "description": "ListenerSets configures gateway.networking.k8s.io/v1 ListenerSets.",
+                          "properties": {
+                            "parentRef": {
+                              "additionalProperties": false,
+                              "description": "ParentRef supplies the complete spec.parentRef. Merge fills only an absent\nor null reference; any supplied reference is retained, including an omitted\nnamespace. Replace replaces the entire reference. Nil leaves it unchanged.\nThe first applicable merge wins; later replacements can override it.\nAttachment remains subject to the parent's allowedListeners configuration.",
+                              "properties": {
+                                "group": {
+                                  "default": "gateway.networking.k8s.io",
+                                  "description": "Group identifies the parent's API group. An explicit empty string selects\nthe core API group, following Gateway API reference semantics.",
+                                  "maxLength": 4096,
+                                  "type": "string"
+                                },
+                                "kind": {
+                                  "default": "Gateway",
+                                  "description": "Kind identifies the parent's kind.",
+                                  "maxLength": 4096,
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Name identifies the parent resource.",
+                                  "maxLength": 4096,
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "namespace": {
+                                  "description": "Namespace identifies the parent's namespace. Omitted means the\nListenerSet's namespace; an explicit empty string is invalid.",
+                                  "maxLength": 4096,
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
                     },
                     "workloads": {
                       "additionalProperties": false,

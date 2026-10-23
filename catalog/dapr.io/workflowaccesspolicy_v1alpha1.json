@@ -1,5 +1,5 @@
 {
-  "description": "WorkflowAccessPolicy controls which app IDs are permitted to schedule\nspecific workflows and activities on a target application.",
+  "description": "WorkflowAccessPolicy controls which app IDs are permitted to perform\nworkflow operations (schedule, terminate, raise, pause, resume, purge, get,\nrerun) on specific workflows, and to schedule specific activities, on a\ntarget application.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -36,8 +36,49 @@
                   "properties": {
                     "name": {
                       "description": "Name is the exact name or glob pattern for the activity.",
+                      "maxLength": 256,
                       "minLength": 1,
                       "type": "string"
+                    },
+                    "requires": {
+                      "description": "Requires is an ordered list of history events that must all be present in\nthe caller's propagated workflow history for this rule to apply. The\nentries must be satisfied in the order they are listed: each successive\nentry matches an event at or after the event matched by the previous one.",
+                      "items": {
+                        "additionalProperties": false,
+                        "description": "RequiredEvent is a single entry in a rule's Requires list. It matches when\nthe caller's propagated history contains an event of the given EventType,\nproduced by AppID, with the given Name.",
+                        "properties": {
+                          "appID": {
+                            "description": "AppID is the app ID that must have produced the matched event. An event\nonly matches when it came from this app's propagated history.",
+                            "maxLength": 256,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "eventType": {
+                            "description": "EventType is the history event that must be present.",
+                            "enum": [
+                              "activity.started",
+                              "activity.completed",
+                              "workflow.started",
+                              "workflow.completed",
+                              "event.raised"
+                            ],
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Name is the activity name (activity.started|activity.completed), the\nchild-workflow name (workflow.started|workflow.completed), or the\nexternal event name (event.raised).",
+                            "maxLength": 256,
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "appID",
+                          "eventType",
+                          "name"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 20,
+                      "type": "array"
                     }
                   },
                   "required": [
@@ -45,16 +86,18 @@
                   ],
                   "type": "object"
                 },
+                "maxItems": 100,
                 "type": "array"
               },
               "callers": {
-                "description": "Callers that this rule applies to.",
+                "description": "Callers that this rule applies to. The policy is a cross-app gate;\nlisting the target app's own appID here has no effect because\nsame-app calls are always exempt from enforcement.",
                 "items": {
                   "additionalProperties": false,
                   "description": "WorkflowCaller identifies a calling application.",
                   "properties": {
                     "appID": {
                       "description": "AppID is the Dapr app ID of the caller.",
+                      "maxLength": 256,
                       "minLength": 1,
                       "type": "string"
                     }
@@ -64,6 +107,7 @@
                   ],
                   "type": "object"
                 },
+                "maxItems": 100,
                 "minItems": 1,
                 "type": "array"
               },
@@ -71,10 +115,11 @@
                 "description": "Workflows are the workflow rules that the matched callers are allowed.",
                 "items": {
                   "additionalProperties": false,
-                  "description": "WorkflowRule grants the matched callers access to the listed operations on\nworkflows whose name matches Name (exact or glob).",
+                  "description": "WorkflowRule grants the matched callers access to the listed operations on\nworkflows whose name matches Name (exact or glob). An optional `requires`\ngate may be attached, but only when the rule's sole operation is\n`schedule` — schedule is the only operation that carries propagated\nworkflow history to check against. Express OR across prerequisite sets by\nlisting multiple workflow rules with the same Name, each with its own\n`requires`; access is granted if any matching rule is satisfied.",
                   "properties": {
                     "name": {
                       "description": "Name is the exact name or glob pattern for the workflow.",
+                      "maxLength": 256,
                       "minLength": 1,
                       "type": "string"
                     },
@@ -94,17 +139,65 @@
                         ],
                         "type": "string"
                       },
+                      "maxItems": 8,
                       "minItems": 1,
                       "type": "array",
                       "x-kubernetes-list-type": "set"
+                    },
+                    "requires": {
+                      "description": "Requires is an ordered list of history events that must all be present in\nthe caller's propagated workflow history for this rule to apply. The\nentries must be satisfied in the order they are listed: each successive\nentry matches an event at or after the event matched by the previous one.\nOnly valid when the rule's only operation is `schedule`.",
+                      "items": {
+                        "additionalProperties": false,
+                        "description": "RequiredEvent is a single entry in a rule's Requires list. It matches when\nthe caller's propagated history contains an event of the given EventType,\nproduced by AppID, with the given Name.",
+                        "properties": {
+                          "appID": {
+                            "description": "AppID is the app ID that must have produced the matched event. An event\nonly matches when it came from this app's propagated history.",
+                            "maxLength": 256,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "eventType": {
+                            "description": "EventType is the history event that must be present.",
+                            "enum": [
+                              "activity.started",
+                              "activity.completed",
+                              "workflow.started",
+                              "workflow.completed",
+                              "event.raised"
+                            ],
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Name is the activity name (activity.started|activity.completed), the\nchild-workflow name (workflow.started|workflow.completed), or the\nexternal event name (event.raised).",
+                            "maxLength": 256,
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "appID",
+                          "eventType",
+                          "name"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 20,
+                      "type": "array"
                     }
                   },
                   "required": [
                     "name",
                     "operations"
                   ],
-                  "type": "object"
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "requires is only valid when the rule's only operation is 'schedule'",
+                      "rule": "!has(self.requires) || size(self.requires) == 0 || (size(self.operations) == 1 && self.operations[0] == 'schedule')"
+                    }
+                  ]
                 },
+                "maxItems": 100,
                 "type": "array"
               }
             },
@@ -119,6 +212,7 @@
               }
             ]
           },
+          "maxItems": 100,
           "type": "array"
         }
       },

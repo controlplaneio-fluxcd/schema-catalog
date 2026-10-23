@@ -1,15 +1,23 @@
-# schema source: Dapr v1.18.9 https://github.com/dapr/dapr
+# schema source: Dapr v1.19.0 https://github.com/dapr/dapr
 apiVersion <string> enum=dapr.io/v1alpha1
 kind <string> enum=WorkflowAccessPolicy
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 scopes <[]string>
 spec <object>	# WorkflowAccessPolicySpec defines the desired state of WorkflowAccessPolicy.
-spec.rules <[]object>	# Rules defines the allow-list of which callers can perform which operations.
-spec.rules[].activities <[]object>	# Activities are the activity rules that the matched callers are allowed.
-spec.rules[].activities[].name <string> (required) min=1	# Name is the exact name or glob pattern for the activity.
-spec.rules[].callers <[]object> (required) min=1	# Callers that this rule applies to.
-spec.rules[].callers[].appID <string> (required) min=1	# AppID is the Dapr app ID of the caller.
-spec.rules[].workflows <[]object>	# Workflows are the workflow rules that the matched callers are allowed.
-spec.rules[].workflows[].name <string> (required) min=1	# Name is the exact name or glob pattern for the workflow.
-spec.rules[].workflows[].operations <[]string> (required) min=1	# Operations is the set of operations this rule applies to.
+spec.rules <[]object> max=100	# Rules defines the allow-list of which callers can perform which operations.
+spec.rules[].activities <[]object> max=100	# Activities are the activity rules that the matched callers are allowed.
+spec.rules[].activities[].name <string> (required) min=1 max=256	# Name is the exact name or glob pattern for the activity.
+spec.rules[].activities[].requires <[]object> max=20	# Requires is an ordered list of history events that must all be present in the caller's propagated workflow history for this rule to apply. The entries must be satisfied in the order they are listed: each successive entry matches an event at or after the event matched by the previous one.
+spec.rules[].activities[].requires[].appID <string> (required) min=1 max=256	# AppID is the app ID that must have produced the matched event. An event only matches when it came from this app's propagated history.
+spec.rules[].activities[].requires[].eventType <string> (required) enum=activity.started|activity.completed|workflow.started|workflow.completed|event.raised	# EventType is the history event that must be present.
+spec.rules[].activities[].requires[].name <string> (required) min=1 max=256	# Name is the activity name (activity.started|activity.completed), the child-workflow name (workflow.started|workflow.completed), or the external event name (event.raised).
+spec.rules[].callers <[]object> (required) min=1 max=100	# Callers that this rule applies to. The policy is a cross-app gate; listing the target app's own appID here has no effect because same-app calls are always exempt from enforcement.
+spec.rules[].callers[].appID <string> (required) min=1 max=256	# AppID is the Dapr app ID of the caller.
+spec.rules[].workflows <[]object> max=100	# Workflows are the workflow rules that the matched callers are allowed.
+spec.rules[].workflows[].name <string> (required) min=1 max=256	# Name is the exact name or glob pattern for the workflow.
+spec.rules[].workflows[].operations <[]string> (required) min=1 max=8	# Operations is the set of operations this rule applies to.
+spec.rules[].workflows[].requires <[]object> max=20	# Requires is an ordered list of history events that must all be present in the caller's propagated workflow history for this rule to apply. The entries must be satisfied in the order they are listed: each successive entry matches an event at or after the event matched by the previous one. Only valid when the rule's only operation is `schedule`.
+spec.rules[].workflows[].requires[].appID <string> (required) min=1 max=256	# AppID is the app ID that must have produced the matched event. An event only matches when it came from this app's propagated history.
+spec.rules[].workflows[].requires[].eventType <string> (required) enum=activity.started|activity.completed|workflow.started|workflow.completed|event.raised	# EventType is the history event that must be present.
+spec.rules[].workflows[].requires[].name <string> (required) min=1 max=256	# Name is the activity name (activity.started|activity.completed), the child-workflow name (workflow.started|workflow.completed), or the external event name (event.raised).
