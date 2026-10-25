@@ -1,4 +1,4 @@
-# schema source: MariaDB Operator 26.10.1 https://github.com/mariadb-operator/mariadb-operator
+# schema source: MariaDB Operator 26.10.2 https://github.com/mariadb-operator/mariadb-operator
 apiVersion <string> enum=k8s.mariadb.com/v1alpha1
 kind <string> enum=MariaDB
 metadata.name <string> (required)
@@ -163,6 +163,7 @@ spec.bootstrapFrom.stagingStorage.persistentVolumeClaim.selector.matchExpression
 spec.bootstrapFrom.stagingStorage.persistentVolumeClaim.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.bootstrapFrom.stagingStorage.persistentVolumeClaim.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.bootstrapFrom.stagingStorage.persistentVolumeClaim.storageClassName <string>
+spec.bootstrapFrom.stagingStorage.persistentVolumeClaim.volumeAttributesClassName <string>	# VolumeAttributesClassName references a VolumeAttributesClass for the PVC.
 spec.bootstrapFrom.stagingStorage.volume <object>	# Volume is a Kubernetes volume specification.
 spec.bootstrapFrom.stagingStorage.volume.csi <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#csivolumesource-v1-core.
 spec.bootstrapFrom.stagingStorage.volume.csi.driver <string> (required)
@@ -393,6 +394,7 @@ spec.galera.config.volumeClaimTemplate.selector.matchExpressions[].operator <str
 spec.galera.config.volumeClaimTemplate.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.galera.config.volumeClaimTemplate.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.galera.config.volumeClaimTemplate.storageClassName <string>
+spec.galera.config.volumeClaimTemplate.volumeAttributesClassName <string>	# VolumeAttributesClassName references a VolumeAttributesClass for the PVC.
 spec.galera.enabled <boolean>	# Enabled is a flag to enable Galera.
 spec.galera.galeraLibPath <string>	# GaleraLibPath is a path inside the MariaDB image to the wsrep provider plugin. It is defaulted if not provided. More info: https://galeracluster.com/library/documentation/mysql-wsrep-options.html#wsrep-provider.
 spec.galera.gtidDomainId <integer>	# GtidDomainID is the domain ID to be used in GTID mode, enabled when the multi-cluster topology is used. For example: if you set this to `0`, the 'wsrep_gtid_domain_id' will be 0, while the replicas (if 3) will have 'gtid_domain_id' 1,2,3. Make sure it has a different value on each the member of a multi-cluster topology. See: https://mariadb.com/docs/galera-cluster/high-availability/using-mariadb-replication-with-mariadb-galera-cluster/configuring-mariadb-replication-between-two-mariadb-galera-clusters
@@ -723,6 +725,7 @@ spec.metrics.passwordSecretKeyRef.generate <boolean> default=false	# Generate in
 spec.metrics.passwordSecretKeyRef.key <string> (required)
 spec.metrics.passwordSecretKeyRef.name <string> default=""
 spec.metrics.serviceMonitor <object>	# ServiceMonitor defines the ServiceMonior object.
+spec.metrics.serviceMonitor.enabled <boolean>	# Enabled is a flag to enable the ServiceMonitor creation. It defaults to true when metrics are enabled. When disabled, the exporter is still deployed, but no ServiceMonitor is created, and the ServiceMonitor CRD is no longer required to be installed in the cluster.
 spec.metrics.serviceMonitor.interval <string>	# Interval for scraping metrics.
 spec.metrics.serviceMonitor.jobLabel <string>	# JobLabel to add to the ServiceMonitor object.
 spec.metrics.serviceMonitor.prometheusRelease <string>	# PrometheusRelease is the release label to add to the ServiceMonitor object.
@@ -1284,6 +1287,7 @@ spec.storage.volumeClaimTemplate.selector.matchExpressions[].operator <string> (
 spec.storage.volumeClaimTemplate.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.storage.volumeClaimTemplate.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.storage.volumeClaimTemplate.storageClassName <string>
+spec.storage.volumeClaimTemplate.volumeAttributesClassName <string>	# VolumeAttributesClassName references a VolumeAttributesClass for the PVC.
 spec.storage.waitForVolumeResize <boolean>	# WaitForVolumeResize indicates whether to wait for the PVCs to be resized before marking the MariaDB object as ready. This will block other operations such as cluster recovery while the resize is in progress. It defaults to true.
 spec.suspend <boolean> default=false	# Suspend indicates whether the current resource should be suspended or not. This can be useful for maintenance, as disabling the reconciliation prevents the operator from interfering with user operations during maintenance activities.
 spec.terminationGracePeriodSeconds <integer> format=int64	# TerminationGracePeriodSeconds to be used in the Pod.
@@ -1372,6 +1376,7 @@ spec.volumes[].ephemeral.volumeClaimTemplate.selector.matchExpressions[].operato
 spec.volumes[].ephemeral.volumeClaimTemplate.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.volumes[].ephemeral.volumeClaimTemplate.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.volumes[].ephemeral.volumeClaimTemplate.storageClassName <string>
+spec.volumes[].ephemeral.volumeClaimTemplate.volumeAttributesClassName <string>	# VolumeAttributesClassName references a VolumeAttributesClass for the PVC.
 spec.volumes[].hostPath <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#hostpathvolumesource-v1-core
 spec.volumes[].hostPath.path <string> (required)
 spec.volumes[].hostPath.type <string>
