@@ -1,4 +1,4 @@
-# schema source: MariaDB Operator 26.10.1 https://github.com/mariadb-operator/mariadb-operator
+# schema source: MariaDB Operator 26.10.2 https://github.com/mariadb-operator/mariadb-operator
 apiVersion <string> enum=k8s.mariadb.com/v1alpha1
 kind <string> enum=MaxScale
 metadata.name <string> (required)
@@ -110,6 +110,7 @@ spec.config.volumeClaimTemplate.selector.matchExpressions[].operator <string> (r
 spec.config.volumeClaimTemplate.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.config.volumeClaimTemplate.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.config.volumeClaimTemplate.storageClassName <string>
+spec.config.volumeClaimTemplate.volumeAttributesClassName <string>	# VolumeAttributesClassName references a VolumeAttributesClass for the PVC.
 spec.connection <object>	# Connection provides a template to define the Connection for MaxScale.
 spec.connection.healthCheck <object>	# HealthCheck to be used in the Connection.
 spec.connection.healthCheck.interval <string>	# Interval used to perform health checks.
@@ -322,6 +323,7 @@ spec.metrics.exporter.tolerations[].operator <string>	# Operator represents a ke
 spec.metrics.exporter.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
 spec.metrics.exporter.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
 spec.metrics.serviceMonitor <object>	# ServiceMonitor defines the ServiceMonior object.
+spec.metrics.serviceMonitor.enabled <boolean>	# Enabled is a flag to enable the ServiceMonitor creation. It defaults to true when metrics are enabled. When disabled, the exporter is still deployed, but no ServiceMonitor is created, and the ServiceMonitor CRD is no longer required to be installed in the cluster.
 spec.metrics.serviceMonitor.interval <string>	# Interval for scraping metrics.
 spec.metrics.serviceMonitor.jobLabel <string>	# JobLabel to add to the ServiceMonitor object.
 spec.metrics.serviceMonitor.prometheusRelease <string>	# PrometheusRelease is the release label to add to the ServiceMonitor object.
@@ -411,6 +413,33 @@ spec.services[].name <string> (required)	# Name is the identifier of the MaxScal
 spec.services[].params <map[string]string>	# Params defines extra parameters to pass to the service. Any parameter supported by MaxScale may be specified here. See reference: https://mariadb.com/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/#service_1. Router specific parameter are also supported: https://mariadb.com/kb/en/mariadb-maxscale-2308-readwritesplit/#configuration. https://mariadb.com/kb/en/mariadb-maxscale-2308-readconnroute/#configuration.
 spec.services[].router <string> (required) enum=readwritesplit|readconnroute	# Router is the type of router to use.
 spec.services[].suspend <boolean> default=false	# Suspend indicates whether the current resource should be suspended or not. This can be useful for maintenance, as disabling the reconciliation prevents the operator from interfering with user operations during maintenance activities.
+spec.sidecarContainers <[]object>	# SidecarContainers to be used in the Pod.
+spec.sidecarContainers[].args <[]string>	# Args to be used in the Container.
+spec.sidecarContainers[].command <[]string>	# Command to be used in the Container.
+spec.sidecarContainers[].env <[]object>	# Env represents the environment variables to be injected in a container.
+spec.sidecarContainers[].env[].name <string> (required)	# Name of the environment variable. Must be a C_IDENTIFIER.
+spec.sidecarContainers[].env[].value <string>
+spec.sidecarContainers[].env[].valueFrom <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#envvarsource-v1-core.
+spec.sidecarContainers[].env[].valueFrom.configMapKeyRef <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#configmapkeyselector-v1-core.
+spec.sidecarContainers[].env[].valueFrom.configMapKeyRef.key <string> (required)
+spec.sidecarContainers[].env[].valueFrom.configMapKeyRef.name <string> default=""
+spec.sidecarContainers[].env[].valueFrom.fieldRef <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#objectfieldselector-v1-core.
+spec.sidecarContainers[].env[].valueFrom.fieldRef.apiVersion <string>
+spec.sidecarContainers[].env[].valueFrom.fieldRef.fieldPath <string> (required)
+spec.sidecarContainers[].env[].valueFrom.secretKeyRef <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#secretkeyselector-v1-core.
+spec.sidecarContainers[].env[].valueFrom.secretKeyRef.key <string> (required)
+spec.sidecarContainers[].env[].valueFrom.secretKeyRef.name <string> default=""
+spec.sidecarContainers[].image <string> (required)	# Image name to be used by the container. The supported format is `<image>:<tag>`.
+spec.sidecarContainers[].imagePullPolicy <string> enum=Always|Never|IfNotPresent	# ImagePullPolicy is the image pull policy. One of `Always`, `Never` or `IfNotPresent`. If not defined, it defaults to `IfNotPresent`.
+spec.sidecarContainers[].name <string>	# Name to be given to the container.
+spec.sidecarContainers[].resources <object>	# Resources describes the compute resource requirements.
+spec.sidecarContainers[].resources.limits <object (free-form)>	# ResourceList is a set of (resource name, quantity) pairs.
+spec.sidecarContainers[].resources.requests <object (free-form)>	# ResourceList is a set of (resource name, quantity) pairs.
+spec.sidecarContainers[].volumeMounts <[]object>	# VolumeMounts to be used in the Container.
+spec.sidecarContainers[].volumeMounts[].mountPath <string> (required)
+spec.sidecarContainers[].volumeMounts[].name <string> (required)	# This must match the Name of a Volume.
+spec.sidecarContainers[].volumeMounts[].readOnly <boolean>
+spec.sidecarContainers[].volumeMounts[].subPath <string>
 spec.startupProbe <object>	# StartupProbe to be used in the Container.
 spec.startupProbe.exec <object>	# Refer to the Kubernetes docs: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.36/#execaction-v1-core.
 spec.startupProbe.exec.command <[]string>

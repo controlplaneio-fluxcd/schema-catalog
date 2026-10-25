@@ -208,7 +208,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
 | [Agentgateway](https://schemas.fluxoperator.dev/p/agentgateway) | `agentgateway` | v1.6.0 | 4 | 2026-10-03 |
-| [AWS Load Balancer Controller](https://schemas.fluxoperator.dev/p/aws-load-balancer-controller) | `aws-load-balancer-controller` | v3.6.1 | 11 | 2026-10-22 |
+| [AWS Load Balancer Controller](https://schemas.fluxoperator.dev/p/aws-load-balancer-controller) | `aws-load-balancer-controller` | v3.6.2 | 11 | 2026-10-25 |
 | [Cluster Inventory API](https://schemas.fluxoperator.dev/p/cluster-inventory-api) | `cluster-inventory-api` | v0.2.0 | 4 | 2026-10-21 |
 | [Envoy Gateway](https://schemas.fluxoperator.dev/p/envoy-gateway) | `envoy-gateway` | v1.9.2 | 8 | 2026-09-29 |
 | [ExternalDNS](https://schemas.fluxoperator.dev/p/external-dns) | `external-dns` | v0.24.0 | 2 | 2026-10-24 |
@@ -273,7 +273,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Kubeflow PVCViewer](https://schemas.fluxoperator.dev/p/kubeflow) | `pvcviewer-controller` | v1.11.0 | 1 | 2026-07-09 |
 | [Kubeflow Tensorboard](https://schemas.fluxoperator.dev/p/kubeflow) | `tensorboard-controller` | v1.11.0 | 1 | 2026-07-09 |
 | [Kubeflow Trainer](https://schemas.fluxoperator.dev/p/kubeflow) | `kubeflow-trainer` | v2.3.0 | 3 | 2026-08-14 |
-| [MariaDB Operator](https://schemas.fluxoperator.dev/p/mariadb-operator) | `mariadb-operator` | 26.10.1 | 12 | 2026-09-23 |
+| [MariaDB Operator](https://schemas.fluxoperator.dev/p/mariadb-operator) | `mariadb-operator` | 26.10.2 | 12 | 2026-10-25 |
 | [Marimo Operator](https://schemas.fluxoperator.dev/p/marimo-operator) | `marimo-operator` | v0.3.0 | 1 | 2026-08-06 |
 | [MPI Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `mpi-operator` | v0.8.2 | 1 | 2026-07-09 |
 | [NATS](https://schemas.fluxoperator.dev/p/nats) | `nats` | v0.25.0 | 8 | 2026-10-22 |
