@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-123-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C236-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-665%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-124-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C251-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-665%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -157,7 +157,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [External Secrets](https://schemas.fluxoperator.dev/p/external-secrets) | `external-secrets` | v2.14.0 | 29 | 2026-10-24 |
 | [Falco Operator](https://schemas.fluxoperator.dev/p/falco-operator) | `falco-operator` | v0.4.1 | 5 | 2026-07-09 |
 | [GCP Config Connector](https://schemas.fluxoperator.dev/p/config-connector) | `config-connector` | v1.159.0 | 703 | 2026-10-14 |
-| [Image Scanner Operator](https://schemas.fluxoperator.dev/p/image-scanner-operator) | `image-scanner-operator` | v0.16.32 | 1 | 2026-10-26 |
+| [Image Scanner Operator](https://schemas.fluxoperator.dev/p/image-scanner-operator) | `image-scanner-operator` | v0.16.33 | 1 | 2026-10-27 |
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.9.4 | 2 | 2026-09-05 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.40.4 | 5 | 2026-09-05 |
 | [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.38.2 | 8 | 2026-09-23 |
@@ -181,6 +181,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
 | [Amazon VPC CNI Network Policy Controller](https://schemas.fluxoperator.dev/p/amazon-network-policy-controller) | `amazon-network-policy-controller` | v1.1.10 | 4 | 2026-09-16 |
+| [Amazon VPC Resource Controller](https://schemas.fluxoperator.dev/p/amazon-vpc-resource-controller) | `amazon-vpc-resource-controller` | v1.7.2 | 2 | 2026-10-27 |
 | [Antrea](https://schemas.fluxoperator.dev/p/antrea) | `antrea` | v2.7.0 | 21 | 2026-08-15 |
 | [Calico](https://schemas.fluxoperator.dev/p/calico) | `calico` | v3.33.0 | 22 | 2026-10-02 |
 | [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.20.4 | 30 | 2026-10-24 |
@@ -279,7 +280,8 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NATS](https://schemas.fluxoperator.dev/p/nats) | `nats` | v0.25.0 | 8 | 2026-10-22 |
 | [OpenFeature Operator](https://schemas.fluxoperator.dev/p/open-feature-operator) | `open-feature-operator` | v0.9.3 | 9 | 2026-08-29 |
 | [OpenKruise](https://schemas.fluxoperator.dev/p/openkruise) | `openkruise` | v1.9.2 | 26 | 2026-10-21 |
-| [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq-cluster-operator) | `rabbitmq-cluster-operator` | v2.23.1 | 1 | 2026-10-14 |
+| [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq) | `rabbitmq-cluster-operator` | v2.23.1 | 1 | 2026-10-14 |
+| [RabbitMQ Messaging Topology Operator](https://schemas.fluxoperator.dev/p/rabbitmq) | `rabbitmq-messaging-topology-operator` | v1.20.4 | 13 | 2026-10-27 |
 | [Rancher Fleet](https://schemas.fluxoperator.dev/p/rancher-fleet) | `rancher-fleet` | v0.16.3 | 14 | 2026-10-24 |
 | [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.27.0 | 4 | 2026-10-09 |
 | [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 6.6.0 | 4 | 2026-10-23 |
@@ -300,7 +302,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Fluent Operator](https://schemas.fluxoperator.dev/p/fluent-operator) | `fluent-operator` | v3.10.1 | 22 | 2026-09-23 |
 | [Grafana Operator](https://schemas.fluxoperator.dev/p/grafana-operator) | `grafana-operator` | v5.25.0 | 13 | 2026-08-25 |
 | [Jaeger Operator](https://schemas.fluxoperator.dev/p/jaeger-operator) | `jaeger-operator` | v1.65.0 | 1 | 2026-07-09 |
-| [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.31.0 | 3 | 2026-07-16 |
+| [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.33.0 | 3 | 2026-10-27 |
 | [Logging Operator](https://schemas.fluxoperator.dev/p/logging-operator) | `logging-operator` | 6.9.0 | 21 | 2026-09-18 |
 | [Loki Operator](https://schemas.fluxoperator.dev/p/loki-operator) | `loki-operator` | v0.12.0 | 9 | 2026-10-08 |
 | [OpenSearch Operator](https://schemas.fluxoperator.dev/p/opensearch-operator) | `opensearch-operator` | 3.0.14 | 20 | 2026-09-26 |

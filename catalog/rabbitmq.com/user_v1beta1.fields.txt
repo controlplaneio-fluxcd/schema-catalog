@@ -1,0 +1,28 @@
+# schema source: RabbitMQ Messaging Topology Operator v1.20.4 https://github.com/rabbitmq/messaging-topology-operator
+apiVersion <string> enum=rabbitmq.com/v1beta1
+kind <string> enum=User
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# Spec configures the desired state of the User object.
+spec.importCredentialsSecret <object>	# Defines a Secret containing the credentials for the User. If this field is omitted, random a username and password will be generated. The Secret must have the following keys in its Data field: * `username` – Must be present or the import will fail. * `passwordHash` – The SHA-512 hash of the password. If the hash is an empty string, a passwordless user will be created. For more information, see https://www.rabbitmq.com/docs/passwords. * `password` – Plain-text password. Will be used only if the `passwordHash` key is missing. The Operator watches this Secret and re-syncs the User's credentials to RabbitMQ whenever it changes, so updating the Secret's `password`/`passwordHash` rotates the User's password.
+spec.importCredentialsSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.limits <object>	# Limits to apply to a user to restrict the number of connections and channels the user can create. These limits can be used as guard rails in environments where applications cannot be trusted and monitored in detail, for example, when RabbitMQ clusters are offered as a service. See https://www.rabbitmq.com/docs/user-limits.
+spec.limits.channels <integer> format=int32	# Limits how many AMQP 0.9.1 channels the user can open.
+spec.limits.connections <integer> format=int32	# Limits how many connections the user can open.
+spec.rabbitmqClusterReference <object> (required)	# Reference to the RabbitmqCluster that the user will be created for. This cluster must exist for the User object to be created.
+spec.rabbitmqClusterReference.connectionSecret <object>	# Secret contains the http management uri for the RabbitMQ cluster. The Secret must contain the key `uri`, `username` and `password` or operator will error. Have to set either name or connectionSecret, but not both.
+spec.rabbitmqClusterReference.connectionSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.rabbitmqClusterReference.name <string>	# The name of the RabbitMQ cluster to reference. Have to set either name or connectionSecret, but not both.
+spec.rabbitmqClusterReference.namespace <string>	# The namespace of the RabbitMQ cluster to reference. Defaults to the namespace of the requested resource if omitted.
+spec.tags <[]string>	# List of permissions tags to associate with the user. This determines the level of access to the RabbitMQ management UI granted to the user. Omitting this field will lead to a user than can still connect to the cluster through messaging protocols, but cannot perform any management actions. For more information, see https://www.rabbitmq.com/management.html#permissions.
+status <object>	# Status exposes the observed state of the User object.
+status.conditions <[]object>
+status.conditions[].lastTransitionTime <string> format=date-time	# The last time this Condition status changed.
+status.conditions[].message <string>	# Full text reason for current status of the condition.
+status.conditions[].reason <string>	# One word, camel-case reason for current status of the condition.
+status.conditions[].status <string> (required)	# True, False, or Unknown
+status.conditions[].type <string> (required)	# Type indicates the scope of the custom resource status addressed by the condition.
+status.credentials <object>	# Provides a reference to a Secret object containing the user credentials.
+status.credentials.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+status.observedGeneration <integer> format=int64	# observedGeneration is the most recent successful generation observed for this User. It corresponds to the User's generation, which is updated on mutation by the API Server.
+status.username <string> (required)	# Provide rabbitmq Username
