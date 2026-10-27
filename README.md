@@ -111,7 +111,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS CloudFront Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudfront` | v1.10.0 | 9 | 2026-10-24 |
 | [AWS CloudWatch Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudwatch` | v1.11.0 | 3 | 2026-10-24 |
 | [AWS CloudWatch Logs Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudwatchlogs` | v1.8.0 | 4 | 2026-10-24 |
-| [AWS DynamoDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-dynamodb` | v1.13.1 | 3 | 2026-10-21 |
+| [AWS DynamoDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-dynamodb` | v1.14.0 | 3 | 2026-10-27 |
 | [AWS EC2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ec2` | v1.23.0 | 20 | 2026-10-24 |
 | [AWS ECR Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ecr` | v1.11.0 | 3 | 2026-10-24 |
 | [AWS EFS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-efs` | v1.8.0 | 3 | 2026-10-24 |
@@ -129,7 +129,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS RDS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-rds` | v1.14.0 | 10 | 2026-10-24 |
 | [AWS Route 53 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-route53` | v1.8.0 | 3 | 2026-10-24 |
 | [AWS S3 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-s3` | v1.14.0 | 1 | 2026-10-24 |
-| [AWS SageMaker Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sagemaker` | v1.11.1 | 26 | 2026-10-14 |
+| [AWS SageMaker Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sagemaker` | v1.12.0 | 26 | 2026-10-27 |
 | [AWS Secrets Manager Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-secretsmanager` | v1.8.0 | 1 | 2026-10-24 |
 | [AWS SNS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sns` | v1.12.0 | 4 | 2026-10-24 |
 | [AWS SQS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sqs` | v1.9.0 | 1 | 2026-10-24 |
@@ -194,7 +194,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.7.2 | 5 | 2026-10-21 |
 | [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.7.1 | 5 | 2026-10-21 |
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.4.0 | 13 | 2026-09-05 |
-| [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.21.0 | 21 | 2026-10-08 |
+| [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.21.1 | 21 | 2026-10-27 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.4 | 12 | 2026-10-23 |
 | [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.3.0-rc0 | 6 | 2026-09-24 |
 | [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.24.2 | 9 | 2026-09-29 |
@@ -263,7 +263,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.9 | 2 | 2026-09-23 |
 | [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.4 | 11 | 2026-10-14 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.23.1 | 20 | 2026-10-09 |
-| [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.23.0 | 12 | 2026-07-30 |
+| [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.24.0 | 12 | 2026-10-27 |
 | [KServe](https://schemas.fluxoperator.dev/p/kserve) | `kserve` | v0.21.0 | 6 | 2026-09-26 |
 | [KServe LLM](https://schemas.fluxoperator.dev/p/kserve) | `kserve-llmisvc` | v0.21.0 | 4 | 2026-09-26 |
 | [Kubeflow Notebooks](https://schemas.fluxoperator.dev/p/kubeflow) | `notebook-controller` | v1.11.0 | 3 | 2026-07-09 |
