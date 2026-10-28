@@ -1,4 +1,4 @@
-# schema source: Agentgateway v1.6.0 https://github.com/agentgateway/agentgateway
+# schema source: Agentgateway v1.7.0 https://github.com/agentgateway/agentgateway
 apiVersion <string> enum=agentgateway.dev/v1alpha1
 kind <string> enum=AgentgatewayModel
 metadata.name <string> (required)
@@ -24,7 +24,7 @@ spec.custom.backendRef.name <string> (required) min=1 max=253	# Name of the refe
 spec.custom.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number to use for this resource. Required when the referenced resource is a Kubernetes Service.
 spec.custom.formats <[]object> (required) min=1 max=6	# Provider-native API formats this provider supports.
 spec.custom.formats[].path <string> min=1 max=1024	# Default upstream path override for this format. If unset, agentgateway uses the default path for the format.
-spec.custom.formats[].type <string> (required) enum=AnthropicTokenCount|Completions|Embeddings|Messages|Realtime|Rerank|Responses	# Provider-native API format.
+spec.custom.formats[].type <string> (required) enum=AnthropicTokenCount|Completions|Decisions|Embeddings|Messages|Realtime|Rerank|Responses|SystemOne	# Provider-native API format.
 spec.custom.providerOverride <string> min=1 max=256	# Provider identity used for cost-catalog lookup and telemetry. Defaults to "custom" when unset.
 spec.match <object>	# Conditions for selecting this model from client requests.
 spec.match.model <string> min=1 max=1024	# Model name matched against client requests. It may be exact, a suffix wildcard such as `gpt-*`, a prefix wildcard such as `*-latest`, or `*`. When omitted, the model matches metadata.name exactly.
@@ -385,9 +385,12 @@ spec.policies.promptGuard.request[].regex.action <string> enum=Audit|Mask|Reject
 spec.policies.promptGuard.request[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.promptGuard.request[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.promptGuard.request[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
+spec.policies.promptGuard.request[].response.headers <[]object>	# Headers to include in the rejection response.
+spec.policies.promptGuard.request[].response.headers[].name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of the HTTP header, case-insensitive
+spec.policies.promptGuard.request[].response.headers[].value <string> (required) min=1 max=4096	# Value for the HTTP header
 spec.policies.promptGuard.request[].response.message <string>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.policies.promptGuard.request[].response.statusCode <integer> format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
-spec.policies.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt` and `Messages`. Tool call inputs and outputs are not inspected unless `ToolInput`/`ToolOutput` are listed explicitly. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
+spec.policies.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt`, `Messages`, and `ToolOutput`. Tool call inputs are not inspected unless `ToolInput` is listed explicitly. Webhook guards do not support scope and always inspect `SystemPrompt` and `Messages`. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.policies.promptGuard.request[].webhook <object>	# Webhook that receives requests for prompt guarding.
 spec.policies.promptGuard.request[].webhook.action <string> enum=Audit|Reject	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.policies.promptGuard.request[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
@@ -528,8 +531,12 @@ spec.policies.promptGuard.response[].regex.action <string> enum=Audit|Mask|Rejec
 spec.policies.promptGuard.response[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.promptGuard.response[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.promptGuard.response[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The response was rejected due to inappropriate content`.
+spec.policies.promptGuard.response[].response.headers <[]object>	# Headers to include in the rejection response.
+spec.policies.promptGuard.response[].response.headers[].name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of the HTTP header, case-insensitive
+spec.policies.promptGuard.response[].response.headers[].value <string> (required) min=1 max=4096	# Value for the HTTP header
 spec.policies.promptGuard.response[].response.message <string>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.policies.promptGuard.response[].response.statusCode <integer> format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
+spec.policies.promptGuard.response[].scope <[]string> min=1 max=4	# Which parts of the response this guard inspects. When unset, defaults to `Messages`. Tool calls generated by the model are not inspected unless `ToolInput` is listed explicitly; `ToolOutput` covers results of serverside tools. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.policies.promptGuard.response[].webhook <object>	# Webhook that receives responses for prompt guarding.
 spec.policies.promptGuard.response[].webhook.action <string> enum=Audit|Reject	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.policies.promptGuard.response[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
@@ -572,11 +579,30 @@ spec.policies.tunnel.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*
 spec.policies.tunnel.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
 spec.policies.tunnel.mode <string> enum=Auto|Connect	# How requests are sent through the proxy. Defaults to `Auto`.
 spec.policies.tunnel.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
-spec.provider <string> enum=Anthropic|Azure|Baseten|Bedrock|Cerebras|Cohere|Custom|Deepinfra|Deepseek|Fireworks|Gemini|Groq|Huggingface|Meta|Mistral|Ollama|OpenAI|Openrouter|TogetherAI|VertexAI|XAI	# Provider serving this concrete model. Provider-specific configuration is set by the corresponding field below when needed.
+spec.provider <string> enum=Anthropic|Azure|Baseten|Bedrock|Cerebras|Cohere|Copilot|Custom|Deepinfra|Deepseek|Fireworks|Gemini|Groq|Huggingface|Meta|Mistral|Ollama|OpenAI|Openrouter|Perplexity|TogetherAI|Typesafe|VertexAI|XAI	# Provider serving this concrete model. Provider-specific configuration is set by the corresponding field below when needed.
 spec.vertexai <object>	# Provider-specific settings for Vertex AI.
 spec.vertexai.projectId <string> (required) min=1 max=64	# The ID of the Google Cloud Project that you use for the Vertex AI.
 spec.vertexai.region <string> min=1 max=64	# The location of the Google Cloud Project that you use for the Vertex AI. Special values: `global` uses the global endpoint, while `us` and `eu` use restricted multi-region endpoints. Other values are treated as regional locations. Defaults to `global` if not specified.
 spec.virtualModel <object>	# Request-time routing among concrete AgentgatewayModel resources.
+spec.virtualModel.callout <object>	# Model selection by calling an external HTTP service.
+spec.virtualModel.callout.backendRef <object>	# `backendRef` selects a backend for this policy. Mutually exclusive with `url`.
+spec.virtualModel.callout.backendRef.group <string> default="" pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# Group of the referent, for example `gateway.networking.k8s.io`. Empty selects the core API group
+spec.virtualModel.callout.backendRef.kind <string> default="Service" pattern="^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$" min=1 max=63	# Kubernetes resource kind of the referent, for example `Service`. Defaults to `Service`
+spec.virtualModel.callout.backendRef.name <string> (required) min=1 max=253	# Name is the name of the referent.
+spec.virtualModel.callout.backendRef.namespace <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# Namespace of the referent. Defaults to the local namespace. A cross-namespace reference requires a ReferenceGrant in the referent namespace
+spec.virtualModel.callout.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number. Required when the referent is a Kubernetes `Service`
+spec.virtualModel.callout.body <string> min=1 max=16384	# CEL expression that computes the callout request body. Strings and bytes are used directly; other values are JSON-encoded. If unset, the original request body is forwarded.
+spec.virtualModel.callout.cache <object>	# Reuse callout responses using CEL expressions as the cache key. On a cache hit, `transformation` is evaluated against the cached response. Keying on a session identifier makes routing sticky for that session.
+spec.virtualModel.callout.cache.key <[]string> (required) min=1 max=16	# Ordered list of CEL expressions evaluated against the request to construct the cache key.
+spec.virtualModel.callout.cache.maxEntries <integer> format=int32 min=1	# Maximum number of callout responses to keep in the cache. If unset, this defaults to 10000.
+spec.virtualModel.callout.cache.ttl <string> (required) min=1 max=16384	# Duration string, such as `5m`, or a CEL expression that returns the duration that a cached callout response may be reused, or a timestamp when it expires. The expression is evaluated with `callout` available, before `transformation` is applied.
+spec.virtualModel.callout.fallback <object>	# Model used when the callout fails, returns a non-2xx or non-JSON response, or selects an unknown model. `transformation` is not applied to the fallback. If unset, the request is rejected.
+spec.virtualModel.callout.fallback.model <string> min=1 max=1024	# Concrete model name selected through the referenced model. It is required when modelRef points to a wildcard match.model. When omitted, the referenced model's exact effective match.model is used.
+spec.virtualModel.callout.fallback.modelRef <object> (required)	# Same-namespace AgentgatewayModel resource selected by this target.
+spec.virtualModel.callout.fallback.modelRef.name <string> default=""	# Name of the referent
+spec.virtualModel.callout.headers <map[string]string>	# Headers to set on the callout request, computed from CEL expressions. Keys may be header names or the `:path`, `:method`, and `:authority` pseudo-headers.
+spec.virtualModel.callout.transformation <map[string]string> (required)	# CEL expressions that compute request payload fields from the callout response, overriding existing values. `callout.headers` holds the response headers and `callout.body` the decoded JSON response body. `model` is required and selects the concrete model name, which is matched against the effective match.model of models attached to the same listener.
+spec.virtualModel.callout.url <string> pattern="^https?://[^/?#@]+(/[^?#]*)?$" min=1 max=1024	# `url` directly specifies the HTTP(S) endpoint for this policy. When the scheme is `https`, backend TLS is enabled automatically. Mutually exclusive with `backendRef`. URLs are opaque; referencing a Kubernetes service hostname like `hello.ns.svc.cluster.local` will not apply Service policies or load balancing.
 spec.virtualModel.conditional <object>	# Ordered condition-based model selection.
 spec.virtualModel.conditional.targets <[]object> (required) min=1 max=64	# Concrete model targets evaluated in order. The first matching condition is selected. One final target may omit when to act as the fallback.
 spec.virtualModel.conditional.targets[].model <string> min=1 max=1024	# Concrete model name selected through the referenced model. It is required when modelRef points to a wildcard match.model. When omitted, the referenced model's exact effective match.model is used.
