@@ -1,4 +1,4 @@
-# schema source: Agentgateway v1.6.0 https://github.com/agentgateway/agentgateway
+# schema source: Agentgateway v1.7.0 https://github.com/agentgateway/agentgateway
 apiVersion <string> enum=agentgateway.dev/v1alpha1
 kind <string> enum=AgentgatewayBackend
 metadata.name <string> (required)
@@ -29,6 +29,8 @@ spec.ai.groups[].providers[].bedrock.guardrail.identifier <string> (required) mi
 spec.ai.groups[].providers[].bedrock.guardrail.version <string> (required) min=1 max=256	# Version of the Guardrail policy to use for the backend.
 spec.ai.groups[].providers[].bedrock.model <string> min=1 max=256	# Model name override, such as `gpt-4o-mini`. If unset, the model name is taken from the request.
 spec.ai.groups[].providers[].bedrock.region <string> pattern="^[a-z0-9-]+$" min=1 max=63	# AWS region to use for the backend. Defaults to `us-east-1` if not specified.
+spec.ai.groups[].providers[].copilot <object>	# GitHub Copilot provider settings.
+spec.ai.groups[].providers[].copilot.model <string> min=1 max=256	# Model name override. If unset, the model name is taken from the request.
 spec.ai.groups[].providers[].custom <object>	# Custom provider configures a non-managed or self-hosted LLM provider. Use this when the provider target and API formats should be declared explicitly instead of inferred from a managed provider such as OpenAI or Anthropic.
 spec.ai.groups[].providers[].custom.backendRef <object>	# Kubernetes backend that serves this provider. `backendRef` may target only a namespace-local Service or InferencePool. If unset, host and port must be set on the parent provider.
 spec.ai.groups[].providers[].custom.backendRef.group <string> pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# API group of the referenced resource. For example, `gateway.networking.k8s.io`. Defaults to the empty string, which identifies the core API group.
@@ -37,7 +39,7 @@ spec.ai.groups[].providers[].custom.backendRef.name <string> (required) min=1 ma
 spec.ai.groups[].providers[].custom.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number to use for this resource. Required when the referenced resource is a Kubernetes Service.
 spec.ai.groups[].providers[].custom.formats <[]object> (required) min=1 max=6	# Provider-native API formats this provider supports.
 spec.ai.groups[].providers[].custom.formats[].path <string> min=1 max=1024	# Default upstream path override for this format. If unset, agentgateway uses the default path for the format.
-spec.ai.groups[].providers[].custom.formats[].type <string> (required) enum=AnthropicTokenCount|Completions|Embeddings|Messages|Realtime|Rerank|Responses	# Provider-native API format.
+spec.ai.groups[].providers[].custom.formats[].type <string> (required) enum=AnthropicTokenCount|Completions|Decisions|Embeddings|Messages|Realtime|Rerank|Responses|SystemOne	# Provider-native API format.
 spec.ai.groups[].providers[].custom.model <string> min=1 max=256	# Model name override, such as `gpt-oss`. If unset, the model name is taken from the request.
 spec.ai.groups[].providers[].custom.providerOverride <string> min=1 max=256	# Provider identity used for cost-catalog lookup and telemetry. Defaults to "custom" when unset.
 spec.ai.groups[].providers[].gemini <object>	# Gemini provider settings.
@@ -74,12 +76,12 @@ spec.ai.groups[].providers[].policies.ai.prompt.append[].role <string> (required
 spec.ai.groups[].providers[].policies.ai.prompt.prepend <[]object>	# Messages to prepend to the prompt sent by the client.
 spec.ai.groups[].providers[].policies.ai.prompt.prepend[].content <string> (required)	# String content of the message.
 spec.ai.groups[].providers[].policies.ai.prompt.prepend[].role <string> (required)	# Role of the message. The available roles depend on the backend LLM provider model, such as `SYSTEM` or `USER` in the OpenAI API.
-spec.ai.groups[].providers[].policies.ai.promptCaching <object>	# Automatic prompt caching for supported providers, currently AWS Bedrock. Reduces API costs by caching static content like system prompts and tool definitions. Only applicable for Bedrock Claude 3+ and Nova models.
+spec.ai.groups[].providers[].policies.ai.promptCaching <object>	# Automatic prompt caching for supported providers: Anthropic, Anthropic models on Vertex AI, and AWS Bedrock (Claude 3+ and Nova models). Reduces API costs by caching static content like system prompts and tool definitions. Cache marks sent by the client take precedence: if a request already has any, the policy adds none.
 spec.ai.groups[].providers[].policies.ai.promptCaching.cacheMessageOffset <integer> min=0	# Shifts the message cache point further back in the conversation. 0 (default) places it at the second-to-last message. Higher values move it N additional messages towards the start, clamped to bounds.
 spec.ai.groups[].providers[].policies.ai.promptCaching.cacheMessages <boolean>	# Enables caching for conversation messages. Defaults to true. Caches all messages in the conversation for cost savings.
 spec.ai.groups[].providers[].policies.ai.promptCaching.cacheSystem <boolean>	# Enables caching for system prompts. Defaults to true. Inserts a cache point after all system messages.
-spec.ai.groups[].providers[].policies.ai.promptCaching.cacheTools <boolean>	# Enables caching for tool definitions. Defaults to false. Inserts a cache point after all tool specifications.
-spec.ai.groups[].providers[].policies.ai.promptCaching.minTokens <integer> min=0	# Minimum estimated token count before caching is enabled. Uses rough heuristic (word count × 1.3) to estimate tokens. Defaults to 1024. Bedrock requires at least 1,024 tokens for caching to be effective.
+spec.ai.groups[].providers[].policies.ai.promptCaching.cacheTools <boolean>	# Enables caching for tool definitions. Defaults to false. Inserts a cache point after all tool specifications. Ignored for Bedrock Nova models, which do not support caching tools.
+spec.ai.groups[].providers[].policies.ai.promptCaching.minTokens <integer> min=0	# Minimum estimated token count before caching is enabled. Uses rough heuristic (word count × 1.3) to estimate tokens. Applies to system prompt caching. Defaults to 1024; most models require at least 1,024 tokens for caching to be effective.
 spec.ai.groups[].providers[].policies.ai.promptGuard <object>	# Guardrails for LLM requests and responses.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request <[]object> min=1 max=8	# Prompt guards to apply to requests sent by the client.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].bedrockGuardrails <object>	# AWS Bedrock Guardrails settings for prompt guarding.
@@ -260,9 +262,12 @@ spec.ai.groups[].providers[].policies.ai.promptGuard.request[].regex.action <str
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
+spec.ai.groups[].providers[].policies.ai.promptGuard.request[].response.headers <[]object>	# Headers to include in the rejection response.
+spec.ai.groups[].providers[].policies.ai.promptGuard.request[].response.headers[].name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of the HTTP header, case-insensitive
+spec.ai.groups[].providers[].policies.ai.promptGuard.request[].response.headers[].value <string> (required) min=1 max=4096	# Value for the HTTP header
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].response.message <string>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].response.statusCode <integer> format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
-spec.ai.groups[].providers[].policies.ai.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt` and `Messages`. Tool call inputs and outputs are not inspected unless `ToolInput`/`ToolOutput` are listed explicitly. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
+spec.ai.groups[].providers[].policies.ai.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt`, `Messages`, and `ToolOutput`. Tool call inputs are not inspected unless `ToolInput` is listed explicitly. Webhook guards do not support scope and always inspect `SystemPrompt` and `Messages`. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].webhook <object>	# Webhook that receives requests for prompt guarding.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].webhook.action <string> enum=Audit|Reject	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.ai.groups[].providers[].policies.ai.promptGuard.request[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
@@ -403,8 +408,12 @@ spec.ai.groups[].providers[].policies.ai.promptGuard.response[].regex.action <st
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The response was rejected due to inappropriate content`.
+spec.ai.groups[].providers[].policies.ai.promptGuard.response[].response.headers <[]object>	# Headers to include in the rejection response.
+spec.ai.groups[].providers[].policies.ai.promptGuard.response[].response.headers[].name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of the HTTP header, case-insensitive
+spec.ai.groups[].providers[].policies.ai.promptGuard.response[].response.headers[].value <string> (required) min=1 max=4096	# Value for the HTTP header
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].response.message <string>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].response.statusCode <integer> format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
+spec.ai.groups[].providers[].policies.ai.promptGuard.response[].scope <[]string> min=1 max=4	# Which parts of the response this guard inspects. When unset, defaults to `Messages`. Tool calls generated by the model are not inspected unless `ToolInput` is listed explicitly; `ToolOutput` covers results of serverside tools. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].webhook <object>	# Webhook that receives responses for prompt guarding.
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].webhook.action <string> enum=Audit|Reject	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.ai.groups[].providers[].policies.ai.promptGuard.response[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
@@ -466,7 +475,7 @@ spec.ai.groups[].providers[].policies.auth.credentials[].secretRef.group <string
 spec.ai.groups[].providers[].policies.auth.credentials[].secretRef.key <string> min=1 max=253	# Key in the referenced Secret. If omitted, a location-specific default is used
 spec.ai.groups[].providers[].policies.auth.credentials[].secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.ai.groups[].providers[].policies.auth.credentials[].secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
-spec.ai.groups[].providers[].policies.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication.
+spec.ai.groups[].providers[].policies.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication. If this configuration is invalid, requests using it are rejected.
 spec.ai.groups[].providers[].policies.auth.crossAppAccess.accessTokenScopes <[]string> max=64	# Scopes requested when exchanging the ID-JAG for an access token. When omitted, defaults to Scopes. Set to an empty list to omit scope.
 spec.ai.groups[].providers[].policies.auth.crossAppAccess.audience <string> (required) min=1 max=256	# Identifier of the resource authorization server. The issued ID-JAG is bound to this audience.
 spec.ai.groups[].providers[].policies.auth.crossAppAccess.cache <object>	# Response cache configuration.
@@ -584,7 +593,7 @@ spec.ai.groups[].providers[].policies.auth.location.header.name <string> (requir
 spec.ai.groups[].providers[].policies.auth.location.header.prefix <string> min=1 max=256
 spec.ai.groups[].providers[].policies.auth.location.queryParameter <object>
 spec.ai.groups[].providers[].policies.auth.location.queryParameter.name <string> (required) min=1 max=256
-spec.ai.groups[].providers[].policies.auth.oauthTokenExchange <object>	# OAuth 2.0 token exchange (RFC 8693) / jwt-bearer (RFC 7523) authentication.
+spec.ai.groups[].providers[].policies.auth.oauthTokenExchange <object>	# OAuth 2.0 token exchange (RFC 8693) / jwt-bearer (RFC 7523) authentication. If this configuration is invalid, requests using it are rejected.
 spec.ai.groups[].providers[].policies.auth.oauthTokenExchange.actorToken <object>	# RFC 8693 delegation actor token. TokenExchange grant only.
 spec.ai.groups[].providers[].policies.auth.oauthTokenExchange.actorToken.mayAct <string> enum=Required	# may_act claim validation mode. When omitted, may_act is not enforced.
 spec.ai.groups[].providers[].policies.auth.oauthTokenExchange.actorToken.source <object> (required)	# Where to read the actor token. Actor tokens have no default source.
@@ -753,6 +762,8 @@ spec.ai.provider.bedrock.guardrail.identifier <string> (required) min=1 max=256	
 spec.ai.provider.bedrock.guardrail.version <string> (required) min=1 max=256	# Version of the Guardrail policy to use for the backend.
 spec.ai.provider.bedrock.model <string> min=1 max=256	# Model name override, such as `gpt-4o-mini`. If unset, the model name is taken from the request.
 spec.ai.provider.bedrock.region <string> pattern="^[a-z0-9-]+$" min=1 max=63	# AWS region to use for the backend. Defaults to `us-east-1` if not specified.
+spec.ai.provider.copilot <object>	# GitHub Copilot provider settings.
+spec.ai.provider.copilot.model <string> min=1 max=256	# Model name override. If unset, the model name is taken from the request.
 spec.ai.provider.custom <object>	# Custom provider configures a non-managed or self-hosted LLM provider. Use this when the provider target and API formats should be declared explicitly instead of inferred from a managed provider such as OpenAI or Anthropic.
 spec.ai.provider.custom.backendRef <object>	# Kubernetes backend that serves this provider. `backendRef` may target only a namespace-local Service or InferencePool. If unset, host and port must be set on the parent provider.
 spec.ai.provider.custom.backendRef.group <string> pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" max=253	# API group of the referenced resource. For example, `gateway.networking.k8s.io`. Defaults to the empty string, which identifies the core API group.
@@ -761,7 +772,7 @@ spec.ai.provider.custom.backendRef.name <string> (required) min=1 max=253	# Name
 spec.ai.provider.custom.backendRef.port <integer> format=int32 min=1 max=65535	# Destination port number to use for this resource. Required when the referenced resource is a Kubernetes Service.
 spec.ai.provider.custom.formats <[]object> (required) min=1 max=6	# Provider-native API formats this provider supports.
 spec.ai.provider.custom.formats[].path <string> min=1 max=1024	# Default upstream path override for this format. If unset, agentgateway uses the default path for the format.
-spec.ai.provider.custom.formats[].type <string> (required) enum=AnthropicTokenCount|Completions|Embeddings|Messages|Realtime|Rerank|Responses	# Provider-native API format.
+spec.ai.provider.custom.formats[].type <string> (required) enum=AnthropicTokenCount|Completions|Decisions|Embeddings|Messages|Realtime|Rerank|Responses|SystemOne	# Provider-native API format.
 spec.ai.provider.custom.model <string> min=1 max=256	# Model name override, such as `gpt-oss`. If unset, the model name is taken from the request.
 spec.ai.provider.custom.providerOverride <string> min=1 max=256	# Provider identity used for cost-catalog lookup and telemetry. Defaults to "custom" when unset.
 spec.ai.provider.gemini <object>	# Gemini provider settings.
@@ -793,8 +804,9 @@ spec.mcp.failureMode <string> enum=FailClosed|FailOpen	# Behavior when MCP targe
 spec.mcp.prefixMode <string> enum=Always|Conditional|Never	# How tool and prompt names are prefixed with the target name. Resource URIs always retain target routing information when multiplexing and are unaffected. `Conditional` (default) prefixes only when there are multiple targets. `Always` prefixes even with a single target. `Never` exposes unprefixed names and routes calls by looking up which target serves the name; names must be unique across targets.
 spec.mcp.sessionRouting <string> enum=Stateful|Stateless	# MCP session routing behavior. Defaults to `Stateful` if not set.
 spec.mcp.targets <[]object> (required) min=1 max=128	# MCP targets to use for this backend. Policies targeting MCP targets must use `targetRefs[].sectionName` to select the target by name.
+spec.mcp.targets[].condition <string> min=1 max=16384	# CEL expression evaluated per request; when it evaluates to false, the target is excluded from the virtual MCP. `mcp.target.name` is available. With `selector`, the condition applies to each selected target.
 spec.mcp.targets[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# Name of the MCP target.
-spec.mcp.targets[].selector <object>	# Label selector used to select `Service` resources. If policies are needed on a per-service basis, `AgentgatewayPolicy` can target the desired `Service`.
+spec.mcp.targets[].selector <object>	# Label selector used to select `Service` resources. Selected `Service` ports must set `appProtocol: agentgateway.dev/mcp` for streamable HTTP or `appProtocol: agentgateway.dev/mcp-sse` for SSE. Ports without a recognized MCP `appProtocol` value are ignored. If policies are needed on a per-service basis, `AgentgatewayPolicy` can target the desired `Service`.
 spec.mcp.targets[].selector.namespaces <object>	# `namespace` is the label selector for namespaces that `Service` resources should be selected from. If unset, only the namespace of the `AgentgatewayBackend` is searched.
 spec.mcp.targets[].selector.namespaces.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
 spec.mcp.targets[].selector.namespaces.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
@@ -855,7 +867,7 @@ spec.mcp.targets[].static.policies.auth.credentials[].secretRef.group <string>	#
 spec.mcp.targets[].static.policies.auth.credentials[].secretRef.key <string> min=1 max=253	# Key in the referenced Secret. If omitted, a location-specific default is used
 spec.mcp.targets[].static.policies.auth.credentials[].secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.mcp.targets[].static.policies.auth.credentials[].secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
-spec.mcp.targets[].static.policies.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication.
+spec.mcp.targets[].static.policies.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication. If this configuration is invalid, requests using it are rejected.
 spec.mcp.targets[].static.policies.auth.crossAppAccess.accessTokenScopes <[]string> max=64	# Scopes requested when exchanging the ID-JAG for an access token. When omitted, defaults to Scopes. Set to an empty list to omit scope.
 spec.mcp.targets[].static.policies.auth.crossAppAccess.audience <string> (required) min=1 max=256	# Identifier of the resource authorization server. The issued ID-JAG is bound to this audience.
 spec.mcp.targets[].static.policies.auth.crossAppAccess.cache <object>	# Response cache configuration.
@@ -973,7 +985,7 @@ spec.mcp.targets[].static.policies.auth.location.header.name <string> (required)
 spec.mcp.targets[].static.policies.auth.location.header.prefix <string> min=1 max=256
 spec.mcp.targets[].static.policies.auth.location.queryParameter <object>
 spec.mcp.targets[].static.policies.auth.location.queryParameter.name <string> (required) min=1 max=256
-spec.mcp.targets[].static.policies.auth.oauthTokenExchange <object>	# OAuth 2.0 token exchange (RFC 8693) / jwt-bearer (RFC 7523) authentication.
+spec.mcp.targets[].static.policies.auth.oauthTokenExchange <object>	# OAuth 2.0 token exchange (RFC 8693) / jwt-bearer (RFC 7523) authentication. If this configuration is invalid, requests using it are rejected.
 spec.mcp.targets[].static.policies.auth.oauthTokenExchange.actorToken <object>	# RFC 8693 delegation actor token. TokenExchange grant only.
 spec.mcp.targets[].static.policies.auth.oauthTokenExchange.actorToken.mayAct <string> enum=Required	# may_act claim validation mode. When omitted, may_act is not enforced.
 spec.mcp.targets[].static.policies.auth.oauthTokenExchange.actorToken.source <object> (required)	# Where to read the actor token. Actor tokens have no default source.
@@ -1106,12 +1118,12 @@ spec.policies.ai.prompt.append[].role <string> (required)	# Role of the message.
 spec.policies.ai.prompt.prepend <[]object>	# Messages to prepend to the prompt sent by the client.
 spec.policies.ai.prompt.prepend[].content <string> (required)	# String content of the message.
 spec.policies.ai.prompt.prepend[].role <string> (required)	# Role of the message. The available roles depend on the backend LLM provider model, such as `SYSTEM` or `USER` in the OpenAI API.
-spec.policies.ai.promptCaching <object>	# Automatic prompt caching for supported providers, currently AWS Bedrock. Reduces API costs by caching static content like system prompts and tool definitions. Only applicable for Bedrock Claude 3+ and Nova models.
+spec.policies.ai.promptCaching <object>	# Automatic prompt caching for supported providers: Anthropic, Anthropic models on Vertex AI, and AWS Bedrock (Claude 3+ and Nova models). Reduces API costs by caching static content like system prompts and tool definitions. Cache marks sent by the client take precedence: if a request already has any, the policy adds none.
 spec.policies.ai.promptCaching.cacheMessageOffset <integer> min=0	# Shifts the message cache point further back in the conversation. 0 (default) places it at the second-to-last message. Higher values move it N additional messages towards the start, clamped to bounds.
 spec.policies.ai.promptCaching.cacheMessages <boolean>	# Enables caching for conversation messages. Defaults to true. Caches all messages in the conversation for cost savings.
 spec.policies.ai.promptCaching.cacheSystem <boolean>	# Enables caching for system prompts. Defaults to true. Inserts a cache point after all system messages.
-spec.policies.ai.promptCaching.cacheTools <boolean>	# Enables caching for tool definitions. Defaults to false. Inserts a cache point after all tool specifications.
-spec.policies.ai.promptCaching.minTokens <integer> min=0	# Minimum estimated token count before caching is enabled. Uses rough heuristic (word count × 1.3) to estimate tokens. Defaults to 1024. Bedrock requires at least 1,024 tokens for caching to be effective.
+spec.policies.ai.promptCaching.cacheTools <boolean>	# Enables caching for tool definitions. Defaults to false. Inserts a cache point after all tool specifications. Ignored for Bedrock Nova models, which do not support caching tools.
+spec.policies.ai.promptCaching.minTokens <integer> min=0	# Minimum estimated token count before caching is enabled. Uses rough heuristic (word count × 1.3) to estimate tokens. Applies to system prompt caching. Defaults to 1024; most models require at least 1,024 tokens for caching to be effective.
 spec.policies.ai.promptGuard <object>	# Guardrails for LLM requests and responses.
 spec.policies.ai.promptGuard.request <[]object> min=1 max=8	# Prompt guards to apply to requests sent by the client.
 spec.policies.ai.promptGuard.request[].bedrockGuardrails <object>	# AWS Bedrock Guardrails settings for prompt guarding.
@@ -1292,9 +1304,12 @@ spec.policies.ai.promptGuard.request[].regex.action <string> enum=Audit|Mask|Rej
 spec.policies.ai.promptGuard.request[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.ai.promptGuard.request[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.ai.promptGuard.request[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
+spec.policies.ai.promptGuard.request[].response.headers <[]object>	# Headers to include in the rejection response.
+spec.policies.ai.promptGuard.request[].response.headers[].name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of the HTTP header, case-insensitive
+spec.policies.ai.promptGuard.request[].response.headers[].value <string> (required) min=1 max=4096	# Value for the HTTP header
 spec.policies.ai.promptGuard.request[].response.message <string>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.policies.ai.promptGuard.request[].response.statusCode <integer> format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
-spec.policies.ai.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt` and `Messages`. Tool call inputs and outputs are not inspected unless `ToolInput`/`ToolOutput` are listed explicitly. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
+spec.policies.ai.promptGuard.request[].scope <[]string> min=1 max=4	# Which parts of the request this guard inspects. When unset, defaults to `SystemPrompt`, `Messages`, and `ToolOutput`. Tool call inputs are not inspected unless `ToolInput` is listed explicitly. Webhook guards do not support scope and always inspect `SystemPrompt` and `Messages`. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.policies.ai.promptGuard.request[].webhook <object>	# Webhook that receives requests for prompt guarding.
 spec.policies.ai.promptGuard.request[].webhook.action <string> enum=Audit|Reject	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.policies.ai.promptGuard.request[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
@@ -1435,8 +1450,12 @@ spec.policies.ai.promptGuard.response[].regex.action <string> enum=Audit|Mask|Re
 spec.policies.ai.promptGuard.response[].regex.builtins <[]string>	# Built-in regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.ai.promptGuard.response[].regex.matches <[]string>	# Regex patterns to match against the request or response. Matches and built-ins are additive.
 spec.policies.ai.promptGuard.response[].response <object>	# Custom response message to return to the client. If not specified, defaults to `The response was rejected due to inappropriate content`.
+spec.policies.ai.promptGuard.response[].response.headers <[]object>	# Headers to include in the rejection response.
+spec.policies.ai.promptGuard.response[].response.headers[].name <string> (required) pattern="^[A-Za-z0-9!#$%&'*+\\-.^_\\x60|~]+$" min=1 max=256	# Name of the HTTP header, case-insensitive
+spec.policies.ai.promptGuard.response[].response.headers[].value <string> (required) min=1 max=4096	# Value for the HTTP header
 spec.policies.ai.promptGuard.response[].response.message <string>	# Custom response message to return to the client. If not specified, defaults to `The request was rejected due to inappropriate content`.
 spec.policies.ai.promptGuard.response[].response.statusCode <integer> format=int32 min=200 max=599	# Status code to return to the client. Defaults to 403.
+spec.policies.ai.promptGuard.response[].scope <[]string> min=1 max=4	# Which parts of the response this guard inspects. When unset, defaults to `Messages`. Tool calls generated by the model are not inspected unless `ToolInput` is listed explicitly; `ToolOutput` covers results of serverside tools. In APIs that send tool arguments as opaque JSON, such as Completions, the arguments are masked as a single string, meaning a prompt guard has the potential to rewrite the arguments into invalid JSON.
 spec.policies.ai.promptGuard.response[].webhook <object>	# Webhook that receives responses for prompt guarding.
 spec.policies.ai.promptGuard.response[].webhook.action <string> enum=Audit|Reject	# Action controls whether the webhook's verdict is enforced or only observed. `Reject` (the default) enforces it; `Audit` records the would-be action without blocking or masking.
 spec.policies.ai.promptGuard.response[].webhook.backendRef <object> (required)	# Webhook server to reach. Supported types: Service and Backend.
@@ -1498,7 +1517,7 @@ spec.policies.auth.credentials[].secretRef.group <string>	# API group of the ref
 spec.policies.auth.credentials[].secretRef.key <string> min=1 max=253	# Key in the referenced Secret. If omitted, a location-specific default is used
 spec.policies.auth.credentials[].secretRef.kind <string>	# Kind of the referenced credential; empty defaults to `Secret`
 spec.policies.auth.credentials[].secretRef.name <string> (required) min=1 max=253	# Name of the referenced credential
-spec.policies.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication.
+spec.policies.auth.crossAppAccess <object>	# Cross App Access (Identity Assertion / ID-JAG) authentication. If this configuration is invalid, requests using it are rejected.
 spec.policies.auth.crossAppAccess.accessTokenScopes <[]string> max=64	# Scopes requested when exchanging the ID-JAG for an access token. When omitted, defaults to Scopes. Set to an empty list to omit scope.
 spec.policies.auth.crossAppAccess.audience <string> (required) min=1 max=256	# Identifier of the resource authorization server. The issued ID-JAG is bound to this audience.
 spec.policies.auth.crossAppAccess.cache <object>	# Response cache configuration.
@@ -1616,7 +1635,7 @@ spec.policies.auth.location.header.name <string> (required) pattern="^[A-Za-z0-9
 spec.policies.auth.location.header.prefix <string> min=1 max=256
 spec.policies.auth.location.queryParameter <object>
 spec.policies.auth.location.queryParameter.name <string> (required) min=1 max=256
-spec.policies.auth.oauthTokenExchange <object>	# OAuth 2.0 token exchange (RFC 8693) / jwt-bearer (RFC 7523) authentication.
+spec.policies.auth.oauthTokenExchange <object>	# OAuth 2.0 token exchange (RFC 8693) / jwt-bearer (RFC 7523) authentication. If this configuration is invalid, requests using it are rejected.
 spec.policies.auth.oauthTokenExchange.actorToken <object>	# RFC 8693 delegation actor token. TokenExchange grant only.
 spec.policies.auth.oauthTokenExchange.actorToken.mayAct <string> enum=Required	# may_act claim validation mode. When omitted, may_act is not enforced.
 spec.policies.auth.oauthTokenExchange.actorToken.source <object> (required)	# Where to read the actor token. Actor tokens have no default source.
@@ -1764,8 +1783,12 @@ spec.policies.mcp.authorization <object>	# MCP backend authorization. Unlike aut
 spec.policies.mcp.authorization.action <string> enum=Allow|Deny|Require	# The effect of this rule when it matches. If unspecified, defaults to `Allow`. `Require` rules are cumulative: all require rules must match.
 spec.policies.mcp.authorization.policy <object> (required)	# The authorization rule to evaluate. * `Allow`: any matching allow rule allows the request. * `Require`: every require rule must match for the request to be allowed. * `Deny`: any matching deny rule denies the request. `Deny` is not recommended because expression failures fail to deny; prefer `Allow` or `Require`. If used, design expressions defensively against evaluation errors. If at least one `Allow` rule is configured, requests are denied unless at least one allow rule matches.
 spec.policies.mcp.authorization.policy.matchExpressions <[]string> (required) min=1 max=256	# CEL expressions that must all evaluate to true for the rule to match.
-spec.policies.mcp.guardrails <object>	# `guardrails` routes selected JSON-RPC methods through a remote policy server.
+spec.policies.mcp.guardrails <object>	# Remote and in-process CEL policy processors for MCP requests and responses.
 spec.policies.mcp.guardrails.processors <[]object> (required) min=1 max=16	# `processors` is the ordered list of policy processors applied to matched methods. Processors run in the order listed; the first to reject a request short-circuits the chain.
+spec.policies.mcp.guardrails.processors[].expression <object>	# In-process guardrail driven by CEL expressions.
+spec.policies.mcp.guardrails.processors[].expression.condition <string> min=1 max=16384	# Condition gating the action; absent means always.
+spec.policies.mcp.guardrails.processors[].expression.reject <string> min=1 max=4096	# Reject with this message.
+spec.policies.mcp.guardrails.processors[].expression.transform <string> min=1 max=16384	# Returns a replacement body (`mcp.params` on requests or `mcp.result` on responses). Use `merge` to preserve fields you do not wish to mutate; `null` leaves the body unchanged.
 spec.policies.mcp.guardrails.processors[].methods <map[string]string> (required)	# `methods` is the allowlist of JSON-RPC methods (e.g. `tools/call`, `tools/list`) routed through this processor, keyed by method name with the phase it runs in. Keys may be exact, a prefix wildcard (`tools/*`), a suffix wildcard (`*/list`), or `*` for all methods; the most specific match wins. Methods matching no key, including unknown ones, bypass this processor.
 spec.policies.mcp.guardrails.processors[].remote <object>	# `remote` configures a gRPC policy server.
 spec.policies.mcp.guardrails.processors[].remote.allowedRequestHeaders <[]string> max=64	# `allowedRequestHeaders` lists the incoming request headers forwarded to the policy server in `McpRequest.headers`. If empty, all headers and pseudo-headers (`:authority`, `:method`, ...) are forwarded. Matching is case-insensitive.
