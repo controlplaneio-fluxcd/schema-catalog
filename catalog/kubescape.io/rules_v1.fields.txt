@@ -1,4 +1,4 @@
-# schema source: Kubescape Operator 1.40.4 https://github.com/kubescape/helm-charts
+# schema source: Kubescape Operator 1.41.0 https://github.com/kubescape/helm-charts
 apiVersion <string> enum=kubescape.io/v1
 kind <string> enum=Rules
 metadata.name <string> (required)
@@ -23,5 +23,13 @@ spec.rules[].profileDataRequired <object (free-form)>	# Per-rule profile fields 
 spec.rules[].profileDependency <integer> (required) enum=0|1|2	# Profile dependency level (0=Required, 1=Optional, 2=NotRequired)
 spec.rules[].severity <integer> (required)	# Severity level of the rule
 spec.rules[].state <object (free-form)>	# State information for the rule
+spec.rules[].stateWrites <[]object>	# Facts this rule remembers across events, for cross-event correlation. Each entry is driven by one event type, which need not be an event type the rule alerts on -- that is what allows a rule to remember on exec and alert on network.
+spec.rules[].stateWrites[].eventType <string> (required)	# Event stream that drives this write
+spec.rules[].stateWrites[].key <string>	# CEL string expression naming the subject. Omit for a scope-wide fact.
+spec.rules[].stateWrites[].name <string> (required)	# What kind of fact this is. A literal, never an expression.
+spec.rules[].stateWrites[].scope <string> (required) enum=container|pod|node|identity	# Bucket the entry belongs to. identity is operator-only.
+spec.rules[].stateWrites[].ttl <string> (required)	# Go duration string; clamped to the agent's configured maxTtl at load
+spec.rules[].stateWrites[].value <object (free-form)>	# Optional author extras as CEL expressions. Keys may not begin with an underscore.
+spec.rules[].stateWrites[].when <string>	# CEL boolean guard; empty means always write
 spec.rules[].supportPolicy <boolean> (required) default=false	# Whether the rule supports rule policy enforcement
 spec.rules[].tags <[]string>	# Tags associated with the rule
