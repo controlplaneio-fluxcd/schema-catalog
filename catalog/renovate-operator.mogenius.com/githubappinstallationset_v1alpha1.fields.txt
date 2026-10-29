@@ -1,0 +1,43 @@
+# schema source: Renovate Operator 6.7.0 https://github.com/mogenius/renovate-operator
+apiVersion <string> enum=renovate-operator.mogenius.com/v1alpha1
+kind <string> enum=GitHubAppInstallationSet
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# GitHubAppInstallationSetSpec defines the desired state of a GitHubAppInstallationSet.
+spec.app <object> (required)	# Secret holding the GitHub App's id and private key. The Secret must carry the renovate-operator.mogenius.com/allow-ref label once the policy engine is enabled.
+spec.app.appIdSecretKey <string> (required) min=1
+spec.app.pemSecretKey <string> (required) min=1
+spec.app.secretName <string> (required) min=1
+spec.installations <object>	# Narrows which installations get a RenovateJob. Every installation of the App matches when unset.
+spec.installations.accountTypes <[]string>	# Account types to include. Every type matches when empty.
+spec.installations.exclude <[]string>	# Account logins to exclude. Takes precedence over include.
+spec.installations.include <[]string>	# Account logins to include. Every account matches when empty.
+spec.provider <object>	# GitHub API endpoints. Defaults to https://api.github.com; set it for GitHub Enterprise Server. Copied to the provider of every generated RenovateJob.
+spec.provider.endpoint <string> pattern="^https?://[^?#]+$"	# GitHub API base URL. Its host must be listed in the operator's policy.allowedHosts.
+spec.provider.publicEndpoint <string> pattern="^https?://[^?#]+$"	# Externally reachable URL used for UI links. Its host must be listed in the operator's policy.allowedHosts.
+spec.resyncInterval <string> default="10m"	# How often the installations are listed from the GitHub API.
+spec.templateRef <object> (required)	# Template every generated RenovateJob inherits its configuration from. The operator sets provider and githubAppReference on each generated RenovateJob, so the template's values for those are overridden.
+spec.templateRef.kind <string> enum=RenovateJobTemplate|ClusterRenovateJobTemplate default="RenovateJobTemplate"	# Kind of the referenced template. Defaults to RenovateJobTemplate.
+spec.templateRef.name <string> (required) min=1 max=253	# Name of the referenced template.
+spec.webhook <object>	# Resyncs immediately when GitHub delivers an installation or installation_repositories event to the operator's /webhook/v1/github endpoint.
+spec.webhook.enabled <boolean> (required)
+spec.webhook.secretRef <object>	# Secret key holding the GitHub App's webhook secret, used to verify the X-Hub-Signature-256 header. The Secret must carry the renovate-operator.mogenius.com/allow-ref label once the policy engine is enabled.
+spec.webhook.secretRef.key <string>
+spec.webhook.secretRef.name <string>
+status <object>	# GitHubAppInstallationSetStatus defines the observed state of a GitHubAppInstallationSet.
+status.conditions <[]object>
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.credentialsResourceVersion <string>	# resourceVersion of the source credentials Secret last written to every generated credentials Secret.
+status.installations <[]object>	# Installations matching the filter as of the last successful sync.
+status.installations[].account <string> (required)
+status.installations[].accountType <string> (required)
+status.installations[].id <integer> (required) format=int64
+status.installations[].renovateJob <string>	# Name of the generated RenovateJob. Empty until it has been created.
+status.installations[].suspended <boolean>	# True when the installation is suspended on GitHub. Its RenovateJob is suspended too, since no token can be minted for it.
+status.lastSyncTime <string> format=date-time	# Time of the last successful listing of installations.
+status.observedGeneration <integer> format=int64	# Generation of the spec the last successful sync used.
