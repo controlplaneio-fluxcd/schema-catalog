@@ -1,0 +1,60 @@
+# schema source: GCP Config Connector v1.160.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+apiVersion <string> enum=aiplatform.cnrm.cloud.google.com/v1alpha1
+kind <string> enum=AIPlatformFeatureView
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# AIPlatformFeatureViewSpec defines the desired state of AIPlatformFeatureView
+spec.bigQuerySource <object>	# Optional. Configures how data is supposed to be extracted from a BigQuery source to be loaded onto the FeatureOnlineStore.
+spec.bigQuerySource.entityIDColumns <[]string> (required)	# Required. Columns to construct entity_id / row keys.
+spec.bigQuerySource.uri <string> (required)	# Required. The BigQuery view URI that will be materialized on each sync trigger based on FeatureView.SyncConfig.
+spec.etag <string>	# Optional. Used to perform consistent read-modify-write updates. If not set, a blind "overwrite" update happens.
+spec.featureRegistrySource <object>	# Optional. Configures the features from a Feature Registry source that need to be loaded onto the FeatureOnlineStore.
+spec.featureRegistrySource.featureGroups <[]object> (required)	# Required. List of features that need to be synced to Online Store.
+spec.featureRegistrySource.featureGroups[].featureGroupID <string> (required)	# Required. Identifier of the feature group.
+spec.featureRegistrySource.featureGroups[].featureIDs <[]string> (required)	# Required. Identifiers of features under the feature group.
+spec.featureRegistrySource.projectNumber <integer> format=int64	# Optional. The project number of the parent project of the Feature Groups.
+spec.indexConfig <object>	# Optional. Configuration for index preparation for vector search. It contains the required configurations to create an index from source data, so that approximate nearest neighbor (a.k.a ANN) algorithms search can be performed during online serving.
+spec.indexConfig.bruteForceConfig <object (free-form)>	# Optional. Configuration options for using brute force search, which simply implements the standard linear search in the database for each query. It is primarily meant for benchmarking and to generate the ground truth for approximate search.
+spec.indexConfig.crowdingColumn <string>	# Optional. Column of crowding. This column contains crowding attribute which is a constraint on a neighbor list produced by [FeatureOnlineStoreService.SearchNearestEntities][google.cloud.aiplatform.v1.FeatureOnlineStoreService.SearchNearestEntities] to diversify search results. If [NearestNeighborQuery.per_crowding_attribute_neighbor_count][google.cloud.aiplatform.v1.NearestNeighborQuery.per_crowding_attribute_neighbor_count] is set to K in [SearchNearestEntitiesRequest][google.cloud.aiplatform.v1.SearchNearestEntitiesRequest], it's guaranteed that no more than K entities of the same crowding attribute are returned in the response.
+spec.indexConfig.distanceMeasureType <string>	# Optional. The distance measure used in nearest neighbor search.
+spec.indexConfig.embeddingColumn <string>	# Optional. Column of embedding. This column contains the source data to create index for vector search. embedding_column must be set when using vector search.
+spec.indexConfig.embeddingDimension <integer> format=int32	# Optional. The number of dimensions of the input embedding.
+spec.indexConfig.filterColumns <[]string>	# Optional. Columns of features that're used to filter vector search results.
+spec.indexConfig.treeAhConfig <object>	# Optional. Configuration options for the tree-AH algorithm (Shallow tree https://arxiv.org/abs/1908.10396
+spec.indexConfig.treeAhConfig.leafNodeEmbeddingCount <integer> format=int64	# Optional. Number of embeddings on each leaf node. The default value is 1000 if not set.
+spec.labels <map[string]string>	# Optional. The labels with user-defined metadata to organize your FeatureViews. Label keys and values can be no longer than 64 characters (Unicode codepoints), can only contain lowercase letters, numeric characters, underscores and dashes. International characters are allowed. See https://goo.gl/xmQnxf for more information on and examples of labels. No more than 64 user labels can be associated with one FeatureOnlineStore(System labels are excluded)." System reserved label keys are prefixed with "aiplatform.googleapis.com/" and are immutable.
+spec.location <string> (required)	# The location of this resource.
+spec.optimizedConfig <object>	# Optional. Configuration for FeatureView created under Optimized FeatureOnlineStore.
+spec.optimizedConfig.automaticResources <object>	# Optional. A description of resources that the FeatureView uses, which to large degree are decided by Vertex AI, and optionally allows only a modest additional configuration. If min_replica_count is not set, the default value is 2. If max_replica_count is not set, the default value is 6. The max allowed replica count is 1000.
+spec.optimizedConfig.automaticResources.maxReplicaCount <integer> format=int32	# Immutable. The maximum number of replicas that may be deployed on when the traffic against it increases. If the requested value is too large, the deployment will error, but if deployment succeeds then the ability to scale to that many replicas is guaranteed (barring service outages). If traffic increases beyond what its replicas at maximum may handle, a portion of the traffic will be dropped. If this value is not provided, a no upper bound for scaling under heavy traffic will be assume, though Vertex AI may be unable to scale beyond certain replica number.
+spec.optimizedConfig.automaticResources.minReplicaCount <integer> format=int32	# Immutable. The minimum number of replicas that will be always deployed on. If traffic against it increases, it may dynamically be deployed onto more replicas up to [max_replica_count][google.cloud.aiplatform.v1.AutomaticResources.max_replica_count], and as traffic decreases, some of these extra replicas may be freed. If the requested value is too large, the deployment will error.
+spec.projectRef <object> (required)	# The project that this resource belongs to.
+spec.projectRef.external <string>	# The `projectID` field of a project, when not managed by Config Connector.
+spec.projectRef.kind <string>	# The kind of the Project resource; optional but must be `Project` if provided.
+spec.projectRef.name <string>	# The `name` field of a `Project` resource.
+spec.projectRef.namespace <string>	# The `namespace` field of a `Project` resource.
+spec.resourceID <string>	# The AIPlatformFeatureView name. If not given, the metadata.name will be used.
+spec.serviceAgentType <string>	# Optional. Service agent type used during data sync. By default, the Vertex AI Service Agent is used. When using an IAM Policy to isolate this FeatureView within a project, a separate service account should be provisioned by setting this field to `SERVICE_AGENT_TYPE_FEATURE_VIEW`. This will generate a separate service account to access the BigQuery source table.
+spec.syncConfig <object>	# Configures when data is to be synced/updated for this FeatureView. At the end of the sync the latest featureValues for each entityId of this FeatureView are made ready for online serving.
+spec.syncConfig.continuous <boolean>	# Optional. If true, syncs the FeatureView in a continuous manner to Online Store.
+spec.syncConfig.cron <string>	# Cron schedule (https://en.wikipedia.org/wiki/Cron) to launch scheduled runs. To explicitly set a timezone to the cron tab, apply a prefix in the cron tab: "CRON_TZ=${IANA_TIME_ZONE}" or "TZ=${IANA_TIME_ZONE}". The ${IANA_TIME_ZONE} may only be a valid string from IANA time zone database. For example, "CRON_TZ=America/New_York 1 * * * *", or "TZ=America/New_York 1 * * * *".
+spec.vertexRagSource <object>	# Optional. The Vertex RAG Source that the FeatureView is linked to.
+spec.vertexRagSource.ragCorpusID <integer> format=int64	# Optional. The RAG corpus id corresponding to this FeatureView.
+spec.vertexRagSource.uri <string> (required)	# Required. The BigQuery view/table URI that will be materialized on each manual sync trigger. The table/view is expected to have the following columns and types at least: - `corpus_id` (STRING, NULLABLE/REQUIRED) - `file_id` (STRING, NULLABLE/REQUIRED) - `chunk_id` (STRING, NULLABLE/REQUIRED) - `chunk_data_type` (STRING, NULLABLE/REQUIRED) - `chunk_data` (STRING, NULLABLE/REQUIRED) - `embeddings` (FLOAT, REPEATED) - `file_original_uri` (STRING, NULLABLE/REQUIRED)
+status <object>	# AIPlatformFeatureViewStatus defines the config connector machine state of AIPlatformFeatureView
+status.conditions <[]object>	# Conditions represent the latest available observations of the object's current state.
+status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Human-readable message indicating details about last transition.
+status.conditions[].reason <string>	# Unique, one-word, CamelCase reason for the condition's last transition.
+status.conditions[].status <string>	# Status is the status of the condition. Can be True, False, Unknown.
+status.conditions[].type <string>	# Type is the type of the condition.
+status.externalRef <string>	# A unique specifier for the AIPlatformFeatureView resource in GCP.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.
+status.observedState <object>	# ObservedState is the state of the resource as most recently observed in GCP.
+status.observedState.bigtableMetadata <object>	# Metadata containing information about the Cloud Bigtable.
+status.observedState.bigtableMetadata.readAppProfile <string>	# The Bigtable App Profile to use for reading from Bigtable.
+status.observedState.createTime <string>	# Output only. Timestamp when this FeatureView was created.
+status.observedState.satisfiesPzi <boolean>	# Output only. Reserved for future use.
+status.observedState.satisfiesPzs <boolean>	# Output only. Reserved for future use.
+status.observedState.serviceAccountEmail <string>	# Output only. A Service Account unique to this FeatureView. The role bigquery.dataViewer should be granted to this service account to allow Vertex AI Feature Store to sync data to the online store.
+status.observedState.updateTime <string>	# Output only. Timestamp when this FeatureView was last updated.

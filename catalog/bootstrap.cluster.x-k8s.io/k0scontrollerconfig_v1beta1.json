@@ -161,6 +161,57 @@
               "description": "AdditionalConfig is an unstructured object that contains additional config to be merged\nwith the generated one. The format follows Butane spec: https://coreos.github.io/butane/",
               "type": "string"
             },
+            "additionalConfigFrom": {
+              "additionalProperties": false,
+              "description": "AdditionalConfigFrom is a reference to a secret or a configmap holding the additional config.\nIt cannot be set together with additionalConfig.",
+              "properties": {
+                "configMapRef": {
+                  "additionalProperties": false,
+                  "description": "ConfigMapRef is a reference to a configmap that contains the content.",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key in the source that contains the content",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the source",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "secretRef": {
+                  "additionalProperties": false,
+                  "description": "SecretRef is a reference to a secret that contains the content.",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key in the source that contains the content",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the source",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "exactly one of secretRef or configMapRef must be set",
+                  "rule": "has(self.secretRef) != has(self.configMapRef)"
+                }
+              ]
+            },
             "variant": {
               "description": "Variant declares which distribution variant the generated config is for.\nCheck the supported variants and versions here:\nhttps://coreos.github.io/butane/specs/#butane-specifications-and-ignition-specifications",
               "enum": [
@@ -181,7 +232,13 @@
             "variant",
             "version"
           ],
-          "type": "object"
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "additionalConfig and additionalConfigFrom are mutually exclusive",
+              "rule": "!has(self.additionalConfig) || !has(self.additionalConfigFrom)"
+            }
+          ]
         },
         "k0s": {
           "description": "K0s defines the k0s configuration. Note, that some fields will be overwritten by k0smotron.\nIf empty, will be used default configuration. @see https://docs.k0sproject.io/stable/configuration/",

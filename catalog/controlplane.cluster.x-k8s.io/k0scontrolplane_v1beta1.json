@@ -165,6 +165,57 @@
                   "description": "AdditionalConfig is an unstructured object that contains additional config to be merged\nwith the generated one. The format follows Butane spec: https://coreos.github.io/butane/",
                   "type": "string"
                 },
+                "additionalConfigFrom": {
+                  "additionalProperties": false,
+                  "description": "AdditionalConfigFrom is a reference to a secret or a configmap holding the additional config.\nIt cannot be set together with additionalConfig.",
+                  "properties": {
+                    "configMapRef": {
+                      "additionalProperties": false,
+                      "description": "ConfigMapRef is a reference to a configmap that contains the content.",
+                      "properties": {
+                        "key": {
+                          "description": "Key is the key in the source that contains the content",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name is the name of the source",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "secretRef": {
+                      "additionalProperties": false,
+                      "description": "SecretRef is a reference to a secret that contains the content.",
+                      "properties": {
+                        "key": {
+                          "description": "Key is the key in the source that contains the content",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name is the name of the source",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "name"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "exactly one of secretRef or configMapRef must be set",
+                      "rule": "has(self.secretRef) != has(self.configMapRef)"
+                    }
+                  ]
+                },
                 "variant": {
                   "description": "Variant declares which distribution variant the generated config is for.\nCheck the supported variants and versions here:\nhttps://coreos.github.io/butane/specs/#butane-specifications-and-ignition-specifications",
                   "enum": [
@@ -185,7 +236,13 @@
                 "variant",
                 "version"
               ],
-              "type": "object"
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "additionalConfig and additionalConfigFrom are mutually exclusive",
+                  "rule": "!has(self.additionalConfig) || !has(self.additionalConfigFrom)"
+                }
+              ]
             },
             "k0s": {
               "description": "K0s defines the k0s configuration. Note, that some fields will be overwritten by k0smotron.\nIf empty, will be used default configuration. @see https://docs.k0sproject.io/stable/configuration/",
@@ -442,6 +499,60 @@
                   "type": "array",
                   "x-kubernetes-list-map-keys": [
                     "conditionType"
+                  ],
+                  "x-kubernetes-list-type": "map"
+                },
+                "taints": {
+                  "description": "taints are the node taints that Cluster API will manage.\nThis list is not necessarily complete: other Kubernetes components may add or remove other taints from nodes,\ne.g. the node controller might add the node.kubernetes.io/not-ready taint.\nOnly those taints defined in this list will be added or removed by core Cluster API controllers.\nCluster API refuses Machines carrying taints unless its MachineTaintPropagation feature gate is enabled.\nTaints reach a Node only when the controllers run with --enable-worker, since otherwise they register no Node.\n\nThere can be at most 64 taints.\nA pod would have to tolerate all existing taints to run on the corresponding node.\n\nNOTE: This list is implemented as a \"map\" type, meaning that individual elements can be managed by different owners.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "MachineTaint defines a taint equivalent to corev1.Taint, but additionally having a propagation field.",
+                    "properties": {
+                      "effect": {
+                        "description": "effect is the effect for the taint. Valid values are NoSchedule, PreferNoSchedule and NoExecute.",
+                        "enum": [
+                          "NoSchedule",
+                          "PreferNoSchedule",
+                          "NoExecute"
+                        ],
+                        "type": "string"
+                      },
+                      "key": {
+                        "description": "key is the taint key to be applied to a node.\nMust be a valid qualified name of maximum size 63 characters\nwith an optional subdomain prefix of maximum size 253 characters,\nseparated by a `/`.",
+                        "maxLength": 317,
+                        "minLength": 1,
+                        "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\\/)?([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$",
+                        "type": "string"
+                      },
+                      "propagation": {
+                        "description": "propagation defines how this taint should be propagated to nodes.\nValid values are 'Always' and 'OnInitialization'.\nAlways: The taint will be continuously reconciled. If it is not set for a node, it will be added during reconciliation.\nOnInitialization: The taint will be added during node initialization. If it gets removed from the node later on it will not get added again.",
+                        "enum": [
+                          "Always",
+                          "OnInitialization"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "value is the taint value corresponding to the taint key.\nIt must be a valid label value of maximum size 63 characters.",
+                        "maxLength": 63,
+                        "minLength": 1,
+                        "pattern": "^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "effect",
+                      "key",
+                      "propagation"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 64,
+                  "minItems": 1,
+                  "type": "array",
+                  "x-kubernetes-list-map-keys": [
+                    "key",
+                    "effect"
                   ],
                   "x-kubernetes-list-type": "map"
                 }
