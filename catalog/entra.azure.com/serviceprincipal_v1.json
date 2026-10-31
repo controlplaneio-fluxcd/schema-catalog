@@ -1,0 +1,197 @@
+{
+  "description": "ServicePrincipal is an Entra service principal for an application.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "properties": {
+        "appId": {
+          "description": "AppId is the global application (client) GUID, not the tenant-specific Entra object ID.\nRequired to create a new service principal; existing principals can be adopted by displayName.",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "type": "string"
+        },
+        "displayName": {
+          "description": "DisplayName identifies an existing principal for adoption, following Application's\nbehavior: multiple matches are an error. An appId is also required if creation is needed.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "operatorSpec": {
+          "additionalProperties": false,
+          "description": "OperatorSpec configures adoption and destinations for the resolved IDs.",
+          "properties": {
+            "configmaps": {
+              "additionalProperties": false,
+              "properties": {
+                "appId": {
+                  "additionalProperties": false,
+                  "description": "ConfigMapDestination describes the location to store a single configmap value\nNote: This is similar to: SecretDestination in secrets.go.\nChanges to one may need to be made to the others as well.",
+                  "properties": {
+                    "annotations": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Annotations is an optional set of annotations to apply to the ConfigMap.",
+                      "type": "object"
+                    },
+                    "key": {
+                      "description": "Key is the key in the ConfigMap being referenced",
+                      "type": "string"
+                    },
+                    "labels": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Labels is an optional set of labels to apply to the ConfigMap.",
+                      "type": "object"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Kubernetes ConfigMap to write to.\nThe ConfigMap will be created in the same namespace as the resource.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "entraID": {
+                  "additionalProperties": false,
+                  "description": "ConfigMapDestination describes the location to store a single configmap value\nNote: This is similar to: SecretDestination in secrets.go.\nChanges to one may need to be made to the others as well.",
+                  "properties": {
+                    "annotations": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Annotations is an optional set of annotations to apply to the ConfigMap.",
+                      "type": "object"
+                    },
+                    "key": {
+                      "description": "Key is the key in the ConfigMap being referenced",
+                      "type": "string"
+                    },
+                    "labels": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Labels is an optional set of labels to apply to the ConfigMap.",
+                      "type": "object"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Kubernetes ConfigMap to write to.\nThe ConfigMap will be created in the same namespace as the resource.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "creationMode": {
+              "description": "CreationMode defaults to AdoptOrCreate. Set AdoptOnly to resolve an existing\nservice principal without creating one if it is absent in this tenant.",
+              "enum": [
+                "AdoptOrCreate",
+                "AlwaysCreate",
+                "AdoptOnly"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "appId or displayName must be specified",
+          "rule": "has(self.appId) || has(self.displayName)"
+        },
+        {
+          "message": "appId must be specified when creationMode is AlwaysCreate",
+          "rule": "!has(self.operatorSpec) || !has(self.operatorSpec.creationMode) || self.operatorSpec.creationMode != 'AlwaysCreate' || has(self.appId)"
+        }
+      ]
+    },
+    "status": {
+      "additionalProperties": false,
+      "properties": {
+        "appId": {
+          "description": "AppId is the global application (client) GUID.",
+          "type": "string"
+        },
+        "conditions": {
+          "description": "Conditions represent the latest available observations of the service principal's state.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition defines an extension to status (an observation) of a resource",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "LastTransitionTime is the last time the condition transitioned from one status to another.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "Message is a human readable message indicating details about the transition. This field may be empty.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if\n.metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "Reason for the condition's last transition.\nReasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.",
+                "type": "string"
+              },
+              "severity": {
+                "description": "Severity with which to treat failures of this type of condition.\nFor conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True\nFor conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False.\nThis is omitted in all cases when Status == Unknown",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the condition, one of True, False, or Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of condition.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "displayName": {
+          "description": "DisplayName is the human-readable name of the service principal.",
+          "type": "string"
+        },
+        "entraID": {
+          "description": "EntraID is the tenant-specific object ID, suitable for role assignments.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-flux-schema-type": "ServicePrincipal"
+}

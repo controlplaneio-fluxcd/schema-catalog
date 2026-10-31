@@ -31,13 +31,55 @@
           "description": "MailNickname: The email address of the group, specified either as a mail nickname (`mygroup`)\nor as a full email address (`mygroup@mydomain.com`).",
           "type": "string"
         },
+        "members": {
+          "description": "Members: Directory objects (users, service principals, groups) to assign as members of the security group.\nApplied during the initial POST to Microsoft Graph via `members@odata.bind` and then used as desired member state\nfor later reconciliation.",
+          "items": {
+            "additionalProperties": false,
+            "description": "SecurityGroupMemberReference is a reference to a directory object (user, service principal, or group) by its\nEntra Object ID.",
+            "properties": {
+              "objectID": {
+                "description": "ObjectID: The Entra Object ID (GUID) of the directory object.",
+                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                "type": "string"
+              },
+              "objectIDFromConfig": {
+                "additionalProperties": false,
+                "description": "ObjectIDFromConfig: Reference to a configmap value containing the Entra Object ID.",
+                "properties": {
+                  "key": {
+                    "description": "Key is the key in the Kubernetes configmap being referenced",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Name is the name of the Kubernetes configmap being referenced.\nThe configmap must be in the same namespace as the resource",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "exactly one of objectID or objectIDFromConfig must be specified",
+                "rule": "has(self.objectID) != has(self.objectIDFromConfig)"
+              }
+            ]
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
         "membershipType": {
           "description": "MembershipType: The membership type of the group.",
           "enum": [
             "assigned",
-            "enabled",
+            "dynamic",
             "assignedm365",
-            "enabledm365"
+            "dynamicm365"
           ],
           "type": "string"
         },
@@ -86,22 +128,71 @@
               "type": "object"
             },
             "creationMode": {
-              "description": "CreationMode: Specifies how ASO will try to create the resource.\nSpecify \"AlwaysCreate\" to always create a new security group when first reconciled.\nOr specify \"AdoptOrCreate\" to first try to adopt an existing security group with the same display name.\nIf multiple security groups with the same display name are found, the resource condition will show an error.\nIf not specified, defaults to \"AdoptOrCreate\".",
+              "description": "CreationMode: Specifies how ASO will try to create the resource.\n\"AlwaysCreate\" to always create a new security group when first reconciled.\n\"AdoptOrCreate\" to first try to adopt an existing security group with the same display name.\n\"AdoptOnly\" to require an existing security group without creating one.\nIf multiple security groups with the same display name are found, the resource condition will show an error.\nIf not specified, defaults to \"AdoptOrCreate\".",
               "enum": [
                 "AdoptOrCreate",
-                "AlwaysCreate"
+                "AlwaysCreate",
+                "AdoptOnly"
               ],
               "type": "string"
             }
           },
           "type": "object"
+        },
+        "owners": {
+          "description": "Owners: Directory objects (users, service principals) to assign as owners of the security\ngroup. Applied during the initial POST to Microsoft Graph via `owners@odata.bind` and then used as desired owner\nstate for later reconciliation.\nRequired when ASO authenticates with an app-only token and the calling principal lacks Group.ReadWrite.All —\notherwise the created group has no owners and is unmanageable.",
+          "items": {
+            "additionalProperties": false,
+            "description": "SecurityGroupMemberReference is a reference to a directory object (user, service principal, or group) by its\nEntra Object ID.",
+            "properties": {
+              "objectID": {
+                "description": "ObjectID: The Entra Object ID (GUID) of the directory object.",
+                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                "type": "string"
+              },
+              "objectIDFromConfig": {
+                "additionalProperties": false,
+                "description": "ObjectIDFromConfig: Reference to a configmap value containing the Entra Object ID.",
+                "properties": {
+                  "key": {
+                    "description": "Key is the key in the Kubernetes configmap being referenced",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Name is the name of the Kubernetes configmap being referenced.\nThe configmap must be in the same namespace as the resource",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "exactly one of objectID or objectIDFromConfig must be specified",
+                "rule": "has(self.objectID) != has(self.objectIDFromConfig)"
+              }
+            ]
+          },
+          "maxItems": 20,
+          "type": "array"
         }
       },
       "required": [
         "displayName",
         "mailNickname"
       ],
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "the combined number of owners and members must not exceed 20",
+          "rule": "(has(self.owners) ? size(self.owners) : 0) + (has(self.members) ? size(self.members) : 0) <= 20"
+        }
+      ]
     },
     "status": {
       "additionalProperties": false,
@@ -168,6 +259,20 @@
         "groupEmailAddress": {
           "description": "MailNickname: The email address of the group.",
           "type": "string"
+        },
+        "members": {
+          "description": "Members: Directory objects (users, service principals, groups) assigned as members of the security group.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "owners": {
+          "description": "Owners: Directory objects (users, service principals, groups) assigned as owners of the security group",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
