@@ -1,4 +1,4 @@
-# schema source: Azure Service Operator v2.21.1 https://github.com/Azure/azure-service-operator
+# schema source: Azure Service Operator v2.22.0 https://github.com/Azure/azure-service-operator
 apiVersion <string> enum=entra.azure.com/v1
 kind <string> enum=SecurityGroup
 metadata.name <string> (required)
@@ -8,7 +8,12 @@ spec.description <string>	# Description: The description of the group.
 spec.displayName <string> (required)	# DisplayName: The display name of the group.
 spec.isAssignableToRole <boolean>	# IsAssignableToRole: Indicates whether the group can be assigned to a role.
 spec.mailNickname <string> (required)	# MailNickname: The email address of the group, specified either as a mail nickname (`mygroup`) or as a full email address (`mygroup@mydomain.com`).
-spec.membershipType <string> enum=assigned|enabled|assignedm365|enabledm365	# MembershipType: The membership type of the group.
+spec.members <[]object> max=20	# Members: Directory objects (users, service principals, groups) to assign as members of the security group. Applied during the initial POST to Microsoft Graph via `members@odata.bind` and then used as desired member state for later reconciliation.
+spec.members[].objectID <string> pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"	# ObjectID: The Entra Object ID (GUID) of the directory object.
+spec.members[].objectIDFromConfig <object>	# ObjectIDFromConfig: Reference to a configmap value containing the Entra Object ID.
+spec.members[].objectIDFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.members[].objectIDFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
+spec.membershipType <string> enum=assigned|dynamic|assignedm365|dynamicm365	# MembershipType: The membership type of the group.
 spec.operatorSpec <object>	# OperatorSpec: The operator specific configuration for the resource.
 spec.operatorSpec.configmaps <object>	# ConfigMaps specifies any config maps that should be created by the operator.
 spec.operatorSpec.configmaps.entraID <object>	# EntraID: The Entra ID of the group.
@@ -16,7 +21,12 @@ spec.operatorSpec.configmaps.entraID.annotations <map[string]string>	# Annotatio
 spec.operatorSpec.configmaps.entraID.key <string> (required)	# Key is the key in the ConfigMap being referenced
 spec.operatorSpec.configmaps.entraID.labels <map[string]string>	# Labels is an optional set of labels to apply to the ConfigMap.
 spec.operatorSpec.configmaps.entraID.name <string> (required)	# Name is the name of the Kubernetes ConfigMap to write to. The ConfigMap will be created in the same namespace as the resource.
-spec.operatorSpec.creationMode <string> enum=AdoptOrCreate|AlwaysCreate	# CreationMode: Specifies how ASO will try to create the resource. Specify "AlwaysCreate" to always create a new security group when first reconciled. Or specify "AdoptOrCreate" to first try to adopt an existing security group with the same display name. If multiple security groups with the same display name are found, the resource condition will show an error. If not specified, defaults to "AdoptOrCreate".
+spec.operatorSpec.creationMode <string> enum=AdoptOrCreate|AlwaysCreate|AdoptOnly	# CreationMode: Specifies how ASO will try to create the resource. "AlwaysCreate" to always create a new security group when first reconciled. "AdoptOrCreate" to first try to adopt an existing security group with the same display name. "AdoptOnly" to require an existing security group without creating one. If multiple security groups with the same display name are found, the resource condition will show an error. If not specified, defaults to "AdoptOrCreate".
+spec.owners <[]object> max=20	# Owners: Directory objects (users, service principals) to assign as owners of the security group. Applied during the initial POST to Microsoft Graph via `owners@odata.bind` and then used as desired owner state for later reconciliation. Required when ASO authenticates with an app-only token and the calling principal lacks Group.ReadWrite.All — otherwise the created group has no owners and is unmanageable.
+spec.owners[].objectID <string> pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"	# ObjectID: The Entra Object ID (GUID) of the directory object.
+spec.owners[].objectIDFromConfig <object>	# ObjectIDFromConfig: Reference to a configmap value containing the Entra Object ID.
+spec.owners[].objectIDFromConfig.key <string> (required)	# Key is the key in the Kubernetes configmap being referenced
+spec.owners[].objectIDFromConfig.name <string> (required)	# Name is the name of the Kubernetes configmap being referenced. The configmap must be in the same namespace as the resource
 status <object>
 status.conditions <[]object>	# Conditions: The observed state of the resource
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
@@ -30,3 +40,5 @@ status.description <string>	# Description: The description of the group.
 status.displayName <string>	# DisplayName: The display name of the group.
 status.entraID <string>	# EntraID: The GUID identifing the resource in Entra
 status.groupEmailAddress <string> (required)	# MailNickname: The email address of the group.
+status.members <[]string>	# Members: Directory objects (users, service principals, groups) assigned as members of the security group.
+status.owners <[]string>	# Owners: Directory objects (users, service principals, groups) assigned as owners of the security group

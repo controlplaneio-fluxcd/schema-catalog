@@ -1,0 +1,170 @@
+# schema source: Azure Service Operator v2.22.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=eventgrid.azure.com/v20250215
+kind <string> enum=Namespace
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.azureName <string> pattern="^[a-zA-Z0-9-]*$" min=3 max=50	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.identity <object>	# Identity: Identity information for the Namespace resource.
+spec.identity.type <string> enum=None|SystemAssigned|"SystemAssigned, UserAssigned"|UserAssigned	# Type: The type of managed identity used. The type 'SystemAssigned, UserAssigned' includes both an implicitly created identity and a set of user-assigned identities. The type 'None' will remove any identity.
+spec.identity.userAssignedIdentities <[]object>	# UserAssignedIdentities: The list of user identities associated with the resource. The user identity dictionary key references will be ARM resource ids in the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'. This property is currently not used and reserved for future usage.
+spec.identity.userAssignedIdentities[].reference <object>	# ResourceReference represents a resource reference, either to a Kubernetes resource or directly to an Azure resource via ARMID
+spec.identity.userAssignedIdentities[].reference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.identity.userAssignedIdentities[].reference.group <string>	# Group is the Kubernetes group of the resource.
+spec.identity.userAssignedIdentities[].reference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.identity.userAssignedIdentities[].reference.name <string>	# Name is the Kubernetes name of the resource.
+spec.inboundIpRules <[]object>	# InboundIpRules: This can be used to restrict traffic from specific IPs instead of all IPs. Note: These are considered only if PublicNetworkAccess is enabled.
+spec.inboundIpRules[].action <string> enum=Allow	# Action: Action to perform based on the match or no match of the IpMask.
+spec.inboundIpRules[].ipMask <string>	# IpMask: IP Address in CIDR notation e.g., 10.0.0.0/8.
+spec.isZoneRedundant <boolean>	# IsZoneRedundant: This is an optional property and it allows the user to specify if the namespace resource supports zone-redundancy capability or not. If this property is not specified explicitly by the user, its default value depends on the following conditions: a. For Availability Zones enabled regions - The default property value would be true. b. For non-Availability Zones enabled regions - The default property value would be false. Once specified, this property cannot be updated.
+spec.location <string> (required)	# Location: Location of the resource.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.secrets <object>	# Secrets: configures where to place Azure generated secrets.
+spec.operatorSpec.secrets.key1 <object>	# Key1: indicates where the Key1 secret should be placed. If omitted, the secret will not be retrieved from Azure.
+spec.operatorSpec.secrets.key1.annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the secret.
+spec.operatorSpec.secrets.key1.key <string> (required)	# Key is the key in the Kubernetes secret being referenced.
+spec.operatorSpec.secrets.key1.labels <map[string]string>	# Labels is an optional set of labels to apply to the secret.
+spec.operatorSpec.secrets.key1.name <string> (required)	# Name is the name of the Kubernetes secret to write to. The secret will be created in the same namespace as the resource.
+spec.operatorSpec.secrets.key2 <object>	# Key2: indicates where the Key2 secret should be placed. If omitted, the secret will not be retrieved from Azure.
+spec.operatorSpec.secrets.key2.annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the secret.
+spec.operatorSpec.secrets.key2.key <string> (required)	# Key is the key in the Kubernetes secret being referenced.
+spec.operatorSpec.secrets.key2.labels <map[string]string>	# Labels is an optional set of labels to apply to the secret.
+spec.operatorSpec.secrets.key2.name <string> (required)	# Name is the name of the Kubernetes secret to write to. The secret will be created in the same namespace as the resource.
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a resources.azure.com/ResourceGroup resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.publicNetworkAccess <string> enum=Disabled|Enabled	# PublicNetworkAccess: This determines if traffic is allowed over public network. By default it is enabled. You can further restrict to specific IPs by configuring <seealso cref="P:Microsoft.Azure.Events.ResourceProvider.Common.Contracts.PubSub.NamespaceProperties.InboundIpRules" />
+spec.sku <object>	# Sku: Represents available Sku pricing tiers.
+spec.sku.capacity <integer>	# Capacity: Specifies the number of Throughput Units that defines the capacity for the namespace. The property default value is 1 which signifies 1 Throughput Unit = 1MB/s ingress and 2MB/s egress per namespace. Min capacity is 1 and max allowed capacity is 20.
+spec.sku.name <string> enum=Standard	# Name: The name of the SKU.
+spec.tags <map[string]string>	# Tags: Tags of the resource.
+spec.topicSpacesConfiguration <object>	# TopicSpacesConfiguration: Topic spaces configuration information for the namespace resource
+spec.topicSpacesConfiguration.customDomains <[]object>	# CustomDomains: List of custom domain configurations for the namespace.
+spec.topicSpacesConfiguration.customDomains[].certificateUrl <string>	# CertificateUrl: The URL for the certificate that is used for publishing to the custom domain. We currently support certificates stored in Azure Key Vault only. While certificate URL can be either versioned URL of the following format https://{key-vault-name}.vault.azure.net/certificates/{certificate-name}/{version-id}, or unversioned URL of the following format (e.g., https://contosovault.vault.azure.net/certificates/contosocert, we support unversioned certificate URL only (e.g., https://contosovault.vault.azure.net/certificates/contosocert)
+spec.topicSpacesConfiguration.customDomains[].expectedTxtRecordName <string>	# ExpectedTxtRecordName: Expected DNS TXT record name. Event Grid will check for a TXT record with this name in the DNS record set of the custom domain name to prove ownership over the domain. The values under this TXT record must contain the expected TXT record value.
+spec.topicSpacesConfiguration.customDomains[].expectedTxtRecordValue <string>	# ExpectedTxtRecordValue: Expected DNS TXT record value. Event Grid will check for a TXT record with this value in the DNS record set of the custom domain name to prove ownership over the domain.
+spec.topicSpacesConfiguration.customDomains[].fullyQualifiedDomainName <string> (required)	# FullyQualifiedDomainName: Fully Qualified Domain Name (FQDN) for the custom domain.
+spec.topicSpacesConfiguration.customDomains[].identity <object>	# Identity: Identity info for accessing the certificate for the custom domain. This identity info must match an identity that has been set on the namespace.
+spec.topicSpacesConfiguration.customDomains[].identity.type <string> enum=SystemAssigned|UserAssigned	# Type: The type of managed identity used. Can be either 'SystemAssigned' or 'UserAssigned'.
+spec.topicSpacesConfiguration.customDomains[].identity.userAssignedIdentity <string>	# UserAssignedIdentity: The user identity associated with the resource.
+spec.topicSpacesConfiguration.customDomains[].validationState <string> enum=Approved|ErrorRetrievingDnsRecord|Pending	# ValidationState: Validation state for the custom domain. This is a read only property and is initially set to 'Pending' and will be updated to 'Approved' by Event Grid only after ownership of the domain name has been successfully validated.
+spec.topicSpacesConfiguration.maximumClientSessionsPerAuthenticationName <integer>	# MaximumClientSessionsPerAuthenticationName: The maximum number of sessions per authentication name. The property default value is 1. Min allowed value is 1 and max allowed value is 100.
+spec.topicSpacesConfiguration.maximumSessionExpiryInHours <integer>	# MaximumSessionExpiryInHours: The maximum session expiry in hours. The property default value is 1 hour. Min allowed value is 1 hour and max allowed value is 8 hours.
+spec.topicSpacesConfiguration.routeTopicResourceReference <object>	# RouteTopicResourceReference: Fully qualified Azure Resource Id for the Event Grid Topic to which events will be routed to from TopicSpaces under a namespace. This property should be in the following format '/subscriptions/{subId}/resourcegroups/{resourceGroupName}/providers/microsoft.EventGrid/topics/{topicName}'. This topic should reside in the same region where namespace is located.
+spec.topicSpacesConfiguration.routeTopicResourceReference.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"	# ARMID is a string of the form /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. The /resourcegroups/{resourceGroupName} bit is optional as some resources are scoped at the subscription level ARMID is mutually exclusive with Group, Kind, Namespace and Name.
+spec.topicSpacesConfiguration.routeTopicResourceReference.group <string>	# Group is the Kubernetes group of the resource.
+spec.topicSpacesConfiguration.routeTopicResourceReference.kind <string>	# Kind is the Kubernetes kind of the resource.
+spec.topicSpacesConfiguration.routeTopicResourceReference.name <string>	# Name is the Kubernetes name of the resource.
+spec.topicSpacesConfiguration.routingEnrichments <object>	# RoutingEnrichments: Routing enrichments for topic spaces configuration
+spec.topicSpacesConfiguration.routingEnrichments.dynamic <[]object>
+spec.topicSpacesConfiguration.routingEnrichments.dynamic[].key <string>	# Key: Dynamic routing enrichment key.
+spec.topicSpacesConfiguration.routingEnrichments.dynamic[].value <string>	# Value: Dynamic routing enrichment value.
+spec.topicSpacesConfiguration.routingEnrichments.static <[]object>
+spec.topicSpacesConfiguration.routingEnrichments.static[].string <object>	# String: Mutually exclusive with all other properties
+spec.topicSpacesConfiguration.routingEnrichments.static[].string.key <string>	# Key: Static routing enrichment key.
+spec.topicSpacesConfiguration.routingEnrichments.static[].string.value <string>	# Value: String type routing enrichment value.
+spec.topicSpacesConfiguration.routingEnrichments.static[].string.valueType <string> (required) enum=String	# ValueType: Static routing enrichment value type. For e.g. this property value can be 'String'.
+spec.topicSpacesConfiguration.routingIdentityInfo <object>	# RoutingIdentityInfo: Routing identity info for topic spaces configuration.
+spec.topicSpacesConfiguration.routingIdentityInfo.type <string> enum=None|SystemAssigned|UserAssigned	# Type: Routing identity type for topic spaces configuration.
+spec.topicSpacesConfiguration.routingIdentityInfo.userAssignedIdentity <string>
+spec.topicSpacesConfiguration.state <string> enum=Disabled|Enabled	# State: Indicate if Topic Spaces Configuration is enabled for the namespace. Default is Disabled.
+spec.topicsConfiguration <object>	# TopicsConfiguration: Topics configuration information for the namespace resource
+spec.topicsConfiguration.customDomains <[]object>	# CustomDomains: List of custom domain configurations for the namespace.
+spec.topicsConfiguration.customDomains[].certificateUrl <string>	# CertificateUrl: The URL for the certificate that is used for publishing to the custom domain. We currently support certificates stored in Azure Key Vault only. While certificate URL can be either versioned URL of the following format https://{key-vault-name}.vault.azure.net/certificates/{certificate-name}/{version-id}, or unversioned URL of the following format (e.g., https://contosovault.vault.azure.net/certificates/contosocert, we support unversioned certificate URL only (e.g., https://contosovault.vault.azure.net/certificates/contosocert)
+spec.topicsConfiguration.customDomains[].expectedTxtRecordName <string>	# ExpectedTxtRecordName: Expected DNS TXT record name. Event Grid will check for a TXT record with this name in the DNS record set of the custom domain name to prove ownership over the domain. The values under this TXT record must contain the expected TXT record value.
+spec.topicsConfiguration.customDomains[].expectedTxtRecordValue <string>	# ExpectedTxtRecordValue: Expected DNS TXT record value. Event Grid will check for a TXT record with this value in the DNS record set of the custom domain name to prove ownership over the domain.
+spec.topicsConfiguration.customDomains[].fullyQualifiedDomainName <string> (required)	# FullyQualifiedDomainName: Fully Qualified Domain Name (FQDN) for the custom domain.
+spec.topicsConfiguration.customDomains[].identity <object>	# Identity: Identity info for accessing the certificate for the custom domain. This identity info must match an identity that has been set on the namespace.
+spec.topicsConfiguration.customDomains[].identity.type <string> enum=SystemAssigned|UserAssigned	# Type: The type of managed identity used. Can be either 'SystemAssigned' or 'UserAssigned'.
+spec.topicsConfiguration.customDomains[].identity.userAssignedIdentity <string>	# UserAssignedIdentity: The user identity associated with the resource.
+spec.topicsConfiguration.customDomains[].validationState <string> enum=Approved|ErrorRetrievingDnsRecord|Pending	# ValidationState: Validation state for the custom domain. This is a read only property and is initially set to 'Pending' and will be updated to 'Approved' by Event Grid only after ownership of the domain name has been successfully validated.
+status <object>	# Namespace resource.
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.id <string>	# Id: Fully qualified identifier of the resource.
+status.identity <object>	# Identity: Identity information for the Namespace resource.
+status.identity.principalId <string>	# PrincipalId: The principal ID of resource identity.
+status.identity.tenantId <string>	# TenantId: The tenant ID of resource.
+status.identity.type <string>	# Type: The type of managed identity used. The type 'SystemAssigned, UserAssigned' includes both an implicitly created identity and a set of user-assigned identities. The type 'None' will remove any identity.
+status.identity.userAssignedIdentities <map[string]object>	# UserAssignedIdentities: The list of user identities associated with the resource. The user identity dictionary key references will be ARM resource ids in the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'. This property is currently not used and reserved for future usage.
+status.identity.userAssignedIdentities.<key>.clientId <string>	# ClientId: The client id of user assigned identity.
+status.identity.userAssignedIdentities.<key>.principalId <string>	# PrincipalId: The principal id of user assigned identity.
+status.inboundIpRules <[]object>	# InboundIpRules: This can be used to restrict traffic from specific IPs instead of all IPs. Note: These are considered only if PublicNetworkAccess is enabled.
+status.inboundIpRules[].action <string>	# Action: Action to perform based on the match or no match of the IpMask.
+status.inboundIpRules[].ipMask <string>	# IpMask: IP Address in CIDR notation e.g., 10.0.0.0/8.
+status.isZoneRedundant <boolean>	# IsZoneRedundant: This is an optional property and it allows the user to specify if the namespace resource supports zone-redundancy capability or not. If this property is not specified explicitly by the user, its default value depends on the following conditions: a. For Availability Zones enabled regions - The default property value would be true. b. For non-Availability Zones enabled regions - The default property value would be false. Once specified, this property cannot be updated.
+status.location <string>	# Location: Location of the resource.
+status.minimumTlsVersionAllowed <string>	# MinimumTlsVersionAllowed: Minimum TLS version of the publisher allowed to publish to this namespace. Only TLS version 1.2 is supported.
+status.name <string>	# Name: Name of the resource.
+status.privateEndpointConnections <[]object>	# PrivateEndpointConnections: List of private endpoint connections.
+status.privateEndpointConnections[].id <string>	# Id: Fully qualified identifier of the resource.
+status.provisioningState <string>	# ProvisioningState: Provisioning state of the namespace resource.
+status.publicNetworkAccess <string>	# PublicNetworkAccess: This determines if traffic is allowed over public network. By default it is enabled. You can further restrict to specific IPs by configuring <seealso cref="P:Microsoft.Azure.Events.ResourceProvider.Common.Contracts.PubSub.NamespaceProperties.InboundIpRules" />
+status.sku <object>	# Sku: Represents available Sku pricing tiers.
+status.sku.capacity <integer>	# Capacity: Specifies the number of Throughput Units that defines the capacity for the namespace. The property default value is 1 which signifies 1 Throughput Unit = 1MB/s ingress and 2MB/s egress per namespace. Min capacity is 1 and max allowed capacity is 20.
+status.sku.name <string>	# Name: The name of the SKU.
+status.systemData <object>	# SystemData: The system metadata relating to the Event Grid resource.
+status.systemData.createdAt <string>	# CreatedAt: The timestamp of resource creation (UTC).
+status.systemData.createdBy <string>	# CreatedBy: The identity that created the resource.
+status.systemData.createdByType <string>	# CreatedByType: The type of identity that created the resource.
+status.systemData.lastModifiedAt <string>	# LastModifiedAt: The timestamp of resource last modification (UTC)
+status.systemData.lastModifiedBy <string>	# LastModifiedBy: The identity that last modified the resource.
+status.systemData.lastModifiedByType <string>	# LastModifiedByType: The type of identity that last modified the resource.
+status.tags <map[string]string>	# Tags: Tags of the resource.
+status.topicSpacesConfiguration <object>	# TopicSpacesConfiguration: Topic spaces configuration information for the namespace resource
+status.topicSpacesConfiguration.customDomains <[]object>	# CustomDomains: List of custom domain configurations for the namespace.
+status.topicSpacesConfiguration.customDomains[].certificateUrl <string>	# CertificateUrl: The URL for the certificate that is used for publishing to the custom domain. We currently support certificates stored in Azure Key Vault only. While certificate URL can be either versioned URL of the following format https://{key-vault-name}.vault.azure.net/certificates/{certificate-name}/{version-id}, or unversioned URL of the following format (e.g., https://contosovault.vault.azure.net/certificates/contosocert, we support unversioned certificate URL only (e.g., https://contosovault.vault.azure.net/certificates/contosocert)
+status.topicSpacesConfiguration.customDomains[].expectedTxtRecordName <string>	# ExpectedTxtRecordName: Expected DNS TXT record name. Event Grid will check for a TXT record with this name in the DNS record set of the custom domain name to prove ownership over the domain. The values under this TXT record must contain the expected TXT record value.
+status.topicSpacesConfiguration.customDomains[].expectedTxtRecordValue <string>	# ExpectedTxtRecordValue: Expected DNS TXT record value. Event Grid will check for a TXT record with this value in the DNS record set of the custom domain name to prove ownership over the domain.
+status.topicSpacesConfiguration.customDomains[].fullyQualifiedDomainName <string>	# FullyQualifiedDomainName: Fully Qualified Domain Name (FQDN) for the custom domain.
+status.topicSpacesConfiguration.customDomains[].identity <object>	# Identity: Identity info for accessing the certificate for the custom domain. This identity info must match an identity that has been set on the namespace.
+status.topicSpacesConfiguration.customDomains[].identity.type <string>	# Type: The type of managed identity used. Can be either 'SystemAssigned' or 'UserAssigned'.
+status.topicSpacesConfiguration.customDomains[].identity.userAssignedIdentity <string>	# UserAssignedIdentity: The user identity associated with the resource.
+status.topicSpacesConfiguration.customDomains[].validationState <string>	# ValidationState: Validation state for the custom domain. This is a read only property and is initially set to 'Pending' and will be updated to 'Approved' by Event Grid only after ownership of the domain name has been successfully validated.
+status.topicSpacesConfiguration.hostname <string>	# Hostname: The endpoint for the topic spaces configuration. This is a read-only property.
+status.topicSpacesConfiguration.maximumClientSessionsPerAuthenticationName <integer>	# MaximumClientSessionsPerAuthenticationName: The maximum number of sessions per authentication name. The property default value is 1. Min allowed value is 1 and max allowed value is 100.
+status.topicSpacesConfiguration.maximumSessionExpiryInHours <integer>	# MaximumSessionExpiryInHours: The maximum session expiry in hours. The property default value is 1 hour. Min allowed value is 1 hour and max allowed value is 8 hours.
+status.topicSpacesConfiguration.routeTopicResourceId <string>	# RouteTopicResourceId: Fully qualified Azure Resource Id for the Event Grid Topic to which events will be routed to from TopicSpaces under a namespace. This property should be in the following format '/subscriptions/{subId}/resourcegroups/{resourceGroupName}/providers/microsoft.EventGrid/topics/{topicName}'. This topic should reside in the same region where namespace is located.
+status.topicSpacesConfiguration.routingEnrichments <object>	# RoutingEnrichments: Routing enrichments for topic spaces configuration
+status.topicSpacesConfiguration.routingEnrichments.dynamic <[]object>
+status.topicSpacesConfiguration.routingEnrichments.dynamic[].key <string>	# Key: Dynamic routing enrichment key.
+status.topicSpacesConfiguration.routingEnrichments.dynamic[].value <string>	# Value: Dynamic routing enrichment value.
+status.topicSpacesConfiguration.routingEnrichments.static <[]object>
+status.topicSpacesConfiguration.routingEnrichments.static[].string <object>	# String: Mutually exclusive with all other properties
+status.topicSpacesConfiguration.routingEnrichments.static[].string.key <string>	# Key: Static routing enrichment key.
+status.topicSpacesConfiguration.routingEnrichments.static[].string.value <string>	# Value: String type routing enrichment value.
+status.topicSpacesConfiguration.routingEnrichments.static[].string.valueType <string>	# ValueType: Static routing enrichment value type. For e.g. this property value can be 'String'.
+status.topicSpacesConfiguration.routingIdentityInfo <object>	# RoutingIdentityInfo: Routing identity info for topic spaces configuration.
+status.topicSpacesConfiguration.routingIdentityInfo.type <string>	# Type: Routing identity type for topic spaces configuration.
+status.topicSpacesConfiguration.routingIdentityInfo.userAssignedIdentity <string>
+status.topicSpacesConfiguration.state <string>	# State: Indicate if Topic Spaces Configuration is enabled for the namespace. Default is Disabled.
+status.topicsConfiguration <object>	# TopicsConfiguration: Topics configuration information for the namespace resource
+status.topicsConfiguration.customDomains <[]object>	# CustomDomains: List of custom domain configurations for the namespace.
+status.topicsConfiguration.customDomains[].certificateUrl <string>	# CertificateUrl: The URL for the certificate that is used for publishing to the custom domain. We currently support certificates stored in Azure Key Vault only. While certificate URL can be either versioned URL of the following format https://{key-vault-name}.vault.azure.net/certificates/{certificate-name}/{version-id}, or unversioned URL of the following format (e.g., https://contosovault.vault.azure.net/certificates/contosocert, we support unversioned certificate URL only (e.g., https://contosovault.vault.azure.net/certificates/contosocert)
+status.topicsConfiguration.customDomains[].expectedTxtRecordName <string>	# ExpectedTxtRecordName: Expected DNS TXT record name. Event Grid will check for a TXT record with this name in the DNS record set of the custom domain name to prove ownership over the domain. The values under this TXT record must contain the expected TXT record value.
+status.topicsConfiguration.customDomains[].expectedTxtRecordValue <string>	# ExpectedTxtRecordValue: Expected DNS TXT record value. Event Grid will check for a TXT record with this value in the DNS record set of the custom domain name to prove ownership over the domain.
+status.topicsConfiguration.customDomains[].fullyQualifiedDomainName <string>	# FullyQualifiedDomainName: Fully Qualified Domain Name (FQDN) for the custom domain.
+status.topicsConfiguration.customDomains[].identity <object>	# Identity: Identity info for accessing the certificate for the custom domain. This identity info must match an identity that has been set on the namespace.
+status.topicsConfiguration.customDomains[].identity.type <string>	# Type: The type of managed identity used. Can be either 'SystemAssigned' or 'UserAssigned'.
+status.topicsConfiguration.customDomains[].identity.userAssignedIdentity <string>	# UserAssignedIdentity: The user identity associated with the resource.
+status.topicsConfiguration.customDomains[].validationState <string>	# ValidationState: Validation state for the custom domain. This is a read only property and is initially set to 'Pending' and will be updated to 'Approved' by Event Grid only after ownership of the domain name has been successfully validated.
+status.topicsConfiguration.hostname <string>	# Hostname: The hostname for the topics configuration. This is a read-only property.
+status.type <string>	# Type: Type of the resource.

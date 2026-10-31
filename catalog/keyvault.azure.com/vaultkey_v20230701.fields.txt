@@ -1,0 +1,90 @@
+# schema source: Azure Service Operator v2.22.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=keyvault.azure.com/v20230701
+kind <string> enum=VaultKey
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.azureName <string> pattern="^[a-zA-Z0-9-]{1,127}$"	# AzureName: The name of the resource in Azure. This is often the same as the name of the resource in Kubernetes but it doesn't have to be.
+spec.operatorSpec <object>	# OperatorSpec: The specification for configuring operator behavior. This field is interpreted by the operator and not passed directly to Azure
+spec.operatorSpec.configMapExpressions <[]object>	# ConfigMapExpressions: configures where to place operator written dynamic ConfigMaps (created with CEL expressions).
+spec.operatorSpec.configMapExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.configMapExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.configMapExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.configMapExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.operatorSpec.createMode <string> enum=default|recover|createOrRecover|purgeThenCreate	# CreateMode: Specifies how the operator handles a soft-deleted key occupying the requested name at creation time. 'default' issues a plain create and surfaces the Azure conflict error if a soft-deleted key blocks the name; 'recover' recovers the soft-deleted key and fails when none exists; 'createOrRecover' recovers a soft-deleted key when one exists and otherwise creates a new key; 'purgeThenCreate' permanently purges the soft-deleted key before creating a replacement. Defaults to 'default'.
+spec.operatorSpec.deleteMode <string> enum=detach|delete|disable	# DeleteMode: Specifies what happens to the key in Azure when the VaultKey resource is deleted from Kubernetes. 'detach' leaves the key untouched in the vault; 'delete' soft-deletes the key via the Key Vault data plane; 'disable' sets the key's enabled attribute to false and leaves it in the vault. Defaults to 'detach', which preserves the key.
+spec.operatorSpec.secretExpressions <[]object>	# SecretExpressions: configures where to place operator written dynamic secrets (created with CEL expressions).
+spec.operatorSpec.secretExpressions[].annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].key <string>	# Key is the key in the ConfigMap or Secret being written to. If the CEL expression in Value returns a string this is required to identify what key to write to. If the CEL expression in Value returns a map[string]string Key must not be set, instead the keys written will be determined dynamically based on the keys of the resulting map[string]string.
+spec.operatorSpec.secretExpressions[].labels <map[string]string>	# Labels is an optional set of labels to apply to the destination resource.
+spec.operatorSpec.secretExpressions[].name <string> (required)	# Name is the name of the Kubernetes configmap or secret to write to. The configmap or secret will be created in the same namespace as the resource.
+spec.operatorSpec.secretExpressions[].value <string> (required)	# Value is a CEL expression. The CEL expression may return a string or a map[string]string. For more information on CEL in ASO see https://azure.github.io/azure-service-operator/guide/expressions/
+spec.owner <object> (required)	# Owner: The owner of the resource. The owner controls where the resource goes when it is deployed. The owner also controls the resources lifecycle. When the owner is deleted the resource will also be deleted. Owner is expected to be a reference to a keyvault.azure.com/Vault resource
+spec.owner.armId <string> pattern="(?i)(^(/subscriptions/([^/]+)(/resourcegroups/([^/]+))?)?/providers/([^/]+)/([^/]+/[^/]+)(/([^/]+/[^/]+))*$|^/subscriptions/([^/]+)(/resourcegroups/([^/]+))?$)"
+spec.owner.name <string>	# This is the name of the Kubernetes resource to reference.
+spec.properties <object> (required)	# Properties: The properties of the key to be created.
+spec.properties.attributes <object>	# Attributes: The attributes of the key.
+spec.properties.attributes.enabled <boolean>	# Enabled: Determines whether or not the object is enabled.
+spec.properties.attributes.exp <integer>	# Exp: Expiry date in seconds since 1970-01-01T00:00:00Z.
+spec.properties.attributes.exportable <boolean>	# Exportable: Indicates if the private key can be exported.
+spec.properties.attributes.nbf <integer>	# Nbf: Not before date in seconds since 1970-01-01T00:00:00Z.
+spec.properties.curveName <string> enum=P-256|P-256K|P-384|P-521	# CurveName: The elliptic curve name. For valid values, see JsonWebKeyCurveName.
+spec.properties.keyOps <[]string>
+spec.properties.keySize <integer>	# KeySize: The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+spec.properties.kty <string> enum=EC|EC-HSM|RSA|RSA-HSM	# Kty: The type of the key. For valid values, see JsonWebKeyType.
+spec.properties.release_policy <object>	# Release_Policy: Key release policy in response. It will be used for both output and input. Omitted if empty
+spec.properties.release_policy.contentType <string>	# ContentType: Content type and version of key release policy
+spec.properties.release_policy.data <string> pattern="^[-A-Za-z0-9_]*={0,2}$"	# Data: Blob encoding the policy rules under which the key can be released.
+spec.properties.rotationPolicy <object>	# RotationPolicy: Key rotation policy in response. It will be used for both output and input. Omitted if empty
+spec.properties.rotationPolicy.attributes <object>	# Attributes: The attributes of key rotation policy.
+spec.properties.rotationPolicy.attributes.expiryTime <string>	# ExpiryTime: The expiration time for the new key version. It should be in ISO8601 format. Eg: 'P90D', 'P1Y'.
+spec.properties.rotationPolicy.lifetimeActions <[]object>	# LifetimeActions: The lifetimeActions for key rotation action.
+spec.properties.rotationPolicy.lifetimeActions[].action <object>	# Action: The action of key rotation policy lifetimeAction.
+spec.properties.rotationPolicy.lifetimeActions[].action.type <string> enum=notify|rotate	# Type: The type of action.
+spec.properties.rotationPolicy.lifetimeActions[].trigger <object>	# Trigger: The trigger of key rotation policy lifetimeAction.
+spec.properties.rotationPolicy.lifetimeActions[].trigger.timeAfterCreate <string>	# TimeAfterCreate: The time duration after key creation to rotate the key. It only applies to rotate. It will be in ISO 8601 duration format. Eg: 'P90D', 'P1Y'.
+spec.properties.rotationPolicy.lifetimeActions[].trigger.timeBeforeExpiry <string>	# TimeBeforeExpiry: The time duration before key expiring to rotate or notify. It will be in ISO 8601 duration format. Eg: 'P90D', 'P1Y'.
+spec.tags <map[string]string>	# Tags: The tags that will be assigned to the key.
+status <object>
+status.attributes <object>	# Attributes: The attributes of the key.
+status.attributes.created <integer>	# Created: Creation time in seconds since 1970-01-01T00:00:00Z.
+status.attributes.enabled <boolean>	# Enabled: Determines whether or not the object is enabled.
+status.attributes.exp <integer>	# Exp: Expiry date in seconds since 1970-01-01T00:00:00Z.
+status.attributes.exportable <boolean>	# Exportable: Indicates if the private key can be exported.
+status.attributes.nbf <integer>	# Nbf: Not before date in seconds since 1970-01-01T00:00:00Z.
+status.attributes.recoveryLevel <string>	# RecoveryLevel: The deletion recovery level currently in effect for the object. If it contains 'Purgeable', then the object can be permanently deleted by a privileged user; otherwise, only the system can purge the object at the end of the retention interval.
+status.attributes.updated <integer>	# Updated: Last updated time in seconds since 1970-01-01T00:00:00Z.
+status.conditions <[]object>	# Conditions: The observed state of the resource
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.curveName <string>	# CurveName: The elliptic curve name. For valid values, see JsonWebKeyCurveName.
+status.id <string>	# Id: Fully qualified identifier of the key vault resource.
+status.keyOps <[]string>
+status.keySize <integer>	# KeySize: The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+status.keyUri <string>	# KeyUri: The URI to retrieve the current version of the key.
+status.keyUriWithVersion <string>	# KeyUriWithVersion: The URI to retrieve the specific version of the key.
+status.kty <string>	# Kty: The type of the key. For valid values, see JsonWebKeyType.
+status.location <string>	# Location: Azure location of the key vault resource.
+status.name <string>	# Name: Name of the key vault resource.
+status.release_policy <object>	# Release_Policy: Key release policy in response. It will be used for both output and input. Omitted if empty
+status.release_policy.contentType <string>	# ContentType: Content type and version of key release policy
+status.release_policy.data <string>	# Data: Blob encoding the policy rules under which the key can be released.
+status.rotationPolicy <object>	# RotationPolicy: Key rotation policy in response. It will be used for both output and input. Omitted if empty
+status.rotationPolicy.attributes <object>	# Attributes: The attributes of key rotation policy.
+status.rotationPolicy.attributes.created <integer>	# Created: Creation time in seconds since 1970-01-01T00:00:00Z.
+status.rotationPolicy.attributes.expiryTime <string>	# ExpiryTime: The expiration time for the new key version. It should be in ISO8601 format. Eg: 'P90D', 'P1Y'.
+status.rotationPolicy.attributes.updated <integer>	# Updated: Last updated time in seconds since 1970-01-01T00:00:00Z.
+status.rotationPolicy.lifetimeActions <[]object>	# LifetimeActions: The lifetimeActions for key rotation action.
+status.rotationPolicy.lifetimeActions[].action <object>	# Action: The action of key rotation policy lifetimeAction.
+status.rotationPolicy.lifetimeActions[].action.type <string>	# Type: The type of action.
+status.rotationPolicy.lifetimeActions[].trigger <object>	# Trigger: The trigger of key rotation policy lifetimeAction.
+status.rotationPolicy.lifetimeActions[].trigger.timeAfterCreate <string>	# TimeAfterCreate: The time duration after key creation to rotate the key. It only applies to rotate. It will be in ISO 8601 duration format. Eg: 'P90D', 'P1Y'.
+status.rotationPolicy.lifetimeActions[].trigger.timeBeforeExpiry <string>	# TimeBeforeExpiry: The time duration before key expiring to rotate or notify. It will be in ISO 8601 duration format. Eg: 'P90D', 'P1Y'.
+status.tags <map[string]string>	# Tags: Tags assigned to the key vault resource.
+status.type <string>	# Type: Resource type of the key vault resource.

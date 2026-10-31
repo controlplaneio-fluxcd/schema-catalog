@@ -1,0 +1,33 @@
+# schema source: Azure Service Operator v2.22.0 https://github.com/Azure/azure-service-operator
+apiVersion <string> enum=entra.azure.com/v1
+kind <string> enum=ServicePrincipal
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>
+spec.appId <string> pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"	# AppId is the global application (client) GUID, not the tenant-specific Entra object ID. Required to create a new service principal; existing principals can be adopted by displayName.
+spec.displayName <string> min=1	# DisplayName identifies an existing principal for adoption, following Application's behavior: multiple matches are an error. An appId is also required if creation is needed.
+spec.operatorSpec <object>	# OperatorSpec configures adoption and destinations for the resolved IDs.
+spec.operatorSpec.configmaps <object>
+spec.operatorSpec.configmaps.appId <object>	# ConfigMapDestination describes the location to store a single configmap value Note: This is similar to: SecretDestination in secrets.go. Changes to one may need to be made to the others as well.
+spec.operatorSpec.configmaps.appId.annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the ConfigMap.
+spec.operatorSpec.configmaps.appId.key <string> (required)	# Key is the key in the ConfigMap being referenced
+spec.operatorSpec.configmaps.appId.labels <map[string]string>	# Labels is an optional set of labels to apply to the ConfigMap.
+spec.operatorSpec.configmaps.appId.name <string> (required)	# Name is the name of the Kubernetes ConfigMap to write to. The ConfigMap will be created in the same namespace as the resource.
+spec.operatorSpec.configmaps.entraID <object>	# ConfigMapDestination describes the location to store a single configmap value Note: This is similar to: SecretDestination in secrets.go. Changes to one may need to be made to the others as well.
+spec.operatorSpec.configmaps.entraID.annotations <map[string]string>	# Annotations is an optional set of annotations to apply to the ConfigMap.
+spec.operatorSpec.configmaps.entraID.key <string> (required)	# Key is the key in the ConfigMap being referenced
+spec.operatorSpec.configmaps.entraID.labels <map[string]string>	# Labels is an optional set of labels to apply to the ConfigMap.
+spec.operatorSpec.configmaps.entraID.name <string> (required)	# Name is the name of the Kubernetes ConfigMap to write to. The ConfigMap will be created in the same namespace as the resource.
+spec.operatorSpec.creationMode <string> enum=AdoptOrCreate|AlwaysCreate|AdoptOnly	# CreationMode defaults to AdoptOrCreate. Set AdoptOnly to resolve an existing service principal without creating one if it is absent in this tenant.
+status <object>
+status.appId <string>	# AppId is the global application (client) GUID.
+status.conditions <[]object>	# Conditions represent the latest available observations of the service principal's state.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# LastTransitionTime is the last time the condition transitioned from one status to another.
+status.conditions[].message <string>	# Message is a human readable message indicating details about the transition. This field may be empty.
+status.conditions[].observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# Reason for the condition's last transition. Reasons are upper CamelCase (PascalCase) with no spaces. A reason is always provided, this field will not be empty.
+status.conditions[].severity <string>	# Severity with which to treat failures of this type of condition. For conditions which have positive polarity (Status == True is their normal/healthy state), this will be omitted when Status == True For conditions which have negative polarity (Status == False is their normal/healthy state), this will be omitted when Status == False. This is omitted in all cases when Status == Unknown
+status.conditions[].status <string> (required)	# Status of the condition, one of True, False, or Unknown.
+status.conditions[].type <string> (required)	# Type of condition.
+status.displayName <string>	# DisplayName is the human-readable name of the service principal.
+status.entraID <string>	# EntraID is the tenant-specific object ID, suitable for role assignments.
