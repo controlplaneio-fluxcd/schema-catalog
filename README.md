@@ -169,7 +169,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Sealed Secrets](https://schemas.fluxoperator.dev/p/sealed-secrets) | `sealed-secrets` | v0.41.2 | 1 | 2026-10-26 |
 | [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.1 | 4 | 2026-09-10 |
 | [Sigstore Policy Controller](https://schemas.fluxoperator.dev/p/sigstore-policy-controller) | `sigstore-policy-controller` | v0.15.1 | 3 | 2026-07-09 |
-| [SPIRE Controller Manager](https://schemas.fluxoperator.dev/p/spire-controller-manager) | `spire-controller-manager` | v0.8.0 | 4 | 2026-09-30 |
+| [SPIRE Controller Manager](https://schemas.fluxoperator.dev/p/spire-controller-manager) | `spire-controller-manager` | v0.7.1 | 4 | 2026-11-01 |
 | [Trust Manager](https://schemas.fluxoperator.dev/p/trust-manager) | `trust-manager` | v0.26.0 | 2 | 2026-10-28 |
 | [Upbound AWS Provider](https://schemas.fluxoperator.dev/p/provider-upjet-aws) | `provider-upjet-aws` | v2.9.0 | 2452 | 2026-10-09 |
 | [Upbound Azure Provider](https://schemas.fluxoperator.dev/p/provider-upjet-azure) | `provider-upjet-azure` | v2.8.0 | 1827 | 2026-10-09 |
@@ -217,7 +217,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Gateway API Inference Extension](https://schemas.fluxoperator.dev/p/gateway-api-inference-extension) | `gateway-api-inference-extension` | v1.6.2 | 2 | 2026-09-18 |
 | [Istio](https://schemas.fluxoperator.dev/p/istio) | `istio` | 1.31.3 | 33 | 2026-10-23 |
 | [JobSet](https://schemas.fluxoperator.dev/p/jobset) | `jobset` | v0.13.0 | 1 | 2026-10-14 |
-| [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.19.0 | 19 | 2026-09-01 |
+| [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.19.1 | 19 | 2026-11-01 |
 | [Karpenter](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter` | v1.15.1 | 4 | 2026-10-24 |
 | [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.15.1 | 1 | 2026-10-24 |
 | [Karpenter Azure](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-azure` | v1.14.5 | 2 | 2026-10-14 |
@@ -256,7 +256,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [CloudNativePG](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `cloudnative-pg` | v1.30.1 | 11 | 2026-09-24 |
 | [CNPG Barman Cloud Plugin](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `plugin-barman-cloud` | v0.15.1 | 1 | 2026-10-01 |
 | [Crunchy Postgres Operator](https://schemas.fluxoperator.dev/p/crunchy-postgres-operator) | `crunchy-postgres-operator` | v6.0.2 | 4 | 2026-07-09 |
-| [Dapr](https://schemas.fluxoperator.dev/p/dapr) | `dapr` | v1.19.0 | 8 | 2026-10-23 |
+| [Dapr](https://schemas.fluxoperator.dev/p/dapr) | `dapr` | v1.19.1 | 8 | 2026-11-01 |
 | [Dragonfly Operator](https://schemas.fluxoperator.dev/p/dragonfly-operator) | `dragonfly-operator` | v1.7.1 | 1 | 2026-10-21 |
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.45.0 | 3 | 2026-09-02 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.10.0 | 17 | 2026-10-26 |
