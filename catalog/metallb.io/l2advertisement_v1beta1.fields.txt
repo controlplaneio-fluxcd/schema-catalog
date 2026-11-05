@@ -1,4 +1,4 @@
-# schema source: MetalLB v0.16.0 https://github.com/metallb/metallb
+# schema source: MetalLB v0.16.2 https://github.com/metallb/metallb
 apiVersion <string> enum=metallb.io/v1beta1
 kind <string> enum=L2Advertisement
 metadata.name <string> (required)
@@ -18,7 +18,15 @@ spec.nodeSelectors[].matchExpressions[].key <string> (required)	# key is the lab
 spec.nodeSelectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
 spec.nodeSelectors[].matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.nodeSelectors[].matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
-spec.serviceSelectors <[]object>	# ServiceSelectors limits the set of services that will be advertised via this advertisement. If empty, all services from the selected pools are advertised.
+spec.preferredNodeSelectors <[]object>	# PreferredNodeSelectors allows specifying soft node preferences for L2 leader election. Nodes matching these selectors receive a higher score and are preferred as the announcing node. If no preferred node is available, any eligible node (per NodeSelectors) can announce. Modeled after Kubernetes PreferredSchedulingTerm.
+spec.preferredNodeSelectors[].preference <object> (required)	# Preference selects the nodes that receive this weight. An empty selector matches every node. Preferences only apply to nodes already eligible under the advertisement's NodeSelectors.
+spec.preferredNodeSelectors[].preference.matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
+spec.preferredNodeSelectors[].preference.matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
+spec.preferredNodeSelectors[].preference.matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+spec.preferredNodeSelectors[].preference.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+spec.preferredNodeSelectors[].preference.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+spec.preferredNodeSelectors[].weight <integer> (required) format=int32 min=1 max=100	# Weight associated with matching the corresponding preference, in the range 1-100. Higher weights rank the node higher in the L2 leader election. Weights from selectors that both match a node sum together.
+spec.serviceSelectors <[]object>	# ServiceSelectors limits the set of services that will be advertised via this advertisement. If empty, all services from the selected pools are advertised. Services matching the selectors cannot use the allow-shared-ip annotation.
 spec.serviceSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
 spec.serviceSelectors[].matchExpressions[].key <string> (required)	# key is the label key that the selector applies to.
 spec.serviceSelectors[].matchExpressions[].operator <string> (required)	# operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
