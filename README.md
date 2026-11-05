@@ -113,14 +113,14 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS CloudWatch Logs Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudwatchlogs` | v1.10.0 | 6 | 2026-11-03 |
 | [AWS DynamoDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-dynamodb` | v1.14.1 | 3 | 2026-11-03 |
 | [AWS EC2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ec2` | v1.23.1 | 20 | 2026-11-04 |
-| [AWS ECR Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ecr` | v1.11.0 | 3 | 2026-10-24 |
+| [AWS ECR Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ecr` | v1.11.1 | 3 | 2026-11-05 |
 | [AWS EFS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-efs` | v1.8.0 | 3 | 2026-10-24 |
 | [AWS EKS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eks` | v1.26.0 | 8 | 2026-10-24 |
 | [AWS Elastic Load Balancing v2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elbv2` | v1.9.0 | 4 | 2026-10-24 |
 | [AWS ElastiCache Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-elasticache` | v1.12.0 | 9 | 2026-11-04 |
-| [AWS EventBridge Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eventbridge` | v1.9.1 | 4 | 2026-10-30 |
+| [AWS EventBridge Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-eventbridge` | v1.9.2 | 4 | 2026-11-05 |
 | [AWS IAM Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-iam` | v1.11.3 | 7 | 2026-11-04 |
-| [AWS Kinesis Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kinesis` | v1.7.0 | 1 | 2026-10-24 |
+| [AWS Kinesis Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kinesis` | v1.7.1 | 1 | 2026-11-05 |
 | [AWS KMS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-kms` | v1.7.0 | 3 | 2026-10-24 |
 | [AWS Lambda Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-lambda` | v1.19.0 | 7 | 2026-10-24 |
 | [AWS MemoryDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-memorydb` | v1.9.0 | 6 | 2026-10-24 |
@@ -233,10 +233,10 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v1.0.0 | 3 | 2026-10-21 |
 | [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.11.1 | 19 | 2026-11-03 |
-| [MetalLB](https://schemas.fluxoperator.dev/p/metallb) | `metallb` | v0.16.0 | 10 | 2026-07-09 |
+| [MetalLB](https://schemas.fluxoperator.dev/p/metallb) | `metallb` | v0.16.2 | 10 | 2026-11-05 |
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.20.1 | 2 | 2026-10-24 |
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.20.1 | 3 | 2026-10-24 |
-| [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.20.2 | 1 | 2026-09-24 |
+| [Rancher System Upgrade Controller](https://schemas.fluxoperator.dev/p/rancher-system-upgrade-controller) | `rancher-system-upgrade-controller` | v0.21.0 | 1 | 2026-11-05 |
 | [Traefik](https://schemas.fluxoperator.dev/p/traefik) | `traefik` | v3.7.17 | 10 | 2026-10-31 |
 | [Vertical Pod Autoscaler](https://schemas.fluxoperator.dev/p/vertical-pod-autoscaler) | `vertical-pod-autoscaler` | 1.8.1 | 4 | 2026-10-22 |
 | [Volcano](https://schemas.fluxoperator.dev/p/volcano) | `volcano` | v1.16.0 | 10 | 2026-10-21 |
@@ -249,9 +249,9 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Actions Runner Controller](https://schemas.fluxoperator.dev/p/actions-runner-controller) | `actions-runner-controller` | 0.15.1 | 9 | 2026-10-24 |
 | [AIBrix](https://schemas.fluxoperator.dev/p/aibrix) | `aibrix` | v0.8.0 | 10 | 2026-10-14 |
 | [Altinity ClickHouse Operator](https://schemas.fluxoperator.dev/p/altinity-clickhouse-operator) | `altinity-clickhouse-operator` | 0.27.4 | 4 | 2026-09-25 |
-| [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.6.0 | 3 | 2026-11-04 |
+| [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.6.1 | 3 | 2026-11-05 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.11 | 3 | 2026-07-14 |
-| [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.10.1 | 5 | 2026-10-14 |
+| [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.10.2 | 5 | 2026-11-05 |
 | [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.1.6 | 8 | 2026-10-23 |
 | [CloudNativePG](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `cloudnative-pg` | v1.30.1 | 11 | 2026-09-24 |
 | [CNPG Barman Cloud Plugin](https://schemas.fluxoperator.dev/p/cloudnative-pg) | `plugin-barman-cloud` | v0.15.1 | 1 | 2026-10-01 |
@@ -284,7 +284,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [RabbitMQ Messaging Topology Operator](https://schemas.fluxoperator.dev/p/rabbitmq) | `rabbitmq-messaging-topology-operator` | v1.20.5 | 13 | 2026-10-28 |
 | [Rancher Fleet](https://schemas.fluxoperator.dev/p/rancher-fleet) | `rancher-fleet` | v0.16.3 | 14 | 2026-10-24 |
 | [Redis Operator](https://schemas.fluxoperator.dev/p/redis-operator) | `redis-operator` | v0.27.0 | 4 | 2026-10-09 |
-| [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 6.7.0 | 5 | 2026-10-29 |
+| [Renovate Operator](https://schemas.fluxoperator.dev/p/renovate-operator) | `renovate-operator` | 6.8.0 | 5 | 2026-11-05 |
 | [ScyllaDB Operator](https://schemas.fluxoperator.dev/p/scylla-operator) | `scylla-operator` | v1.23.0 | 8 | 2026-10-26 |
 | [Seldon Core v2](https://schemas.fluxoperator.dev/p/seldon-core) | `seldon-core` | v2.10.2 | 7 | 2026-07-09 |
 | [Shipwright](https://schemas.fluxoperator.dev/p/shipwright) | `shipwright` | v0.21.11 | 8 | 2026-10-26 |
