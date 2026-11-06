@@ -1,4 +1,4 @@
-# schema source: Perses Operator v0.5.0 https://github.com/perses/perses-operator
+# schema source: Perses Operator v0.6.0 https://github.com/perses/perses-operator
 apiVersion <string> enum=perses.dev/v1alpha1 (deprecated)	# perses.dev/v1alpha1 is deprecated; use perses.dev/v1alpha2
 kind <string> enum=Perses
 metadata.name <string> (required)
@@ -236,6 +236,10 @@ spec.config.datasource.global.discovery[].http_sd.tls_config.serverName <string>
 spec.config.datasource.global.discovery[].http_sd.url <string> (required) format=uri
 spec.config.datasource.global.discovery[].kubernetes_sd <object>	# Kubernetes SD configurations allow retrieving global datasource from Kubernetes' REST API and always staying synchronized with the cluster state.
 spec.config.datasource.global.discovery[].kubernetes_sd.datasource_plugin_kind <string> (required)	# DatasourcePluginKind is the name of the datasource plugin that should be filled when creating datasources found.
+spec.config.datasource.global.discovery[].kubernetes_sd.default <object>	# Marks the discovered datasource as default
+spec.config.datasource.global.discovery[].kubernetes_sd.default.annotations <map[string]string>
+spec.config.datasource.global.discovery[].kubernetes_sd.default.enable <boolean>
+spec.config.datasource.global.discovery[].kubernetes_sd.default.labels <map[string]string>
 spec.config.datasource.global.discovery[].kubernetes_sd.labels <map[string]string>	# The labels used to filter the list of resource when contacting the Kubernetes API.
 spec.config.datasource.global.discovery[].kubernetes_sd.namespace <string> (required)	# Kubernetes namespace to constraint the query to only one namespace. Leave empty if you are looking for datasource cross-namespace.
 spec.config.datasource.global.discovery[].kubernetes_sd.pod_configuration <object>	# Configuration when you want to discover the pods in Kubernetes
@@ -252,21 +256,44 @@ spec.config.datasource.global.discovery[].name <string> (required)	# The name of
 spec.config.datasource.global.discovery[].refresh_interval <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# Refresh interval to re-query the endpoint.
 spec.config.datasource.project <object> (required)
 spec.config.datasource.project.disable <boolean> (required)	# Disable is used to disable the project datasource feature. It will also remove the associated proxy.
+spec.config.datasource.proxy <object> (required)	# Proxy contains the configuration of the datasource proxy: the destinations it is allowed to reach (whatever the kind of proxy), and the configuration specific to each kind of proxy.
+spec.config.datasource.proxy.allowed_hosts <[]string>	# AllowedHosts, when not empty, is the exhaustive list of hosts the proxy can reach. An entry is either an exact hostname (e.g. "prometheus.example.com"), a wildcard matching any subdomain (e.g. "*.example.com") or an IP address. The port must not be provided.
+spec.config.datasource.proxy.allowed_networks <[]string>	# AllowedNetworks is a list of IP addresses or CIDRs that are allowed. When an IP address is part of both an allowed and a denied network (the built-in ones, DeniedNetworks and DenyPrivateNetworks), the most specific network wins (on equal prefix lengths, the allowed network wins). For example, allowing 10.0.0.0/8 doesn't allow the Kubernetes API service IP, and allowing 169.254.0.0/16 doesn't allow 169.254.169.254 (both denied as single IP addresses), while allowing these IP addresses explicitly does. Use ["127.0.0.0/8", "::1/128"] if your datasources are running on the same host as Perses.
+spec.config.datasource.proxy.denied_networks <[]string>	# DeniedNetworks is a list of IP addresses or CIDRs that are denied, in addition to the built-in ones.
+spec.config.datasource.proxy.deny_private_networks <boolean> (required)	# DenyPrivateNetworks when true denies the private networks as well: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, fc00::/7 and fec0::/10.
+spec.config.datasource.proxy.http <object>	# HTTP contains the configuration specific to the proxy of the datasources of kind HTTPProxy.
+spec.config.datasource.proxy.http.allowed_schemes <[]string>	# AllowedSchemes is the list of URL schemes an HTTP datasource is allowed to use. Accepted values are "http" and "https". Default: ["http", "https"].
+spec.config.datasource.proxy.http.default_timeout <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# DefaultTimeout is the maximum amount of time allowed to establish a connection to a datasource, when the datasource doesn't define its own timeout (or sets it to 0). Default: 30s, or MaxTimeout if it is lower
+spec.config.datasource.proxy.http.max_conns_per_host <integer>	# MaxConnsPerHost limits the total number of connections (in use and idle) that Perses opens, for a given datasource, to a given host. Once the limit is reached, the new requests wait until a connection is available, or until they are canceled. It can be used to protect Perses (file descriptors) and the datasources from a burst of queries. Zero means no limit.
+spec.config.datasource.proxy.http.max_idle_conns <integer>	# MaxIdleConns limits the number of idle connections kept open, for a given datasource, across all hosts. Idle connections are reused by the next requests, saving the TCP and TLS handshakes, but each of them holds a socket and some memory. Default: 100
+spec.config.datasource.proxy.http.max_idle_conns_per_host <integer>	# MaxIdleConnsPerHost limits the number of idle connections kept open, for a given datasource, to a given host. A datasource usually talks to a single host, so it is in practice the number of idle connections kept per datasource. Default: 10
+spec.config.datasource.proxy.http.max_timeout <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# MaxTimeout is the highest timeout a datasource can define. A datasource can only lower the timeout, never go beyond it. A long timeout keeps goroutines and sockets busy against unreachable hosts, so letting the users increase it freely would expose Perses to resource exhaustion. Default: the value of DefaultTimeout
 spec.config.ephemeral_dashboard <object>	# EphemeralDashboard contains the config about the ephemeral dashboard feature
 spec.config.ephemeral_dashboard.cleanup_interval <string> (required) format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# The interval at which to trigger the cleanup of ephemeral dashboards, based on their TTLs.
 spec.config.ephemeral_dashboard.enable <boolean> (required)	# When true user will be able to use the ephemeral dashboard at project level.
 spec.config.ephemeral_dashboards_cleanup_interval <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# EphemeralDashboardsCleanupInterval is the interval at which the ephemeral dashboards are cleaned up DEPRECATED. Please use the config EphemeralDashboard instead.
 spec.config.frontend <object>	# Frontend contains any config that will be used by the frontend itself.
+spec.config.frontend.auto_refresh <object>	# AutoRefresh contains the auto-refresh configuration for dashboards
+spec.config.frontend.auto_refresh.disable <boolean>
+spec.config.frontend.auto_refresh.options <[]string>
 spec.config.frontend.banner <object>	# BannerInfo contains the content to be display in a banner at the top of each page along with the severity of the information
 spec.config.frontend.banner.message <string> (required)
 spec.config.frontend.banner.severity <string> (required)
+spec.config.frontend.default_user_preferences <object>	# DefaultUserPreferences contains server-wide defaults for user preferences.
+spec.config.frontend.default_user_preferences.rows_per_page <integer>
+spec.config.frontend.default_user_preferences.theme <string>
+spec.config.frontend.default_user_preferences.timezone <string>
 spec.config.frontend.disable <boolean> (required)	# When it is true, Perses won't serve the frontend anymore, and any other config set here will be ignored
 spec.config.frontend.enable_keyboard_shortcuts <boolean>	# EnableKeyboardShortcuts enables keyboard shortcuts in the UI. Defaults to true when omitted.
+spec.config.frontend.enable_lock_mode <boolean>	# EnablePluginVersioning enables the dashboard "lock" button that pins every plugin to its latest available version. Defaults to false (feature hidden) when omitted.
 spec.config.frontend.explorer <object> (required)	# Explorer is activating the different kind of explorer supported. Be sure you have installed an associated plugin for each explorer type.
 spec.config.frontend.explorer.enable <boolean> (required)
-spec.config.frontend.important_dashboards <[]object>	# ImportantDashboards contains important dashboard selectors
-spec.config.frontend.important_dashboards[].dashboard <string> (required)	# Dashboard is the name of the dashboard (dashboard.metadata.name)
-spec.config.frontend.important_dashboards[].project <string> (required)	# Project is the name of the project (dashboard.metadata.project)
+spec.config.frontend.important_dashboards <[]object>	# ImportantDashboards contains grouped important dashboard selectors. Each selector can target one dashboard or an entire project when dashboard is omitted.
+spec.config.frontend.important_dashboards[].dashboards <[]object>
+spec.config.frontend.important_dashboards[].dashboards[].dashboard <string>	# Dashboard is the name of the dashboard (dashboard.metadata.name). When omitted, all dashboards from the project are considered important.
+spec.config.frontend.important_dashboards[].dashboards[].project <string> (required)	# Project is the name of the project (dashboard.metadata.project)
+spec.config.frontend.important_dashboards[].description <string>
+spec.config.frontend.important_dashboards[].title <string>
 spec.config.frontend.information <string>	# Information contains Markdown content to be display on the home page
 spec.config.frontend.time_range <object>	# TimeRange contains the time range configuration for the dropdown
 spec.config.frontend.time_range.disable_custom <boolean>
@@ -280,6 +307,7 @@ spec.config.plugin.enable_dev <boolean> (required)	# DevEnvironment is the confi
 spec.config.plugin.enabled <[]string>	# Enabled is a list of plugin activated. Leave empty if you want to activate all plugins found in the `path` directory. If not empty, only the plugins whose name is in this list will be activated. The name can be the name of the plugin or the name of the module. For example, you can put `Prometheus` to enable the Prometheus module that contains query, variables and datasource plugin. Use either Enabled or Disabled. Both can not be used at the same time.
 spec.config.plugin.path <string>	# Path is the path to the directory containing the runtime plugins
 spec.config.provisioning <object>	# Provisioning contains the provisioning config that can be used if you want to provide default resources.
+spec.config.provisioning.enable_watch <boolean>	# EnableWatch can be used to update provisioning on change instead of waiting for the configured interval. Interval is still used to reconcile the state.
 spec.config.provisioning.folders <[]string>
 spec.config.provisioning.interval <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# Interval is the refresh frequency
 spec.config.schemas <object>	# Schemas contain the configuration to get access to the CUE schemas DEPRECATED. Please remove it from your config.
@@ -288,6 +316,11 @@ spec.config.schemas.interval <string> format=duration pattern="^(([0-9]+)y)?(([0
 spec.config.schemas.panels_path <string>
 spec.config.schemas.queries_path <string>
 spec.config.schemas.variables_path <string>
+spec.config.search <object>	# Search contains the config for the search engine and the index in memory.
+spec.config.search.check_latest_update_interval <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# CheckLatestUpdateInterval is the interval when it checks if the index cache needs to be refreshed with db content. Only for SQL database setup.
+spec.config.search.excluded_chars <[]string>	# ExcludedChars is the list of characters that will be excluded from the search engine.
+spec.config.search.index_keys <object>
+spec.config.search.index_keys.dashboard <[]string>
 spec.config.security <object>	# Security contains any configuration that changes the API behavior like the endpoints exposed or if the permissions are activated.
 spec.config.security.authentication <object>	# Authentication contains configuration regarding management of access/refresh token
 spec.config.security.authentication.access_token_ttl <string> format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"	# AccessTokenTTL is the time to live of the access token. By default, it is 15 minutes.
@@ -298,6 +331,12 @@ spec.config.security.authentication.providers.kubernetes <object>
 spec.config.security.authentication.providers.kubernetes.enable <boolean> (required)
 spec.config.security.authentication.providers.oauth <[]object>
 spec.config.security.authentication.providers.oauth[].auth_url <string> (required) format=uri
+spec.config.security.authentication.providers.oauth[].claims <[]object>	# Claims lists upstream token claim fields that Perses should persist in the Perses JWT and optionally map to Perses roles.
+spec.config.security.authentication.providers.oauth[].claims[].claim_name <string> (required)	# ClaimName is the JSON field name in the upstream access token (e.g. "roles", "groups").
+spec.config.security.authentication.providers.oauth[].claims[].mappings <[]object>	# Mappings maps individual claim values to Perses roles.
+spec.config.security.authentication.providers.oauth[].claims[].mappings[].claim_value <string> (required)
+spec.config.security.authentication.providers.oauth[].claims[].mappings[].project <string>	# Project is optional. When set, maps the claim value to a project-scoped Role. When empty, maps to a GlobalRole.
+spec.config.security.authentication.providers.oauth[].claims[].mappings[].role_name <string> (required)
 spec.config.security.authentication.providers.oauth[].client_credentials <object>
 spec.config.security.authentication.providers.oauth[].client_credentials.client_id <string> (required)	# Hidden special type for storing secrets.
 spec.config.security.authentication.providers.oauth[].client_credentials.client_secret <string>	# Hidden special type for storing secrets.
@@ -315,7 +354,7 @@ spec.config.security.authentication.providers.oauth[].device_code.client_secret_
 spec.config.security.authentication.providers.oauth[].device_code.scopes <[]string> (required)
 spec.config.security.authentication.providers.oauth[].http <object> (required)
 spec.config.security.authentication.providers.oauth[].http.timeout <string> (required) format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"
-spec.config.security.authentication.providers.oauth[].http.tls_config <object> (required)
+spec.config.security.authentication.providers.oauth[].http.tls_config <object>
 spec.config.security.authentication.providers.oauth[].http.tls_config.ca <string>	# Text of the CA cert to use for the targets.
 spec.config.security.authentication.providers.oauth[].http.tls_config.caFile <string>	# The CA cert to use for the targets.
 spec.config.security.authentication.providers.oauth[].http.tls_config.cert <string>	# Text of the client cert file for the targets.
@@ -333,6 +372,12 @@ spec.config.security.authentication.providers.oauth[].slug_id <string> (required
 spec.config.security.authentication.providers.oauth[].token_url <string> (required) format=uri
 spec.config.security.authentication.providers.oauth[].user_infos_url <string> (required) format=uri
 spec.config.security.authentication.providers.oidc <[]object>
+spec.config.security.authentication.providers.oidc[].claims <[]object>	# Claims lists upstream token claim fields that Perses should persist in the Perses JWT and optionally map to Perses roles.
+spec.config.security.authentication.providers.oidc[].claims[].claim_name <string> (required)	# ClaimName is the JSON field name in the upstream access token (e.g. "roles", "groups").
+spec.config.security.authentication.providers.oidc[].claims[].mappings <[]object>	# Mappings maps individual claim values to Perses roles.
+spec.config.security.authentication.providers.oidc[].claims[].mappings[].claim_value <string> (required)
+spec.config.security.authentication.providers.oidc[].claims[].mappings[].project <string>	# Project is optional. When set, maps the claim value to a project-scoped Role. When empty, maps to a GlobalRole.
+spec.config.security.authentication.providers.oidc[].claims[].mappings[].role_name <string> (required)
 spec.config.security.authentication.providers.oidc[].client_credentials <object>
 spec.config.security.authentication.providers.oidc[].client_credentials.client_id <string> (required)	# Hidden special type for storing secrets.
 spec.config.security.authentication.providers.oidc[].client_credentials.client_secret <string>	# Hidden special type for storing secrets.
@@ -341,6 +386,7 @@ spec.config.security.authentication.providers.oidc[].client_credentials.scopes <
 spec.config.security.authentication.providers.oidc[].client_id <string> (required)	# Hidden special type for storing secrets.
 spec.config.security.authentication.providers.oidc[].client_secret <string>	# Hidden special type for storing secrets.
 spec.config.security.authentication.providers.oidc[].client_secret_file <string>
+spec.config.security.authentication.providers.oidc[].custom_login_property <string>	# CustomLoginProperty is the name of the userinfo property to use as the "login" of the user (e.g. "preferred_username"). It must be one of the properties Perses already extracts from the userinfo response. If not set or not found in the response, it falls back to the email, then to the subject.
 spec.config.security.authentication.providers.oidc[].device_code <object>
 spec.config.security.authentication.providers.oidc[].device_code.client_id <string> (required)	# Hidden special type for storing secrets.
 spec.config.security.authentication.providers.oidc[].device_code.client_secret <string>	# Hidden special type for storing secrets.
@@ -350,7 +396,7 @@ spec.config.security.authentication.providers.oidc[].disable_pkce <boolean> (req
 spec.config.security.authentication.providers.oidc[].discovery_url <string> format=uri
 spec.config.security.authentication.providers.oidc[].http <object> (required)
 spec.config.security.authentication.providers.oidc[].http.timeout <string> (required) format=duration pattern="^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$"
-spec.config.security.authentication.providers.oidc[].http.tls_config <object> (required)
+spec.config.security.authentication.providers.oidc[].http.tls_config <object>
 spec.config.security.authentication.providers.oidc[].http.tls_config.ca <string>	# Text of the CA cert to use for the targets.
 spec.config.security.authentication.providers.oidc[].http.tls_config.caFile <string>	# The CA cert to use for the targets.
 spec.config.security.authentication.providers.oidc[].http.tls_config.cert <string>	# Text of the client cert file for the targets.
@@ -403,9 +449,10 @@ spec.config.security.cors.enable <boolean> (required)
 spec.config.security.cors.expose_headers <[]string>
 spec.config.security.cors.max_age <integer>
 spec.config.security.enable_auth <boolean> (required)	# When it is true, the authentication and authorization config are considered. And you will need a valid JWT token to contact most of the endpoints exposed by the API
-spec.config.security.encryption_key <string>	# EncryptionKey is the secret key used to encrypt and decrypt sensitive data stored in the database such as the password of the basic auth for a datasource. Note that if it is not provided, it will use a default value. On a production instance, you should set this key. Also note the key size must be exactly 32 bytes long as we are using AES-256 to encrypt the data.
+spec.config.security.encryption_key <string>	# EncryptionKey is the secret key used to encrypt and decrypt sensitive data stored in the database such as the password of the basic auth for a datasource. In case authentication is enabled, it is also used to encrypt the access and refresh token used for authentication. Therefore, if auth is enabled, and you did not set this key, Perses will not start and will return an error. Also note the key size must be exactly 32 bytes long as we are using AES-256 to encrypt the data.
 spec.config.security.encryption_key_file <string>	# EncryptionKeyFile is the path to file containing the secret key
 spec.config.security.readonly <boolean> (required)	# Readonly will deactivate any HTTP POST, PUT, DELETE endpoint
+spec.config.security.secret_file_allowed_directories <[]string>	# SecretFileAllowedDirectories is the list of absolute directories from which the Secrets and GlobalSecrets are allowed to read files (basicAuth.passwordFile, authorization.credentialsFile, oauth.clientSecretFile, tlsConfig.caFile/certFile/keyFile). When empty (default), any file reference in a Secret or a GlobalSecret is rejected. This prevents a user allowed to create a secret from exfiltrating arbitrary files from the server.
 spec.config.variable <object>	# Variable contains the configuration for the variable.
 spec.config.variable.disable_local <boolean> (required)	# DisableLocal when used is preventing the possibility to add a variable directly in the dashboard spec.
 spec.config.variable.global <object> (required)
@@ -419,6 +466,7 @@ spec.livenessProbe.exec <object>	# Exec specifies a command to execute in the co
 spec.livenessProbe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
 spec.livenessProbe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
 spec.livenessProbe.grpc <object>	# GRPC specifies a GRPC HealthCheckRequest.
+spec.livenessProbe.grpc.mode <string>	# mode specifies the connection mode for the gRPC health probe. Set to "TLS" to use TLS without certificate verification. Set to "Plaintext" to use a plaintext (insecure) connection explicitly. If not specified, the probe uses a plaintext (insecure) connection.
 spec.livenessProbe.grpc.port <integer> (required) format=int32	# Port number of the gRPC service. Number must be in the range 1 to 65535.
 spec.livenessProbe.grpc.service <string> default=""	# Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If this is not specified, the default behavior is defined by gRPC.
 spec.livenessProbe.httpGet <object>	# HTTPGet specifies an HTTP GET request to perform.
@@ -428,6 +476,7 @@ spec.livenessProbe.httpGet.httpHeaders[].name <string> (required)	# The header f
 spec.livenessProbe.httpGet.httpHeaders[].value <string> (required)	# The header field value
 spec.livenessProbe.httpGet.path <string>	# Path to access on the HTTP server.
 spec.livenessProbe.httpGet.port <int-or-string> (required)	# Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.livenessProbe.httpGet.protocol <string>	# Protocol selects the wire protocol for the probe connection. Nil defaults to HTTP/1.1.
 spec.livenessProbe.httpGet.scheme <string>	# Scheme to use for connecting to the host. Defaults to HTTP.
 spec.livenessProbe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 spec.livenessProbe.periodSeconds <integer> format=int32	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
@@ -446,6 +495,7 @@ spec.readinessProbe.exec <object>	# Exec specifies a command to execute in the c
 spec.readinessProbe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
 spec.readinessProbe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
 spec.readinessProbe.grpc <object>	# GRPC specifies a GRPC HealthCheckRequest.
+spec.readinessProbe.grpc.mode <string>	# mode specifies the connection mode for the gRPC health probe. Set to "TLS" to use TLS without certificate verification. Set to "Plaintext" to use a plaintext (insecure) connection explicitly. If not specified, the probe uses a plaintext (insecure) connection.
 spec.readinessProbe.grpc.port <integer> (required) format=int32	# Port number of the gRPC service. Number must be in the range 1 to 65535.
 spec.readinessProbe.grpc.service <string> default=""	# Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md). If this is not specified, the default behavior is defined by gRPC.
 spec.readinessProbe.httpGet <object>	# HTTPGet specifies an HTTP GET request to perform.
@@ -455,6 +505,7 @@ spec.readinessProbe.httpGet.httpHeaders[].name <string> (required)	# The header 
 spec.readinessProbe.httpGet.httpHeaders[].value <string> (required)	# The header field value
 spec.readinessProbe.httpGet.path <string>	# Path to access on the HTTP server.
 spec.readinessProbe.httpGet.port <int-or-string> (required)	# Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
+spec.readinessProbe.httpGet.protocol <string>	# Protocol selects the wire protocol for the probe connection. Nil defaults to HTTP/1.1.
 spec.readinessProbe.httpGet.scheme <string>	# Scheme to use for connecting to the host. Defaults to HTTP.
 spec.readinessProbe.initialDelaySeconds <integer> format=int32	# Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 spec.readinessProbe.periodSeconds <integer> format=int32	# How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.

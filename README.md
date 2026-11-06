@@ -111,7 +111,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS CloudFront Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudfront` | v1.10.1 | 9 | 2026-11-03 |
 | [AWS CloudWatch Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudwatch` | v1.11.0 | 3 | 2026-10-24 |
 | [AWS CloudWatch Logs Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-cloudwatchlogs` | v1.10.0 | 6 | 2026-11-03 |
-| [AWS DynamoDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-dynamodb` | v1.14.1 | 3 | 2026-11-03 |
+| [AWS DynamoDB Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-dynamodb` | v1.14.2 | 3 | 2026-11-06 |
 | [AWS EC2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ec2` | v1.23.1 | 20 | 2026-11-04 |
 | [AWS ECR Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-ecr` | v1.11.1 | 3 | 2026-11-05 |
 | [AWS EFS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-efs` | v1.8.0 | 3 | 2026-10-24 |
@@ -131,7 +131,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [AWS S3 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-s3` | v1.15.0 | 1 | 2026-10-29 |
 | [AWS SageMaker Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sagemaker` | v1.12.0 | 26 | 2026-10-27 |
 | [AWS Secrets Manager Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-secretsmanager` | v1.8.2 | 1 | 2026-11-03 |
-| [AWS SNS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sns` | v1.12.0 | 4 | 2026-10-24 |
+| [AWS SNS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sns` | v1.13.0 | 4 | 2026-11-06 |
 | [AWS SQS Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-sqs` | v1.9.0 | 1 | 2026-10-24 |
 | [AWS WAFv2 Controller](https://schemas.fluxoperator.dev/p/aws-ack) | `ack-wafv2` | v1.8.1 | 3 | 2026-11-04 |
 | [Azure Service Operator](https://schemas.fluxoperator.dev/p/azure-service-operator) | `azure-service-operator` | v2.22.0 | 1726 | 2026-10-31 |
@@ -140,7 +140,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cluster API](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api` | v1.14.4 | 36 | 2026-11-04 |
 | [Cluster API Add-on Provider Helm](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-addon-provider-helm` | v0.6.4 | 2 | 2026-07-09 |
 | [Cluster API AWS](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-aws` | v2.13.1 | 37 | 2026-10-01 |
-| [Cluster API Azure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-azure` | v1.27.0 | 25 | 2026-09-04 |
+| [Cluster API Azure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-azure` | v1.28.0 | 25 | 2026-11-06 |
 | [Cluster API GCP](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-gcp` | v1.13.1 | 13 | 2026-08-12 |
 | [Cluster API Hetzner](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-hetzner` | v1.1.10 | 11 | 2026-10-23 |
 | [Cluster API k0smotron Bootstrap](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-bootstrap` | v2.3.1 | 6 | 2026-10-30 |
@@ -167,7 +167,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Rancher Elemental Operator](https://schemas.fluxoperator.dev/p/rancher-elemental-operator) | `rancher-elemental-operator` | v1.9.2 | 9 | 2026-07-10 |
 | [Rancher Turtles](https://schemas.fluxoperator.dev/p/rancher-turtles) | `rancher-turtles` | v0.27.4 | 2 | 2026-10-28 |
 | [Sealed Secrets](https://schemas.fluxoperator.dev/p/sealed-secrets) | `sealed-secrets` | v0.41.2 | 1 | 2026-10-26 |
-| [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.1 | 4 | 2026-09-10 |
+| [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.2 | 4 | 2026-11-06 |
 | [Sigstore Policy Controller](https://schemas.fluxoperator.dev/p/sigstore-policy-controller) | `sigstore-policy-controller` | v0.15.1 | 3 | 2026-07-09 |
 | [SPIRE Controller Manager](https://schemas.fluxoperator.dev/p/spire-controller-manager) | `spire-controller-manager` | v0.7.1 | 4 | 2026-11-01 |
 | [Trust Manager](https://schemas.fluxoperator.dev/p/trust-manager) | `trust-manager` | v0.26.0 | 2 | 2026-10-28 |
@@ -190,12 +190,12 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Kube-OVN](https://schemas.fluxoperator.dev/p/kube-ovn) | `kube-ovn` | v1.16.17 | 24 | 2026-11-03 |
 | [Longhorn](https://schemas.fluxoperator.dev/p/longhorn) | `longhorn` | v1.13.0 | 28 | 2026-09-30 |
 | [Multi-Cluster Services API](https://schemas.fluxoperator.dev/p/mcs-api) | `mcs-api` | v0.5.2 | 4 | 2026-07-14 |
-| [Multus CNI](https://schemas.fluxoperator.dev/p/multus-cni) | `multus-cni` | v4.3.1 | 1 | 2026-09-09 |
+| [Multus CNI](https://schemas.fluxoperator.dev/p/multus-cni) | `multus-cni` | v4.3.2 | 1 | 2026-11-06 |
 | [Network Policy API](https://schemas.fluxoperator.dev/p/network-policy-api) | `network-policy-api` | v0.2.1 | 1 | 2026-10-31 |
 | [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.7.2 | 5 | 2026-10-21 |
 | [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.7.1 | 5 | 2026-10-21 |
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.4.0 | 13 | 2026-09-05 |
-| [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.21.1 | 21 | 2026-10-27 |
+| [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.21.2 | 21 | 2026-11-06 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.2.4 | 12 | 2026-10-23 |
 | [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.3.0 | 6 | 2026-10-30 |
 | [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.25.0 | 9 | 2026-11-03 |
@@ -227,8 +227,8 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [kgateway](https://schemas.fluxoperator.dev/p/kgateway) | `kgateway` | v2.5.0 | 7 | 2026-11-03 |
 | [kjob](https://schemas.fluxoperator.dev/p/kjob) | `kjob` | v0.1.0 | 5 | 2026-07-09 |
 | [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.1 | 18 | 2026-07-16 |
-| [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.7.1 | 7 | 2026-09-23 |
-| [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.20.4 | 22 | 2026-10-30 |
+| [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.7.2 | 7 | 2026-11-06 |
+| [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.20.5 | 22 | 2026-11-06 |
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v3.0.1 | 32 | 2026-10-31 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-07-09 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v1.0.0 | 3 | 2026-10-21 |
@@ -279,7 +279,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [MPI Operator](https://schemas.fluxoperator.dev/p/kubeflow) | `mpi-operator` | v0.8.2 | 1 | 2026-07-09 |
 | [NATS](https://schemas.fluxoperator.dev/p/nats) | `nats` | v0.25.0 | 8 | 2026-10-22 |
 | [OpenFeature Operator](https://schemas.fluxoperator.dev/p/open-feature-operator) | `open-feature-operator` | v0.9.4 | 9 | 2026-10-30 |
-| [OpenKruise](https://schemas.fluxoperator.dev/p/openkruise) | `openkruise` | v1.9.2 | 26 | 2026-10-21 |
+| [OpenKruise](https://schemas.fluxoperator.dev/p/openkruise) | `openkruise` | v1.9.3 | 26 | 2026-11-06 |
 | [RabbitMQ Cluster Operator](https://schemas.fluxoperator.dev/p/rabbitmq) | `rabbitmq-cluster-operator` | v2.23.2 | 1 | 2026-10-28 |
 | [RabbitMQ Messaging Topology Operator](https://schemas.fluxoperator.dev/p/rabbitmq) | `rabbitmq-messaging-topology-operator` | v1.20.5 | 13 | 2026-10-28 |
 | [Rancher Fleet](https://schemas.fluxoperator.dev/p/rancher-fleet) | `rancher-fleet` | v0.16.3 | 14 | 2026-10-24 |
@@ -307,7 +307,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Loki Operator](https://schemas.fluxoperator.dev/p/loki-operator) | `loki-operator` | v0.12.0 | 9 | 2026-10-08 |
 | [OpenSearch Operator](https://schemas.fluxoperator.dev/p/opensearch-operator) | `opensearch-operator` | 3.0.14 | 20 | 2026-09-26 |
 | [OpenTelemetry Operator](https://schemas.fluxoperator.dev/p/opentelemetry) | `opentelemetry` | v0.162.0 | 5 | 2026-10-24 |
-| [Perses Operator](https://schemas.fluxoperator.dev/p/perses-operator) | `perses-operator` | v0.5.0 | 7 | 2026-08-05 |
+| [Perses Operator](https://schemas.fluxoperator.dev/p/perses-operator) | `perses-operator` | v0.6.0 | 7 | 2026-11-06 |
 | [Prometheus Operator](https://schemas.fluxoperator.dev/p/prometheus-operator) | `prometheus-operator` | v0.94.2 | 10 | 2026-10-24 |
 | [Tempo Operator](https://schemas.fluxoperator.dev/p/tempo-operator) | `tempo-operator` | v0.23.1 | 2 | 2026-10-23 |
 | [VictoriaMetrics Operator](https://schemas.fluxoperator.dev/p/victoriametrics-operator) | `victoriametrics-operator` | v0.75.2 | 26 | 2026-10-29 |
