@@ -1,11 +1,11 @@
-# schema source: Cluster API Azure v1.27.0 https://github.com/kubernetes-sigs/cluster-api-provider-azure
+# schema source: Cluster API Azure v1.28.0 https://github.com/kubernetes-sigs/cluster-api-provider-azure
 apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta1
 kind <string> enum=AzureCluster
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# AzureClusterSpec defines the desired state of AzureCluster.
 spec.additionalTags <map[string]string>	# AdditionalTags is an optional set of tags to add to Azure resources managed by the Azure provider, in addition to the ones added by default.
-spec.azureEnvironment <string>	# AzureEnvironment is the name of the AzureCloud to be used. The default value that would be used by most users is "AzurePublicCloud", other values are: - ChinaCloud: "AzureChinaCloud" - GermanCloud: "AzureGermanCloud" - PublicCloud: "AzurePublicCloud" - USGovernmentCloud: "AzureUSGovernmentCloud" Note that values other than the default must also be accompanied by corresponding changes to the aso-controller-settings Secret to configure ASO to refer to the non-Public cloud. ASO currently does not support referring to multiple different clouds in a single installation. The following fields must be defined in the Secret: - AZURE_AUTHORITY_HOST - AZURE_RESOURCE_MANAGER_ENDPOINT - AZURE_RESOURCE_MANAGER_AUDIENCE See the [ASO docs] for more details. [ASO docs]: https://azure.github.io/azure-service-operator/guide/aso-controller-settings-options/
+spec.azureEnvironment <string>	# AzureEnvironment is the name of the AzureCloud to be used. The default value that would be used by most users is "AzurePublicCloud", other values are: - ChinaCloud: "AzureChinaCloud" - GermanCloud: "AzureGermanCloud" - PublicCloud: "AzurePublicCloud" - USGovernmentCloud: "AzureUSGovernmentCloud" - USSecCloud: "AzureUSSecCloud" Note that values other than the default must also be accompanied by corresponding changes to the aso-controller-settings Secret to configure ASO to refer to the non-Public cloud. ASO currently does not support referring to multiple different clouds in a single installation. The following fields must be defined in the Secret: - AZURE_AUTHORITY_HOST - AZURE_RESOURCE_MANAGER_ENDPOINT - AZURE_RESOURCE_MANAGER_AUDIENCE See the [ASO docs] for more details. When set to "AzureUSSecCloud", the AZURE_ENVIRONMENT_FILEPATH environment variable must be set on the controller, pointing to a JSON file containing the dynamically-discovered cloud endpoints for the air-gapped environment. [ASO docs]: https://azure.github.io/azure-service-operator/guide/aso-controller-settings-options/
 spec.bastionSpec <object>	# BastionSpec encapsulates all things related to the Bastions in the cluster.
 spec.bastionSpec.azureBastion <object>	# AzureBastion specifies how the Azure Bastion cloud component should be configured.
 spec.bastionSpec.azureBastion.enableTunneling <boolean> default=false	# EnableTunneling enables the native client support feature for the Azure Bastion Host. Defaults to false.
@@ -52,7 +52,7 @@ spec.bastionSpec.azureBastion.subnet.securityGroup.id <string>	# ID is the Azure
 spec.bastionSpec.azureBastion.subnet.securityGroup.name <string> (required)
 spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules <[]object>	# SecurityRules is a slice of Azure security rules for security groups.
 spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules[].action <string> enum=Allow|Deny default="Allow"	# Action specifies whether network traffic is allowed or denied. Can either be "Allow" or "Deny". Defaults to "Allow".
-spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules[].description <string> (required)	# A description for this rule. Restricted to 140 chars.
+spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules[].description <string> max=140	# A description for this rule. Restricted to 140 chars.
 spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules[].destination <string>	# Destination is the destination address prefix. CIDR or destination IP range. Asterix '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
 spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules[].destinationPorts <string>	# DestinationPorts specifies the destination port or range. Integer or range between 0 and 65535. Asterix '*' can also be used to match all ports.
 spec.bastionSpec.azureBastion.subnet.securityGroup.securityRules[].direction <string> (required) enum=Inbound|Outbound	# Direction indicates whether the rule applies to inbound, or outbound traffic. "Inbound" or "Outbound".
@@ -121,13 +121,13 @@ spec.networkSpec.apiServerLB.frontendIPsCount <integer> format=int32	# FrontendI
 spec.networkSpec.apiServerLB.id <string>	# ID is the Azure resource ID of the load balancer. READ-ONLY
 spec.networkSpec.apiServerLB.idleTimeoutInMinutes <integer> format=int32	# IdleTimeoutInMinutes specifies the timeout for the TCP idle connection.
 spec.networkSpec.apiServerLB.name <string>
-spec.networkSpec.apiServerLB.privateLinks <[]object>	# PrivateLinks to the load balancer (max 8 private links). Only supported on the API server load balancer.
+spec.networkSpec.apiServerLB.privateLinks <[]object> max=8	# PrivateLinks to the load balancer (max 8 private links). Only supported on the API server load balancer.
 spec.networkSpec.apiServerLB.privateLinks[].allowedSubscriptions <[]string>	# AllowedSubscriptions is a list of subscriptions from which the private link can be accessed.
 spec.networkSpec.apiServerLB.privateLinks[].autoApprovedSubscriptions <[]string>	# AutoApprovedSubscriptions is a list of subscription for which the connections to private link are automatically approved.
 spec.networkSpec.apiServerLB.privateLinks[].enableProxyProtocol <boolean>	# EnableProxyProtocol indicates whether the private link service is enabled for proxy protocol or not.
-spec.networkSpec.apiServerLB.privateLinks[].lbFrontendIPConfigNames <[]string> (required)	# LBFrontendIPConfigNames are the names of the load balancer FrontendIP to which the private link will forward requests. The specified frontend IP configs must have the private IP set.
-spec.networkSpec.apiServerLB.privateLinks[].name <string>	# Name of the private link.
-spec.networkSpec.apiServerLB.privateLinks[].natIPConfigurations <[]object> (required)	# NATIPConfigurations specify up to 8 NAT IP configurations for the private link.
+spec.networkSpec.apiServerLB.privateLinks[].lbFrontendIPConfigNames <[]string> (required) min=1	# LBFrontendIPConfigNames are the names of the load balancer FrontendIP to which the private link will forward requests. The specified frontend IP configs must have the private IP set.
+spec.networkSpec.apiServerLB.privateLinks[].name <string> (required) min=1	# Name of the private link.
+spec.networkSpec.apiServerLB.privateLinks[].natIPConfigurations <[]object> (required) min=1 max=8	# NATIPConfigurations specify up to 8 NAT IP configurations for the private link.
 spec.networkSpec.apiServerLB.privateLinks[].natIPConfigurations[].allocationMethod <string> (required) enum=Static|Dynamic	# AllocationMethod specifies how the private link NAT IPs are allocated: "Static" or "Dynamic".
 spec.networkSpec.apiServerLB.privateLinks[].natIPConfigurations[].privateIPAddress <string>
 spec.networkSpec.apiServerLB.privateLinks[].natIPConfigurations[].subnet <string> (required)	# Subnet from which the IP is allocated.
@@ -150,13 +150,13 @@ spec.networkSpec.controlPlaneOutboundLB.frontendIPsCount <integer> format=int32	
 spec.networkSpec.controlPlaneOutboundLB.id <string>	# ID is the Azure resource ID of the load balancer. READ-ONLY
 spec.networkSpec.controlPlaneOutboundLB.idleTimeoutInMinutes <integer> format=int32	# IdleTimeoutInMinutes specifies the timeout for the TCP idle connection.
 spec.networkSpec.controlPlaneOutboundLB.name <string>
-spec.networkSpec.controlPlaneOutboundLB.privateLinks <[]object>	# PrivateLinks to the load balancer (max 8 private links). Only supported on the API server load balancer.
+spec.networkSpec.controlPlaneOutboundLB.privateLinks <[]object> max=8	# PrivateLinks to the load balancer (max 8 private links). Only supported on the API server load balancer.
 spec.networkSpec.controlPlaneOutboundLB.privateLinks[].allowedSubscriptions <[]string>	# AllowedSubscriptions is a list of subscriptions from which the private link can be accessed.
 spec.networkSpec.controlPlaneOutboundLB.privateLinks[].autoApprovedSubscriptions <[]string>	# AutoApprovedSubscriptions is a list of subscription for which the connections to private link are automatically approved.
 spec.networkSpec.controlPlaneOutboundLB.privateLinks[].enableProxyProtocol <boolean>	# EnableProxyProtocol indicates whether the private link service is enabled for proxy protocol or not.
-spec.networkSpec.controlPlaneOutboundLB.privateLinks[].lbFrontendIPConfigNames <[]string> (required)	# LBFrontendIPConfigNames are the names of the load balancer FrontendIP to which the private link will forward requests. The specified frontend IP configs must have the private IP set.
-spec.networkSpec.controlPlaneOutboundLB.privateLinks[].name <string>	# Name of the private link.
-spec.networkSpec.controlPlaneOutboundLB.privateLinks[].natIPConfigurations <[]object> (required)	# NATIPConfigurations specify up to 8 NAT IP configurations for the private link.
+spec.networkSpec.controlPlaneOutboundLB.privateLinks[].lbFrontendIPConfigNames <[]string> (required) min=1	# LBFrontendIPConfigNames are the names of the load balancer FrontendIP to which the private link will forward requests. The specified frontend IP configs must have the private IP set.
+spec.networkSpec.controlPlaneOutboundLB.privateLinks[].name <string> (required) min=1	# Name of the private link.
+spec.networkSpec.controlPlaneOutboundLB.privateLinks[].natIPConfigurations <[]object> (required) min=1 max=8	# NATIPConfigurations specify up to 8 NAT IP configurations for the private link.
 spec.networkSpec.controlPlaneOutboundLB.privateLinks[].natIPConfigurations[].allocationMethod <string> (required) enum=Static|Dynamic	# AllocationMethod specifies how the private link NAT IPs are allocated: "Static" or "Dynamic".
 spec.networkSpec.controlPlaneOutboundLB.privateLinks[].natIPConfigurations[].privateIPAddress <string>
 spec.networkSpec.controlPlaneOutboundLB.privateLinks[].natIPConfigurations[].subnet <string> (required)	# Subnet from which the IP is allocated.
@@ -179,13 +179,13 @@ spec.networkSpec.nodeOutboundLB.frontendIPsCount <integer> format=int32	# Fronte
 spec.networkSpec.nodeOutboundLB.id <string>	# ID is the Azure resource ID of the load balancer. READ-ONLY
 spec.networkSpec.nodeOutboundLB.idleTimeoutInMinutes <integer> format=int32	# IdleTimeoutInMinutes specifies the timeout for the TCP idle connection.
 spec.networkSpec.nodeOutboundLB.name <string>
-spec.networkSpec.nodeOutboundLB.privateLinks <[]object>	# PrivateLinks to the load balancer (max 8 private links). Only supported on the API server load balancer.
+spec.networkSpec.nodeOutboundLB.privateLinks <[]object> max=8	# PrivateLinks to the load balancer (max 8 private links). Only supported on the API server load balancer.
 spec.networkSpec.nodeOutboundLB.privateLinks[].allowedSubscriptions <[]string>	# AllowedSubscriptions is a list of subscriptions from which the private link can be accessed.
 spec.networkSpec.nodeOutboundLB.privateLinks[].autoApprovedSubscriptions <[]string>	# AutoApprovedSubscriptions is a list of subscription for which the connections to private link are automatically approved.
 spec.networkSpec.nodeOutboundLB.privateLinks[].enableProxyProtocol <boolean>	# EnableProxyProtocol indicates whether the private link service is enabled for proxy protocol or not.
-spec.networkSpec.nodeOutboundLB.privateLinks[].lbFrontendIPConfigNames <[]string> (required)	# LBFrontendIPConfigNames are the names of the load balancer FrontendIP to which the private link will forward requests. The specified frontend IP configs must have the private IP set.
-spec.networkSpec.nodeOutboundLB.privateLinks[].name <string>	# Name of the private link.
-spec.networkSpec.nodeOutboundLB.privateLinks[].natIPConfigurations <[]object> (required)	# NATIPConfigurations specify up to 8 NAT IP configurations for the private link.
+spec.networkSpec.nodeOutboundLB.privateLinks[].lbFrontendIPConfigNames <[]string> (required) min=1	# LBFrontendIPConfigNames are the names of the load balancer FrontendIP to which the private link will forward requests. The specified frontend IP configs must have the private IP set.
+spec.networkSpec.nodeOutboundLB.privateLinks[].name <string> (required) min=1	# Name of the private link.
+spec.networkSpec.nodeOutboundLB.privateLinks[].natIPConfigurations <[]object> (required) min=1 max=8	# NATIPConfigurations specify up to 8 NAT IP configurations for the private link.
 spec.networkSpec.nodeOutboundLB.privateLinks[].natIPConfigurations[].allocationMethod <string> (required) enum=Static|Dynamic	# AllocationMethod specifies how the private link NAT IPs are allocated: "Static" or "Dynamic".
 spec.networkSpec.nodeOutboundLB.privateLinks[].natIPConfigurations[].privateIPAddress <string>
 spec.networkSpec.nodeOutboundLB.privateLinks[].natIPConfigurations[].subnet <string> (required)	# Subnet from which the IP is allocated.
@@ -229,7 +229,7 @@ spec.networkSpec.subnets[].securityGroup.id <string>	# ID is the Azure resource 
 spec.networkSpec.subnets[].securityGroup.name <string> (required)
 spec.networkSpec.subnets[].securityGroup.securityRules <[]object>	# SecurityRules is a slice of Azure security rules for security groups.
 spec.networkSpec.subnets[].securityGroup.securityRules[].action <string> enum=Allow|Deny default="Allow"	# Action specifies whether network traffic is allowed or denied. Can either be "Allow" or "Deny". Defaults to "Allow".
-spec.networkSpec.subnets[].securityGroup.securityRules[].description <string> (required)	# A description for this rule. Restricted to 140 chars.
+spec.networkSpec.subnets[].securityGroup.securityRules[].description <string> max=140	# A description for this rule. Restricted to 140 chars.
 spec.networkSpec.subnets[].securityGroup.securityRules[].destination <string>	# Destination is the destination address prefix. CIDR or destination IP range. Asterix '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
 spec.networkSpec.subnets[].securityGroup.securityRules[].destinationPorts <string>	# DestinationPorts specifies the destination port or range. Integer or range between 0 and 65535. Asterix '*' can also be used to match all ports.
 spec.networkSpec.subnets[].securityGroup.securityRules[].direction <string> (required) enum=Inbound|Outbound	# Direction indicates whether the rule applies to inbound, or outbound traffic. "Inbound" or "Outbound".
