@@ -22,24 +22,28 @@
             "maxConnections": {
               "description": "MaxConnections is the maximum number of connections that will be made to\nthe upstream cluster. If not specified, defaults to 1024.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 1,
               "type": "integer"
             },
             "maxPendingRequests": {
               "description": "MaxPendingRequests is the maximum number of pending requests that are\nallowed to the upstream cluster. If not specified, defaults to 1024.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 1,
               "type": "integer"
             },
             "maxRequests": {
               "description": "MaxRequests is the maximum number of parallel requests that are allowed\nto the upstream cluster. If not specified, defaults to 1024.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 1,
               "type": "integer"
             },
             "maxRetries": {
               "description": "MaxRetries is the maximum number of parallel retries that are allowed\nto the upstream cluster. If not specified, defaults to 3.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
@@ -83,14 +87,16 @@
               ]
             },
             "maxHeadersCount": {
-              "description": "Specifies the maximum number of response headers that the upstream connection will accept\nfrom the backend. If not specified, the default of 100 is used.\nTo configure the maximum number of headers accepted in downstream requests, use\nListenerPolicy.spec.default.httpSettings.maxHeadersCount.",
+              "description": "Specifies the maximum number of response headers that the upstream connection will accept\nfrom the backend. Must be at least 1. If not specified, the default of 100 is used.\nTo configure the maximum number of headers accepted in downstream requests, use\nListenerPolicy.spec.default.httpSettings.maxHeadersCount.",
               "format": "int32",
-              "minimum": 0,
+              "maximum": 2147483647,
+              "minimum": 1,
               "type": "integer"
             },
             "maxRequestsPerConnection": {
               "description": "Maximum requests for a single upstream connection.\nIf set to 0 or unspecified, defaults to unlimited.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
@@ -109,13 +115,17 @@
           "type": "object"
         },
         "connectTimeout": {
-          "description": "The timeout for new network connections to hosts in the cluster.",
+          "description": "The timeout for new network connections to hosts in the cluster. Must be at least 1ms.",
           "maxLength": 32,
           "type": "string",
           "x-kubernetes-validations": [
             {
               "message": "invalid duration value",
               "rule": "matches(self, '^([0-9]{1,5}(h|m|s|ms)){1,4}$')"
+            },
+            {
+              "message": "must be at least 1ms",
+              "rule": "duration(self) >= duration('1ms')"
             }
           ]
         },
@@ -146,7 +156,7 @@
               "type": "string"
             },
             "refreshRate": {
-              "description": "RefreshRate controls how frequently Envoy polls DNS for this backend's hostnames.\n\nMinimum value is 1ms. If unset, Envoy's default of 5s is used.\nWhen Envoy respects DNS TTLs, lower TTL values effectively override this setting,\nso RefreshRate acts as the maximum polling interval.\nRecommended value for large-scale deployments is 60s or higher.",
+              "description": "RefreshRate controls how frequently Envoy polls DNS for this backend's hostnames.\n\nMust be greater than 1ms. If unset, Envoy's default of 5s is used.\nWhen Envoy respects DNS TTLs, lower TTL values effectively override this setting,\nso RefreshRate acts as the maximum polling interval.\nRecommended value for large-scale deployments is 60s or higher.",
               "maxLength": 32,
               "type": "string",
               "x-kubernetes-validations": [
@@ -155,8 +165,8 @@
                   "rule": "matches(self, '^([0-9]{1,5}(h|m|s|ms)){1,4}$')"
                 },
                 {
-                  "message": "refreshRate must be at least 1ms",
-                  "rule": "duration(self) >= duration('1ms')"
+                  "message": "refreshRate must be greater than 1ms",
+                  "rule": "duration(self) > duration('1ms')"
                 }
               ]
             },
@@ -195,6 +205,7 @@
             "healthyThreshold": {
               "description": "HealthyThreshold is the number of healthy health checks required before a host is marked\nhealthy. Note that during startup, only a single successful health check is\nrequired to mark a host healthy.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
@@ -231,13 +242,17 @@
               "type": "object"
             },
             "interval": {
-              "description": "Interval is the time between health checks after the backend receives its first request.",
+              "description": "Interval is the time between health checks after the backend receives its first request.\nMust be at least 1ms.",
               "maxLength": 32,
               "type": "string",
               "x-kubernetes-validations": [
                 {
                   "message": "invalid duration value",
                   "rule": "matches(self, '^([0-9]{1,5}(h|m|s|ms)){1,4}$')"
+                },
+                {
+                  "message": "must be at least 1ms",
+                  "rule": "duration(self) >= duration('1ms')"
                 }
               ]
             },
@@ -257,19 +272,24 @@
               ]
             },
             "timeout": {
-              "description": "Timeout is time to wait for a health check response. If the timeout is reached the\nhealth check attempt will be considered a failure.",
+              "description": "Timeout is time to wait for a health check response. If the timeout is reached the\nhealth check attempt will be considered a failure. Must be at least 1ms.",
               "maxLength": 32,
               "type": "string",
               "x-kubernetes-validations": [
                 {
                   "message": "invalid duration value",
                   "rule": "matches(self, '^([0-9]{1,5}(h|m|s|ms)){1,4}$')"
+                },
+                {
+                  "message": "must be at least 1ms",
+                  "rule": "duration(self) >= duration('1ms')"
                 }
               ]
             },
             "unhealthyThreshold": {
               "description": "UnhealthyThreshold is the number of consecutive failed health checks that will be considered\nunhealthy.\nNote that for HTTP health checks, if a host responds with a code not in ExpectedStatuses or RetriableStatuses,\nthis threshold is ignored and the host is considered immediately unhealthy.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             }
@@ -435,8 +455,10 @@
               "properties": {
                 "choiceCount": {
                   "default": 2,
-                  "description": "How many choices to take into account.\nDefaults to 2.",
+                  "description": "How many choices to take into account.\nDefaults to 2. Must be at least 2.",
                   "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": 2,
                   "type": "integer"
                 },
                 "slowStart": {
@@ -680,15 +702,17 @@
                   "type": "array"
                 },
                 "maximumRingSize": {
-                  "description": "MaximumRingSize is the maximum size of the ring.",
+                  "description": "MaximumRingSize is the maximum size of the ring. Must be at most 8388608, and at least\nminimumRingSize (default 1024).",
                   "format": "int64",
+                  "maximum": 8388608,
                   "minimum": 0,
                   "type": "integer"
                 },
                 "minimumRingSize": {
-                  "description": "MinimumRingSize is the minimum size of the ring.",
+                  "description": "MinimumRingSize is the minimum size of the ring. Must be between 1 and 8388608.",
                   "format": "int64",
-                  "minimum": 0,
+                  "maximum": 8388608,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 "useHostnameForHashing": {
@@ -696,7 +720,13 @@
                   "type": "boolean"
                 }
               },
-              "type": "object"
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "minimumRingSize (default 1024) must be less than or equal to maximumRingSize (default 8388608)",
+                  "rule": "(has(self.minimumRingSize) ? self.minimumRingSize : 1024) <= (has(self.maximumRingSize) ? self.maximumRingSize : 8388608)"
+                }
+              ]
             },
             "roundRobin": {
               "additionalProperties": false,
@@ -766,7 +796,8 @@
                         "minEndpointsInZoneThreshold": {
                           "default": 1,
                           "description": "MinEndpointsInZoneThreshold is the minimum number of endpoints that must\nexist in the local zone for forced zone-local routing to be active.\nIf the local zone has fewer endpoints than this threshold, the system\nfalls back to standard zone-aware routing behavior.\nDefaults to 1.",
-                          "format": "int32",
+                          "format": "uint32",
+                          "maximum": 4294967295,
                           "minimum": 1,
                           "type": "integer"
                         }
@@ -777,6 +808,7 @@
                       "default": 6,
                       "description": "MinEndpointsThreshold is the minimum number of total endpoints in the cluster\nthat must exist for zone-aware routing to be enabled. If the total number\nof endpoints is below this threshold, zone-aware routing is disabled.\nThis maps to Envoy's min_cluster_size setting.\nDefaults to 6.",
                       "format": "int64",
+                      "maximum": 9223372036854774784,
                       "minimum": 1,
                       "type": "integer"
                     },
@@ -841,18 +873,21 @@
               "default": 5,
               "description": "The number of consecutive server-side error responses (for HTTP traffic,\n5xx responses; for TCP traffic, connection failures; etc.) before an\nejection occurs. Defaults to 5. If this is zero, consecutive 5xx passive\nhealth checks will be disabled. In the future, other types of passive\nhealth checking might be added, but none will be enabled by default.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
             "consecutiveGatewayFailure": {
               "description": "The number of consecutive gateway failures (502, 503 and 504 status\ncodes) before a host is ejected. When set, ejection is always enforced.\nWhen unset, consecutive gateway failure ejection is disabled.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 1,
               "type": "integer"
             },
             "consecutiveLocalOriginFailure": {
               "description": "The number of consecutive locally originated failures before an ejection\noccurs. Defaults to 5. This setting takes effect only when\nsplitExternalLocalOriginErrors is true. If this is zero, consecutive local\norigin failure ejection is disabled.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
@@ -904,6 +939,7 @@
         "perConnectionBufferLimitBytes": {
           "description": "Soft limit on the size of the cluster's connections read and write buffers.\nIf unspecified, an implementation-defined default is applied (1MiB).",
           "format": "int32",
+          "maximum": 2147483647,
           "minimum": 0,
           "type": "integer"
         },
@@ -1103,6 +1139,7 @@
             "keepAliveProbes": {
               "description": "Maximum number of keep-alive probes to send before dropping the connection.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
@@ -1536,6 +1573,7 @@
                     "observedGeneration": {
                       "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
                       "format": "int64",
+                      "maximum": 9223372036854774784,
                       "minimum": 0,
                       "type": "integer"
                     },

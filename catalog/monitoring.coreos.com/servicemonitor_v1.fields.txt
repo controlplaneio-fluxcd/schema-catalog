@@ -1,4 +1,4 @@
-# schema source: Prometheus Operator v0.94.2 https://github.com/prometheus-operator/prometheus-operator
+# schema source: Prometheus Operator v0.95.1 https://github.com/prometheus-operator/prometheus-operator
 apiVersion <string> enum=monitoring.coreos.com/v1
 kind <string> enum=ServiceMonitor
 metadata.name <string> (required)
@@ -108,7 +108,7 @@ spec.endpoints[].relabelings[].sourceLabels <[]string>	# sourceLabels defines th
 spec.endpoints[].relabelings[].targetLabel <string>	# targetLabel defines the label to which the resulting string is written in a replacement. It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions. Regex capture groups are available.
 spec.endpoints[].scheme <string> enum=http|https|HTTP|HTTPS	# scheme defines the HTTP scheme to use when scraping the metrics.
 spec.endpoints[].scrapeTimeout <string> pattern="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"	# scrapeTimeout defines the timeout after which Prometheus considers the scrape to be failed. If empty, Prometheus uses the global scrape timeout unless it is less than the target's scrape interval value in which the latter is used. The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
-spec.endpoints[].targetPort <int-or-string>	# targetPort defines the name or number of a container port on Pods selected by the Service. If a name, it matches against `.spec.containers[].ports[].name` of the Pods. If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+spec.endpoints[].targetPort <int-or-string>	# targetPort defines the name or number of a container port on Pods selected by the Service. If a name, it matches against `.spec.containers[].ports[].name` of the Pods. If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods. Because it relies on Pod metadata, endpoints which aren't backed by Pods are never scraped when `targetPort` is used.
 spec.endpoints[].tlsConfig <object>	# tlsConfig defines TLS configuration used by the client.
 spec.endpoints[].tlsConfig.ca <object>	# ca defines the Certificate authority used when verifying server certificates.
 spec.endpoints[].tlsConfig.ca.configMap <object>	# configMap defines the ConfigMap containing data to use for the targets.
@@ -140,6 +140,7 @@ spec.endpoints[].tlsConfig.maxVersion <string> enum=TLS10|TLS11|TLS12|TLS13	# ma
 spec.endpoints[].tlsConfig.minVersion <string> enum=TLS10|TLS11|TLS12|TLS13	# minVersion defines the minimum acceptable TLS version. It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
 spec.endpoints[].tlsConfig.serverName <string>	# serverName is used to verify the hostname for the targets.
 spec.endpoints[].trackTimestampsStaleness <boolean>	# trackTimestampsStaleness defines whether Prometheus tracks staleness of the metrics that have an explicit timestamp present in scraped data. Has no effect if `honorTimestamps` is false. It requires Prometheus >= v2.48.0.
+spec.extraScrapeMetrics <boolean>	# extraScrapeMetrics defines whether to store additional time series for each scrape: `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`. These metrics help monitor how close targets are to their configured limits. It requires Prometheus >= v3.10.0.
 spec.fallbackScrapeProtocol <string> enum=PrometheusProto|OpenMetricsText0.0.1|OpenMetricsText1.0.0|PrometheusText0.0.4|PrometheusText1.0.0	# fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type. It requires Prometheus >= v3.0.0.
 spec.jobLabel <string>	# jobLabel selects the label from the associated Kubernetes `Service` object which will be used as the `job` label for all metrics. For example if `jobLabel` is set to `foo` and the Kubernetes `Service` object is labeled with `foo: bar`, then Prometheus adds the `job="bar"` label to all ingested metrics. If the value of this field is empty or if the label doesn't exist for the given Service, the `job` label of the metrics defaults to the name of the associated Kubernetes `Service`.
 spec.keepDroppedTargets <integer> format=int64 min=0	# keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling that will be kept in memory. 0 means no limit. It requires Prometheus >= v2.47.0.
