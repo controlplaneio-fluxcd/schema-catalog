@@ -1,4 +1,4 @@
-# schema source: kgateway v2.5.0 https://github.com/kgateway-dev/kgateway
+# schema source: kgateway v2.5.1 https://github.com/kgateway-dev/kgateway
 apiVersion <string> enum=gateway.kgateway.dev/v1alpha1
 kind <string> enum=Backend
 metadata.name <string> (required)
@@ -19,7 +19,7 @@ spec.aws.ec2.filters[].key <string> min=1 max=128	# Key matches instances that c
 spec.aws.ec2.filters[].keyValue <object>	# KeyValue matches instances that contain the given tag key/value pair.
 spec.aws.ec2.filters[].keyValue.key <string> (required) min=1 max=128	# Key is the tag key to match.
 spec.aws.ec2.filters[].keyValue.value <string> (required) min=1 max=256	# Value is the tag value to match.
-spec.aws.ec2.port <integer> default=80 format=int32	# Port is the port to use for discovered instances. Defaults to 80.
+spec.aws.ec2.port <integer> default=80 format=int32 min=-2147483648 max=2147483647	# Port is the port to use for discovered instances. Defaults to 80. A value of 0 also uses 80.
 spec.aws.lambda <object>	# Lambda configures the AWS Lambda service.
 spec.aws.lambda.accountId <string> pattern="^[0-9]{12}$" min=1 max=12	# AccountId is the AWS account ID to use for the backend. This is the preferred location for Lambda backends.
 spec.aws.lambda.endpointURL <string> pattern="^https?://[-a-zA-Z0-9@:%.+~#?&/=]+$" max=2048	# EndpointURL is the URL or domain for the Lambda service. This is primarily useful for testing and development purposes. When omitted, the default lambda hostname will be used.
@@ -40,13 +40,13 @@ spec.static <object>	# Static is the static backend configuration.
 spec.static.appProtocol <string> enum=http2|grpc|grpc-web|kubernetes.io/h2c|kubernetes.io/ws	# AppProtocol is the application protocol to use when communicating with the backend.
 spec.static.hosts <[]object> (required) min=1	# Hosts is a list of hosts to use for the backend.
 spec.static.hosts[].host <string> (required) min=1	# Host is the host name to use for the backend.
-spec.static.hosts[].port <integer> (required) format=int32	# Port is the port to use for the backend.
+spec.static.hosts[].port <integer> (required) format=int32 min=-2147483648 max=2147483647	# Port is the port to use for the backend. Must be between 1 and 65535.
 spec.type <string> enum=AWS|Static|DynamicForwardProxy|GCP|PriorityGroups	# Type indicates the type of the backend to be used. Deprecated: The Type field is deprecated and will be removed in a future release. The backend type is inferred from the configuration.
 status <object>	# BackendStatus defines the observed state of Backend.
 status.conditions <[]object> max=8	# Conditions is the list of conditions for the backend.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
 status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
-status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].observedGeneration <integer> format=int64 min=0 max=9223372036854774784	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
 status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
 status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
