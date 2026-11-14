@@ -19,8 +19,15 @@
           "description": "EnableAddressSet to work with policy-based routing and ACL",
           "type": "boolean"
         },
+        "ipCount": {
+          "description": "Number of addresses to pick automatically from the subnet's free addresses,\nper IP family (a dual-stack subnet yields ipCount IPv4 plus ipCount IPv6 addresses).\nThe picked addresses are recorded in status.ips and stay stable; increasing the\nvalue appends addresses, decreasing it releases the most recently added ones first.\nMutually exclusive with ips.\nAn ippool carves a small set of addresses out of a subnet; needing more than a few\ndozen is better served by a dedicated subnet, or by spelling out ranges in ips.\nThis bound must stay in sync with maxIPPoolIPCount in the controller, which still\nguards pools created before the limit was introduced.",
+          "format": "int32",
+          "maximum": 32,
+          "minimum": 1,
+          "type": "integer"
+        },
         "ips": {
-          "description": "IP addresses or ranges in the pool (IPv4/IPv6 addresses or CIDR ranges)",
+          "description": "IP addresses or ranges in the pool (IPv4/IPv6 addresses or CIDR ranges).\nMutually exclusive with ipCount.",
           "items": {
             "type": "string"
           },
@@ -39,10 +46,15 @@
         }
       },
       "required": [
-        "ips",
         "subnet"
       ],
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "exactly one of spec.ips and spec.ipCount must be set",
+          "rule": "has(self.ips) != has(self.ipCount)"
+        }
+      ]
     },
     "status": {
       "additionalProperties": false,
@@ -86,6 +98,13 @@
               }
             },
             "type": "object"
+          },
+          "type": "array"
+        },
+        "ips": {
+          "description": "IP addresses the pool currently consists of, in allocation order.\nMaintained by the controller for pools using spec.ipCount, and cleared when the\npool leaves that mode, so the recorded selection is never mistaken for the\nmembers of a pool that lists spec.ips.",
+          "items": {
+            "type": "string"
           },
           "type": "array"
         },

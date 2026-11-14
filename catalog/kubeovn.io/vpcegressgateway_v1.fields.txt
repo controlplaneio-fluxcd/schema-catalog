@@ -1,4 +1,4 @@
-# schema source: Kube-OVN v1.16.17 https://github.com/kubeovn/kube-ovn
+# schema source: Kube-OVN v1.17.1 https://github.com/kubeovn/kube-ovn
 apiVersion <string> enum=kubeovn.io/v1
 kind <string> enum=VpcEgressGateway
 metadata.name <string> (required)
@@ -15,11 +15,12 @@ spec.bfd.multiplier <integer> default=3 format=int32 min=1 max=3600000
 spec.bgpConf <string>	# optional BGP configuration name it references a cluster-scoped BgpConf resource
 spec.evpnConf <string>	# optional EVPN configuration name it references a cluster-scoped EvpnConf resource
 spec.externalIPPool <string>	# optional name of an IPPool resource used to allocate the external IP for the workload the referenced IPPool's subnet must match the external subnet mutually exclusive with externalIPs
-spec.externalIPs <[]string>	# External IP addresses for the egress gateway
-spec.externalSubnet <string> (required)	# external subnet used to create the workload
+spec.externalIPs <[]string>	# External IP addresses for the egress gateway mutually exclusive with externalIPPool
+spec.externalNetworkMode <string> enum=Attachment|PrimaryCNI default="Attachment" (immutable)	# External network mode. Attachment uses externalSubnet; PrimaryCNI uses the pod's primary network.
+spec.externalSubnet <string>	# External subnet used to create the workload in Attachment mode.
 spec.image <string>	# optional image used by the workload if not specified, the default image passed in by kube-ovn-controller will be used
 spec.internalIPPool <string>	# optional name of an IPPool resource used to allocate the internal IP for the workload the referenced IPPool's subnet must match the internal subnet mutually exclusive with internalIPs
-spec.internalIPs <[]string>	# optional internal/external IPs used to create the workload these IPs must be in the internal/external subnet when specified, the IPs count must NOT be less than the replicas count
+spec.internalIPs <[]string>	# optional internal/external IPs used to create the workload these IPs must be in the internal/external subnet when specified, the IPs count must NOT be less than the replicas count mutually exclusive with internalIPPool
 spec.internalSubnet <string>	# optional internal subnet used to create the workload if not specified, the workload will be created in the default subnet of the VPC
 spec.nodeSelector <[]object>	# optional node selector used to select the nodes where the workload will be running
 spec.nodeSelector[].matchExpressions <[]object>
@@ -97,11 +98,13 @@ spec.observability.resources.requests <object (free-form)>	# Requests describes 
 spec.observability.serviceMonitor <object>	# VpcEgressGatewayServiceMonitor configures metadata for the per-gateway ServiceMonitor.
 spec.observability.serviceMonitor.annotations <map[string]string>
 spec.observability.serviceMonitor.labels <map[string]string>
+spec.podAntiAffinity <string> enum=Required|Preferred default="Required"	# Pod anti-affinity mode for gateway workload replicas. Required spreads replicas across nodes and is the default. Preferred allows co-located replicas but does not provide node-level HA. Changing from Preferred to Required only takes effect when pods are recreated.
 spec.policies <[]object>	# egress policies at least one policy or selector must be specified
 spec.policies[].ipBlocks <[]string>	# CIDRs/subnets targeted by the egress traffic policy
 spec.policies[].snat <boolean> default=false	# whether to enable SNAT/MASQUERADE for the egress traffic
 spec.policies[].subnets <[]string>
 spec.prefix <string> pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*[-\\.]?$" (immutable)	# optional name prefix used to generate the workload the workload name will be generated as <prefix><vpc-egress-gateway-name>
+spec.priorityClassName <string>	# Optional PriorityClass name applied to the workload pods. If not specified, the cluster's default Pod priority applies.
 spec.replicas <integer> default=1 format=int32 min=0 max=10	# workload replicas
 spec.resources <object>	# Compute Resources required for the container. If not specified, the controller will set a default value. If specified, the controller will not set any default value and use the specified value directly.
 spec.resources.claims <[]object>	# Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container. This field depends on the DynamicResourceAllocation feature gate. This field is immutable. It can only be set for containers.

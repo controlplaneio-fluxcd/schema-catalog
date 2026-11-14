@@ -103,15 +103,30 @@
           "type": "string"
         },
         "externalIPs": {
-          "description": "External IP addresses for the egress gateway",
+          "description": "External IP addresses for the egress gateway\nmutually exclusive with externalIPPool",
           "items": {
             "type": "string"
           },
           "type": "array",
           "x-kubernetes-list-type": "set"
         },
+        "externalNetworkMode": {
+          "default": "Attachment",
+          "description": "External network mode. Attachment uses externalSubnet; PrimaryCNI uses the pod's primary network.",
+          "enum": [
+            "Attachment",
+            "PrimaryCNI"
+          ],
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "This field is immutable.",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
         "externalSubnet": {
-          "description": "external subnet used to create the workload",
+          "description": "External subnet used to create the workload in Attachment mode.",
           "type": "string"
         },
         "image": {
@@ -123,7 +138,7 @@
           "type": "string"
         },
         "internalIPs": {
-          "description": "optional internal/external IPs used to create the workload\nthese IPs must be in the internal/external subnet\nwhen specified, the IPs count must NOT be less than the replicas count",
+          "description": "optional internal/external IPs used to create the workload\nthese IPs must be in the internal/external subnet\nwhen specified, the IPs count must NOT be less than the replicas count\nmutually exclusive with internalIPPool",
           "items": {
             "type": "string"
           },
@@ -801,6 +816,15 @@
           },
           "type": "object"
         },
+        "podAntiAffinity": {
+          "default": "Required",
+          "description": "Pod anti-affinity mode for gateway workload replicas.\nRequired spreads replicas across nodes and is the default. Preferred allows\nco-located replicas but does not provide node-level HA. Changing from\nPreferred to Required only takes effect when pods are recreated.",
+          "enum": [
+            "Required",
+            "Preferred"
+          ],
+          "type": "string"
+        },
         "policies": {
           "description": "egress policies\nat least one policy or selector must be specified",
           "items": {
@@ -847,6 +871,10 @@
               "rule": "self == oldSelf"
             }
           ]
+        },
+        "priorityClassName": {
+          "description": "Optional PriorityClass name applied to the workload pods.\nIf not specified, the cluster's default Pod priority applies.",
+          "type": "string"
         },
         "replicas": {
           "default": 1,
@@ -1079,21 +1107,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "externalSubnet"
-      ],
       "type": "object",
       "x-kubernetes-validations": [
-        {
-          "fieldPath": ".internalIPPool",
-          "message": "internalIPs and internalIPPool are mutually exclusive",
-          "rule": "!(has(self.internalIPs) && size(self.internalIPs) != 0 && has(self.internalIPPool) && size(self.internalIPPool) > 0)"
-        },
-        {
-          "fieldPath": ".externalIPPool",
-          "message": "externalIPs and externalIPPool are mutually exclusive",
-          "rule": "!(has(self.externalIPs) && size(self.externalIPs) != 0 && has(self.externalIPPool) && size(self.externalIPPool) > 0)"
-        },
         {
           "fieldPath": ".internalIPs",
           "message": "Size of Internal IPs MUST be equal to or greater than Replicas",
@@ -1105,8 +1120,26 @@
           "rule": "!has(self.externalIPs) || size(self.externalIPs) == 0 || size(self.externalIPs) >= self.replicas"
         },
         {
+          "fieldPath": ".internalIPPool",
+          "message": "internalIPs and internalIPPool are mutually exclusive",
+          "rule": "!(has(self.internalIPs) && size(self.internalIPs) != 0 && has(self.internalIPPool) && size(self.internalIPPool) > 0)"
+        },
+        {
+          "fieldPath": ".externalIPPool",
+          "message": "externalIPs and externalIPPool are mutually exclusive",
+          "rule": "!(has(self.externalIPs) && size(self.externalIPs) != 0 && has(self.externalIPPool) && size(self.externalIPPool) > 0)"
+        },
+        {
           "message": "Each VPC Egress Gateway MUST have at least one policy or selector",
           "rule": "(has(self.policies) && size(self.policies) != 0) || (has(self.selectors) && size(self.selectors) != 0)"
+        },
+        {
+          "message": "externalSubnet is required in Attachment mode and forbidden in PrimaryCNI mode",
+          "rule": "has(self.externalNetworkMode) && self.externalNetworkMode == 'PrimaryCNI' ? !has(self.externalSubnet) || size(self.externalSubnet) == 0 : has(self.externalSubnet) && size(self.externalSubnet) > 0"
+        },
+        {
+          "message": "PrimaryCNI mode does not support external IP allocation, BGP, EVPN, selectors, bandwidth or observability",
+          "rule": "!has(self.externalNetworkMode) || self.externalNetworkMode != 'PrimaryCNI' || ((!has(self.externalIPs) || size(self.externalIPs) == 0) && (!has(self.externalIPPool) || size(self.externalIPPool) == 0) && (!has(self.bgpConf) || size(self.bgpConf) == 0) && (!has(self.evpnConf) || size(self.evpnConf) == 0) && (!has(self.selectors) || size(self.selectors) == 0) && !has(self.bandwidth) && !has(self.observability))"
         }
       ]
     },

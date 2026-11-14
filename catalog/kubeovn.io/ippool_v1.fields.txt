@@ -1,10 +1,11 @@
-# schema source: Kube-OVN v1.16.17 https://github.com/kubeovn/kube-ovn
+# schema source: Kube-OVN v1.17.1 https://github.com/kubeovn/kube-ovn
 apiVersion <string> enum=kubeovn.io/v1
 kind <string> enum=IPPool (cluster-scoped)
 metadata.name <string> (required)
 spec <object>
 spec.enableAddressSet <boolean> default=false	# EnableAddressSet to work with policy-based routing and ACL
-spec.ips <[]string> (required)	# IP addresses or ranges in the pool (IPv4/IPv6 addresses or CIDR ranges)
+spec.ipCount <integer> format=int32 min=1 max=32	# Number of addresses to pick automatically from the subnet's free addresses, per IP family (a dual-stack subnet yields ipCount IPv4 plus ipCount IPv6 addresses). The picked addresses are recorded in status.ips and stay stable; increasing the value appends addresses, decreasing it releases the most recently added ones first. Mutually exclusive with ips. An ippool carves a small set of addresses out of a subnet; needing more than a few dozen is better served by a dedicated subnet, or by spelling out ranges in ips. This bound must stay in sync with maxIPPoolIPCount in the controller, which still guards pools created before the limit was introduced.
+spec.ips <[]string>	# IP addresses or ranges in the pool (IPv4/IPv6 addresses or CIDR ranges). Mutually exclusive with ipCount.
 spec.namespaces <[]string>	# Namespaces that can use this IP pool
 spec.subnet <string> (required)	# Subnet name for the IP pool. This field is immutable.
 status <object>
@@ -16,6 +17,7 @@ status.conditions[].observedGeneration <integer> format=int64	# ObservedGenerati
 status.conditions[].reason <string>	# The reason for the condition's last transition.
 status.conditions[].status <string>	# Status of the condition, one of True, False, Unknown.
 status.conditions[].type <string>	# Type of condition.
+status.ips <[]string>	# IP addresses the pool currently consists of, in allocation order. Maintained by the controller for pools using spec.ipCount, and cleared when the pool leaves that mode, so the recorded selection is never mistaken for the members of a pool that lists spec.ips.
 status.v4AvailableIPRange <string>	# Available IPv4 address range
 status.v4AvailableIPs <number>	# Number of available IPv4 addresses
 status.v4UsingIPRange <string>	# IPv4 address range in use

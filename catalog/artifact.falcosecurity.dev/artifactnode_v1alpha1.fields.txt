@@ -1,0 +1,29 @@
+# schema source: Falco Operator v0.5.0 https://github.com/falcosecurity/falco-operator
+apiVersion <string> enum=artifact.falcosecurity.dev/v1alpha1
+kind <string> enum=ArtifactNode
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Spec is required, so the apiserver also enforces NodeName's own required constraint within it.
+spec.artifacts <[]object> max=100	# Artifacts is the set of artifacts assigned to the node. Entries are unique by kind and name.
+spec.artifacts[].kind <string> (required) enum=Rulesfile|Plugin|Config	# Kind is the kind of the assigned artifact.
+spec.artifacts[].name <string> (required) min=1 max=253	# Name is the name of the assigned artifact.
+spec.artifacts[].uid <string> (required) min=1	# UID is the UID of the artifact object the assignment was made for. It tells a deleted and recreated artifact of the same name apart from its predecessor.
+spec.nodeName <string> (required) min=1 max=253 (immutable)	# NodeName is the name of the node the artifacts are assigned to.
+status <object>	# ArtifactNodeStatus defines the observed state of the artifacts assigned to a node.
+status.artifacts <[]object> max=100	# Artifacts is the per-artifact state, written exclusively by the artifact operator on the node.
+status.artifacts[].conditions <[]object> max=16	# Conditions represent the latest available observations of the artifact's state on this node.
+status.artifacts[].conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.artifacts[].conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.artifacts[].conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.artifacts[].conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.artifacts[].conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.artifacts[].conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.artifacts[].installedArtifacts <[]object> max=3	# InstalledArtifacts tracks the artifact files currently written to disk for this artifact. Each entry corresponds to one source medium (oci, inline, configmap).
+status.artifacts[].installedArtifacts[].contentHash <string> (required)	# ContentHash is the SHA-256 hex digest of the bytes written to disk. A mismatch between this value and the current source signals that the file must be re-written.
+status.artifacts[].installedArtifacts[].medium <string> (required) enum=oci|inline|configmap	# Medium identifies the source: "oci", "inline", or "configmap".
+status.artifacts[].installedArtifacts[].path <string> (required)	# Path is the absolute on-disk path of the installed file.
+status.artifacts[].installedArtifacts[].priority <integer> (required) format=int32	# Priority is the load-order value encoded in the filename.
+status.artifacts[].installedArtifacts[].specHash <string>	# SpecHash is the SHA-256 hash of the parent artifact's OCIArtifact spec at the time this artifact was installed. Populated only for MediumOCI. A mismatch with the parent artifact's current ArtifactMeta.SpecHash means the remote blob may have changed and the artifact must be re-fetched regardless of disk integrity.
+status.artifacts[].kind <string> (required) enum=Rulesfile|Plugin|Config	# Kind is the kind of the artifact this entry reports on.
+status.artifacts[].name <string> (required) min=1 max=253	# Name is the name of the artifact this entry reports on.
+status.artifacts[].uid <string> (required) min=1	# UID is the UID of the artifact object this entry reports on. An entry whose UID differs from the assignment's describes a previous incarnation of the artifact and must be ignored.
