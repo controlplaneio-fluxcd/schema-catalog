@@ -14,8 +14,12 @@
     "spec": {
       "additionalProperties": false,
       "properties": {
+        "clusterIP": {
+          "description": "Kubernetes Service ClusterIP served by this rule for traffic from within the VPC.",
+          "type": "string"
+        },
         "eip": {
-          "description": "EIP name for DNAT rule",
+          "description": "Name of the EIP used as the rule's external address. Optional when ClusterIP is set.",
           "type": "string"
         },
         "externalPort": {
@@ -32,6 +36,30 @@
         },
         "protocol": {
           "description": "Protocol type (TCP or UDP)",
+          "type": "string"
+        },
+        "sessionAffinity": {
+          "description": "SessionAffinity controls client-IP session affinity for share type DNAT. Only \"\" (none,\ndefault) and \"ClientIP\" are supported, and it is rejected for exclusive type. It is\nimmutable after creation because it applies to the whole share DNAT identity; change it\nby deleting and recreating the rule (the nftable LB service controller does this when a\nService's session affinity changes). When set to \"ClientIP\", connections from the same\nclient IP are pinned to the same backend for SessionAffinityTimeoutSeconds, implemented\nwith per-backend nftables affinity sets (kube-proxy nftables pattern).",
+          "enum": [
+            "",
+            "ClientIP"
+          ],
+          "type": "string"
+        },
+        "sessionAffinityTimeoutSeconds": {
+          "description": "SessionAffinityTimeoutSeconds is the sticky window, in seconds, for ClientIP affinity.\nIt is only used when SessionAffinity is \"ClientIP\"; when unset (0) the controller applies\nthe default of 10800 (3h). Non-zero values must be in the range 1-86400.",
+          "format": "int32",
+          "maximum": 86400,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "type": {
+          "default": "exclusive",
+          "description": "Type of the DNAT rule, controls whether the EIP:Port identity can be shared\nby multiple internal backends:\n- \"exclusive\" (default): The EIP:Port is exclusively owned by this single DNAT rule.\n  Uses iptables DNAT for 1:1 port forwarding. This was the only mode before the\n  nft LB feature was introduced; any duplicate identity is rejected.\n- \"share\": Multiple DNAT rules may share the same EIP:Port identity, each\n  contributing a different internal IP:Port as a backend. Traffic is distributed\n  across backends using nftables numgen random map-based DNAT: each new connection\n  picks a backend at random and is then pinned by conntrack (connection-level\n  balancing, no client-IP affinity).",
+          "enum": [
+            "exclusive",
+            "share"
+          ],
           "type": "string"
         }
       },

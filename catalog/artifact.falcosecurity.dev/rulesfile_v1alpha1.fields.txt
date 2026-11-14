@@ -1,4 +1,4 @@
-# schema source: Falco Operator v0.4.1 https://github.com/falcosecurity/falco-operator
+# schema source: Falco Operator v0.5.0 https://github.com/falcosecurity/falco-operator
 apiVersion <string> enum=artifact.falcosecurity.dev/v1alpha1
 kind <string> enum=Rulesfile
 metadata.name <string> (required)
@@ -27,6 +27,19 @@ spec.selector.matchExpressions[].operator <string> (required)	# operator represe
 spec.selector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.selector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 status <object> default={"conditions":[{"lastTransitionTime":"1970-01-01T00:00:00Z","message":"Waiting for controller","reason":"Pending","status":"Unknown","type":"Programmed"}]}	# RulesfileStatus defines the observed state of Rulesfile.
+status.artifactMeta <object>	# ArtifactMeta holds the parsed metadata (requirements, dependencies, digest) collected by the instance operator. Per-node artifact operators read this field instead of hitting the registry or re-parsing content themselves.
+status.artifactMeta.dependencies <[]object>	# Dependencies lists the plugin dependencies declared by the artifact.
+status.artifactMeta.dependencies[].alternatives <[]object>	# Alternatives lists optional substitute plugins that can satisfy this dependency.
+status.artifactMeta.dependencies[].alternatives[].name <string> (required)	# Name is the plugin name.
+status.artifactMeta.dependencies[].alternatives[].version <string> (required)	# Version is the minimum required plugin version.
+status.artifactMeta.dependencies[].name <string> (required)	# Name is the plugin name.
+status.artifactMeta.dependencies[].version <string> (required)	# Version is the minimum required plugin version.
+status.artifactMeta.digest <string>	# Digest is the resolved OCI manifest digest of the currently observed artifact.
+status.artifactMeta.requirements <[]object>	# Requirements lists the engine/capability requirements declared by the artifact.
+status.artifactMeta.requirements[].name <string> (required)	# Name is the capability name (e.g. "engine_version_semver", "falco").
+status.artifactMeta.requirements[].version <string> (required)	# Version is the minimum required version string.
+status.artifactMeta.specHash <string>	# SpecHash is a SHA-256 hash of the OCIArtifact spec. When it changes the cached Digest, Requirements, and Dependencies are invalidated and re-fetched.
+status.artifactMetaSourcesHash <string>	# ArtifactMetaSourcesHash is the SHA-256 hash of every source input used to build ArtifactMeta: the OCIArtifact spec, referenced ConfigMap rules, and inline rules. The instance operator reuses ArtifactMeta only while this hash still matches.
 status.conditions <[]object>	# Conditions represent the latest available observations of the Rulesfile's state.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
 status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
@@ -34,3 +47,4 @@ status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGe
 status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
 status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the .metadata.generation that the instance operator has fully processed (ArtifactMeta computed, status patched). Per-node artifact operators defer reconciliation until this equals metadata.generation.
