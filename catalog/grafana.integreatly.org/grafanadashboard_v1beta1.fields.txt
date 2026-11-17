@@ -1,4 +1,4 @@
-# schema source: Grafana Operator v5.25.0 https://github.com/grafana/grafana-operator
+# schema source: Grafana Operator v5.26.0 https://github.com/grafana/grafana-operator
 apiVersion <string> enum=grafana.integreatly.org/v1beta1
 kind <string> enum=GrafanaDashboard
 metadata.name <string> (required)
@@ -6,7 +6,7 @@ metadata.namespace <string> (required)
 spec <object> (required)	# GrafanaDashboardSpec defines the desired state of GrafanaDashboard
 spec.allowCrossNamespaceImport <boolean> default=false	# Allow the Operator to match this resource with Grafanas outside the current namespace
 spec.configMapRef <object>	# model from configmap
-spec.configMapRef.key <string> (required)	# The key to select.
+spec.configMapRef.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
 spec.configMapRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.configMapRef.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
 spec.contentCacheDuration <string>	# Cache duration for models fetched from URLs
@@ -15,7 +15,7 @@ spec.datasources[].datasourceName <string> (required)
 spec.datasources[].inputName <string> (required)
 spec.envFrom <[]object>	# environments variables from secrets or config maps
 spec.envFrom[].configMapKeyRef <object>	# Selects a key of a ConfigMap.
-spec.envFrom[].configMapKeyRef.key <string> (required)	# The key to select.
+spec.envFrom[].configMapKeyRef.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
 spec.envFrom[].configMapKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.envFrom[].configMapKeyRef.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
 spec.envFrom[].secretKeyRef <object>	# Selects a key of a Secret.
@@ -27,7 +27,7 @@ spec.envs[].name <string> (required)
 spec.envs[].value <string>	# Inline env value
 spec.envs[].valueFrom <object>	# Reference on value source, might be the reference on a secret or config map
 spec.envs[].valueFrom.configMapKeyRef <object>	# Selects a key of a ConfigMap.
-spec.envs[].valueFrom.configMapKeyRef.key <string> (required)	# The key to select.
+spec.envs[].valueFrom.configMapKeyRef.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
 spec.envs[].valueFrom.configMapKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.envs[].valueFrom.configMapKeyRef.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
 spec.envs[].valueFrom.secretKeyRef <object>	# Selects a key of a Secret.
@@ -59,6 +59,22 @@ spec.oci.path <string> (required) min=1 max=512	# Path is the path of the file t
 spec.oci.pullSecretRef <object>	# PullSecretRef references a kubernetes.io/dockerconfigjson Secret in the same namespace as the CR. If omitted, anonymous pull is attempted.
 spec.oci.pullSecretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.oci.reference <string> (required) pattern="^[^:@]+(:[^:@/]+|@sha256:[a-fA-F0-9]{64})$" min=3 max=512	# Reference is the full OCI artifact reference including a tag or digest, e.g. "ghcr.io/team/dashboards:v1.4.7" or "ghcr.io/team/dashboards@sha256:abc123...". Prefer a digest for reproducible deployments.
+spec.patch <object>	# Patch the contents of the dashboard JSON using jq scripts. This is applied to a resolved dashboard, after variable substitution.
+spec.patch.env <[]object>
+spec.patch.env[].name <string> (required)
+spec.patch.env[].valueFrom <object> (required)
+spec.patch.env[].valueFrom.configMapKeyRef <object>	# Selects a key of a ConfigMap.
+spec.patch.env[].valueFrom.configMapKeyRef.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.patch.env[].valueFrom.configMapKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.patch.env[].valueFrom.configMapKeyRef.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.patch.env[].valueFrom.grafanaRef <object>	# ObjectFieldSelector selects an APIVersioned field of an object.
+spec.patch.env[].valueFrom.grafanaRef.apiVersion <string>	# Version of the schema the FieldPath is written in terms of, defaults to "v1".
+spec.patch.env[].valueFrom.grafanaRef.fieldPath <string> (required)	# Path of the field to select in the specified API version.
+spec.patch.env[].valueFrom.secretKeyRef <object>	# Selects a key of a Secret.
+spec.patch.env[].valueFrom.secretKeyRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.patch.env[].valueFrom.secretKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.patch.env[].valueFrom.secretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.patch.scripts <[]string> (required)
 spec.plugins <[]object>	# plugins
 spec.plugins[].name <string> (required) min=1
 spec.plugins[].version <string> (required) pattern="^((0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?|latest)$"

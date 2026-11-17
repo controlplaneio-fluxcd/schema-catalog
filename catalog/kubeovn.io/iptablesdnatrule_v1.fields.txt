@@ -1,13 +1,17 @@
-# schema source: Kube-OVN v1.16.17 https://github.com/kubeovn/kube-ovn
+# schema source: Kube-OVN v1.17.1 https://github.com/kubeovn/kube-ovn
 apiVersion <string> enum=kubeovn.io/v1
 kind <string> enum=IptablesDnatRule (cluster-scoped)
 metadata.name <string> (required)
 spec <object>
-spec.eip <string>	# EIP name for DNAT rule
+spec.clusterIP <string>	# Kubernetes Service ClusterIP served by this rule for traffic from within the VPC.
+spec.eip <string>	# Name of the EIP used as the rule's external address. Optional when ClusterIP is set.
 spec.externalPort <string>	# External port number
 spec.internalIp <string>	# Internal IP address to forward traffic to
 spec.internalPort <string>	# Internal port number to forward traffic to
 spec.protocol <string>	# Protocol type (TCP or UDP)
+spec.sessionAffinity <string> enum=|ClientIP	# SessionAffinity controls client-IP session affinity for share type DNAT. Only "" (none, default) and "ClientIP" are supported, and it is rejected for exclusive type. It is immutable after creation because it applies to the whole share DNAT identity; change it by deleting and recreating the rule (the nftable LB service controller does this when a Service's session affinity changes). When set to "ClientIP", connections from the same client IP are pinned to the same backend for SessionAffinityTimeoutSeconds, implemented with per-backend nftables affinity sets (kube-proxy nftables pattern).
+spec.sessionAffinityTimeoutSeconds <integer> format=int32 min=0 max=86400	# SessionAffinityTimeoutSeconds is the sticky window, in seconds, for ClientIP affinity. It is only used when SessionAffinity is "ClientIP"; when unset (0) the controller applies the default of 10800 (3h). Non-zero values must be in the range 1-86400.
+spec.type <string> enum=exclusive|share default="exclusive"	# Type of the DNAT rule, controls whether the EIP:Port identity can be shared by multiple internal backends: - "exclusive" (default): The EIP:Port is exclusively owned by this single DNAT rule. Uses iptables DNAT for 1:1 port forwarding. This was the only mode before the nft LB feature was introduced; any duplicate identity is rejected. - "share": Multiple DNAT rules may share the same EIP:Port identity, each contributing a different internal IP:Port as a backend. Traffic is distributed across backends using nftables numgen random map-based DNAT: each new connection picks a backend at random and is then pinned by conntrack (connection-level balancing, no client-IP affinity).
 status <object>
 status.conditions <[]object>	# Conditions represents the latest state of the object
 status.conditions[].lastTransitionTime <string> format=date-time	# Last time the condition transitioned from one status to another.

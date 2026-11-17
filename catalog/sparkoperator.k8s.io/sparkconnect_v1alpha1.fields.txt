@@ -1,9 +1,14 @@
-# schema source: Spark Operator v2.5.2 https://github.com/kubeflow/spark-operator
+# schema source: Spark Operator v2.6.0 https://github.com/kubeflow/spark-operator
 apiVersion <string> enum=sparkoperator.k8s.io/v1alpha1
 kind <string> enum=SparkConnect
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# SparkConnectSpec defines the desired state of SparkConnect.
+spec.deps <object>	# Deps captures all possible types of dependencies of a Spark Connect server.
+spec.deps.excludePackages <[]string>	# ExcludePackages is a list of "groupId:artifactId", to exclude while resolving the dependencies provided in Packages to avoid dependency conflicts.
+spec.deps.jars <[]string>	# Jars is a list of JAR files the Spark Connect server depends on.
+spec.deps.packages <[]string>	# Packages is a list of maven coordinates of jars to include on the driver and executor classpaths. This will search the local maven repo, then maven central and any additional remote repositories given by the "repositories" option. Each package should be of the form "groupId:artifactId:version".
+spec.deps.repositories <[]string>	# Repositories is a list of additional remote repositories to search for the maven coordinate given with the "packages" option.
 spec.dynamicAllocation <object>	# DynamicAllocation configures dynamic allocation that becomes available for the Kubernetes scheduler backend since Spark 3.0.
 spec.dynamicAllocation.enabled <boolean>	# Enabled controls whether dynamic allocation is enabled or not.
 spec.dynamicAllocation.initialExecutors <integer> format=int32	# InitialExecutors is the initial number of executors to request. If .spec.executor.instances is also set, the initial number of executors is set to the bigger of that and this option.
@@ -12,14 +17,24 @@ spec.dynamicAllocation.minExecutors <integer> format=int32	# MinExecutors is the
 spec.dynamicAllocation.shuffleTrackingEnabled <boolean>	# ShuffleTrackingEnabled enables shuffle file tracking for executors, which allows dynamic allocation without the need for an external shuffle service. This option will try to keep alive executors that are storing shuffle data for active jobs. If external shuffle service is enabled, set ShuffleTrackingEnabled to false. ShuffleTrackingEnabled is true by default if dynamicAllocation.enabled is true.
 spec.dynamicAllocation.shuffleTrackingTimeout <integer> format=int64	# ShuffleTrackingTimeout controls the timeout in milliseconds for executors that are holding shuffle data if shuffle tracking is enabled (true by default if dynamic allocation is enabled).
 spec.executor <object> (required)	# Executor is the Spark executor specification.
-spec.executor.cores <integer> format=int32 min=1	# Cores maps to `spark.driver.cores` or `spark.executor.cores` for the driver and executors, respectively.
+spec.executor.coreLimit <int-or-string>	# CoreLimit is the physical CPU core limit for the pod.
+spec.executor.coreRequest <int-or-string>	# CoreRequest is the physical CPU core request for the pod.
+spec.executor.cores <integer> format=int32 min=1	# Cores is a shorthand for coreRequest on the server, and maps to `spark.executor.cores` for executors.
+spec.executor.gpu <object>	# GPU specifies GPU resources for the pod and Spark resource scheduler. GPU discovery and per-task resource settings are configured through SparkConf.
+spec.executor.gpu.name <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)*[a-z0-9]([-a-z0-9]*[a-z0-9])?/gpu$" max=257	# Name is the Kubernetes GPU resource name, such as nvidia.com/gpu or amd.com/gpu. The vendor domain is used for Spark's GPU resource vendor configuration.
+spec.executor.gpu.quantity <integer> (required) format=int64 min=1	# Quantity is the number of GPUs to request for each pod.
 spec.executor.instances <integer> format=int32 min=0	# Instances is the number of executor instances.
 spec.executor.memory <string>	# Memory is the amount of memory to request for the pod.
 spec.executor.template <object (free-form)>	# Template is a pod template that can be used to define the driver or executor pod configurations that Spark configurations do not support. Spark version >= 3.0.0 is required. Ref: https://spark.apache.org/docs/latest/running-on-kubernetes.html#pod-template.
 spec.hadoopConf <map[string]string>	# HadoopConf carries user-specified Hadoop configuration properties as they would use the "--conf" option in spark-submit. The SparkApplication controller automatically adds prefix "spark.hadoop." to Hadoop configuration properties.
 spec.image <string>	# Image is the container image for the driver, executor, and init-container. Any custom container images for the driver, executor, or init-container takes precedence over this.
 spec.server <object> (required)	# Server is the Spark connect server specification.
-spec.server.cores <integer> format=int32 min=1	# Cores maps to `spark.driver.cores` or `spark.executor.cores` for the driver and executors, respectively.
+spec.server.coreLimit <int-or-string>	# CoreLimit is the physical CPU core limit for the pod.
+spec.server.coreRequest <int-or-string>	# CoreRequest is the physical CPU core request for the pod.
+spec.server.cores <integer> format=int32 min=1	# Cores is a shorthand for coreRequest on the server, and maps to `spark.executor.cores` for executors.
+spec.server.gpu <object>	# GPU specifies GPU resources for the pod and Spark resource scheduler. GPU discovery and per-task resource settings are configured through SparkConf.
+spec.server.gpu.name <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)*[a-z0-9]([-a-z0-9]*[a-z0-9])?/gpu$" max=257	# Name is the Kubernetes GPU resource name, such as nvidia.com/gpu or amd.com/gpu. The vendor domain is used for Spark's GPU resource vendor configuration.
+spec.server.gpu.quantity <integer> (required) format=int64 min=1	# Quantity is the number of GPUs to request for each pod.
 spec.server.memory <string>	# Memory is the amount of memory to request for the pod.
 spec.server.service <object>	# Service exposes the Spark connect server.
 spec.server.service.apiVersion <string>	# APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
@@ -57,7 +72,7 @@ spec.server.service.spec.sessionAffinity <string>	# Supports "ClientIP" and "Non
 spec.server.service.spec.sessionAffinityConfig <object>	# sessionAffinityConfig contains the configurations of session affinity.
 spec.server.service.spec.sessionAffinityConfig.clientIP <object>	# clientIP contains the configurations of Client IP based session affinity.
 spec.server.service.spec.sessionAffinityConfig.clientIP.timeoutSeconds <integer> format=int32	# timeoutSeconds specifies the seconds of ClientIP type session sticky time. The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP". Default value is 10800(for 3 hours).
-spec.server.service.spec.trafficDistribution <string>	# TrafficDistribution offers a way to express preferences for how traffic is distributed to Service endpoints. Implementations can use this field as a hint, but are not required to guarantee strict adherence. If the field is not set, the implementation will apply its default routing strategy. If set to "PreferClose", implementations should prioritize endpoints that are topologically close (e.g., same zone). This is a beta field and requires enabling ServiceTrafficDistribution feature.
+spec.server.service.spec.trafficDistribution <string>	# TrafficDistribution offers a way to express preferences for how traffic is distributed to Service endpoints. Implementations can use this field as a hint, but are not required to guarantee strict adherence. If the field is not set, the implementation will apply its default routing strategy. If set to "PreferClose", implementations should prioritize endpoints that are in the same zone.
 spec.server.service.spec.type <string>	# type determines how the Service is exposed. Defaults to ClusterIP. Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer. "ClusterIP" allocates a cluster-internal IP address for load-balancing to endpoints. Endpoints are determined by the selector or if that is not specified, by manual construction of an Endpoints object or EndpointSlice objects. If clusterIP is "None", no virtual IP is allocated and the endpoints are published as a set of endpoints rather than a virtual IP. "NodePort" builds on ClusterIP and allocates a port on every node which routes to the same endpoints as the clusterIP. "LoadBalancer" builds on NodePort and creates an external load-balancer (if supported in the current cloud) which routes to the same endpoints as the clusterIP. "ExternalName" aliases this service to the specified externalName. Several other fields do not apply to ExternalName services. More info: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
 spec.server.service.status <object>	# Most recently observed status of the service. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 spec.server.service.status.conditions <[]object>	# Current service state

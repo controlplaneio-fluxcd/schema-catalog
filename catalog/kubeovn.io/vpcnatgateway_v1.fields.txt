@@ -1,4 +1,4 @@
-# schema source: Kube-OVN v1.16.17 https://github.com/kubeovn/kube-ovn
+# schema source: Kube-OVN v1.17.1 https://github.com/kubeovn/kube-ovn
 apiVersion <string> enum=kubeovn.io/v1
 kind <string> enum=VpcNatGateway (cluster-scoped)
 metadata.name <string> (required)
@@ -101,6 +101,11 @@ spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].n
 spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>	# namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace".
 spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string> (required)	# This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed.
 spec.annotations <map[string]string>	# User-defined annotations for the StatefulSet NAT gateway Pod template. Only effective at creation time; updates to this field are not detected.
+spec.bfd <object>	# BFD configuration for health monitoring and automatic failover (HA mode only)
+spec.bfd.enabled <boolean> default=false	# Enable BFD health monitoring When enabled, each gateway instance establishes a BFD session with the VPC's BFD port. The VPC's spec.bfd.enabled must also be set to true.
+spec.bfd.minRX <integer> default=1000 format=int32 min=1 max=3600000	# BFD minimum receive interval in milliseconds This is the minimum interval at which this gateway expects to receive BFD control packets.
+spec.bfd.minTX <integer> default=1000 format=int32 min=1 max=3600000	# BFD minimum transmit interval in milliseconds This is the minimum interval at which this gateway will send BFD control packets.
+spec.bfd.multiplier <integer> default=3 format=int32 min=1 max=255	# BFD detection multiplier Number of missed BFD packets before declaring the session down. Detection time = MinRX * Multiplier
 spec.bgpSpeaker <object>	# BGP speaker configuration
 spec.bgpSpeaker.asn <integer> format=int32	# BGP ASN
 spec.bgpSpeaker.enableGracefulRestart <boolean>	# Enable graceful restart
@@ -112,9 +117,13 @@ spec.bgpSpeaker.password <string>	# BGP password
 spec.bgpSpeaker.remoteAsn <integer> format=int32	# BGP remote ASN
 spec.bgpSpeaker.routerId <string>	# BGP router ID
 spec.externalSubnets <[]string>	# External subnets accessible through the NAT gateway
-spec.lanIp <string>	# LAN IP address for the NAT gateway. This field is immutable after creation.
+spec.internalCIDRs <[]string>	# Internal CIDRs for OVN route injection. Traffic from these CIDRs destined for 0.0.0.0/0 or ::/0 will be routed to NAT gateway instances. This field is cumulative with internalSubnets.
+spec.internalSubnets <[]string>	# Internal subnets by name (resolved to CIDRs) for OVN route injection. Traffic from these subnets destined for 0.0.0.0/0 or ::/0 will be routed to NAT gateway instances. This field is cumulative with internalCIDRs.
+spec.lanIp <string>	# LAN IP address for the NAT gateway. Used only when Replicas = 1 (non-HA mode). If empty, an address is allocated dynamically and persisted here after it is observed on the Pod. Once set, this field is immutable. In HA mode (Replicas > 1) this field is ignored and cannot be used to pin addresses: every replica allocates its own address dynamically, and the controller re-points the OVN policy routes and BFD sessions whenever a replica is replaced. iptables EIP/FIP/DNAT/SNAT do not fully support IPv6 yet. Once they do, consider adding a v6LanIp field to pin the IPv6 LAN address separately.
+spec.namespace <string>	# Namespace where the NAT gateway StatefulSet/Pod will be created. If empty, defaults to the kube-ovn controller's own namespace (typically kube-system).
 spec.noDefaultEIP <boolean>	# Disable default EIP assignment
 spec.qosPolicy <string>	# QoS policy name to apply to the NAT gateway
+spec.replicas <integer> default=1 format=int32 min=1	# Number of gateway replicas for HA support. When > 1, uses Deployment workload with pod anti-affinity to distribute instances across nodes. When = 1 or unset, uses StatefulSet workload (legacy mode) for backward compatibility.
 spec.routes <[]object>	# Static routes for the NAT gateway
 spec.routes[].cidr <string>	# Route CIDR
 spec.routes[].nextHopIP <string>	# Next hop IP
@@ -226,7 +235,12 @@ status.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[]
 status.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].namespaces <[]string>	# namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace".
 status.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[].topologyKey <string> (required)	# This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed.
 status.externalSubnets <[]string>	# External subnets configured for the NAT gateway
+status.internalCIDRs <[]string>	# Internal CIDRs configured for OVN route injection
+status.internalSubnets <[]string>	# Internal subnets configured for OVN route injection
+status.lanIp <string>	# LAN IP address(es) observed on the NAT gateway Pods. For non-HA, this is the single address persisted to spec.lanIp. For HA, this is a comma-separated, sorted list of all observed addresses.
 status.qosPolicy <string>	# QoS policy applied to the NAT gateway
+status.ready <boolean>	# Ready state of the NAT gateway
+status.replicas <integer> format=int32	# Number of gateway replicas
 status.selector <[]string>	# Pod selector configured for the NAT gateway
 status.tolerations <[]object>
 status.tolerations[].effect <string>	# Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
@@ -234,3 +248,8 @@ status.tolerations[].key <string>	# Key is the taint key that the toleration app
 status.tolerations[].operator <string>	# Operator represents a key's relationship to the value. Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category. Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
 status.tolerations[].tolerationSeconds <integer> format=int64	# TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
 status.tolerations[].value <string>	# Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.
+status.workload <object>	# Workload information (Deployment or StatefulSet)
+status.workload.apiVersion <string>	# API version of the workload (e.g., "apps/v1")
+status.workload.kind <string>	# Kind of the workload ("Deployment" or "StatefulSet")
+status.workload.name <string>	# Name of the workload
+status.workload.nodes <[]string>	# Nodes where gateway instances are running

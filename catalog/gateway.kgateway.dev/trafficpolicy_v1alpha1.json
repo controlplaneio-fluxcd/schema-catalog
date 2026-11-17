@@ -339,6 +339,8 @@
                   "default": 0,
                   "description": "Weight controls ordering among multiple filters at the same\nstage and predicate. Higher weight places the filter earlier in the\nchain. Defaults to 0. Filters with the same stage, predicate, and\nweight are sorted alphabetically by filter name for consistency.",
                   "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
                   "type": "integer"
                 }
               },
@@ -559,6 +561,7 @@
               "default": 5,
               "description": "MaxAge indicates the duration (in seconds) for the client to cache the\nresults of a \"preflight\" request.\n\nThe information provided by the `Access-Control-Allow-Methods` and\n`Access-Control-Allow-Headers` response headers can be cached by the\nclient until the time specified by `Access-Control-Max-Age` elapses.\n\nThe default value of `Access-Control-Max-Age` response header is 5\n(seconds).\n\nWhen the `MaxAge` field is unspecified, the gateway sets the response\nheader \"Access-Control-Max-Age: 5\" by default.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 1,
               "type": "integer"
             }
@@ -685,6 +688,7 @@
                 "maxRequestBytes": {
                   "description": "MaxRequestBytes sets the maximum size of a message body to buffer.\nRequests exceeding this size will receive HTTP 413 and not be sent to the auth service.",
                   "format": "int32",
+                  "maximum": 2147483647,
                   "minimum": 1,
                   "type": "integer"
                 },
@@ -901,7 +905,8 @@
             },
             "maxActiveFaults": {
               "description": "MaxActiveFaults limits the number of concurrent active faults.\nWhen this limit is reached, new requests will not have faults injected.\nIf not specified, defaults to unlimited.",
-              "format": "int32",
+              "format": "uint32",
+              "maximum": 4294967295,
               "minimum": 0,
               "type": "integer"
             },
@@ -912,6 +917,7 @@
                 "kbitsPerSecond": {
                   "description": "KbitsPerSecond limits the response rate to the specified kilobits per second.",
                   "format": "int64",
+                  "maximum": 9223372036854774784,
                   "minimum": 1,
                   "type": "integer"
                 },
@@ -1315,7 +1321,8 @@
             },
             "maxRedirects": {
               "description": "MaxRedirects caps followed redirects for a single downstream request.\nDefaults to 1.",
-              "format": "int32",
+              "format": "uint32",
+              "maximum": 4294967295,
               "minimum": 1,
               "type": "integer"
             },
@@ -1592,6 +1599,7 @@
                     "maxTokens": {
                       "description": "MaxTokens specifies the maximum number of tokens that the bucket can hold.\nThis value must be greater than or equal to 1.\nIt determines the burst capacity of the rate limiter.",
                       "format": "int32",
+                      "maximum": 2147483647,
                       "minimum": 1,
                       "type": "integer"
                     },
@@ -1599,6 +1607,7 @@
                       "default": 1,
                       "description": "TokensPerFill specifies the number of tokens added to the bucket during each fill interval.\nIf not specified, it defaults to 1.",
                       "format": "int32",
+                      "maximum": 2147483647,
                       "minimum": 1,
                       "type": "integer"
                     }
@@ -1687,6 +1696,7 @@
               "default": 1,
               "description": "Attempts specifies the number of retry attempts for a request.\nDefaults to 1 attempt if not set.\nA value of 0 effectively disables retries.",
               "format": "int32",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             },
@@ -1707,7 +1717,7 @@
               ]
             },
             "perTryTimeout": {
-              "description": "PerTryTimeout specifies the timeout per retry attempt (including the initial attempt).\nIf a global timeout is configured on a route, this timeout must be less than the global\nroute timeout.\nIt is specified as a sequence of decimal numbers, each with optional fraction and a unit suffix, such as \"1s\" or \"500ms\".",
+              "description": "PerTryTimeout specifies the timeout per retry attempt (including the initial attempt).\nIt cannot be longer than the route's request timeout, unless that timeout is 0s (disabled).\nIt is specified as a sequence of decimal numbers, each with optional fraction and a unit suffix, such as \"1s\" or \"500ms\".",
               "maxLength": 32,
               "type": "string",
               "x-kubernetes-validations": [
@@ -2414,8 +2424,8 @@
           "rule": "!has(self.httpUpgrade) || self.httpUpgrade.all(x, self.httpUpgrade.exists_one(y, y.type.lowerAscii() == x.type.lowerAscii()))"
         },
         {
-          "message": "retry.perTryTimeout must be less than timeouts.request",
-          "rule": "has(self.retry) && has(self.timeouts) ? (has(self.retry.perTryTimeout) && has(self.timeouts.request) ? duration(self.retry.perTryTimeout) < duration(self.timeouts.request) : true) : true"
+          "message": "retry.perTryTimeout cannot be longer than timeouts.request unless timeouts.request is 0s",
+          "rule": "!(has(self.retry) && has(self.retry.perTryTimeout) && has(self.timeouts) && has(self.timeouts.request) && duration(self.timeouts.request) != duration('0s') && duration(self.retry.perTryTimeout) > duration(self.timeouts.request))"
         },
         {
           "message": "buffer cannot be used together with httpUpgrade unless buffering is disabled",
@@ -2504,6 +2514,7 @@
                     "observedGeneration": {
                       "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
                       "format": "int64",
+                      "maximum": 9223372036854774784,
                       "minimum": 0,
                       "type": "integer"
                     },
