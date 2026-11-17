@@ -1,5 +1,5 @@
 {
-  "description": "VpcNatGateway represents a NAT gateway for a VPC, implemented as a StatefulSet Pod.\n\nArchitecture note:\nThe NAT gateway Pod does NOT support hot updates. Any changes to Spec fields (ExternalSubnets,\nSelector, Tolerations, Affinity, etc.) will trigger a StatefulSet template update,\nwhich causes the Pod to be recreated via RollingUpdate strategy. This is by design because:\n 1. Network configuration (routes, iptables rules) is initialized at Pod startup\n 2. Runtime state (vpc_cidrs, init status) is managed by separate handlers and will be\n    automatically restored after Pod recreation through the normal reconciliation flow\n\nThe only exception is QoSPolicy, which can be updated without Pod restart.",
+  "description": "VpcNatGateway represents a NAT gateway for a VPC, implemented by a StatefulSet in non-HA mode or a Deployment in HA mode.\n\nArchitecture note:\nThe NAT gateway Pod does NOT support hot updates. Any changes to Spec fields (ExternalSubnets,\nSelector, Tolerations, Affinity, etc.) will trigger a StatefulSet template update,\nwhich causes the Pod to be recreated via RollingUpdate strategy. This is by design because:\n 1. Network configuration (routes, iptables rules) is initialized at Pod startup\n 2. Runtime state (vpc_cidrs, init status) is managed by separate handlers and will be\n    automatically restored after Pod recreation through the normal reconciliation flow\n\nQoSPolicy updates are applied without restarting the Pod. Every other Spec change,\nincluding the one-time persistence of a dynamically allocated LanIP, updates the\nworkload template and therefore recreates the Pod.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -811,6 +811,42 @@
           "description": "User-defined annotations for the StatefulSet NAT gateway Pod template.\nOnly effective at creation time; updates to this field are not detected.",
           "type": "object"
         },
+        "bfd": {
+          "additionalProperties": false,
+          "description": "BFD configuration for health monitoring and automatic failover (HA mode only)",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable BFD health monitoring\nWhen enabled, each gateway instance establishes a BFD session with the VPC's BFD port.\nThe VPC's spec.bfd.enabled must also be set to true.",
+              "type": "boolean"
+            },
+            "minRX": {
+              "default": 1000,
+              "description": "BFD minimum receive interval in milliseconds\nThis is the minimum interval at which this gateway expects to receive BFD control packets.",
+              "format": "int32",
+              "maximum": 3600000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "minTX": {
+              "default": 1000,
+              "description": "BFD minimum transmit interval in milliseconds\nThis is the minimum interval at which this gateway will send BFD control packets.",
+              "format": "int32",
+              "maximum": 3600000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "multiplier": {
+              "default": 3,
+              "description": "BFD detection multiplier\nNumber of missed BFD packets before declaring the session down.\nDetection time = MinRX * Multiplier",
+              "format": "int32",
+              "maximum": 255,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
         "bgpSpeaker": {
           "additionalProperties": false,
           "description": "BGP speaker configuration",
@@ -869,8 +905,26 @@
           },
           "type": "array"
         },
+        "internalCIDRs": {
+          "description": "Internal CIDRs for OVN route injection.\nTraffic from these CIDRs destined for 0.0.0.0/0 or ::/0 will be routed to NAT gateway instances.\nThis field is cumulative with internalSubnets.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "internalSubnets": {
+          "description": "Internal subnets by name (resolved to CIDRs) for OVN route injection.\nTraffic from these subnets destined for 0.0.0.0/0 or ::/0 will be routed to NAT gateway instances.\nThis field is cumulative with internalCIDRs.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "lanIp": {
-          "description": "LAN IP address for the NAT gateway. This field is immutable after creation.",
+          "description": "LAN IP address for the NAT gateway. Used only when Replicas = 1 (non-HA mode).\nIf empty, an address is allocated dynamically and persisted here after it is observed on the Pod.\nOnce set, this field is immutable.\nIn HA mode (Replicas > 1) this field is ignored and cannot be used to pin addresses: every\nreplica allocates its own address dynamically, and the controller re-points the OVN policy\nroutes and BFD sessions whenever a replica is replaced.\niptables EIP/FIP/DNAT/SNAT do not fully support IPv6 yet. Once they do, consider\nadding a v6LanIp field to pin the IPv6 LAN address separately.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Namespace where the NAT gateway StatefulSet/Pod will be created.\nIf empty, defaults to the kube-ovn controller's own namespace (typically kube-system).",
           "type": "string"
         },
         "noDefaultEIP": {
@@ -880,6 +934,13 @@
         "qosPolicy": {
           "description": "QoS policy name to apply to the NAT gateway",
           "type": "string"
+        },
+        "replicas": {
+          "default": 1,
+          "description": "Number of gateway replicas for HA support.\nWhen > 1, uses Deployment workload with pod anti-affinity to distribute instances across nodes.\nWhen = 1 or unset, uses StatefulSet workload (legacy mode) for backward compatibility.",
+          "format": "int32",
+          "minimum": 1,
+          "type": "integer"
         },
         "routes": {
           "description": "Static routes for the NAT gateway",
@@ -1747,9 +1808,36 @@
           },
           "type": "array"
         },
+        "internalCIDRs": {
+          "description": "Internal CIDRs configured for OVN route injection",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "internalSubnets": {
+          "description": "Internal subnets configured for OVN route injection",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lanIp": {
+          "description": "LAN IP address(es) observed on the NAT gateway Pods.\nFor non-HA, this is the single address persisted to spec.lanIp.\nFor HA, this is a comma-separated, sorted list of all observed addresses.",
+          "type": "string"
+        },
         "qosPolicy": {
           "description": "QoS policy applied to the NAT gateway",
           "type": "string"
+        },
+        "ready": {
+          "description": "Ready state of the NAT gateway",
+          "type": "boolean"
+        },
+        "replicas": {
+          "description": "Number of gateway replicas",
+          "format": "int32",
+          "type": "integer"
         },
         "selector": {
           "description": "Pod selector configured for the NAT gateway",
@@ -1788,6 +1876,32 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "workload": {
+          "additionalProperties": false,
+          "description": "Workload information (Deployment or StatefulSet)",
+          "properties": {
+            "apiVersion": {
+              "description": "API version of the workload (e.g., \"apps/v1\")",
+              "type": "string"
+            },
+            "kind": {
+              "description": "Kind of the workload (\"Deployment\" or \"StatefulSet\")",
+              "type": "string"
+            },
+            "name": {
+              "description": "Name of the workload",
+              "type": "string"
+            },
+            "nodes": {
+              "description": "Nodes where gateway instances are running",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
         }
       },
       "type": "object"

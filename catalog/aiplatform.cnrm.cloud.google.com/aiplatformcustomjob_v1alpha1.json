@@ -1,5 +1,5 @@
 {
-  "description": "VertexAICustomJob is the Schema for the VertexAICustomJob API",
+  "description": "AIPlatformCustomJob is the Schema for the AIPlatformCustomJob API",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -14,7 +14,7 @@
     },
     "spec": {
       "additionalProperties": false,
-      "description": "VertexAICustomJobSpec defines the desired state of VertexAICustomJob",
+      "description": "AIPlatformCustomJobSpec defines the desired state of AIPlatformCustomJob",
       "properties": {
         "displayName": {
           "description": "Required. The display name of the CustomJob. The name can be up to 128 characters long and can consist of any UTF-8 characters.",
@@ -26,7 +26,7 @@
           "properties": {
             "kmsKeyRef": {
               "additionalProperties": false,
-              "description": "Required. The Cloud KMS resource identifier of the customer managed encryption key used to protect a resource. The key needs to be in the same region as where the compute resource is created.",
+              "description": "Required. The Cloud KMS resource identifier of the customer managed encryption key used to protect a resource. Has the form: `projects/my-project/locations/my-region/keyRings/my-kr/cryptoKeys/my-key`. The key needs to be in the same region as where the compute resource is created.",
               "oneOf": [
                 {
                   "not": {
@@ -75,9 +75,6 @@
               "type": "object"
             }
           },
-          "required": [
-            "kmsKeyRef"
-          ],
           "type": "object"
         },
         "jobSpec": {
@@ -96,11 +93,11 @@
               "type": "object"
             },
             "enableDashboardAccess": {
-              "description": "Optional. Whether you want Vertex AI to enable access to the customized\n dashboard in training chief container.\n\n If set to `true`, you can access the dashboard at the URIs given\n by [CustomJob.web_access_uris][google.cloud.aiplatform.v1beta1.CustomJob.web_access_uris] or\n [Trial.web_access_uris][google.cloud.aiplatform.v1beta1.Trial.web_access_uris] (within\n [HyperparameterTuningJob.trials][google.cloud.aiplatform.v1beta1.HyperparameterTuningJob.trials]).",
+              "description": "Optional. Whether you want Vertex AI to enable access to the customized\n dashboard in training chief container.\n\n If set to `true`, you can access the dashboard at the URIs given\n by [CustomJob.web_access_uris][google.cloud.aiplatform.v1.CustomJob.web_access_uris] or\n [Trial.web_access_uris][google.cloud.aiplatform.v1.Trial.web_access_uris] (within\n [HyperparameterTuningJob.trials][google.cloud.aiplatform.v1.HyperparameterTuningJob.trials]).",
               "type": "boolean"
             },
             "enableWebAccess": {
-              "description": "Optional. Whether you want Vertex AI to enable [interactive shell\n access](https://cloud.google.com/vertex-ai/docs/training/monitor-debug-interactive-shell)\n for custom training.\n\n If set to `true`, you can access interactive shells at the URIs given\n by [CustomJob.web_access_uris][google.cloud.aiplatform.v1beta1.CustomJob.web_access_uris] or\n [Trial.web_access_uris][google.cloud.aiplatform.v1beta1.Trial.web_access_uris] (within\n [HyperparameterTuningJob.trials][google.cloud.aiplatform.v1beta1.HyperparameterTuningJob.trials]).",
+              "description": "Optional. Whether you want Vertex AI to enable [interactive shell\n access](https://cloud.google.com/vertex-ai/docs/training/monitor-debug-interactive-shell)\n for custom training.\n\n If set to `true`, you can access interactive shells at the URIs given\n by [CustomJob.web_access_uris][google.cloud.aiplatform.v1.CustomJob.web_access_uris] or\n [Trial.web_access_uris][google.cloud.aiplatform.v1.Trial.web_access_uris] (within\n [HyperparameterTuningJob.trials][google.cloud.aiplatform.v1.HyperparameterTuningJob.trials]).",
               "type": "boolean"
             },
             "experimentRef": {
@@ -320,7 +317,7 @@
               "description": "Optional. Configuration for PSC-I for CustomJob.",
               "properties": {
                 "dnsPeeringConfigs": {
-                  "description": "Optional. DNS peering configurations. When specified, Vertex AI will attempt to configure DNS peering zones in the tenant project VPC to resolve the specified domains using the target network's Cloud DNS. The user must grant the dns.peer role to the Vertex AI Service Agent on the target project.",
+                  "description": "Optional. DNS peering configurations.",
                   "items": {
                     "additionalProperties": false,
                     "properties": {
@@ -328,22 +325,164 @@
                         "description": "Required. The DNS name suffix of the zone being peered to, e.g., \"my-internal-domain.corp.\". Must end with a dot.",
                         "type": "string"
                       },
-                      "targetNetwork": {
+                      "targetNetworkRef": {
+                        "additionalProperties": false,
                         "description": "Required. The VPC network name in the target_project where the DNS zone specified by 'domain' is visible.",
-                        "type": "string"
+                        "oneOf": [
+                          {
+                            "not": {
+                              "required": [
+                                "external"
+                              ]
+                            },
+                            "required": [
+                              "name"
+                            ]
+                          },
+                          {
+                            "not": {
+                              "anyOf": [
+                                {
+                                  "required": [
+                                    "name"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "namespace"
+                                  ]
+                                }
+                              ]
+                            },
+                            "required": [
+                              "external"
+                            ]
+                          }
+                        ],
+                        "properties": {
+                          "external": {
+                            "description": "A reference to an externally managed ComputeNetwork resource. Should be in the format \"projects/{{projectID}}/global/networks/{{networkID}}\".",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "The name of a ComputeNetwork resource.",
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "description": "The namespace of a ComputeNetwork resource.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
                       },
-                      "targetProject": {
-                        "description": "Required. The project ID hosting the Cloud DNS managed zone that contains the 'domain'. The Vertex AI Service Agent requires the dns.peer role on this project.",
-                        "type": "string"
+                      "targetProjectRef": {
+                        "additionalProperties": false,
+                        "description": "Required. The project ID hosting the Cloud DNS managed zone that contains the 'domain'.",
+                        "oneOf": [
+                          {
+                            "not": {
+                              "required": [
+                                "external"
+                              ]
+                            },
+                            "required": [
+                              "name"
+                            ]
+                          },
+                          {
+                            "not": {
+                              "anyOf": [
+                                {
+                                  "required": [
+                                    "name"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "namespace"
+                                  ]
+                                }
+                              ]
+                            },
+                            "required": [
+                              "external"
+                            ]
+                          }
+                        ],
+                        "properties": {
+                          "external": {
+                            "description": "The `projectID` field of a project, when not managed by Config Connector.",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "description": "The kind of the Project resource; optional but must be `Project` if provided.",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "The `name` field of a `Project` resource.",
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "description": "The `namespace` field of a `Project` resource.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
                       }
                     },
                     "type": "object"
                   },
                   "type": "array"
                 },
-                "networkAttachment": {
-                  "description": "Optional. The name of the Compute Engine [network attachment](https://cloud.google.com/vpc/docs/about-network-attachments) to attach to the resource within the region and user project. To specify this field, you must have already [created a network attachment] (https://cloud.google.com/vpc/docs/create-manage-network-attachments#create-network-attachments). This field is only used for resources using PSC-I.",
-                  "type": "string"
+                "networkAttachmentRef": {
+                  "additionalProperties": false,
+                  "description": "Optional. The name of the Compute Engine network attachment to attach to the resource within the region and user project.",
+                  "oneOf": [
+                    {
+                      "not": {
+                        "required": [
+                          "external"
+                        ]
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    {
+                      "not": {
+                        "anyOf": [
+                          {
+                            "required": [
+                              "name"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "namespace"
+                            ]
+                          }
+                        ]
+                      },
+                      "required": [
+                        "external"
+                      ]
+                    }
+                  ],
+                  "properties": {
+                    "external": {
+                      "description": "A reference to an externally managed ComputeNetworkAttachment resource. Should be in the format \"projects/{{projectID}}/regions/{{region}}/networkAttachments/{{networkattachmentID}}\".",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "The name of a ComputeNetworkAttachment resource.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "The namespace of a ComputeNetworkAttachment resource.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -368,7 +507,7 @@
                   "type": "string"
                 },
                 "restartJobOnWorkerRestart": {
-                  "description": "Restarts the entire CustomJob if a worker gets restarted. This feature can be used by distributed training jobs that are not resilient to workers leaving and joining a job.",
+                  "description": "Optional. Restarts the entire CustomJob if a worker gets restarted. This feature can be used by distributed training jobs that are not resilient to workers leaving and joining a job.",
                   "type": "boolean"
                 },
                 "strategy": {
@@ -376,7 +515,7 @@
                   "type": "string"
                 },
                 "timeout": {
-                  "description": "The maximum job running time. The default is 7 days.",
+                  "description": "Optional. The maximum job running time. The default is 7 days.",
                   "type": "string"
                 }
               },
@@ -434,7 +573,7 @@
             },
             "tensorboardRef": {
               "additionalProperties": false,
-              "description": "Optional. The name of a Vertex AI [Tensorboard][google.cloud.aiplatform.v1beta1.Tensorboard] resource to which this CustomJob will upload Tensorboard logs. Format: `projects/{project}/locations/{location}/tensorboards/{tensorboard}`",
+              "description": "Optional. The name of a Vertex AI [Tensorboard][google.cloud.aiplatform.v1.Tensorboard] resource to which this CustomJob will upload Tensorboard logs. Format: `projects/{project}/locations/{location}/tensorboards/{tensorboard}`",
               "oneOf": [
                 {
                   "not": {
@@ -546,6 +685,32 @@
                     },
                     "type": "object"
                   },
+                  "lustreMounts": {
+                    "description": "Optional. List of Lustre mounts.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "filesystem": {
+                          "description": "Required. The name of the Lustre filesystem.",
+                          "type": "string"
+                        },
+                        "instanceIP": {
+                          "description": "Required. IP address of the Lustre instance.",
+                          "type": "string"
+                        },
+                        "mountPoint": {
+                          "description": "Required. Destination mount path. The Lustre file system will be mounted for the user under /mnt/lustre/<mount_point>",
+                          "type": "string"
+                        },
+                        "volumeHandle": {
+                          "description": "Required. The unique identifier of the Lustre volume.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
                   "machineSpec": {
                     "additionalProperties": false,
                     "description": "Optional. Immutable. The specification of a single machine.",
@@ -556,7 +721,7 @@
                         "type": "integer"
                       },
                       "acceleratorType": {
-                        "description": "Immutable. The type of accelerator(s) that may be attached to the machine as per [accelerator_count][google.cloud.aiplatform.v1beta1.MachineSpec.accelerator_count].",
+                        "description": "Immutable. The type of accelerator(s) that may be attached to the machine as per [accelerator_count][google.cloud.aiplatform.v1.MachineSpec.accelerator_count].",
                         "type": "string"
                       },
                       "gpuPartitionSize": {
@@ -564,13 +729,8 @@
                         "type": "string"
                       },
                       "machineType": {
-                        "description": "Immutable. The type of the machine.\n\n See the [list of machine types supported for\n prediction](https://cloud.google.com/vertex-ai/docs/predictions/configure-compute#machine-types)\n\n See the [list of machine types supported for custom\n training](https://cloud.google.com/vertex-ai/docs/training/configure-compute#machine-types).\n\n For [DeployedModel][google.cloud.aiplatform.v1beta1.DeployedModel] this\n field is optional, and the default value is `n1-standard-2`. For\n [BatchPredictionJob][google.cloud.aiplatform.v1beta1.BatchPredictionJob] or\n as part of [WorkerPoolSpec][google.cloud.aiplatform.v1beta1.WorkerPoolSpec]\n this field is required.",
+                        "description": "Immutable. The type of the machine.\n\n See the [list of machine types supported for\n prediction](https://cloud.google.com/vertex-ai/docs/predictions/configure-compute#machine-types)\n\n See the [list of machine types supported for custom\n training](https://cloud.google.com/vertex-ai/docs/training/configure-compute#machine-types).\n\n For [DeployedModel][google.cloud.aiplatform.v1.DeployedModel] this field is\n optional, and the default value is `n1-standard-2`. For\n [BatchPredictionJob][google.cloud.aiplatform.v1.BatchPredictionJob] or as\n part of [WorkerPoolSpec][google.cloud.aiplatform.v1.WorkerPoolSpec] this\n field is required.",
                         "type": "string"
-                      },
-                      "multihostGpuNodeCount": {
-                        "description": "Optional. Immutable. The number of nodes per replica for multihost GPU deployments.",
-                        "format": "int32",
-                        "type": "integer"
                       },
                       "reservationAffinity": {
                         "additionalProperties": false,
@@ -731,7 +891,7 @@
           "type": "object"
         },
         "resourceID": {
-          "description": "The VertexAICustomJob name. If not given, the metadata.name will be used.",
+          "description": "Immutable. Optional. The service-generated name of the resource. Used for acquisition only. Leave unset to create a new resource.",
           "type": "string"
         }
       },
@@ -745,7 +905,7 @@
     },
     "status": {
       "additionalProperties": false,
-      "description": "VertexAICustomJobStatus defines the config connector machine state of VertexAICustomJob",
+      "description": "AIPlatformCustomJobStatus defines the config connector machine state of AIPlatformCustomJob",
       "properties": {
         "conditions": {
           "description": "Conditions represent the latest available observations of the object's current state.",
@@ -778,7 +938,7 @@
           "type": "array"
         },
         "externalRef": {
-          "description": "A unique specifier for the VertexAICustomJob resource in GCP.",
+          "description": "A unique specifier for the AIPlatformCustomJob resource in GCP.",
           "type": "string"
         },
         "observedGeneration": {
@@ -813,10 +973,6 @@
                 }
               },
               "type": "object"
-            },
-            "name": {
-              "description": "Output only. Resource name of a CustomJob.",
-              "type": "string"
             },
             "satisfiesPzi": {
               "description": "Output only. Reserved for future use.",
@@ -856,5 +1012,5 @@
     "spec"
   ],
   "type": "object",
-  "x-flux-schema-type": "VertexAICustomJob"
+  "x-flux-schema-type": "AIPlatformCustomJob"
 }
