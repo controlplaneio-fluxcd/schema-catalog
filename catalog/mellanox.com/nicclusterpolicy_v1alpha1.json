@@ -315,6 +315,11 @@
               "pattern": "[a-zA-Z0-9\\.\\-\\/]+",
               "type": "string"
             },
+            "shareHostSharedMemory": {
+              "default": false,
+              "description": "ShareHostSharedMemory backs the shared memory used for IPC with the host's whole /dev/shm,\nwhich is what IPC clients running directly on the node require.\nWhen false the shared memory is confined to /dev/shm/telemetry on the host, which\ncontainerized IPC clients can mount while the rest of the host's shared memory stays isolated.",
+              "type": "boolean"
+            },
             "version": {
               "description": "Version of the image to use",
               "type": "string"
@@ -450,6 +455,17 @@
           "additionalProperties": false,
           "description": "NicConfigurationOperator provides Kubernetes CRD API to allow FW configuration on NVIDIA NICs in a coordinated manner\nSee: https://github.com/Mellanox/nic-configuration-operator",
           "properties": {
+            "certConfig": {
+              "additionalProperties": false,
+              "description": "Optional: Custom TLS certificates configuration for NIC Configuration Operator container",
+              "properties": {
+                "name": {
+                  "description": "Name of the ConfigMap",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
             "configurationDaemon": {
               "additionalProperties": false,
               "description": "Image information for nic-configuration-daemon",
@@ -697,6 +713,21 @@
               "additionalProperties": false,
               "description": "NicFirmwareStorage contains configuration for the NIC firmware storage. If not provided, the NIC firmware storage will not be configured.",
               "properties": {
+                "accessMode": {
+                  "default": "ReadWriteMany",
+                  "description": "AccessMode is the access mode of the PVC to create. Only applies if nicFirmwareStorage.create == true.\nReadWriteMany is required on multi-node clusters, where the firmware storage is mounted by the\nconfiguration daemon on every node. ReadWriteOnce is only valid on single-node clusters (e.g. Single\nNode OpenShift with storage that does not support ReadWriteMany). Default value: ReadWriteMany",
+                  "enum": [
+                    "ReadWriteMany",
+                    "ReadWriteOnce"
+                  ],
+                  "type": "string",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "accessMode is immutable once set. nicFirmwareStorage should be deleted and created again with a new value.",
+                      "rule": "self == oldSelf"
+                    }
+                  ]
+                },
                 "availableStorageSize": {
                   "default": "1Gi",
                   "description": "AvailableStorageSize is storage size for the NIC Configuration Operator to request. Only applies if nicFirmwareStorage.create == true. Default value: 1Gi",
@@ -1891,6 +1922,15 @@
                     "type": "object"
                   },
                   "type": "array"
+                },
+                "deploymentType": {
+                  "default": "thin",
+                  "description": "DeploymentType selects the Multus deployment variant.\n\"thin\" (default): Multus runs as an in-process CNI plugin. The config field, if set,\nprovides the Multus CNI configuration file content.\n\"thick\": Multus runs as a privileged daemon; CNI calls are proxied via a Unix socket shim.\nThe config field, if set, configures the daemon (daemon-config.json).",
+                  "enum": [
+                    "thin",
+                    "thick"
+                  ],
+                  "type": "string"
                 },
                 "image": {
                   "description": "Name of the image",

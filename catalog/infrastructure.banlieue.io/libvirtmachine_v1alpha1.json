@@ -1,0 +1,495 @@
+{
+  "description": "LibvirtMachine — the concrete, scheduled VM request for a libvirt/KVM host.\n\nYou normally do not create this by hand: banlieue's controller does, owned\nby the `VirtualMachine` it was scheduled from, and the libvirt provider\nreconciles it into a real domain.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "LibvirtMachine — the concrete, scheduled VM request for a libvirt/KVM host.\n\nYou normally do not create this by hand: banlieue's controller does, owned\nby the `VirtualMachine` it was scheduled from, and the libvirt provider\nreconciles it into a real domain.",
+      "properties": {
+        "bootSource": {
+          "additionalProperties": false,
+          "description": "How this machine's OS disk comes into being.",
+          "properties": {
+            "kind": {
+              "description": "Which of the two provisioning shapes this machine uses.",
+              "enum": [
+                "backingVolume",
+                "installMedia"
+              ],
+              "type": "string"
+            },
+            "volume": {
+              "description": "Volume name within `LibvirtMachineSpec::pool`: the backing image\nfor `BackingVolume`, or the\ninstaller ISO for\n`InstallMedia`.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "volume"
+          ],
+          "type": "object"
+        },
+        "desiredPowerState": {
+          "default": "PoweredOn",
+          "description": "Desired power state, resolved from the parent `VirtualMachine`'s\n`spec.desiredPowerState` (ADR-0024).",
+          "enum": [
+            "PoweredOn",
+            "PoweredOff",
+            "Suspended"
+          ],
+          "type": "string"
+        },
+        "disks": {
+          "description": "Disks. The first is the OS disk; the rest are blank data disks.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One virtual disk on the resulting domain.",
+            "properties": {
+              "bus": {
+                "default": "virtio",
+                "description": "Controller bus.",
+                "enum": [
+                  "virtio",
+                  "scsi",
+                  "sata"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "Stable disk name; echoed in status and used to name the volume.",
+                "type": "string"
+              },
+              "sizeGiB": {
+                "description": "Disk size in GiB. For an overlay OS disk this is a floor — the\noverlay is created at least this large.",
+                "maximum": 65536,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "sizeGiB"
+            ],
+            "type": "object"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "type": "array"
+        },
+        "domainName": {
+          "description": "libvirt domain name. Unique per host, and the handle every domain\nprocedure takes.\n\nDistinct from `metadata.name` on purpose: two namespaces can hold a\n`LibvirtMachine` called `db-01`, but one libvirt host cannot hold two\ndomains by that name.",
+          "type": "string"
+        },
+        "failureDomain": {
+          "description": "CAPI contract (optional): failure domain placement. The banlieue\nscheduler writes the chosen failure domain here.\n\nlibvirt has no cluster or datacenter hierarchy, so a failure domain is\nsimply one host (see roadmap 07) — which makes this field carry more\nweight than on vSphere, not less: it is the only placement signal.",
+          "nullable": true,
+          "type": "string"
+        },
+        "firmware": {
+          "description": "Firmware. EFI requires OVMF on the host; `EfiSecure` additionally\nrequires a `.secboot.fd` variant and pre-enrolled keys.",
+          "enum": [
+            "bios",
+            "efi",
+            "efi-secure"
+          ],
+          "type": "string"
+        },
+        "firstBootSealing": {
+          "additionalProperties": false,
+          "description": "First-boot sealing the guest must report before `GuestReady`\n(ADR-0088), copied by `banlieue-controller` from the parent\n`VirtualMachine`'s `VMImage.spec.firstBootSealing` when the class is\n`tpmEnabled`. `None` for every other machine, which keeps today's\n`GuestReady` meaning unchanged.",
+          "nullable": true,
+          "properties": {
+            "partitions": {
+              "default": [
+                "COS_PERSISTENT"
+              ],
+              "description": "Kairos partition labels to seal on first boot. Defaults to\n`[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and\n`COS_GRUB` are refused at admission, mirroring Kairos's own refusal.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "timeoutSeconds": {
+              "default": 600,
+              "description": "Seconds from the machine's power-on (its infrastructure `Ready`\ntransition) within which the guest must report every listed partition\nsealed; after that `GuestReady` is `False` with reason\n`FirstBootSealingTimeout`. A clone that cannot seal halts in its\ninitramfs and never reports anything, so this is how it is noticed.",
+              "maximum": 86400,
+              "minimum": 60,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "machineType": {
+          "description": "QEMU machine type (`q35`, `pc`, …). `None` lets libvirt pick its\ndefault for the host's architecture, which is the right answer unless\nan image needs a specific chipset.",
+          "nullable": true,
+          "type": "string"
+        },
+        "memoryMiB": {
+          "description": "Memory in MiB.",
+          "maximum": 4194304,
+          "minimum": 128,
+          "type": "integer"
+        },
+        "network": {
+          "description": "Network interfaces.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One virtual network interface on the resulting domain.",
+            "properties": {
+              "ipam": {
+                "additionalProperties": false,
+                "description": "IP address management for this interface.",
+                "properties": {
+                  "pool": {
+                    "additionalProperties": false,
+                    "description": "Pool-based IPAM parameters.",
+                    "nullable": true,
+                    "properties": {
+                      "poolRef": {
+                        "additionalProperties": false,
+                        "description": "Typed reference (apiGroup + kind + name + optional namespace).\n\nUsed wherever the referenced kind is pluggable — e.g. IPAM pools, where we\nwant to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's\ndefault) or future banlieue-native pool types.",
+                        "properties": {
+                          "apiGroup": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "apiGroup",
+                          "kind",
+                          "name"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "poolRef"
+                    ],
+                    "type": "object"
+                  },
+                  "static": {
+                    "additionalProperties": false,
+                    "description": "Static IPAM parameters (address, prefix, gateway, nameservers, domain).",
+                    "nullable": true,
+                    "properties": {
+                      "address": {
+                        "type": "string"
+                      },
+                      "domain": {
+                        "description": "DNS domain, used both as a DNS search domain and (by a\n`VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build\nan FQDN as `<vm-name>.<domain>`.",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "gateway": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "nameservers": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "prefix": {
+                        "maximum": 255,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "prefix"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "macAddress": {
+                "description": "Optional MAC address (otherwise libvirt generates one).",
+                "nullable": true,
+                "type": "string"
+              },
+              "model": {
+                "description": "Device model. `None` means `virtio`, which is what every image\nbanlieue builds expects.",
+                "nullable": true,
+                "type": "string"
+              },
+              "name": {
+                "description": "Stable NIC name; echoed in status.",
+                "type": "string"
+              },
+              "source": {
+                "additionalProperties": false,
+                "description": "Resolved bridge or libvirt network.",
+                "properties": {
+                  "kind": {
+                    "description": "Whether `name` names a host bridge or a libvirt network.",
+                    "enum": [
+                      "network",
+                      "bridge"
+                    ],
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The bridge interface (`br0`) or libvirt network (`default`).",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "ipam",
+              "name",
+              "source"
+            ],
+            "type": "object"
+          },
+          "maxItems": 16,
+          "type": "array"
+        },
+        "pool": {
+          "description": "Storage pool that holds this machine's volumes, resolved from the\nstorage class by the scheduler.",
+          "type": "string"
+        },
+        "providerID": {
+          "description": "CAPI contract: Provider ID for the resulting Node, if this VM becomes\na Kubernetes node. Format: `libvirt://<provider-name>/<domain-uuid>`.\nSet by the provider controller after the domain is defined.\n\nThe *provider name*, not a hostname: the connection URI is a\ndeployment detail that can change without the VM changing, and a real\nhostname here would end up in tracked YAML (see\n`rules/no-real-infrastructure.md`). The domain UUID is libvirt's own\nstable identity for the domain, unaffected by rename or restart.",
+          "nullable": true,
+          "type": "string"
+        },
+        "providerRef": {
+          "additionalProperties": false,
+          "description": "Reference to the banlieue `Provider` whose connection details describe\nthe target libvirt host.",
+          "properties": {
+            "name": {
+              "description": "Name of the `Provider`.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the `Provider`. Defaults to the referrer's namespace.\n\nOnly `banlieue-controller` may set this: a machine naming a provider in\nanother namespace is a placement that skipped scheduling, so an\nadmission policy reserves the field to the controller's identity.",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "tpmEnabled": {
+          "default": false,
+          "description": "Attach an emulated TPM 2.0 device (swtpm), resolved from the VM's\n`VMClass.spec.tpmEnabled` (ADR-0039).\n\nThe device must exist before first boot, because Kairos's `kcrypt`\nseals LUKS keys to it during the unattended install — which is why\n`tpmEnabled` only makes sense paired with\n`LibvirtBootSource::InstallMedia` (ADR-0040, ADR-0048).\n\nswtpm keys its state by domain UUID, so a new domain always gets a\nfresh TPM. The corollary is that a domain carrying TPM state must\nnever be cloned, and that `undefine` must pass\n`VIR_DOMAIN_UNDEFINE_TPM` or that state outlives the VM (ADR-0050\nDecision 5).",
+          "type": "boolean"
+        },
+        "userData": {
+          "description": "Guest bootstrap payload, already resolved from the parent\n`VirtualMachine`'s `spec.userData` Secret or ConfigMap (ADR-0038) and\nplaceholder-substituted by `banlieue-controller` (ADR-0025). The\nprovider renders it into a NoCloud `cidata` volume — it never reads a\nSecret or ConfigMap itself.",
+          "nullable": true,
+          "type": "string"
+        },
+        "vcpus": {
+          "description": "Number of virtual CPUs.",
+          "maximum": 256,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bootSource",
+        "disks",
+        "domainName",
+        "firmware",
+        "memoryMiB",
+        "network",
+        "pool",
+        "providerRef",
+        "vcpus"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed state of a LibvirtMachine, shaped to the CAPI v1beta2\nInfraMachine status contract (plus libvirt-specific diagnostics).",
+      "nullable": true,
+      "properties": {
+        "addressSource": {
+          "description": "Which source answered when the provider looked up the guest's addresses\n(ADR-0050 Decision 8).\n\nRecorded because the three sources disagree in ways that matter: the\nagent reports what the guest actually configured, a lease reports what\nDHCP offered (which the guest may have ignored), and ARP reports what was\nseen on the wire. An address that looks wrong is only diagnosable if you\nknow which of those produced it.",
+          "enum": [
+            "guestAgent",
+            "dhcpLease",
+            "arpTable",
+            "static"
+          ],
+          "nullable": true,
+          "type": "string"
+        },
+        "addresses": {
+          "description": "CAPI contract field (optional): VM addresses.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A typed machine address. Mirrors CAPI's `clusterv1.MachineAddress`.",
+            "properties": {
+              "address": {
+                "description": "The address itself.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.",
+                "enum": [
+                  "Hostname",
+                  "ExternalIP",
+                  "InternalIP",
+                  "ExternalDNS",
+                  "InternalDNS"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "conditions": {
+          "description": "CAPI-compatible conditions. The `Ready` condition is mirrored as\n`InfrastructureReady` on the parent per contract.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "domainUuid": {
+          "description": "libvirt's UUID for the domain, in its 36-character textual form. The\ndomain's real identity — stable across rename and host restart — and\nthe source for `spec.providerID`. Not part of the CAPI contract.",
+          "nullable": true,
+          "type": "string"
+        },
+        "failureDomain": {
+          "description": "CAPI contract field (optional): observed failure domain — the host\nthe domain actually landed on.",
+          "nullable": true,
+          "type": "string"
+        },
+        "guestInstalled": {
+          "description": "Whether the *installed* guest has announced itself (ADR-0043).\n\n**Sticky once true.** The marker lives in the guest's `/run`, so it\ndoes not survive a power cycle — but a VM that was stopped has not\nbecome uninstalled. Without stickiness a warm pool member would drop\nout of the pool every time it was powered off and back on.\n\n`None` means \"not observed yet\", which is the expected state for the\nwhole of a `Deferred` image's install. Not part of the CAPI\ncontract.",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "initialization": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "CAPI contract field: replaces the deprecated v1beta1 `status.ready`.",
+          "properties": {
+            "provisioned": {
+              "description": "True when the infrastructure provider reports that the resource's\ninfrastructure is fully provisioned.",
+              "nullable": true,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "installMediaDetached": {
+          "description": "Whether the install medium has been ejected (ADR-0044).\n\n**Sticky once true**, for the same reason as `Self::guest_installed`:\nan ejected ISO does not come back, and a stopped domain has not become\nre-armed.\n\n`None` means \"nothing to do\" — an `Immediate`-mode machine never had\ninstall media attached — which is deliberately distinct from\n`Some(false)`, \"attached and not yet ejected\". Collapsing the two\nwould make a machine that never needed an eject indistinguishable\nfrom one whose eject is still pending.\n\n`GuestReady` is published only *after* this is true, so a pool can\nnever bind a member that still has its installer attached. That\nordering is the invariant; this field is what makes it auditable\nfrom outside the controller.",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "observedPowerState": {
+          "description": "The domain's last observed run state, mapped onto banlieue's\nbackend-neutral `PowerState` (ADR-0034). The hypervisor's view, not\na guest-OS-boot signal. Not part of the CAPI contract; mirrored onto\nthe parent `VirtualMachine`'s `status.observedPowerState`.",
+          "enum": [
+            "PoweredOn",
+            "PoweredOff",
+            "Suspended",
+            null
+          ],
+          "nullable": true,
+          "type": "string"
+        },
+        "sealedPartitions": {
+          "description": "Partitions the guest has reported sealed, as LUKS containers, on a\nfirst-boot sealing machine (ADR-0088): from ``/run/banlieue/sealed`, read with the guest agent`. **Sticky**:\nthe report is re-asserted every boot but lives in volatile state, and a\npowered-off machine has not become unsealed. Empty until reported, and\non every machine without `spec.firstBootSealing`. Guest-supplied, so it\nis only ever used to *withhold* `GuestReady`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tpmAttached": {
+          "description": "Whether an emulated TPM was attached, when `spec.tpmEnabled` is set\n(ADR-0039). `None` when `tpmEnabled` is `false` or the attach has not\nrun yet. A failed attach surfaces through the conditions rather than\na dedicated `VirtualMachine`-level mirror.",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "tpmEndorsementCertificates": {
+          "description": "PEM vTPM endorsement key certificate(s) reported by the guest and\nvalidated against this domain (ADR-0045).\n\nEmpty when `spec.tpmEnabled` is `false`, and while a `tpmEnabled`\nguest has not yet exported one. On libvirt this is necessarily a\nguest-reported value: `swtpm_localca` issues the certificate into the\nvTPM's NVRAM and persists no copy the host or any libvirt RPC can\nread. It is published only after its subject CN is confirmed to be\n`<domain-name>:<domain-uuid>`, and possession of the matching private\nkey is what ADR-0049's attestation actually proves.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "LibvirtMachine",
+  "type": "object",
+  "x-flux-schema-type": "LibvirtMachine"
+}

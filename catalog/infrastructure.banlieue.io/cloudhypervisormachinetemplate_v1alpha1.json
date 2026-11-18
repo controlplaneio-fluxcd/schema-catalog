@@ -1,0 +1,433 @@
+{
+  "description": "CloudHypervisorMachineTemplate — a stamped-out CloudHypervisorMachine spec.\n\nCAPI requires an InfraMachineTemplate so a MachineSet or MachineDeployment\ncan mint identical machines. A spec template, not a disk template: nothing\nclones a guest, which is what keeps per-VM vTPMs unique (ADR-0040).",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "CloudHypervisorMachineTemplate — a stamped-out CloudHypervisorMachine spec.\n\nCAPI requires an InfraMachineTemplate so a MachineSet or MachineDeployment\ncan mint identical machines. A spec template, not a disk template: nothing\nclones a guest, which is what keeps per-VM vTPMs unique (ADR-0040).",
+      "properties": {
+        "template": {
+          "additionalProperties": false,
+          "description": "The spec stamped into every machine created from this template.",
+          "properties": {
+            "spec": {
+              "additionalProperties": false,
+              "description": "The CloudHypervisorMachine spec for machines created from this template.",
+              "properties": {
+                "bootSource": {
+                  "additionalProperties": false,
+                  "description": "Where the OS disk comes from.",
+                  "properties": {
+                    "image": {
+                      "description": "The image in the host's image cache: an installed raw disk for\n`Image`, the installer ISO for\n`InstallMedia`.",
+                      "type": "string"
+                    },
+                    "kind": {
+                      "description": "Which provisioning shape this machine uses.",
+                      "enum": [
+                        "image",
+                        "installMedia"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "image",
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                "cpus": {
+                  "additionalProperties": false,
+                  "description": "Virtual CPUs.",
+                  "properties": {
+                    "boot": {
+                      "description": "vCPUs the guest boots with.",
+                      "maximum": 256,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "max": {
+                      "description": "Hotplug headroom: the most vCPUs the guest may be resized to. Fixed\nwhen the VM is created. `None` means no headroom.",
+                      "maximum": 256,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "boot"
+                  ],
+                  "type": "object"
+                },
+                "desiredPowerState": {
+                  "default": "PoweredOn",
+                  "description": "Desired power state, resolved from the parent `VirtualMachine`.",
+                  "enum": [
+                    "PoweredOn",
+                    "PoweredOff",
+                    "Suspended"
+                  ],
+                  "type": "string"
+                },
+                "failureDomain": {
+                  "description": "CAPI contract (optional): failure domain placement. One host is one\nfailure domain on this backend, as on libvirt.",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "firstBootSealing": {
+                  "additionalProperties": false,
+                  "description": "First-boot sealing the guest must report before `GuestReady`\n(ADR-0088, ADR-0112), copied by `banlieue-controller` from the parent\n`VirtualMachine`'s `VMImage.spec.firstBootSealing` when the class is\n`tpmEnabled`. The guest reports over its vsock (`sealed=` beside\n`phase=installed`). `None` for every other machine, which keeps\ntoday's `GuestReady` meaning unchanged.",
+                  "nullable": true,
+                  "properties": {
+                    "partitions": {
+                      "default": [
+                        "COS_PERSISTENT"
+                      ],
+                      "description": "Kairos partition labels to seal on first boot. Defaults to\n`[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and\n`COS_GRUB` are refused at admission, mirroring Kairos's own refusal.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "timeoutSeconds": {
+                      "default": 600,
+                      "description": "Seconds from the machine's power-on (its infrastructure `Ready`\ntransition) within which the guest must report every listed partition\nsealed; after that `GuestReady` is `False` with reason\n`FirstBootSealingTimeout`. A clone that cannot seal halts in its\ninitramfs and never reports anything, so this is how it is noticed.",
+                      "maximum": 86400,
+                      "minimum": 60,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "identity": {
+                  "additionalProperties": false,
+                  "description": "The guest identity this machine carries when it is not its own: set by\n`banlieue-controller` on a move's destination machine to the source's\nidentity (ADR-0127 Decision 6). The provider derives the MAC, tap names,\nmachine directory and EK certificate subject from it instead of from\nthis machine's name and UID, so a moved guest keeps all of them. Absent\non every machine that was never the destination of a move. Immutable.",
+                  "nullable": true,
+                  "properties": {
+                    "name": {
+                      "description": "The original machine's name.",
+                      "type": "string"
+                    },
+                    "uid": {
+                      "description": "The original machine's UID.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "uid"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "identity is immutable",
+                      "rule": "self == oldSelf"
+                    }
+                  ]
+                },
+                "memory": {
+                  "additionalProperties": false,
+                  "description": "Guest memory.",
+                  "properties": {
+                    "hugepages": {
+                      "default": false,
+                      "description": "Back guest memory with hugepages. The host reports hugepages as their\nown capacity, since they are reserved rather than allocated on demand.",
+                      "type": "boolean"
+                    },
+                    "sizeMiB": {
+                      "description": "Guest memory in MiB.",
+                      "maximum": 4194304,
+                      "minimum": 128,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "sizeMiB"
+                  ],
+                  "type": "object"
+                },
+                "moveIn": {
+                  "additionalProperties": false,
+                  "description": "This machine is a move's destination (ADR-0127 Decision 4). Set by\n`banlieue-controller` at creation; the host provider prepares to receive.",
+                  "nullable": true,
+                  "properties": {
+                    "commit": {
+                      "description": "Resume the received guest. Written only after the source reported\n`Sent` and its VMM exited (Decision 5); never written with the source's\n`abort`. One way.",
+                      "type": "boolean"
+                    },
+                    "moveId": {
+                      "description": "The `VirtualMachineMove` this machine receives. Immutable.",
+                      "type": "string",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "moveIn.moveId is immutable",
+                          "rule": "self == oldSelf"
+                        }
+                      ]
+                    },
+                    "peer": {
+                      "additionalProperties": false,
+                      "description": "The source host, once it has published its certificate.",
+                      "nullable": true,
+                      "properties": {
+                        "certificate": {
+                          "description": "The peer's per-move certificate, PEM.",
+                          "type": "string"
+                        },
+                        "endpoint": {
+                          "description": "`host:port` the destination listens on. Set only on the source's\n`moveOut.peer`: the source connects, the destination listens.",
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "certificate"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "moveId"
+                  ],
+                  "type": "object"
+                },
+                "moveOut": {
+                  "additionalProperties": false,
+                  "description": "This machine is a move's source (ADR-0127 Decision 4). Set by\n`banlieue-controller`; the host provider copies the guest out.",
+                  "nullable": true,
+                  "properties": {
+                    "abort": {
+                      "description": "Give up before commit: resume the guest here (Decision 12). One way;\nnever written once the destination's `commit` is.",
+                      "type": "boolean"
+                    },
+                    "cutover": {
+                      "description": "Pause the guest and send the disk delta and the VMM state. One way.",
+                      "type": "boolean"
+                    },
+                    "moveId": {
+                      "description": "The `VirtualMachineMove` this machine sends. Immutable.",
+                      "type": "string",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "moveOut.moveId is immutable",
+                          "rule": "self == oldSelf"
+                        }
+                      ]
+                    },
+                    "peer": {
+                      "additionalProperties": false,
+                      "description": "The destination host, once it has published its certificate and\nendpoint.",
+                      "nullable": true,
+                      "properties": {
+                        "certificate": {
+                          "description": "The peer's per-move certificate, PEM.",
+                          "type": "string"
+                        },
+                        "endpoint": {
+                          "description": "`host:port` the destination listens on. Set only on the source's\n`moveOut.peer`: the source connects, the destination listens.",
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "certificate"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "moveId"
+                  ],
+                  "type": "object"
+                },
+                "nics": {
+                  "description": "Network interfaces.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "One network interface.",
+                    "properties": {
+                      "ipam": {
+                        "additionalProperties": false,
+                        "description": "IP address management for this interface.",
+                        "properties": {
+                          "pool": {
+                            "additionalProperties": false,
+                            "description": "Pool-based IPAM parameters.",
+                            "nullable": true,
+                            "properties": {
+                              "poolRef": {
+                                "additionalProperties": false,
+                                "description": "Typed reference (apiGroup + kind + name + optional namespace).\n\nUsed wherever the referenced kind is pluggable — e.g. IPAM pools, where we\nwant to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's\ndefault) or future banlieue-native pool types.",
+                                "properties": {
+                                  "apiGroup": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "namespace": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "apiGroup",
+                                  "kind",
+                                  "name"
+                                ],
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "poolRef"
+                            ],
+                            "type": "object"
+                          },
+                          "static": {
+                            "additionalProperties": false,
+                            "description": "Static IPAM parameters (address, prefix, gateway, nameservers, domain).",
+                            "nullable": true,
+                            "properties": {
+                              "address": {
+                                "type": "string"
+                              },
+                              "domain": {
+                                "description": "DNS domain, used both as a DNS search domain and (by a\n`VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build\nan FQDN as `<vm-name>.<domain>`.",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "gateway": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "nameservers": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "prefix": {
+                                "maximum": 255,
+                                "minimum": 0,
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "address",
+                              "prefix"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "macAddress": {
+                        "description": "Optional MAC address. The provider derives a stable one from the\nmachine UID otherwise, so the address survives a restart.",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "description": "Stable NIC name; echoed in status.",
+                        "type": "string"
+                      },
+                      "networkClass": {
+                        "description": "Network class: a name the host resolves to one of its bridges. Never\na bridge name from the cluster.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "ipam",
+                      "name",
+                      "networkClass"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 16,
+                  "type": "array"
+                },
+                "osDiskSizeGiB": {
+                  "description": "OS disk size in GiB. Required, and grown to before first boot; never\nshrunk. Must be at least the image's size.",
+                  "maximum": 65536,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "providerID": {
+                  "description": "CAPI contract: Provider ID for the resulting Node, if this VM becomes\na Kubernetes node. Format:\n`cloudhypervisor://<provider-name>/<machine-uid>`. Set by the provider\nonce the guest exists.",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "providerRef": {
+                  "additionalProperties": false,
+                  "description": "The `Provider` for the one host that runs this machine (ADR-0060).",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the `Provider`.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "Namespace of the `Provider`. Defaults to the referrer's namespace.\n\nOnly `banlieue-controller` may set this: a machine naming a provider in\nanother namespace is a placement that skipped scheduling, so an\nadmission policy reserves the field to the controller's identity.",
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "storageClass": {
+                  "description": "Storage class the machine's disks live in. A name the host declares\nin its local config and publishes on its failure domain; never a\npath.",
+                  "type": "string"
+                },
+                "tpmEnabled": {
+                  "default": false,
+                  "description": "Attach a vTPM (swtpm), resolved from the VM's `VMClass.spec.tpmEnabled`.\nRequires `ChBootSourceKind::InstallMedia` (ADR-0040, ADR-0048,\nADR-0065), or an image that seals itself on first boot\n(`Self::first_boot_sealing`, ADR-0088, ADR-0112).",
+                  "type": "boolean"
+                },
+                "userData": {
+                  "description": "Guest bootstrap payload, already resolved and placeholder-substituted\nby `banlieue-controller` (ADR-0025, ADR-0038). Rendered into a\nNoCloud `CIDATA` seed disk; the provider reads no Secret or ConfigMap.",
+                  "nullable": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "bootSource",
+                "cpus",
+                "memory",
+                "nics",
+                "osDiskSizeGiB",
+                "providerRef",
+                "storageClass"
+              ],
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "identity is set when the machine is created, or never",
+                  "rule": "has(self.identity) == has(oldSelf.identity)"
+                }
+              ]
+            }
+          },
+          "required": [
+            "spec"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "template"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "CloudHypervisorMachineTemplate",
+  "type": "object",
+  "x-flux-schema-type": "CloudHypervisorMachineTemplate"
+}

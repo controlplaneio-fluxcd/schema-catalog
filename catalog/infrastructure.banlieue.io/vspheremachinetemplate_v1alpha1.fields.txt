@@ -1,0 +1,51 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=infrastructure.banlieue.io/v1alpha1
+kind <string> enum=VSphereMachineTemplate
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# VSphereMachineTemplate — a stamped-out VSphereMachine spec. CAPI requires an InfraMachineTemplate so higher-level controllers (a MachineSet / MachineDeployment) can mint many identical machines from one template. It wraps a single `template.spec` that is the VSphereMachine spec used for each generated machine. banlieue ships it for CAPI compatibility; standalone VirtualMachine users do not need it.
+spec.template <object> (required)	# The VSphereMachine spec stamped into every machine created from this template.
+spec.template.spec <object> (required)	# The VSphereMachine spec for machines created from this template.
+spec.template.spec.cluster <string> (required)	# Compute cluster within the datacenter.
+spec.template.spec.createdBy <string>	# The principal that created the parent `VirtualMachine`, copied from its `banlieue.io/created-by` annotation when present (ADR-0089). That annotation is stamped by an optional `MutatingAdmissionPolicy` (`deploy/admission/virtualmachine-created-by.yaml`) from `request.userInfo.username` at `VirtualMachine` CREATE — `None` on a cluster that doesn't apply it, or for a `VirtualMachine` that predates it. Surfaced as the vCenter `CreatedBy` custom attribute by the provider; never a stand-in value when absent.
+spec.template.spec.datacenter <string> (required)	# Datacenter name.
+spec.template.spec.datastore <string> (required)	# Datastore or datastore cluster name (resolved from the storage class).
+spec.template.spec.desiredPowerState <string> enum=PoweredOn|PoweredOff|Suspended default="PoweredOn"	# Desired power state, resolved from the parent `VirtualMachine`'s `spec.desiredPowerState` (ADR-0024). Defaults to `PoweredOn`, matching `VirtualMachineSpec`'s own default.
+spec.template.spec.disks <[]object> (required) min=1 max=32	# Disks. The first disk is the template's OS disk (grown if needed); subsequent disks are blank.
+spec.template.spec.disks[].name <string> (required)	# Stable disk name; echoed in status with resolved backend identifiers.
+spec.template.spec.disks[].provisioning <string> enum=thin|thick|eagerZeroed default="thin"	# Provisioning hint (thin / thick / eager-zeroed).
+spec.template.spec.disks[].sizeGiB <integer> (required) min=1 max=65536	# Disk size in GiB. For the OS disk this is a floor — the template's disk is grown to at least this size.
+spec.template.spec.failureDomain <string>	# CAPI contract (optional): failure domain placement. The banlieue scheduler writes the chosen failure domain here; for CAPI users the parent Machine's `spec.failureDomain` is what populates this.
+spec.template.spec.firmware <string> (required) enum=bios|efi|efi-secure	# Firmware. EFI / EFI Secure require the template to be EFI-capable.
+spec.template.spec.firstBootSealing <object>	# First-boot sealing the guest must report before `GuestReady` (ADR-0088), copied by `banlieue-controller` from the parent `VirtualMachine`'s `VMImage.spec.firstBootSealing` when the class is `tpmEnabled`. `None` for every other machine, which keeps today's `GuestReady` meaning unchanged.
+spec.template.spec.firstBootSealing.partitions <[]string> default=["COS_PERSISTENT"] min=1	# Kairos partition labels to seal on first boot. Defaults to `[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and `COS_GRUB` are refused at admission, mirroring Kairos's own refusal.
+spec.template.spec.firstBootSealing.timeoutSeconds <integer> default=600 min=60 max=86400	# Seconds from the machine's power-on (its infrastructure `Ready` transition) within which the guest must report every listed partition sealed; after that `GuestReady` is `False` with reason `FirstBootSealingTimeout`. A clone that cannot seal halts in its initramfs and never reports anything, so this is how it is noticed.
+spec.template.spec.folder <string>	# Destination vCenter folder path for the **clone** (not the source template — see `template_folder`). Optional; defaults to the datacenter VM root, or (once set by `banlieue-controller`) the same per-zone folder the template lives in.
+spec.template.spec.memoryMiB <integer> (required) min=128 max=4194304	# Memory in MiB.
+spec.template.spec.network <[]object> (required) min=1 max=16	# Network interfaces.
+spec.template.spec.network[].ipam <object> (required)	# IP address management for this interface.
+spec.template.spec.network[].ipam.pool <object>	# Pool-based IPAM parameters.
+spec.template.spec.network[].ipam.pool.poolRef <object> (required)	# Typed reference (apiGroup + kind + name + optional namespace). Used wherever the referenced kind is pluggable — e.g. IPAM pools, where we want to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's default) or future banlieue-native pool types.
+spec.template.spec.network[].ipam.pool.poolRef.apiGroup <string> (required)
+spec.template.spec.network[].ipam.pool.poolRef.kind <string> (required)
+spec.template.spec.network[].ipam.pool.poolRef.name <string> (required)
+spec.template.spec.network[].ipam.pool.poolRef.namespace <string>
+spec.template.spec.network[].ipam.static <object>	# Static IPAM parameters (address, prefix, gateway, nameservers, domain).
+spec.template.spec.network[].ipam.static.address <string> (required)
+spec.template.spec.network[].ipam.static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.template.spec.network[].ipam.static.gateway <string>
+spec.template.spec.network[].ipam.static.nameservers <[]string>
+spec.template.spec.network[].ipam.static.prefix <integer> (required) min=0 max=255
+spec.template.spec.network[].macAddress <string>	# Optional MAC address (otherwise vCenter generates one).
+spec.template.spec.network[].name <string> (required)	# Stable NIC name; echoed in status.
+spec.template.spec.network[].portGroup <string> (required)	# Resolved port group or distributed port group name.
+spec.template.spec.numCpus <integer> (required) min=1 max=256	# Number of virtual CPUs.
+spec.template.spec.providerID <string>	# CAPI contract: Provider ID for the resulting Node, if this VM becomes a Kubernetes node. Format: `vsphere://<vm-instance-uuid>`. Set by the provider controller after the VM is created.
+spec.template.spec.providerRef <object> (required)	# Reference to the banlieue `Provider` whose connection details describe the target vCenter.
+spec.template.spec.providerRef.name <string> (required)	# Name of the `Provider`.
+spec.template.spec.providerRef.namespace <string>	# Namespace of the `Provider`. Defaults to the referrer's namespace. Only `banlieue-controller` may set this: a machine naming a provider in another namespace is a placement that skipped scheduling, so an admission policy reserves the field to the controller's identity.
+spec.template.spec.resourcePool <string>	# Resource pool path within the cluster. Optional; defaults to the cluster's root resource pool.
+spec.template.spec.template <string> (required)	# vCenter template's bare display name (resolved from `VMImage`). Never a decorated string (no `[dc]`/folder prefix) — see `template_folder` for the scoping the lookup needs.
+spec.template.spec.templateFolder <string>	# The per-zone vCenter folder the template in `template` lives in (resolved from `VMImage.status`, e.g. `templates/cluster-01`, ADR-0020 Decision #5). Set for both `Url` and `Template` vSphere sources (ADR-0104); `None` only for a row written by a provider that predates it, whose lookup is datacenter-wide. This is deliberately a separate field from `template`, not a `folder/name`-encoded string: every zone's template shares the same display `name`, so a lookup that doesn't scope by folder can match a *different* zone's template (found live: a datacenter-wide lookup let one zone's `VirtualMachine` clone another zone's template).
+spec.template.spec.tpmEnabled <boolean> default=false	# Attach a virtual TPM (vTPM) device to this VM, resolved from the VM's `VMClass.spec.tpmEnabled` (ADR-0039). Consumed by the provider controller between `clone_vm` (which always clones powered off) and the power-on step, so the device exists before first boot — a hard requirement for Kairos's `kcrypt` to seal LUKS keys to it during unattended install.
+spec.template.spec.userData <string>	# Guest bootstrap payload content — already resolved from the parent `VirtualMachine`'s `spec.userData` Secret or ConfigMap (ADR-0038) and placeholder-substituted (ADR-0024's `${VM_NAME}`/`${FQDN}`/etc. set) by `banlieue-controller` (ADR-0025). The provider delivers this verbatim (base64 into `guestinfo.userdata`) — it never reads a Secret or ConfigMap itself.

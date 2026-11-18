@@ -1,0 +1,158 @@
+{
+  "description": "ARecord maps a DNS hostname to an IPv4 address. Multiple A records for the same name enable round-robin DNS load balancing.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "`ARecord` maps a DNS name to an IPv4 address.\n\nA records are the most common DNS record type, mapping hostnames to IPv4 addresses.\nMultiple A records can exist for the same name (round-robin DNS).\n\n# Example\n\n```yaml\napiVersion: bindy.firestoned.io/v1beta1\nkind: ARecord\nmetadata:\n  name: www-example-com\n  namespace: bindy-system\n  labels:\n    zone: example.com\nspec:\n  name: www\n  ipv4Address: 192.0.2.1\n  ttl: 300\n```\n\nRecords are associated with `DNSZones` via label selectors.\nThe `DNSZone` must have a `recordsFrom` selector that matches this record's labels.",
+      "properties": {
+        "ipv4Addresses": {
+          "description": "List of IPv4 addresses for this DNS record.\n\nMultiple addresses create round-robin DNS (load balancing).\nAll addresses in the list belong to the same DNS name.\n\nMust contain at least one valid IPv4 address in dotted-decimal notation.\n\nExamples: `[\"192.0.2.1\"]`, `[\"192.0.2.1\", \"192.0.2.2\", \"192.0.2.3\"]`",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "name": {
+          "description": "Record name within the zone. Use \"@\" for the zone apex.\n\nExamples: \"www\", \"mail\", \"ftp\", \"@\"\nThe full DNS name will be: {name}.{zone}",
+          "type": "string"
+        },
+        "ttl": {
+          "description": "Time To Live in seconds. Overrides zone default TTL if specified.\n\nTypical values: 60-86400 (1 minute to 1 day).",
+          "format": "int32",
+          "maximum": 2147483647,
+          "minimum": 0,
+          "nullable": true,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ipv4Addresses",
+        "name"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Generic record status",
+      "nullable": true,
+      "properties": {
+        "addresses": {
+          "description": "Comma-separated list of addresses for display purposes.\n\nFor `ARecord` and `AAAARecord` resources, this field contains the IP addresses\nfrom `spec.ipv4Addresses` or `spec.ipv6Addresses` joined with commas.\nThis is used for prettier kubectl output instead of showing JSON arrays.\n\nExample: \"192.0.2.1,192.0.2.2,192.0.2.3\"\n\nFor other record types, this field is not used.",
+          "nullable": true,
+          "type": "string"
+        },
+        "conditions": {
+          "default": [],
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition represents an observation of a resource's current state.\n\nConditions are used in status subresources to communicate the state of\na resource to users and controllers.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "Last time the condition transitioned from one status to another (RFC3339 format).",
+                "nullable": true,
+                "type": "string"
+              },
+              "message": {
+                "description": "Human-readable message indicating details about the transition.",
+                "nullable": true,
+                "type": "string"
+              },
+              "reason": {
+                "description": "Brief CamelCase reason for the condition's last transition.",
+                "nullable": true,
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the condition: True, False, or Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of condition. Common types include: Ready, Available, Progressing, Degraded, Failed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "Timestamp of the last successful update to BIND9.\n\nThis is updated after a successful nsupdate operation.\nUses RFC 3339 format (e.g., \"2025-12-26T10:30:00Z\").",
+          "nullable": true,
+          "type": "string"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "publishedName": {
+          "description": "DNS record name (from `spec.name`) most recently published to BIND9.\n\nSet by the record reconciler after a successful dynamic DNS update.\nWhen `spec.name` changes (a rename), the reconciler compares it against\nthis field, deletes the old FQDN from the zone, publishes the new name,\nand then updates this field. Without it, renamed records would leave\ntheir old FQDN orphaned in BIND9.",
+          "nullable": true,
+          "type": "string"
+        },
+        "recordHash": {
+          "description": "SHA-256 hash of the record's spec data.\n\nUsed to detect when a record's data has actually changed, avoiding\nunnecessary BIND9 updates and zone transfers.\n\nThe hash is calculated from all fields in the record's spec that affect\nthe DNS record data (name, addresses, TTL, etc.).",
+          "nullable": true,
+          "type": "string"
+        },
+        "zone": {
+          "description": "The FQDN of the zone that owns this record (set by `DNSZone` controller).\n\nWhen a `DNSZone`'s label selector matches this record, the `DNSZone` controller\nsets this field to the zone's FQDN (e.g., `\"example.com\"`). The record reconciler\nuses this to determine which zone to update in BIND9.\n\nIf this field is empty, the record is not matched by any zone and should not\nbe reconciled into BIND9.\n\n**DEPRECATED**: Use `zone_ref` instead for structured zone reference.",
+          "nullable": true,
+          "type": "string"
+        },
+        "zoneRef": {
+          "additionalProperties": false,
+          "description": "Structured reference to the `DNSZone` that owns this record.\n\nSet by the `DNSZone` controller when the zone's `recordsFrom` selector matches\nthis record's labels. Contains the complete Kubernetes object reference including\napiVersion, kind, name, namespace, and zoneName.\n\nThe record reconciler uses this to:\n1. Look up the parent `DNSZone` resource\n2. Find the zone's primary `Bind9Instance` servers\n3. Add this record to BIND9 on primaries\n4. Trigger zone transfer (retransfer) on secondaries\n\nIf this field is None, the record is not selected by any zone and will not\nbe added to BIND9.",
+          "nullable": true,
+          "properties": {
+            "apiVersion": {
+              "description": "API version of the `DNSZone` resource (e.g., \"bindy.firestoned.io/v1beta1\")",
+              "type": "string"
+            },
+            "kind": {
+              "description": "Kind of the resource (always \"`DNSZone`\")",
+              "type": "string"
+            },
+            "lastReconciledAt": {
+              "description": "Timestamp when this zone was last successfully configured on the instance.\n\nThis field is set by the `DNSZone` controller after successfully applying zone configuration\nto the instance. It is reset to `None` when:\n- The instance's pod restarts (requiring zone reconfiguration)\n- The instance's spec changes (requiring reconfiguration)\n\nThe `DNSZone` controller uses this field to determine which instances need zone configuration.\nIf this field is `None`, the zone needs to be configured on the instance.",
+              "nullable": true,
+              "type": "string"
+            },
+            "name": {
+              "description": "Name of the `DNSZone` resource",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the `DNSZone` resource",
+              "type": "string"
+            },
+            "zoneName": {
+              "description": "Fully qualified domain name from the zone's spec (e.g., \"example.com\")",
+              "type": "string"
+            }
+          },
+          "required": [
+            "apiVersion",
+            "kind",
+            "name",
+            "namespace",
+            "zoneName"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "ARecord",
+  "type": "object",
+  "x-flux-schema-type": "ARecord"
+}

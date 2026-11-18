@@ -1,0 +1,224 @@
+{
+  "description": "VMClass — a reusable, cluster-scoped catalog of VM \"shapes\".\n\nA VMClass is to a VirtualMachine what a Kubernetes `StorageClass` is to a\nPersistentVolumeClaim: a named, admin-curated template that captures *how\nmuch* machine you get and *what the backend must support*, without naming\nany particular backend. A VirtualMachine references a VMClass by name\n(`spec.classRef`) instead of restating CPU / memory / disk / network on\nevery VM.\n\n# Why create one\n\n- **Standardize sizing.** Define a small set of tiers (`small`, `db-prod`,\n  `gpu-trainer`) once; users pick a tier instead of hand-tuning hardware.\n- **Decouple intent from backend.** A VMClass requests *abstract* storage\n  and network classes plus feature flags (e.g. `efiSecureBoot`). The\n  scheduler only places a VM on a Provider + failure domain that actually\n  advertises those capabilities, so a class stays portable across vSphere,\n  Proxmox, and libvirt.\n- **Govern capabilities.** Because requirements live on the class, cluster\n  admins control which hardware shapes and features tenants may request.\n\n# How it is used\n\nAt schedule time the controller intersects this class's requirements with\neach candidate Provider's `spec.capabilities` and each failure domain's\nresolved attributes. A Provider that lacks the requested storage class,\nnetwork class, firmware, or a required feature is filtered out.\n\nCluster-scoped: a VMClass is shared by VirtualMachines in any namespace.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "VMClass — a reusable, cluster-scoped catalog of VM \"shapes\".\n\nA VMClass is to a VirtualMachine what a Kubernetes `StorageClass` is to a\nPersistentVolumeClaim: a named, admin-curated template that captures *how\nmuch* machine you get and *what the backend must support*, without naming\nany particular backend. A VirtualMachine references a VMClass by name\n(`spec.classRef`) instead of restating CPU / memory / disk / network on\nevery VM.\n\n# Why create one\n\n- **Standardize sizing.** Define a small set of tiers (`small`, `db-prod`,\n  `gpu-trainer`) once; users pick a tier instead of hand-tuning hardware.\n- **Decouple intent from backend.** A VMClass requests *abstract* storage\n  and network classes plus feature flags (e.g. `efiSecureBoot`). The\n  scheduler only places a VM on a Provider + failure domain that actually\n  advertises those capabilities, so a class stays portable across vSphere,\n  Proxmox, and libvirt.\n- **Govern capabilities.** Because requirements live on the class, cluster\n  admins control which hardware shapes and features tenants may request.\n\n# How it is used\n\nAt schedule time the controller intersects this class's requirements with\neach candidate Provider's `spec.capabilities` and each failure domain's\nresolved attributes. A Provider that lacks the requested storage class,\nnetwork class, firmware, or a required feature is filtered out.\n\nCluster-scoped: a VMClass is shared by VirtualMachines in any namespace.",
+      "properties": {
+        "features": {
+          "description": "Required feature flags. The scheduler will only select a Provider\n+ failure domain whose `features` is a superset of this list.\n\nWell-known values match those in `Provider.spec.capabilities.features`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "firmware": {
+          "default": "efi",
+          "description": "Firmware. Providers / failure domains that lack support for the\nrequested firmware are filtered out by the scheduler.",
+          "enum": [
+            "bios",
+            "efi",
+            "efi-secure"
+          ],
+          "type": "string"
+        },
+        "hardware": {
+          "additionalProperties": false,
+          "description": "Virtual hardware shape — CPU, memory, and disks — every VM of this\nclass is given.",
+          "properties": {
+            "cpus": {
+              "description": "Number of virtual CPUs.",
+              "maximum": 256,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "disks": {
+              "description": "Disks in attachment order. The first disk is the OS disk and is\nbacked by the VMImage resolved for the VirtualMachine; subsequent\ndisks are blank and created with the requested size and storage class.",
+              "items": {
+                "additionalProperties": false,
+                "description": "A single virtual disk in a VMClass. Disks are attached in list order; the\nfirst is the OS disk backed by the VM's VMImage.",
+                "properties": {
+                  "name": {
+                    "description": "Stable name within the VM; used in status to report resolved\nbackend identifiers.",
+                    "type": "string"
+                  },
+                  "provisioning": {
+                    "default": "thin",
+                    "description": "Disk provisioning hint. Providers honor on a best-effort basis.",
+                    "enum": [
+                      "thin",
+                      "thick",
+                      "eagerZeroed"
+                    ],
+                    "type": "string"
+                  },
+                  "sizeGiB": {
+                    "description": "Size in GiB. For the OS disk this is the minimum size; if the image\nis larger, the provider grows accordingly.",
+                    "maximum": 65536,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "storageClass": {
+                    "description": "Abstract storage class name. MUST be advertised in the chosen\nProvider's `spec.capabilities.storageClasses`.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "sizeGiB",
+                  "storageClass"
+                ],
+                "type": "object"
+              },
+              "maxItems": 32,
+              "minItems": 1,
+              "type": "array"
+            },
+            "memoryMiB": {
+              "description": "Memory in MiB.",
+              "maximum": 4194304,
+              "minimum": 128,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "cpus",
+            "disks",
+            "memoryMiB"
+          ],
+          "type": "object"
+        },
+        "network": {
+          "additionalProperties": false,
+          "description": "Network shape — the ordered interfaces (and their abstract network\nclasses) every VM of this class is given.",
+          "properties": {
+            "interfaces": {
+              "description": "Network interfaces in attachment order.",
+              "items": {
+                "additionalProperties": false,
+                "description": "A single virtual network interface in a VMClass, bound to an abstract\nnetwork class that a Provider must advertise.",
+                "properties": {
+                  "ipam": {
+                    "additionalProperties": false,
+                    "description": "IPAM configuration. Uses `IpamShape` (not `IpamSpec`) because a\n`VMClass` is shared by many VMs — there is no per-VM address at this\nlevel. Per-VM static addresses are provided via\n`VirtualMachine.spec.networkOverrides`.",
+                    "properties": {
+                      "pool": {
+                        "additionalProperties": false,
+                        "description": "Pool-based IPAM parameters.",
+                        "nullable": true,
+                        "properties": {
+                          "poolRef": {
+                            "additionalProperties": false,
+                            "description": "Typed reference (apiGroup + kind + name + optional namespace).\n\nUsed wherever the referenced kind is pluggable — e.g. IPAM pools, where we\nwant to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's\ndefault) or future banlieue-native pool types.",
+                            "properties": {
+                              "apiGroup": {
+                                "type": "string"
+                              },
+                              "kind": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "namespace": {
+                                "nullable": true,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "apiGroup",
+                              "kind",
+                              "name"
+                            ],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "poolRef"
+                        ],
+                        "type": "object"
+                      },
+                      "static": {
+                        "additionalProperties": false,
+                        "description": "Shared subnet parameters (prefix, gateway, nameservers, domain) —\n**not** a per-VM address.",
+                        "nullable": true,
+                        "properties": {
+                          "domain": {
+                            "description": "DNS domain, used both as a DNS search domain and (by a\n`VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build\nan FQDN as `<vm-name>.<domain>`.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "gateway": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "nameservers": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "prefix": {
+                            "maximum": 255,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "mtu": {
+                    "description": "Optional MTU override. Provider may ignore if unsupported.",
+                    "maximum": 65535,
+                    "minimum": 68,
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "description": "Stable name within the VM.",
+                    "type": "string"
+                  },
+                  "networkClass": {
+                    "description": "Abstract network class name. MUST be advertised in the chosen\nProvider's `spec.capabilities.networkClasses`.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ipam",
+                  "name",
+                  "networkClass"
+                ],
+                "type": "object"
+              },
+              "maxItems": 16,
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "interfaces"
+          ],
+          "type": "object"
+        },
+        "tpmEnabled": {
+          "description": "Attach a virtual TPM (vTPM) device to every VM of this class\n(ADR-0039). A class-level capability, like `firmware` — not a\nper-VM override (`VirtualMachineSpec.hardwareOverride` has no\n`tpmEnabled` counterpart, for the same reason it has none for\n`firmware`). The scheduler only selects a Provider/failure domain\nadvertising the `vtpm` feature when this is `true`. Used by Kairos's\n`kcrypt` to seal LUKS keys to the VM's own TPM at install time; the\ndevice must exist before first boot, which the vSphere provider\nguarantees by attaching it between clone and power-on.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "hardware",
+        "network"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "VMClass",
+  "type": "object",
+  "x-flux-schema-type": "VMClass"
+}

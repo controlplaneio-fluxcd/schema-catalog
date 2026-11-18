@@ -1,0 +1,33 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=banlieue.io/v1alpha1
+kind <string> enum=VMClass (cluster-scoped)
+metadata.name <string> (required)
+spec <object> (required)	# VMClass — a reusable, cluster-scoped catalog of VM "shapes". A VMClass is to a VirtualMachine what a Kubernetes `StorageClass` is to a PersistentVolumeClaim: a named, admin-curated template that captures *how much* machine you get and *what the backend must support*, without naming any particular backend. A VirtualMachine references a VMClass by name (`spec.classRef`) instead of restating CPU / memory / disk / network on every VM. # Why create one - **Standardize sizing.** Define a small set of tiers (`small`, `db-prod`, `gpu-trainer`) once; users pick a tier instead of hand-tuning hardware. - **Decouple intent from backend.** A VMClass requests *abstract* storage and network classes plus feature flags (e.g. `efiSecureBoot`). The scheduler only places a VM on a Provider + failure domain that actually advertises those capabilities, so a class stays portable across vSphere, Proxmox, and libvirt. - **Govern capabilities.** Because requirements live on the class, cluster admins control which hardware shapes and features tenants may request. # How it is used At schedule time the controller intersects this class's requirements with each candidate Provider's `spec.capabilities` and each failure domain's resolved attributes. A Provider that lacks the requested storage class, network class, firmware, or a required feature is filtered out. Cluster-scoped: a VMClass is shared by VirtualMachines in any namespace.
+spec.features <[]string>	# Required feature flags. The scheduler will only select a Provider + failure domain whose `features` is a superset of this list. Well-known values match those in `Provider.spec.capabilities.features`.
+spec.firmware <string> enum=bios|efi|efi-secure default="efi"	# Firmware. Providers / failure domains that lack support for the requested firmware are filtered out by the scheduler.
+spec.hardware <object> (required)	# Virtual hardware shape — CPU, memory, and disks — every VM of this class is given.
+spec.hardware.cpus <integer> (required) min=1 max=256	# Number of virtual CPUs.
+spec.hardware.disks <[]object> (required) min=1 max=32	# Disks in attachment order. The first disk is the OS disk and is backed by the VMImage resolved for the VirtualMachine; subsequent disks are blank and created with the requested size and storage class.
+spec.hardware.disks[].name <string> (required)	# Stable name within the VM; used in status to report resolved backend identifiers.
+spec.hardware.disks[].provisioning <string> enum=thin|thick|eagerZeroed default="thin"	# Disk provisioning hint. Providers honor on a best-effort basis.
+spec.hardware.disks[].sizeGiB <integer> (required) min=1 max=65536	# Size in GiB. For the OS disk this is the minimum size; if the image is larger, the provider grows accordingly.
+spec.hardware.disks[].storageClass <string> (required)	# Abstract storage class name. MUST be advertised in the chosen Provider's `spec.capabilities.storageClasses`.
+spec.hardware.memoryMiB <integer> (required) min=128 max=4194304	# Memory in MiB.
+spec.network <object> (required)	# Network shape — the ordered interfaces (and their abstract network classes) every VM of this class is given.
+spec.network.interfaces <[]object> (required) min=1 max=16	# Network interfaces in attachment order.
+spec.network.interfaces[].ipam <object> (required)	# IPAM configuration. Uses `IpamShape` (not `IpamSpec`) because a `VMClass` is shared by many VMs — there is no per-VM address at this level. Per-VM static addresses are provided via `VirtualMachine.spec.networkOverrides`.
+spec.network.interfaces[].ipam.pool <object>	# Pool-based IPAM parameters.
+spec.network.interfaces[].ipam.pool.poolRef <object> (required)	# Typed reference (apiGroup + kind + name + optional namespace). Used wherever the referenced kind is pluggable — e.g. IPAM pools, where we want to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's default) or future banlieue-native pool types.
+spec.network.interfaces[].ipam.pool.poolRef.apiGroup <string> (required)
+spec.network.interfaces[].ipam.pool.poolRef.kind <string> (required)
+spec.network.interfaces[].ipam.pool.poolRef.name <string> (required)
+spec.network.interfaces[].ipam.pool.poolRef.namespace <string>
+spec.network.interfaces[].ipam.static <object>	# Shared subnet parameters (prefix, gateway, nameservers, domain) — **not** a per-VM address.
+spec.network.interfaces[].ipam.static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.network.interfaces[].ipam.static.gateway <string>
+spec.network.interfaces[].ipam.static.nameservers <[]string>
+spec.network.interfaces[].ipam.static.prefix <integer> min=0 max=255
+spec.network.interfaces[].mtu <integer> min=68 max=65535	# Optional MTU override. Provider may ignore if unsupported.
+spec.network.interfaces[].name <string> (required)	# Stable name within the VM.
+spec.network.interfaces[].networkClass <string> (required)	# Abstract network class name. MUST be advertised in the chosen Provider's `spec.capabilities.networkClasses`.
+spec.tpmEnabled <boolean>	# Attach a virtual TPM (vTPM) device to every VM of this class (ADR-0039). A class-level capability, like `firmware` — not a per-VM override (`VirtualMachineSpec.hardwareOverride` has no `tpmEnabled` counterpart, for the same reason it has none for `firmware`). The scheduler only selects a Provider/failure domain advertising the `vtpm` feature when this is `true`. Used by Kairos's `kcrypt` to seal LUKS keys to the VM's own TPM at install time; the device must exist before first boot, which the vSphere provider guarantees by attaching it between clone and power-on.

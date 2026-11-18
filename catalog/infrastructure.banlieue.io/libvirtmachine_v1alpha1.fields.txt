@@ -1,0 +1,73 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=infrastructure.banlieue.io/v1alpha1
+kind <string> enum=LibvirtMachine
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# LibvirtMachine — the concrete, scheduled VM request for a libvirt/KVM host. You normally do not create this by hand: banlieue's controller does, owned by the `VirtualMachine` it was scheduled from, and the libvirt provider reconciles it into a real domain.
+spec.bootSource <object> (required)	# How this machine's OS disk comes into being.
+spec.bootSource.kind <string> (required) enum=backingVolume|installMedia	# Which of the two provisioning shapes this machine uses.
+spec.bootSource.volume <string> (required)	# Volume name within `LibvirtMachineSpec::pool`: the backing image for `BackingVolume`, or the installer ISO for `InstallMedia`.
+spec.desiredPowerState <string> enum=PoweredOn|PoweredOff|Suspended default="PoweredOn"	# Desired power state, resolved from the parent `VirtualMachine`'s `spec.desiredPowerState` (ADR-0024).
+spec.disks <[]object> (required) min=1 max=32	# Disks. The first is the OS disk; the rest are blank data disks.
+spec.disks[].bus <string> enum=virtio|scsi|sata default="virtio"	# Controller bus.
+spec.disks[].name <string> (required)	# Stable disk name; echoed in status and used to name the volume.
+spec.disks[].sizeGiB <integer> (required) min=1 max=65536	# Disk size in GiB. For an overlay OS disk this is a floor — the overlay is created at least this large.
+spec.domainName <string> (required)	# libvirt domain name. Unique per host, and the handle every domain procedure takes. Distinct from `metadata.name` on purpose: two namespaces can hold a `LibvirtMachine` called `db-01`, but one libvirt host cannot hold two domains by that name.
+spec.failureDomain <string>	# CAPI contract (optional): failure domain placement. The banlieue scheduler writes the chosen failure domain here. libvirt has no cluster or datacenter hierarchy, so a failure domain is simply one host (see roadmap 07) — which makes this field carry more weight than on vSphere, not less: it is the only placement signal.
+spec.firmware <string> (required) enum=bios|efi|efi-secure	# Firmware. EFI requires OVMF on the host; `EfiSecure` additionally requires a `.secboot.fd` variant and pre-enrolled keys.
+spec.firstBootSealing <object>	# First-boot sealing the guest must report before `GuestReady` (ADR-0088), copied by `banlieue-controller` from the parent `VirtualMachine`'s `VMImage.spec.firstBootSealing` when the class is `tpmEnabled`. `None` for every other machine, which keeps today's `GuestReady` meaning unchanged.
+spec.firstBootSealing.partitions <[]string> default=["COS_PERSISTENT"] min=1	# Kairos partition labels to seal on first boot. Defaults to `[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and `COS_GRUB` are refused at admission, mirroring Kairos's own refusal.
+spec.firstBootSealing.timeoutSeconds <integer> default=600 min=60 max=86400	# Seconds from the machine's power-on (its infrastructure `Ready` transition) within which the guest must report every listed partition sealed; after that `GuestReady` is `False` with reason `FirstBootSealingTimeout`. A clone that cannot seal halts in its initramfs and never reports anything, so this is how it is noticed.
+spec.machineType <string>	# QEMU machine type (`q35`, `pc`, …). `None` lets libvirt pick its default for the host's architecture, which is the right answer unless an image needs a specific chipset.
+spec.memoryMiB <integer> (required) min=128 max=4194304	# Memory in MiB.
+spec.network <[]object> (required) max=16	# Network interfaces.
+spec.network[].ipam <object> (required)	# IP address management for this interface.
+spec.network[].ipam.pool <object>	# Pool-based IPAM parameters.
+spec.network[].ipam.pool.poolRef <object> (required)	# Typed reference (apiGroup + kind + name + optional namespace). Used wherever the referenced kind is pluggable — e.g. IPAM pools, where we want to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's default) or future banlieue-native pool types.
+spec.network[].ipam.pool.poolRef.apiGroup <string> (required)
+spec.network[].ipam.pool.poolRef.kind <string> (required)
+spec.network[].ipam.pool.poolRef.name <string> (required)
+spec.network[].ipam.pool.poolRef.namespace <string>
+spec.network[].ipam.static <object>	# Static IPAM parameters (address, prefix, gateway, nameservers, domain).
+spec.network[].ipam.static.address <string> (required)
+spec.network[].ipam.static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.network[].ipam.static.gateway <string>
+spec.network[].ipam.static.nameservers <[]string>
+spec.network[].ipam.static.prefix <integer> (required) min=0 max=255
+spec.network[].macAddress <string>	# Optional MAC address (otherwise libvirt generates one).
+spec.network[].model <string>	# Device model. `None` means `virtio`, which is what every image banlieue builds expects.
+spec.network[].name <string> (required)	# Stable NIC name; echoed in status.
+spec.network[].source <object> (required)	# Resolved bridge or libvirt network.
+spec.network[].source.kind <string> (required) enum=network|bridge	# Whether `name` names a host bridge or a libvirt network.
+spec.network[].source.name <string> (required)	# The bridge interface (`br0`) or libvirt network (`default`).
+spec.pool <string> (required)	# Storage pool that holds this machine's volumes, resolved from the storage class by the scheduler.
+spec.providerID <string>	# CAPI contract: Provider ID for the resulting Node, if this VM becomes a Kubernetes node. Format: `libvirt://<provider-name>/<domain-uuid>`. Set by the provider controller after the domain is defined. The *provider name*, not a hostname: the connection URI is a deployment detail that can change without the VM changing, and a real hostname here would end up in tracked YAML (see `rules/no-real-infrastructure.md`). The domain UUID is libvirt's own stable identity for the domain, unaffected by rename or restart.
+spec.providerRef <object> (required)	# Reference to the banlieue `Provider` whose connection details describe the target libvirt host.
+spec.providerRef.name <string> (required)	# Name of the `Provider`.
+spec.providerRef.namespace <string>	# Namespace of the `Provider`. Defaults to the referrer's namespace. Only `banlieue-controller` may set this: a machine naming a provider in another namespace is a placement that skipped scheduling, so an admission policy reserves the field to the controller's identity.
+spec.tpmEnabled <boolean> default=false	# Attach an emulated TPM 2.0 device (swtpm), resolved from the VM's `VMClass.spec.tpmEnabled` (ADR-0039). The device must exist before first boot, because Kairos's `kcrypt` seals LUKS keys to it during the unattended install — which is why `tpmEnabled` only makes sense paired with `LibvirtBootSource::InstallMedia` (ADR-0040, ADR-0048). swtpm keys its state by domain UUID, so a new domain always gets a fresh TPM. The corollary is that a domain carrying TPM state must never be cloned, and that `undefine` must pass `VIR_DOMAIN_UNDEFINE_TPM` or that state outlives the VM (ADR-0050 Decision 5).
+spec.userData <string>	# Guest bootstrap payload, already resolved from the parent `VirtualMachine`'s `spec.userData` Secret or ConfigMap (ADR-0038) and placeholder-substituted by `banlieue-controller` (ADR-0025). The provider renders it into a NoCloud `cidata` volume — it never reads a Secret or ConfigMap itself.
+spec.vcpus <integer> (required) min=1 max=256	# Number of virtual CPUs.
+status <object>	# Observed state of a LibvirtMachine, shaped to the CAPI v1beta2 InfraMachine status contract (plus libvirt-specific diagnostics).
+status.addressSource <string> enum=guestAgent|dhcpLease|arpTable|static	# Which source answered when the provider looked up the guest's addresses (ADR-0050 Decision 8). Recorded because the three sources disagree in ways that matter: the agent reports what the guest actually configured, a lease reports what DHCP offered (which the guest may have ignored), and ARP reports what was seen on the wire. An address that looks wrong is only diagnosable if you know which of those produced it.
+status.addresses <[]object>	# CAPI contract field (optional): VM addresses.
+status.addresses[].address <string> (required)	# The address itself.
+status.addresses[].type <string> (required) enum=Hostname|ExternalIP|InternalIP|ExternalDNS|InternalDNS	# Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.
+status.conditions <[]object>	# CAPI-compatible conditions. The `Ready` condition is mirrored as `InfrastructureReady` on the parent per contract.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required)	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.domainUuid <string>	# libvirt's UUID for the domain, in its 36-character textual form. The domain's real identity — stable across rename and host restart — and the source for `spec.providerID`. Not part of the CAPI contract.
+status.failureDomain <string>	# CAPI contract field (optional): observed failure domain — the host the domain actually landed on.
+status.guestInstalled <boolean>	# Whether the *installed* guest has announced itself (ADR-0043). **Sticky once true.** The marker lives in the guest's `/run`, so it does not survive a power cycle — but a VM that was stopped has not become uninstalled. Without stickiness a warm pool member would drop out of the pool every time it was powered off and back on. `None` means "not observed yet", which is the expected state for the whole of a `Deferred` image's install. Not part of the CAPI contract.
+status.initialization <object> default={}	# CAPI contract field: replaces the deprecated v1beta1 `status.ready`.
+status.initialization.provisioned <boolean>	# True when the infrastructure provider reports that the resource's infrastructure is fully provisioned.
+status.installMediaDetached <boolean>	# Whether the install medium has been ejected (ADR-0044). **Sticky once true**, for the same reason as `Self::guest_installed`: an ejected ISO does not come back, and a stopped domain has not become re-armed. `None` means "nothing to do" — an `Immediate`-mode machine never had install media attached — which is deliberately distinct from `Some(false)`, "attached and not yet ejected". Collapsing the two would make a machine that never needed an eject indistinguishable from one whose eject is still pending. `GuestReady` is published only *after* this is true, so a pool can never bind a member that still has its installer attached. That ordering is the invariant; this field is what makes it auditable from outside the controller.
+status.observedGeneration <integer> format=int64
+status.observedPowerState <string> enum=PoweredOn|PoweredOff|Suspended|null	# The domain's last observed run state, mapped onto banlieue's backend-neutral `PowerState` (ADR-0034). The hypervisor's view, not a guest-OS-boot signal. Not part of the CAPI contract; mirrored onto the parent `VirtualMachine`'s `status.observedPowerState`.
+status.sealedPartitions <[]string>	# Partitions the guest has reported sealed, as LUKS containers, on a first-boot sealing machine (ADR-0088): from ``/run/banlieue/sealed`, read with the guest agent`. **Sticky**: the report is re-asserted every boot but lives in volatile state, and a powered-off machine has not become unsealed. Empty until reported, and on every machine without `spec.firstBootSealing`. Guest-supplied, so it is only ever used to *withhold* `GuestReady`.
+status.tpmAttached <boolean>	# Whether an emulated TPM was attached, when `spec.tpmEnabled` is set (ADR-0039). `None` when `tpmEnabled` is `false` or the attach has not run yet. A failed attach surfaces through the conditions rather than a dedicated `VirtualMachine`-level mirror.
+status.tpmEndorsementCertificates <[]string>	# PEM vTPM endorsement key certificate(s) reported by the guest and validated against this domain (ADR-0045). Empty when `spec.tpmEnabled` is `false`, and while a `tpmEnabled` guest has not yet exported one. On libvirt this is necessarily a guest-reported value: `swtpm_localca` issues the certificate into the vTPM's NVRAM and persists no copy the host or any libvirt RPC can read. It is published only after its subject CN is confirmed to be `<domain-name>:<domain-uuid>`, and possession of the matching private key is what ADR-0049's attestation actually proves.

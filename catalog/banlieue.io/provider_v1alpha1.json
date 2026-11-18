@@ -1,0 +1,744 @@
+{
+  "description": "Provider — one backend instance registered with banlieue.\n\nA Provider represents a single place VMs can run: one vCenter, one Proxmox\ncluster, or one libvirt host. It carries the connection details and an\nadmin-curated declaration of the storage classes, network classes, and\nfeatures that backend exposes. Its controller logs in, verifies those\ncapabilities, and publishes the reachable `status.failureDomains[]`.\n\n# Why create one\n\n- **Make a backend schedulable.** A VirtualMachine can only be placed on a\n  Provider — no Provider, nowhere to run.\n- **Declare capabilities explicitly.** `spec.capabilities` maps abstract\n  class names (the ones VMClass / VMImage request) to concrete backend\n  targets (a datastore, a port group). That mapping is the contract the\n  scheduler matches against — capabilities are declared, not guessed.\n- **Model many backends, including duplicates.** A cluster can hold many\n  Providers of the same class (`prod-vsphere`, `dr-vsphere`) and mix\n  classes freely.\n\nThe provider's controller talks to the backend; banlieue's main controller\nnever does. Communication between them is CRD-only.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "Provider — one backend instance registered with banlieue.\n\nA Provider represents a single place VMs can run: one vCenter, one Proxmox\ncluster, or one libvirt host. It carries the connection details and an\nadmin-curated declaration of the storage classes, network classes, and\nfeatures that backend exposes. Its controller logs in, verifies those\ncapabilities, and publishes the reachable `status.failureDomains[]`.\n\n# Why create one\n\n- **Make a backend schedulable.** A VirtualMachine can only be placed on a\n  Provider — no Provider, nowhere to run.\n- **Declare capabilities explicitly.** `spec.capabilities` maps abstract\n  class names (the ones VMClass / VMImage request) to concrete backend\n  targets (a datastore, a port group). That mapping is the contract the\n  scheduler matches against — capabilities are declared, not guessed.\n- **Model many backends, including duplicates.** A cluster can hold many\n  Providers of the same class (`prod-vsphere`, `dr-vsphere`) and mix\n  classes freely.\n\nThe provider's controller talks to the backend; banlieue's main controller\nnever does. Communication between them is CRD-only.",
+      "properties": {
+        "attestation": {
+          "additionalProperties": false,
+          "description": "Attestation trust anchors for this backend's vTPMs (ADR-0049\nDecision 10). Admin-supplied, never discovered: an anchor read off\nthe hypervisor would let whoever controls the hypervisor choose the\nanchor that vouches for its own guests. Optional — a Provider that\nruns no `tpmEnabled` classes has no reason to set it.",
+          "nullable": true,
+          "properties": {
+            "ekTrustBundle": {
+              "additionalProperties": false,
+              "description": "PEM bundle of CA certificates trusted to issue this backend's vTPM\nendorsement-key certificates. Provenance differs per backend\n(ADR-0045): on vSphere the issuing CA is vCenter's; on libvirt it is\neach host's `swtpm_localca` issuer certificate, one entry per host.\n\nSame value-or-source shape as `connection.caBundle`: exactly one of\n`inline`, `configMapRef`, `secretRef` must be set (see\n`CABundleSource`); references resolve in the Provider's namespace.\nRemoval of an issuer from this bundle is the revocation mechanism on\nlibvirt — swtpm EK certificates never expire.",
+              "properties": {
+                "configMapRef": {
+                  "additionalProperties": false,
+                  "description": "Key in a ConfigMap in the referrer's namespace (key defaults to `ca.crt`).",
+                  "nullable": true,
+                  "properties": {
+                    "key": {
+                      "description": "Key within the object's `data`. Defaults are caller-defined.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "inline": {
+                  "description": "Inline PEM (one or more concatenated certificates).",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "secretRef": {
+                  "additionalProperties": false,
+                  "description": "Key in a Secret in the referrer's namespace (key defaults to `ca.crt`).",
+                  "nullable": true,
+                  "properties": {
+                    "key": {
+                      "description": "Key within the object's `data`. Defaults are caller-defined.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "ekTrustBundle"
+          ],
+          "type": "object"
+        },
+        "capabilities": {
+          "additionalProperties": false,
+          "description": "Admin-defined capability mappings. Every storage / network class that\nVMClass and VMImage may request MUST be listed here for this provider\nto be considered by the scheduler.",
+          "properties": {
+            "features": {
+              "description": "Feature flags admin asserts are available. Provider's controller may\ndowngrade these in status if introspection finds otherwise.\nWell-known values: hotAddCPU, hotAddMemory, efiSecureBoot,\nnestedVirtualization, gpuPassthrough.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "networkClasses": {
+              "description": "Network classes the admin asserts are available on this backend.",
+              "items": {
+                "additionalProperties": false,
+                "description": "Maps one abstract network-class name to a concrete backend target.\n\nSame per-zone override shape as `StorageClassMapping` and for the same\nreason: the \"same\" logical network commonly has a differently-named\nport group on each cluster of a Provider (ADR-0030).",
+                "properties": {
+                  "name": {
+                    "description": "Abstract name referenced by VMClass.network.interfaces[].networkClass.",
+                    "type": "string"
+                  },
+                  "perZone": {
+                    "description": "Per-`(datacenter, cluster)` overrides of `target` (ADR-0030).",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A concrete backend target scoped to one specific failure domain — a\n`(datacenter, cluster)` pair — within a Provider. Keyed the same way\n`Provider.spec.failureDomainNameOverrides` is (ADR-0023): the\nvCenter-reported identity, not a failure domain's own (possibly\nadmin-renamed) display name, which would make the mapping fragile to a\nrename. Shared by `StorageClassMapping` and `NetworkClassMapping` —\nsame shape, same identity key (ADR-0030).",
+                      "properties": {
+                        "cluster": {
+                          "description": "Cluster name as vCenter reports it.",
+                          "type": "string"
+                        },
+                        "datacenter": {
+                          "description": "Datacenter name as vCenter reports it.",
+                          "type": "string"
+                        },
+                        "target": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Concrete backend target for this zone, same shape as\n`StorageClassMapping::target` / `NetworkClassMapping::target`.",
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "cluster",
+                        "datacenter",
+                        "target"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "perZoneSubnet": {
+                    "description": "Per-`(datacenter, cluster)` overrides of `subnet` (ADR-0032).",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A subnet's gateway/DNS/domain, scoped to one specific failure domain — a\n`(datacenter, cluster)` pair — within a Provider's network class.\nDeliberately excludes `prefix`, which stays a per-VM field on\n`StaticIpamConfig` rather than becoming zone-derived (ADR-0032).",
+                      "properties": {
+                        "cluster": {
+                          "description": "Cluster name as vCenter reports it.",
+                          "type": "string"
+                        },
+                        "datacenter": {
+                          "description": "Datacenter name as vCenter reports it.",
+                          "type": "string"
+                        },
+                        "subnet": {
+                          "additionalProperties": false,
+                          "description": "Subnet shape for this zone.",
+                          "properties": {
+                            "domain": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "gateway": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "nameservers": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "cluster",
+                        "datacenter",
+                        "subnet"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "subnet": {
+                    "additionalProperties": false,
+                    "description": "Default subnet shape (gateway/nameservers/domain) for this network\nclass, used in any zone `per_zone_subnet` does not cover. A port\ngroup implies a subnet, so this lives alongside `target`/`per_zone`\nrather than on `VMClass` — it lets a static-addressing\n`VirtualMachine` omit gateway/nameservers/domain entirely and have\nthem resolved from whichever zone the scheduler picked (ADR-0032).",
+                    "nullable": true,
+                    "properties": {
+                      "domain": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "gateway": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "nameservers": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "target": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Default concrete target, used in any zone `per_zone` does not cover.\n`None` means this class resolves ONLY in the zones `per_zone` lists.\nFree-form per provider class. Examples:\n  vsphere:  { portGroup: \"vmnet-prod\" }\n            { distributedPortGroup: \"dvs-prod-vlan100\" }\n  proxmox:  { bridge: \"vmbr0\", vlan: \"100\" }\n  libvirt:  { network: \"br-prod\" }",
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "storageClasses": {
+              "description": "Storage classes the admin asserts are available on this backend.\nEach entry maps an abstract class name to a provider-interpreted\nconcrete target.",
+              "items": {
+                "additionalProperties": false,
+                "description": "Maps one abstract storage-class name to a concrete backend target.\n\nA single class name can resolve differently per failure domain of the\nsame Provider — the \"same\" storage tier commonly has a differently-named\ndatastore (cluster) on each vCenter cluster. `target` is the default,\napplied to any zone not covered by `per_zone`; `per_zone` overrides it\nfor the zones it lists. At least one of the two must resolve a target\nfor a zone, or this class is simply unavailable there — not an error,\nthe same \"not reported available\" path an unmatched target already took\nbefore this ADR (ADR-0019, ADR-0030).",
+                "properties": {
+                  "name": {
+                    "description": "Abstract name referenced by VMClass.hardware.disks[].storageClass.",
+                    "type": "string"
+                  },
+                  "perZone": {
+                    "description": "Per-`(datacenter, cluster)` overrides of `target` (ADR-0030).",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A concrete backend target scoped to one specific failure domain — a\n`(datacenter, cluster)` pair — within a Provider. Keyed the same way\n`Provider.spec.failureDomainNameOverrides` is (ADR-0023): the\nvCenter-reported identity, not a failure domain's own (possibly\nadmin-renamed) display name, which would make the mapping fragile to a\nrename. Shared by `StorageClassMapping` and `NetworkClassMapping` —\nsame shape, same identity key (ADR-0030).",
+                      "properties": {
+                        "cluster": {
+                          "description": "Cluster name as vCenter reports it.",
+                          "type": "string"
+                        },
+                        "datacenter": {
+                          "description": "Datacenter name as vCenter reports it.",
+                          "type": "string"
+                        },
+                        "target": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Concrete backend target for this zone, same shape as\n`StorageClassMapping::target` / `NetworkClassMapping::target`.",
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "cluster",
+                        "datacenter",
+                        "target"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "target": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Default concrete target, used in any zone `per_zone` does not cover.\n`None` means this class resolves ONLY in the zones `per_zone` lists.\nFree-form per provider class; the provider's controller interprets\nit. Examples by provider class:\n  vsphere:  { datastore: \"ds-fast-01\" }\n            { datastoreCluster: \"dsc-gold\" }\n            { tagCategory: \"tier\", tag: \"gold\" }\n  proxmox:  { storage: \"ceph-pool-1\" }\n  libvirt:  { pool: \"nvme-pool\" }",
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "connection": {
+          "additionalProperties": false,
+          "description": "Connection details for the backend.",
+          "properties": {
+            "caBundle": {
+              "additionalProperties": false,
+              "description": "Optional CA bundle to validate the endpoint's TLS certificate.\n\nA value-or-source: inline PEM, or a `configMapRef` / `secretRef` naming a\nkey (default `ca.crt`) in the Provider's namespace. Exactly one source\nmust be set; see `CABundleSource`. Resolved by the provider controller\nand injected into the HTTP client (ADR-0008, BYOC). When unset, the\nsystem trust roots are used.",
+              "nullable": true,
+              "properties": {
+                "configMapRef": {
+                  "additionalProperties": false,
+                  "description": "Key in a ConfigMap in the referrer's namespace (key defaults to `ca.crt`).",
+                  "nullable": true,
+                  "properties": {
+                    "key": {
+                      "description": "Key within the object's `data`. Defaults are caller-defined.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "inline": {
+                  "description": "Inline PEM (one or more concatenated certificates).",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "secretRef": {
+                  "additionalProperties": false,
+                  "description": "Key in a Secret in the referrer's namespace (key defaults to `ca.crt`).",
+                  "nullable": true,
+                  "properties": {
+                    "key": {
+                      "description": "Key within the object's `data`. Defaults are caller-defined.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "credentialsRef": {
+              "additionalProperties": false,
+              "description": "Reference to a Secret in the Provider's namespace containing the\ncredentials. Required keys depend on provider class:\n  vsphere:  username, password\n  proxmox:  username (the full API token id, user@realm!tokenid), tokenValue\n            (API tokens only; password/ticket auth is not supported, ADR-0074)\n  libvirt:  tls.crt, tls.key (mutual TLS, ADR-0011)\n\nRequired by every backend that authenticates to a remote endpoint, and\nrefused by `cloud-hypervisor`, whose provider runs on the hypervisor\nhost and must read no Secret at all (ADR-0060 Decision 4). When unset\nthe operator grants no Secret access whatsoever.",
+              "nullable": true,
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "endpoint": {
+              "description": "Endpoint URL or URI. Format depends on provider class:\n  vsphere:  https://vcenter.example.com/sdk\n  proxmox:  https://pve.example.com:8006\n  libvirt:  qemu+ssh://kvm-host.example.com/system",
+              "type": "string"
+            },
+            "insecureSkipTLSVerify": {
+              "description": "Skip TLS verification. Applies to vsphere and proxmox.\n\nSerialized as `insecureSkipTLSVerify` (matching CAPI convention with\nuppercase `TLS`), not the auto-derived `insecureSkipTlsVerify`.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "endpoint"
+          ],
+          "type": "object"
+        },
+        "failureDomainNameOverrides": {
+          "description": "Explicit overrides for individual discovered failure domains'\ngenerated `name`. The auto-computed, collision-safe name\n(`<provider>-<datacenter>-<cluster>`, hashed when too long) is\nalways the fallback for any `(datacenter, cluster)` pair with no\nmatching entry here — this is opt-in, never required. See ADR-0023.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Explicit override for one discovered failure domain's generated `name`,\nkeyed by the `(datacenter, cluster)` pair `discover_inventory` resolves\nit from. Named fields, not a `\"dc/cluster\"` string key, so a call site\ncan't accidentally swap them — same reasoning as `ImportJobIdentity`\n(ADR-0020-era `import_job_name` fix). See ADR-0023.",
+            "properties": {
+              "cluster": {
+                "description": "Cluster name as vCenter reports it.",
+                "type": "string"
+              },
+              "datacenter": {
+                "description": "Datacenter name as vCenter reports it (matches `discover_inventory`'s\nwalk, not an operator-chosen alias).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The name to use instead of the auto-computed one, e.g. `cluster-01`.\nSlugified the same way auto-computed names are, so `Cluster 01`\nstill produces a valid Kubernetes name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "cluster",
+              "datacenter",
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "datacenter",
+            "cluster"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "namespaceSelector": {
+          "additionalProperties": false,
+          "description": "The namespaces this Provider serves, besides its own (ADR-0133).\n\nA label selector over `Namespace` objects. Absent means the Provider's\nown namespace only, so a Provider written before ADR-0133 serves nobody\nnew. It is the single source for both readers:\n\n- the operator renders it onto the provider workload as\n  `--watch-namespace-selector`, so the provider watches machines in\n  those namespaces while it keeps its credentials in its own;\n- the controller considers a Provider in the provider namespace for a\n  VM only when this selector matches the VM's namespace labels.\n\nAn empty selector (`{}`) serves nothing: banlieue never defaults to every\nnamespace, so a Provider cannot serve all of them by omission or by\naccident. The selector is scope, not isolation: who may create a VM in a\nmatching namespace is RBAC and admission policy. Set it only on a Provider\nin the platform's provider namespace; tenants must not be able to write it.",
+          "nullable": true,
+          "properties": {
+            "matchExpressions": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "enum": [
+                      "In",
+                      "NotIn",
+                      "Exists",
+                      "DoesNotExist"
+                    ],
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "matchLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "paused": {
+          "description": "Suspend reconciliation. Equivalent to setting the\n`cluster.x-k8s.io/paused` annotation but in-band.",
+          "type": "boolean"
+        },
+        "providerClassRef": {
+          "additionalProperties": false,
+          "description": "Reference to a ProviderClass that identifies the backend type.\n\nFor v1alpha1 the ProviderClass CRD is deferred; treat this as a name\ndrawn from a well-known set: `vsphere`, `proxmox`, `libvirt`. A future\nProviderClass CRD will provide install metadata (image, RBAC) without\nchanging this reference.",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "scheduling": {
+          "additionalProperties": false,
+          "description": "How the scheduler places VMs on this backend (ADR-0107). Optional:\nwithout it the defaults apply.",
+          "nullable": true,
+          "properties": {
+            "cpuOvercommitRatio": {
+              "description": "vCPUs the scheduler may place per CPU a failure domain publishes in\n`attributes.capacity.cpus`. `1` means no overcommit. CPU contention\nonly slows guests, so the default allows 4; memory is never\novercommitted. Unset: 4.",
+              "maximum": 64,
+              "minimum": 1,
+              "nullable": true,
+              "type": "integer"
+            },
+            "storageReservePercent": {
+              "description": "Percent of each store's `totalGiB` the scheduler keeps free when it\nplaces a new VM's disks (ADR-0128): a full store pauses the guests\nalready on it. `0` disables the reserve. Unset: 10.",
+              "maximum": 50,
+              "minimum": 0,
+              "nullable": true,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "useContentLibrary": {
+          "description": "vSphere only: import `Url`-kind VMImages through a vCenter Content\nLibrary rather than the default datastore-upload + `MarkAsTemplate`\npath. Defaults to `false` (no Content Library required), matching\nenvironments where CL is not enabled. Ignored by non-vSphere classes.\nSee ADR-0020.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "connection",
+        "providerClassRef"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed state of a Provider: the failure domains its controller discovered\nand the health / reachability conditions.",
+      "nullable": true,
+      "properties": {
+        "conditions": {
+          "description": "Standard Kubernetes conditions. The `Ready` condition reflects overall\nprovider health. The `ProviderReachable` condition reflects connection\nstate to the backend.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "ekCaCertificates": {
+          "description": "PEM certificates of the CAs that issue this backend's vTPM\nendorsement key certificates: on a Cloud Hypervisor host, the host's\nown `swtpm_localca` (ADR-0065 Decision 6). A verifier trusts a\nguest's EK only through the host that created it; this is the input\n`ekTrustBundle` needs (ADR-0049). Empty when the backend offers no\nvTPM or publishes no anchor.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "failureDomains": {
+          "description": "Failure domains (\"availability zones\" — the terms are synonyms;\n`failureDomain` was kept to align with CAPI v1beta2's own vocabulary)\ndiscovered by the provider's controller within this backend. The\nscheduler matches against `labels` and filters by\n`attributes.availableStorageClasses` / `availableNetworkClasses`.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One placement target within a backend — typically a (datacenter, cluster)\npair or a zone. The scheduler matches VMs to failure domains by `labels`\nand filters by the capabilities resolved in `attributes`.\n\n\"Failure domain\" and \"availability zone\" are synonyms here — this type\nnames it `failureDomain` to align with the CAPI v1beta2 vocabulary\n(`clusterv1.FailureDomain`, `Machine.spec.failureDomain`) that banlieue's\ninfra CRDs are built to satisfy, not because it means something distinct\nfrom an AZ. Docs and CLI help text are free to say \"availability zone\"\nwhere that reads more naturally.",
+            "properties": {
+              "attributes": {
+                "additionalProperties": false,
+                "default": {},
+                "description": "Attributes the provider's controller resolved for this domain,\nincluding the subset of admin-listed classes that are actually\nreachable from here.",
+                "properties": {
+                  "availableNetworkClasses": {
+                    "description": "Subset of spec.capabilities.networkClasses[].name reachable here.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "availableStorageClasses": {
+                    "description": "Subset of spec.capabilities.storageClasses[].name reachable here.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "capacity": {
+                    "additionalProperties": false,
+                    "description": "What guests may use in this failure domain, as the provider measured\nit (ADR-0107). The scheduler fits each VM against it; a domain that\npublishes none is not filtered on capacity.",
+                    "nullable": true,
+                    "properties": {
+                      "cpus": {
+                        "description": "Logical CPUs guests may use. vCPUs are placed up to this times the\nProvider's `scheduling.cpuOvercommitRatio`.",
+                        "minimum": 0,
+                        "nullable": true,
+                        "type": "integer"
+                      },
+                      "memoryAvailableMiB": {
+                        "description": "Memory a new guest could take now, MiB, as the provider measured it\n(ADR-0128). Includes what running VMs already use, so the scheduler\nchecks it for new placements only. Never more than `memoryMiB`.",
+                        "minimum": 0,
+                        "nullable": true,
+                        "type": "integer"
+                      },
+                      "memoryMiB": {
+                        "description": "Memory guests may use, MiB: the host's, or a smaller budget the host\ndeclares for guests (a Cloud Hypervisor host's guests' slice,\nADR-0105). Never overcommitted.",
+                        "minimum": 0,
+                        "nullable": true,
+                        "type": "integer"
+                      },
+                      "memoryOverheadMiBPerVM": {
+                        "description": "Memory each VM costs beyond its class's `memoryMiB` (its VMM), MiB.",
+                        "minimum": 0,
+                        "nullable": true,
+                        "type": "integer"
+                      },
+                      "storage": {
+                        "description": "Size and free space of the store behind each available storage\nclass, as the provider measured it (ADR-0128).",
+                        "items": {
+                          "additionalProperties": false,
+                          "description": "The store behind one storage class in a failure domain (ADR-0128).",
+                          "properties": {
+                            "freeGiB": {
+                              "description": "Space a new disk could take now, GiB, for the writer the provider\nruns as.",
+                              "minimum": 0,
+                              "nullable": true,
+                              "type": "integer"
+                            },
+                            "shared": {
+                              "description": "The same space backs other failure domains of this Provider (a\nProxmox shared storage, a datastore mounted by several clusters), so\ndisks placed in any of them draw on it.",
+                              "type": "boolean"
+                            },
+                            "storageClass": {
+                              "description": "A name from `availableStorageClasses`.",
+                              "type": "string"
+                            },
+                            "totalGiB": {
+                              "description": "The store's size, GiB.",
+                              "minimum": 0,
+                              "nullable": true,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "storageClass"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "features": {
+                    "description": "Feature flags actually present here. Always a subset of\nspec.capabilities.features.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "raw": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Provider-specific resolved attributes; for vSphere this typically\nincludes datacenter, cluster, resourcePool. Used by the provider's\ncontroller when filling in the infrastructure CR.",
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "labels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Labels used by the scheduler's `failureDomainSelector` and by\nVirtualMachine anti-affinity `topologyKey` matching.\nRecommended keys: `datacenter`, `cluster`, `rack`, `env`. Every\nprovider also sets `name` to this failure domain's own resolved\n`name` above (auto-computed, or an ADR-0023 override) — `name` above\nis a top-level field a `LabelSelector` cannot match directly, so\nwithout this mirror, targeting a specific zone by its friendly\noverride name (rather than a raw backend-reported label like\n`cluster`) would be impossible.",
+                "type": "object"
+              },
+              "name": {
+                "description": "Stable name. Conventionally `<provider>-<cluster-or-zone>`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "observedGeneration": {
+          "description": "The generation of the spec that the controller has reconciled.",
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "workload": {
+          "additionalProperties": false,
+          "description": "The provider workload `banlieue-operator` created for this Provider.\n\nWritten **only** by the operator's field manager\n(`banlieue.io/operator`); the provider's own controller never touches\nit. This split is deliberate: `conditions` is a plain list with no\n`x-kubernetes-list-type: map` marker, so two field managers writing into\nit would contend over the whole array rather than merging per entry.\nGiving the operator a disjoint field keeps server-side apply\nconflict-free (ADR-0012).",
+          "nullable": true,
+          "properties": {
+            "deploymentName": {
+              "description": "Name of the Deployment running this Provider's controller.\nConventionally `banlieue-provider-<class>-<provider-name>`. Unset for\n`External`: there is no Deployment.",
+              "nullable": true,
+              "type": "string"
+            },
+            "heartbeat": {
+              "description": "A provider's liveness, from its leader-election Lease (ADR-0102).",
+              "enum": [
+                "Alive",
+                "Stale",
+                "Absent"
+              ],
+              "nullable": true,
+              "type": "string"
+            },
+            "lastHeartbeatTime": {
+              "description": "The Lease's last `renewTime`, when there is a Lease.",
+              "format": "date-time",
+              "nullable": true,
+              "type": "string"
+            },
+            "mode": {
+              "default": "Managed",
+              "description": "Whether the operator runs this provider (`Managed`) or only gave it an\nidentity (`External`, ADR-0060 Decision 3). Absent on objects written\nbefore the field existed, which were all Managed.",
+              "enum": [
+                "Managed",
+                "External"
+              ],
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace the Deployment was created in — the ProviderClass's\n`workloadNamespace`, or the operator's own namespace when unset.",
+              "type": "string"
+            },
+            "observedGeneration": {
+              "description": "The Provider generation the operator had observed when it last applied\nthis workload.",
+              "format": "int64",
+              "nullable": true,
+              "type": "integer"
+            },
+            "readyReplicas": {
+              "description": "Ready replicas reported by that Deployment. Zero means the backend's\ncontroller is not currently running, whatever the Provider's other\nconditions say. Unset for `External`: there is no Deployment, and\nwhether the provider is running is `heartbeat` (ADR-0102).",
+              "format": "int32",
+              "nullable": true,
+              "type": "integer"
+            },
+            "serviceAccountName": {
+              "description": "Name of the ServiceAccount the operator created for this Provider, in `namespace`: the\nidentity its controller runs as, and what a host-resident provider's token is minted for\n(ADR-0126). Read it rather than derive it: the naming is the operator's. Unset on a\nProvider an older operator wrote.",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "Provider",
+  "type": "object",
+  "x-flux-schema-type": "Provider"
+}

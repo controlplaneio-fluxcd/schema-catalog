@@ -1,0 +1,606 @@
+{
+  "description": "VirtualMachinePool: a self-refilling set of warm, single-use VMs.\n\n# Why create one\n\n- **Hide install latency.** A `tpmEnabled` class must pair with an\n  `installMode: Deferred` image, so every VM pays a full install on first\n  boot. The pool pays that ahead of time.\n- **Single use by construction.** Members are handed out through\n  `VirtualMachineClaim` and destroyed when the claim ends. There is no\n  code path that returns a used member to the warm set.\n- **Follow the image.** When the referenced `VMImage` is rebuilt, warm\n  members from the old build are replaced surge-style without dropping\n  claimable capacity.\n\nNamespaced: members are created in the pool's own namespace, which is\nalso where the scheduler looks for candidate Providers.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "VirtualMachinePool: a self-refilling set of warm, single-use VMs.\n\n# Why create one\n\n- **Hide install latency.** A `tpmEnabled` class must pair with an\n  `installMode: Deferred` image, so every VM pays a full install on first\n  boot. The pool pays that ahead of time.\n- **Single use by construction.** Members are handed out through\n  `VirtualMachineClaim` and destroyed when the claim ends. There is no\n  code path that returns a used member to the warm set.\n- **Follow the image.** When the referenced `VMImage` is rebuilt, warm\n  members from the old build are replaced surge-style without dropping\n  claimable capacity.\n\nNamespaced: members are created in the pool's own namespace, which is\nalso where the scheduler looks for candidate Providers.",
+      "properties": {
+        "addressing": {
+          "additionalProperties": false,
+          "description": "Per-member static addressing. Omit for DHCP or class-level IPAM.\nInterim until the CAPI IPAM contract lands (ADR-0033); at that point\nthis gains a `poolRef` alternative and the inline range stays as the\nzero-dependency option.",
+          "nullable": true,
+          "properties": {
+            "domain": {
+              "nullable": true,
+              "type": "string"
+            },
+            "gateway": {
+              "nullable": true,
+              "type": "string"
+            },
+            "interface": {
+              "description": "Name of the `VMClass` network interface to stamp, matching\n`NetworkInterfaceOverride.name`.",
+              "type": "string"
+            },
+            "nameservers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "pool": {
+              "description": "The addresses members are drawn from, in the order to draw them\n(ADR-0056). Each entry is one of:\n\n- a single address (`\"192.0.2.40\"`)\n- an inclusive range, low-high (`\"192.0.2.10-192.0.2.29\"`)\n- a CIDR block (`\"192.0.2.50/31\"`), every address in the block\n  included\n\nSize the list at `maxReplicas` plus a few spares: an address stays\nheld until a deleted member's backend VM is actually gone.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "prefix": {
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "interface",
+            "pool",
+            "prefix"
+          ],
+          "type": "object"
+        },
+        "maxIdleSeconds": {
+          "description": "Replace a Ready member that has sat unclaimed this long. Bounds how\nstale an unpatched warm VM can get between image rebuilds.",
+          "minimum": 0,
+          "nullable": true,
+          "type": "integer"
+        },
+        "maxReplicas": {
+          "description": "Hard ceiling on members of any phase, claimed ones included. Leave\nheadroom above `warmReplicas` plus expected concurrent claims, or\nimage rollouts have to trade warm capacity for replacements.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxSurge": {
+          "default": 2,
+          "description": "Most members allowed to be provisioning at once. Bounds the install\nload a refill puts on the hosts that claimed members are running on.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "provisioningTimeoutSeconds": {
+          "default": 1800,
+          "description": "A member still provisioning after this long is treated as poisoned\nand deleted, never repaired.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "readiness": {
+          "description": "Which member condition makes it claimable. See `PoolReadiness`.\n\n**Required, with no default** (ADR-0046 Decision 2). `GuestReady` is\nthe correct answer for a Deferred-mode image and would be the natural\ndefault — but nothing publishes that condition until ADR-0043 lands,\nso defaulting to it would leave every pool at zero warm members\nforever, with no error. A field whose wrong value produces silence\nrather than a failure is one the operator has to state out loud.",
+          "enum": [
+            "GuestReady",
+            "InfrastructureReady"
+          ],
+          "type": "string"
+        },
+        "recycleOnImageChange": {
+          "default": true,
+          "description": "Replace warm members when the referenced `VMImage`'s build changes.",
+          "type": "boolean"
+        },
+        "template": {
+          "additionalProperties": false,
+          "description": "Template for each member. `spec.networkOverrides` entries for the\ninterface named in `addressing` are replaced per member; everything\nelse is copied verbatim.",
+          "properties": {
+            "annotations": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Extra annotations stamped on each member.",
+              "type": "object"
+            },
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Extra labels stamped on each member, in addition to the pool's own.",
+              "type": "object"
+            },
+            "spec": {
+              "additionalProperties": false,
+              "description": "VirtualMachine — the user-facing request for a running VM.\n\nThis is the one resource end users create. It expresses *intent*: which\nVMClass (shape) and VMImage (OS) to use, optional placement constraints,\nthe desired power state, and optional guest user-data. banlieue's\ncontroller schedules it onto a Provider + failure domain, creates the\nmatching provider infrastructure CR (e.g. `VSphereMachine`), and mirrors\nthat CR's status back here.\n\n# Why create one\n\n- **Declare a VM the Kubernetes way.** Describe the VM you want; the\n  controller reconciles reality toward it, including power state.\n- **Stay backend-agnostic.** You reference a class and an image by name,\n  not a datastore or a port group. Where it lands is the scheduler's job.\n- **Compose with policy.** Label / anti-affinity selectors and a migration\n  policy steer placement and drift handling without coupling to a specific\n  Provider.\n\nIndependent of Cluster API: a VirtualMachine is **not** a `clusterv1.\nMachine`. It can coexist with CAPI but does not depend on it.\n\nNamespaced: candidate Providers are drawn from the VM's own namespace.",
+              "properties": {
+                "classRef": {
+                  "additionalProperties": false,
+                  "description": "Reference to a (cluster-scoped) VMClass.",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "desiredPowerState": {
+                  "default": "PoweredOn",
+                  "description": "Desired power state. Defaults to `PoweredOn`.",
+                  "enum": [
+                    "PoweredOn",
+                    "PoweredOff",
+                    "Suspended"
+                  ],
+                  "type": "string"
+                },
+                "folder": {
+                  "description": "Destination folder for the provisioned VM (e.g. `apps/prod` on\nvSphere). When unset, the provider defaults to organizing the VM\nthe same way it organizes its source template — on vSphere, the\nsame per-zone folder the template lives in (ADR-0020 Decision #5).\n\nUnlike `networkOverrides` / `hardwareOverride`, this has no\n`VMClass`-level counterpart to be a delta *against* — placement is\npurely an infrastructure concern, not part of a VM's abstract\nshape. It is also the one field here that is unavoidably\nbackend-flavored (a \"folder\" is a vSphere concept); other backends\nmay interpret it differently or ignore it.",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "hardwareOverride": {
+                  "additionalProperties": false,
+                  "description": "Per-VM override for the `VMClass`'s hardware shape — CPUs, memory,\nand disk sizes.\n\n**This is a delta, not the primary definition.** The `VMClass` is the\nauthoritative source for a VM's hardware shape: its `spec.hardware`\nis fixed and shared by every VM that references the class. This\nfield applies *on top of* the class — only the fields you set here\nreplace the class value; everything else is inherited verbatim.\n\nUse this sparingly. Its primary purpose is to accommodate the rare\nVM that genuinely needs a different CPU, memory, or disk budget than\nits class defines — for example, a database primary bumped to 16 CPUs\nwhile all other replicas use the 4-CPU class shape, or one VM that\nneeds a larger data disk. If you find yourself setting the same\noverride on every VM of a given class, create a new `VMClass` instead.",
+                  "nullable": true,
+                  "properties": {
+                    "cpus": {
+                      "description": "Override the `VMClass`'s `spec.hardware.cpus`.\nIf absent, the class value is used unchanged.",
+                      "maximum": 256,
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "diskOverrides": {
+                      "description": "Per-disk size overrides, keyed by `DiskSpec.name`.\nOnly `sizeGiB` can be overridden per VM; the disk's `storageClass`\nand `provisioning` are class-level concerns.\n\n**This is a delta, not the primary definition.** A disk with no\nentry here inherits the `VMClass`'s size verbatim.",
+                      "items": {
+                        "additionalProperties": false,
+                        "description": "A per-VM size override for one `VMClass`-declared disk.\n\n**This is a delta, not the primary definition.** The `VMClass` defines\nthe disk set; this struct lets a single VM request a larger size for\none of those disks (e.g. a bigger data volume) without altering the\nshared class.",
+                        "properties": {
+                          "name": {
+                            "description": "Matches a `VMClass.spec.hardware.disks[].name`.",
+                            "type": "string"
+                          },
+                          "sizeGiB": {
+                            "description": "Override the disk's `sizeGiB`. Must be ≥ the class value (the\nprovider will reject a shrink). If absent, the class size is used.",
+                            "maximum": 65536,
+                            "minimum": 1,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "sizeGiB"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-map-keys": [
+                        "name"
+                      ],
+                      "x-kubernetes-list-type": "map"
+                    },
+                    "memoryMiB": {
+                      "description": "Override the `VMClass`'s `spec.hardware.memoryMiB`.\nIf absent, the class value is used unchanged.",
+                      "maximum": 4194304,
+                      "minimum": 128,
+                      "nullable": true,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "imageRef": {
+                  "additionalProperties": false,
+                  "description": "Reference to a (cluster-scoped) VMImage.",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "migrationPolicy": {
+                  "default": "automatic",
+                  "description": "What to do when current placement no longer satisfies the spec.",
+                  "enum": [
+                    "automatic",
+                    "manual",
+                    "never"
+                  ],
+                  "type": "string"
+                },
+                "networkOverrides": {
+                  "description": "Per-VM overrides for specific VMClass-declared network interfaces\n(ADR-0024). Keyed by `NetworkInterfaceSpec.name`; an interface with\nno entry here uses its VMClass's own `ipam` verbatim (commonly\n`dhcp`). Lets many VMs share one VMClass while each still gets its\nown static address — a VMClass-level `ipam.static` cannot express\nthat, since a class is shared by design.\n\n**This is a delta, not the primary definition.** The VMClass is the\nauthoritative source for the VM's network shape. Entries here are\nlayered on top: only the named interface's `ipam` is replaced;\nevery other interface is inherited from the class unchanged.",
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "A per-VM static-address override for one `VMClass`-declared network\ninterface (ADR-0024).\n\n**This is a delta, not the primary definition.** The `VMClass` is the\nauthoritative source for the VM's network shape. An entry here replaces\nonly the named interface's `ipam`; every other interface, and all other\nattributes of the named interface, are inherited from the class unchanged.\n\nNamed `NetworkInterfaceOverride` (rather than reusing\n`NetworkInterfaceSpec`) for the same reason as `HardwareOverride`: the\nname signals layered intent — \"a per-VM delta on top of a shared class\"\n— rather than a standalone definition.",
+                    "properties": {
+                      "name": {
+                        "description": "Matches a `VMClass.spec.network.interfaces[].name`.",
+                        "type": "string"
+                      },
+                      "static": {
+                        "additionalProperties": false,
+                        "description": "The static address to use for this interface, overriding whatever\nthe `VMClass`'s own `ipam` declares.",
+                        "properties": {
+                          "address": {
+                            "type": "string"
+                          },
+                          "domain": {
+                            "description": "DNS domain, used both as a DNS search domain and (by a\n`VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build\nan FQDN as `<vm-name>.<domain>`.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "gateway": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "nameservers": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "prefix": {
+                            "maximum": 255,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "address",
+                          "prefix"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "static"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "x-kubernetes-list-map-keys": [
+                    "name"
+                  ],
+                  "x-kubernetes-list-type": "map"
+                },
+                "paused": {
+                  "description": "Suspend reconciliation in-band.",
+                  "type": "boolean"
+                },
+                "placement": {
+                  "additionalProperties": false,
+                  "default": {},
+                  "description": "Placement intent. If unset, the scheduler considers every Provider\nin the VM's namespace and every failure domain.",
+                  "properties": {
+                    "antiAffinity": {
+                      "description": "Anti-affinity rules against other VirtualMachines in the same\nnamespace. Evaluated at scheduling time.",
+                      "items": {
+                        "additionalProperties": false,
+                        "description": "A rule that spreads this VM away from other VirtualMachines across a\nfailure-domain topology key, evaluated at scheduling time.",
+                        "properties": {
+                          "labelSelector": {
+                            "additionalProperties": false,
+                            "description": "Other VMs (by their own metadata.labels) to spread away from.",
+                            "properties": {
+                              "matchExpressions": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "key": {
+                                      "type": "string"
+                                    },
+                                    "operator": {
+                                      "enum": [
+                                        "In",
+                                        "NotIn",
+                                        "Exists",
+                                        "DoesNotExist"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "values": {
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "required": [
+                                    "key",
+                                    "operator"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "matchLabels": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "mode": {
+                            "default": "required",
+                            "description": "Strictness. `required` filters candidates; `preferred` is best-effort.",
+                            "enum": [
+                              "required",
+                              "preferred"
+                            ],
+                            "type": "string"
+                          },
+                          "topologyKey": {
+                            "description": "A label key from the failure domain's labels. Spreading is required\nacross distinct values of this key.\nCommon keys: `cluster`, `rack`, `host`, `dc`.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "labelSelector",
+                          "topologyKey"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "failureDomainSelector": {
+                      "additionalProperties": false,
+                      "description": "Match failure domains by their `status.failureDomains[].labels`.\nAcross all candidate Providers, only failure domains whose labels\nmatch are considered.",
+                      "nullable": true,
+                      "properties": {
+                        "matchExpressions": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "key": {
+                                "type": "string"
+                              },
+                              "operator": {
+                                "enum": [
+                                  "In",
+                                  "NotIn",
+                                  "Exists",
+                                  "DoesNotExist"
+                                ],
+                                "type": "string"
+                              },
+                              "values": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "key",
+                              "operator"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "matchLabels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "providerSelector": {
+                      "additionalProperties": false,
+                      "description": "Match Providers by their `metadata.labels`. A Provider is a candidate\nonly if its labels match this selector.",
+                      "nullable": true,
+                      "properties": {
+                        "matchExpressions": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "key": {
+                                "type": "string"
+                              },
+                              "operator": {
+                                "enum": [
+                                  "In",
+                                  "NotIn",
+                                  "Exists",
+                                  "DoesNotExist"
+                                ],
+                                "type": "string"
+                              },
+                              "values": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "key",
+                              "operator"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "matchLabels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "userData": {
+                  "additionalProperties": false,
+                  "description": "Optional user-data delivered to the guest via the image's\n`guestAgent` (cloud-init / ignition / sysprep).",
+                  "nullable": true,
+                  "properties": {
+                    "configMapRef": {
+                      "additionalProperties": false,
+                      "description": "Key in a ConfigMap in the VirtualMachine's namespace (key defaults to\n`DEFAULT_USER_DATA_KEY`).",
+                      "nullable": true,
+                      "properties": {
+                        "key": {
+                          "description": "Key within the object's `data`. Defaults are caller-defined.",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "secretRef": {
+                      "additionalProperties": false,
+                      "description": "Key in a Secret in the VirtualMachine's namespace (key defaults to\n`DEFAULT_USER_DATA_KEY`).",
+                      "nullable": true,
+                      "properties": {
+                        "key": {
+                          "description": "Key within the object's `data`. Defaults are caller-defined.",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "classRef",
+                "imageRef"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "spec"
+          ],
+          "type": "object"
+        },
+        "warmReplicas": {
+          "description": "How many Ready, unclaimed members to keep available.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "maxReplicas",
+        "readiness",
+        "template",
+        "warmReplicas"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "nullable": true,
+      "properties": {
+        "available": {
+          "default": 0,
+          "description": "Ready and unclaimed: what a claim can bind right now.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "claimed": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "conditions": {
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "imageRevision": {
+          "description": "Image revision new members are currently being built from.",
+          "nullable": true,
+          "type": "string"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "provisioning": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "replicas": {
+          "default": 0,
+          "description": "Members of any phase, excluding ones already being deleted.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "VirtualMachinePool",
+  "type": "object",
+  "x-flux-schema-type": "VirtualMachinePool"
+}

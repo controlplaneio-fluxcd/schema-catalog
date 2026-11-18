@@ -1,0 +1,42 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=infrastructure.banlieue.io/v1alpha1
+kind <string> enum=VSphereCluster
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# VSphereCluster — banlieue's CAPI v1beta2 InfraCluster for vSphere backends. It tells CAPI where a cluster's machines may be placed by aggregating the failure domains of one or more `Provider`s (vCenters) into the CAPI-shaped `status.failureDomains` list. The control-plane endpoint is operator-supplied (a VIP) or filled in by the control-plane provider (e.g. k0smotron). # Why it exists - **Cluster-side failure-domain spread.** CAPI's control-plane / MachineSet controllers balance machines across the FDs published here. "Spread across all 6 domains" is simply `replicas: 6` over a `VSphereCluster` that advertises 6 FDs. - **Multi-vCenter clusters.** One Kubernetes cluster can span several `Provider`s — a capability beyond single-vCenter CAPV. You do not create the resulting VMs by hand; CAPI mints `VSphereMachine`s (the InfraMachine) from a `VSphereMachineTemplate`. This object only advertises *where* they may go.
+spec.controlPlaneEndpoint <object>	# CAPI contract (optional): the cluster's API-server endpoint. Operator- supplied control-plane VIP, or left unset for a control-plane provider (e.g. k0smotron) to manage. Mirrored to `status.controlPlaneEndpoint`.
+spec.controlPlaneEndpoint.host <string> (required)	# Hostname or IP on which the API server is serving.
+spec.controlPlaneEndpoint.port <integer> (required) format=int32	# Port on which the API server is serving.
+spec.controlPlaneFailureDomainSelector <object>	# Which aggregated failure domains are eligible to run control-plane nodes, matched against the Provider FD `labels`. When unset, **all** aggregated FDs are control-plane eligible. Use this to keep the etcd quorum to a bounded, odd set of domains while workers spread wider.
+spec.controlPlaneFailureDomainSelector.matchExpressions <[]object>
+spec.controlPlaneFailureDomainSelector.matchExpressions[].key <string> (required)
+spec.controlPlaneFailureDomainSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.controlPlaneFailureDomainSelector.matchExpressions[].values <[]string>
+spec.controlPlaneFailureDomainSelector.matchLabels <map[string]string>
+spec.paused <boolean>	# Suspend reconciliation. Equivalent to the `cluster.x-k8s.io/paused` annotation but in-band.
+spec.providerRefs <[]object>	# Explicit list of `Provider`s (in this namespace) to aggregate. Takes precedence over `providerSelector` when non-empty. Declaring the set explicitly is the preferred, "explicit over implicit" form.
+spec.providerRefs[].name <string> (required)
+spec.providerSelector <object>	# Select `Provider`s (in this namespace) to aggregate failure domains from, by matching their labels. Ignored when `providerRefs` is set.
+spec.providerSelector.matchExpressions <[]object>
+spec.providerSelector.matchExpressions[].key <string> (required)
+spec.providerSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.providerSelector.matchExpressions[].values <[]string>
+spec.providerSelector.matchLabels <map[string]string>
+status <object>	# Observed state of a VSphereCluster, shaped to the CAPI v1beta2 InfraCluster status contract.
+status.conditions <[]object>	# CAPI-compatible conditions. The `Ready` condition is mirrored to the parent `Cluster`'s `InfrastructureReady`; `Paused` reflects pause state.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required)	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.controlPlaneEndpoint <object>	# CAPI contract field (optional): the resolved API-server endpoint, echoed from `spec.controlPlaneEndpoint` or set by the control-plane provider.
+status.controlPlaneEndpoint.host <string> (required)	# Hostname or IP on which the API server is serving.
+status.controlPlaneEndpoint.port <integer> (required) format=int32	# Port on which the API server is serving.
+status.failureDomains <[]object>	# CAPI contract field: the failure domains machines may be placed in, aggregated from the selected `Provider`s. A **list** per v1beta2.
+status.failureDomains[].attributes <map[string]string>	# Arbitrary attributes for consumers. banlieue flattens the Provider FD's `attributes.raw` plus `dc`/`cluster` labels into this map.
+status.failureDomains[].controlPlane <boolean>	# Whether this failure domain is eligible to run control-plane nodes. `None` is treated by CAPI as "not control-plane eligible".
+status.failureDomains[].name <string> (required)	# Unique failure-domain name (one of the Provider's `status.failureDomains[].name`).
+status.initialization <object> default={}	# CAPI contract field: replaces the deprecated v1beta1 `status.ready`. `provisioned == true` once the failure domains are resolved (and the control-plane endpoint is known, when one is required).
+status.initialization.provisioned <boolean>	# True when the infrastructure provider reports that the resource's infrastructure is fully provisioned.
+status.observedGeneration <integer> format=int64	# The generation of the spec the controller has reconciled.

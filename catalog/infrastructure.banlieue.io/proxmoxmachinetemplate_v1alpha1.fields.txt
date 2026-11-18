@@ -1,0 +1,53 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=infrastructure.banlieue.io/v1alpha1
+kind <string> enum=ProxmoxMachineTemplate
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# ProxmoxMachineTemplate — a stamped-out ProxmoxMachine spec. CAPI requires an InfraMachineTemplate so a MachineSet or MachineDeployment can mint identical machines. banlieue ships it for CAPI compatibility; standalone VirtualMachine users do not need it.
+spec.template <object> (required)	# The spec stamped into every machine created from this template.
+spec.template.spec <object> (required)	# The ProxmoxMachine spec for machines created from this template.
+spec.template.spec.cores <integer> (required) min=1 max=512	# Cores per socket.
+spec.template.spec.cpuType <string>	# CPU model (`host`, `x86-64-v2-AES`, …). Proxmox's default applies when absent.
+spec.template.spec.dataDisks <[]object> max=30	# Additional blank disks, attached after the OS disk.
+spec.template.spec.dataDisks[].discard <boolean> default=false	# Pass TRIM/discard to the storage.
+spec.template.spec.dataDisks[].iothread <boolean> default=false	# Dedicated I/O thread (virtio-scsi-single).
+spec.template.spec.dataDisks[].name <string> (required)	# Stable disk name; echoed in status.
+spec.template.spec.dataDisks[].sizeGiB <integer> (required) min=1 max=65536	# Size in GiB.
+spec.template.spec.dataDisks[].ssd <boolean> default=false	# Present as an SSD to the guest.
+spec.template.spec.dataDisks[].storage <string>	# Storage id; defaults to the machine's `storage`.
+spec.template.spec.desiredPowerState <string> enum=PoweredOn|PoweredOff|Suspended default="PoweredOn"	# Desired power state, resolved from the parent `VirtualMachine`.
+spec.template.spec.failureDomain <string>	# CAPI contract (optional): failure domain placement. One node is one failure domain (roadmap 06).
+spec.template.spec.firmware <string> enum=bios|efi|efi-secure default="efi"	# Firmware: `bios` selects SeaBIOS; `efi` and `efi-secure` select OVMF, the latter with Microsoft/distribution keys pre-enrolled. The template must be able to boot the chosen firmware.
+spec.template.spec.isoStorage <string>	# Storage the NoCloud seed ISO is uploaded to. Must allow `iso` content. Required whenever `userData` is set.
+spec.template.spec.memoryMiB <integer> (required) min=16 max=4194304	# Memory in MiB.
+spec.template.spec.nics <[]object> (required) max=16	# Network interfaces.
+spec.template.spec.nics[].bridge <string> (required)	# Bridge on the node (resolved from the network class), e.g. `vmbr0`.
+spec.template.spec.nics[].ipam <object> (required)	# IP address management for this interface.
+spec.template.spec.nics[].ipam.pool <object>	# Pool-based IPAM parameters.
+spec.template.spec.nics[].ipam.pool.poolRef <object> (required)	# Typed reference (apiGroup + kind + name + optional namespace). Used wherever the referenced kind is pluggable — e.g. IPAM pools, where we want to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's default) or future banlieue-native pool types.
+spec.template.spec.nics[].ipam.pool.poolRef.apiGroup <string> (required)
+spec.template.spec.nics[].ipam.pool.poolRef.kind <string> (required)
+spec.template.spec.nics[].ipam.pool.poolRef.name <string> (required)
+spec.template.spec.nics[].ipam.pool.poolRef.namespace <string>
+spec.template.spec.nics[].ipam.static <object>	# Static IPAM parameters (address, prefix, gateway, nameservers, domain).
+spec.template.spec.nics[].ipam.static.address <string> (required)
+spec.template.spec.nics[].ipam.static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.template.spec.nics[].ipam.static.gateway <string>
+spec.template.spec.nics[].ipam.static.nameservers <[]string>
+spec.template.spec.nics[].ipam.static.prefix <integer> (required) min=0 max=255
+spec.template.spec.nics[].macAddress <string>	# Optional MAC address (Proxmox generates one otherwise).
+spec.template.spec.nics[].model <string> enum=virtio|e1000|rtl8139|vmxnet3 default="virtio"	# Emulated NIC model.
+spec.template.spec.nics[].name <string> (required)	# Stable NIC name; echoed in status.
+spec.template.spec.nics[].vlan <integer> min=1 max=4094	# 802.1Q VLAN tag.
+spec.template.spec.node <string> (required)	# Node the VM is created on (resolved from the failure domain).
+spec.template.spec.osDiskSizeGiB <integer> (required) min=1 max=65536	# OS disk size in GiB: the cloned disk is grown to at least this, never shrunk.
+spec.template.spec.pool <string>	# Proxmox resource pool to place the VM in.
+spec.template.spec.providerID <string>	# CAPI contract: Provider ID for the resulting Node, if this VM becomes a Kubernetes node. Format: `proxmox://<provider-name>/<vmid>`. Set by the provider once the VM exists.
+spec.template.spec.providerRef <object> (required)	# The `Provider` whose connection describes the target Proxmox cluster.
+spec.template.spec.providerRef.name <string> (required)	# Name of the `Provider`.
+spec.template.spec.providerRef.namespace <string>	# Namespace of the `Provider`. Defaults to the referrer's namespace. Only `banlieue-controller` may set this: a machine naming a provider in another namespace is a placement that skipped scheduling, so an admission policy reserves the field to the controller's identity.
+spec.template.spec.sockets <integer> default=1 min=1 max=4	# CPU sockets.
+spec.template.spec.storage <string> (required)	# Storage id for the cloned and new disks (resolved from the storage class). Must allow `images` content.
+spec.template.spec.templateVmid <integer> (required) min=0	# VMID of the template VM to clone. Must be a template (ADR-0075 Decision 5a); the provider checks before cloning.
+spec.template.spec.tpmEnabled <boolean> default=false	# Attach a vTPM 2.0 (`tpmstate0` on `storage`), resolved from `VMClass.spec.tpmEnabled` and attached before first boot.
+spec.template.spec.userData <string>	# Guest bootstrap payload, already resolved and placeholder-substituted by `banlieue-controller` (ADR-0025, ADR-0038). Rendered into a NoCloud `CIDATA` ISO (ADR-0054); the provider reads no Secret or ConfigMap.

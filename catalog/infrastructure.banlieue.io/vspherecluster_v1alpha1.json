@@ -1,0 +1,275 @@
+{
+  "description": "VSphereCluster — banlieue's CAPI v1beta2 InfraCluster for vSphere backends.\n\nIt tells CAPI where a cluster's machines may be placed by aggregating the\nfailure domains of one or more `Provider`s (vCenters) into the CAPI-shaped\n`status.failureDomains` list. The control-plane endpoint is operator-supplied\n(a VIP) or filled in by the control-plane provider (e.g. k0smotron).\n\n# Why it exists\n\n- **Cluster-side failure-domain spread.** CAPI's control-plane / MachineSet\n  controllers balance machines across the FDs published here. \"Spread across\n  all 6 domains\" is simply `replicas: 6` over a `VSphereCluster` that\n  advertises 6 FDs.\n- **Multi-vCenter clusters.** One Kubernetes cluster can span several\n  `Provider`s — a capability beyond single-vCenter CAPV.\n\nYou do not create the resulting VMs by hand; CAPI mints `VSphereMachine`s\n(the InfraMachine) from a `VSphereMachineTemplate`. This object only\nadvertises *where* they may go.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "VSphereCluster — banlieue's CAPI v1beta2 InfraCluster for vSphere backends.\n\nIt tells CAPI where a cluster's machines may be placed by aggregating the\nfailure domains of one or more `Provider`s (vCenters) into the CAPI-shaped\n`status.failureDomains` list. The control-plane endpoint is operator-supplied\n(a VIP) or filled in by the control-plane provider (e.g. k0smotron).\n\n# Why it exists\n\n- **Cluster-side failure-domain spread.** CAPI's control-plane / MachineSet\n  controllers balance machines across the FDs published here. \"Spread across\n  all 6 domains\" is simply `replicas: 6` over a `VSphereCluster` that\n  advertises 6 FDs.\n- **Multi-vCenter clusters.** One Kubernetes cluster can span several\n  `Provider`s — a capability beyond single-vCenter CAPV.\n\nYou do not create the resulting VMs by hand; CAPI mints `VSphereMachine`s\n(the InfraMachine) from a `VSphereMachineTemplate`. This object only\nadvertises *where* they may go.",
+      "properties": {
+        "controlPlaneEndpoint": {
+          "additionalProperties": false,
+          "description": "CAPI contract (optional): the cluster's API-server endpoint. Operator-\nsupplied control-plane VIP, or left unset for a control-plane provider\n(e.g. k0smotron) to manage. Mirrored to `status.controlPlaneEndpoint`.",
+          "nullable": true,
+          "properties": {
+            "host": {
+              "description": "Hostname or IP on which the API server is serving.",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port on which the API server is serving.",
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "host",
+            "port"
+          ],
+          "type": "object"
+        },
+        "controlPlaneFailureDomainSelector": {
+          "additionalProperties": false,
+          "description": "Which aggregated failure domains are eligible to run control-plane\nnodes, matched against the Provider FD `labels`. When unset, **all**\naggregated FDs are control-plane eligible. Use this to keep the etcd\nquorum to a bounded, odd set of domains while workers spread wider.",
+          "nullable": true,
+          "properties": {
+            "matchExpressions": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "enum": [
+                      "In",
+                      "NotIn",
+                      "Exists",
+                      "DoesNotExist"
+                    ],
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "matchLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "paused": {
+          "description": "Suspend reconciliation. Equivalent to the `cluster.x-k8s.io/paused`\nannotation but in-band.",
+          "type": "boolean"
+        },
+        "providerRefs": {
+          "description": "Explicit list of `Provider`s (in this namespace) to aggregate. Takes\nprecedence over `providerSelector` when non-empty. Declaring the set\nexplicitly is the preferred, \"explicit over implicit\" form.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Reference to an object in the same namespace.",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "providerSelector": {
+          "additionalProperties": false,
+          "description": "Select `Provider`s (in this namespace) to aggregate failure domains\nfrom, by matching their labels. Ignored when `providerRefs` is set.",
+          "properties": {
+            "matchExpressions": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "enum": [
+                      "In",
+                      "NotIn",
+                      "Exists",
+                      "DoesNotExist"
+                    ],
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "matchLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed state of a VSphereCluster, shaped to the CAPI v1beta2 InfraCluster\nstatus contract.",
+      "nullable": true,
+      "properties": {
+        "conditions": {
+          "description": "CAPI-compatible conditions. The `Ready` condition is mirrored to the\nparent `Cluster`'s `InfrastructureReady`; `Paused` reflects pause state.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "controlPlaneEndpoint": {
+          "additionalProperties": false,
+          "description": "CAPI contract field (optional): the resolved API-server endpoint,\nechoed from `spec.controlPlaneEndpoint` or set by the control-plane\nprovider.",
+          "nullable": true,
+          "properties": {
+            "host": {
+              "description": "Hostname or IP on which the API server is serving.",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port on which the API server is serving.",
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "host",
+            "port"
+          ],
+          "type": "object"
+        },
+        "failureDomains": {
+          "description": "CAPI contract field: the failure domains machines may be placed in,\naggregated from the selected `Provider`s. A **list** per v1beta2.",
+          "items": {
+            "additionalProperties": false,
+            "description": "CAPI v1beta2 `clusterv1.FailureDomain` — one element of an InfraCluster's\n`status.failureDomains` list.\n\nIn v1beta2 failure domains are a **list** (the v1beta1 map was retired).\nbanlieue's `VSphereCluster` reconciler translates each selected\n`Provider.status.failureDomains[]` entry into one of these, carrying the\nbanlieue FD `name` through, flattening provider attributes into\n`attributes`, and setting `control_plane` from the cluster's\ncontrol-plane FD selector.",
+            "properties": {
+              "attributes": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Arbitrary attributes for consumers. banlieue flattens the Provider FD's\n`attributes.raw` plus `dc`/`cluster` labels into this map.",
+                "type": "object"
+              },
+              "controlPlane": {
+                "description": "Whether this failure domain is eligible to run control-plane nodes.\n`None` is treated by CAPI as \"not control-plane eligible\".",
+                "nullable": true,
+                "type": "boolean"
+              },
+              "name": {
+                "description": "Unique failure-domain name (one of the Provider's\n`status.failureDomains[].name`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "initialization": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "CAPI contract field: replaces the deprecated v1beta1 `status.ready`.\n`provisioned == true` once the failure domains are resolved (and the\ncontrol-plane endpoint is known, when one is required).",
+          "properties": {
+            "provisioned": {
+              "description": "True when the infrastructure provider reports that the resource's\ninfrastructure is fully provisioned.",
+              "nullable": true,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "observedGeneration": {
+          "description": "The generation of the spec the controller has reconciled.",
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "VSphereCluster",
+  "type": "object",
+  "x-flux-schema-type": "VSphereCluster"
+}
