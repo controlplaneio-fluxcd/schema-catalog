@@ -1,0 +1,63 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=infrastructure.banlieue.io/v1alpha1
+kind <string> enum=CloudHypervisorMachineTemplate
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# CloudHypervisorMachineTemplate — a stamped-out CloudHypervisorMachine spec. CAPI requires an InfraMachineTemplate so a MachineSet or MachineDeployment can mint identical machines. A spec template, not a disk template: nothing clones a guest, which is what keeps per-VM vTPMs unique (ADR-0040).
+spec.template <object> (required)	# The spec stamped into every machine created from this template.
+spec.template.spec <object> (required)	# The CloudHypervisorMachine spec for machines created from this template.
+spec.template.spec.bootSource <object> (required)	# Where the OS disk comes from.
+spec.template.spec.bootSource.image <string> (required)	# The image in the host's image cache: an installed raw disk for `Image`, the installer ISO for `InstallMedia`.
+spec.template.spec.bootSource.kind <string> (required) enum=image|installMedia	# Which provisioning shape this machine uses.
+spec.template.spec.cpus <object> (required)	# Virtual CPUs.
+spec.template.spec.cpus.boot <integer> (required) min=1 max=256	# vCPUs the guest boots with.
+spec.template.spec.cpus.max <integer> min=1 max=256	# Hotplug headroom: the most vCPUs the guest may be resized to. Fixed when the VM is created. `None` means no headroom.
+spec.template.spec.desiredPowerState <string> enum=PoweredOn|PoweredOff|Suspended default="PoweredOn"	# Desired power state, resolved from the parent `VirtualMachine`.
+spec.template.spec.failureDomain <string>	# CAPI contract (optional): failure domain placement. One host is one failure domain on this backend, as on libvirt.
+spec.template.spec.firstBootSealing <object>	# First-boot sealing the guest must report before `GuestReady` (ADR-0088, ADR-0112), copied by `banlieue-controller` from the parent `VirtualMachine`'s `VMImage.spec.firstBootSealing` when the class is `tpmEnabled`. The guest reports over its vsock (`sealed=` beside `phase=installed`). `None` for every other machine, which keeps today's `GuestReady` meaning unchanged.
+spec.template.spec.firstBootSealing.partitions <[]string> default=["COS_PERSISTENT"] min=1	# Kairos partition labels to seal on first boot. Defaults to `[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and `COS_GRUB` are refused at admission, mirroring Kairos's own refusal.
+spec.template.spec.firstBootSealing.timeoutSeconds <integer> default=600 min=60 max=86400	# Seconds from the machine's power-on (its infrastructure `Ready` transition) within which the guest must report every listed partition sealed; after that `GuestReady` is `False` with reason `FirstBootSealingTimeout`. A clone that cannot seal halts in its initramfs and never reports anything, so this is how it is noticed.
+spec.template.spec.identity <object> (immutable)	# The guest identity this machine carries when it is not its own: set by `banlieue-controller` on a move's destination machine to the source's identity (ADR-0127 Decision 6). The provider derives the MAC, tap names, machine directory and EK certificate subject from it instead of from this machine's name and UID, so a moved guest keeps all of them. Absent on every machine that was never the destination of a move. Immutable.
+spec.template.spec.identity.name <string> (required)	# The original machine's name.
+spec.template.spec.identity.uid <string> (required)	# The original machine's UID.
+spec.template.spec.memory <object> (required)	# Guest memory.
+spec.template.spec.memory.hugepages <boolean> default=false	# Back guest memory with hugepages. The host reports hugepages as their own capacity, since they are reserved rather than allocated on demand.
+spec.template.spec.memory.sizeMiB <integer> (required) min=128 max=4194304	# Guest memory in MiB.
+spec.template.spec.moveIn <object>	# This machine is a move's destination (ADR-0127 Decision 4). Set by `banlieue-controller` at creation; the host provider prepares to receive.
+spec.template.spec.moveIn.commit <boolean>	# Resume the received guest. Written only after the source reported `Sent` and its VMM exited (Decision 5); never written with the source's `abort`. One way.
+spec.template.spec.moveIn.moveId <string> (required) (immutable)	# The `VirtualMachineMove` this machine receives. Immutable.
+spec.template.spec.moveIn.peer <object>	# The source host, once it has published its certificate.
+spec.template.spec.moveIn.peer.certificate <string> (required)	# The peer's per-move certificate, PEM.
+spec.template.spec.moveIn.peer.endpoint <string>	# `host:port` the destination listens on. Set only on the source's `moveOut.peer`: the source connects, the destination listens.
+spec.template.spec.moveOut <object>	# This machine is a move's source (ADR-0127 Decision 4). Set by `banlieue-controller`; the host provider copies the guest out.
+spec.template.spec.moveOut.abort <boolean>	# Give up before commit: resume the guest here (Decision 12). One way; never written once the destination's `commit` is.
+spec.template.spec.moveOut.cutover <boolean>	# Pause the guest and send the disk delta and the VMM state. One way.
+spec.template.spec.moveOut.moveId <string> (required) (immutable)	# The `VirtualMachineMove` this machine sends. Immutable.
+spec.template.spec.moveOut.peer <object>	# The destination host, once it has published its certificate and endpoint.
+spec.template.spec.moveOut.peer.certificate <string> (required)	# The peer's per-move certificate, PEM.
+spec.template.spec.moveOut.peer.endpoint <string>	# `host:port` the destination listens on. Set only on the source's `moveOut.peer`: the source connects, the destination listens.
+spec.template.spec.nics <[]object> (required) max=16	# Network interfaces.
+spec.template.spec.nics[].ipam <object> (required)	# IP address management for this interface.
+spec.template.spec.nics[].ipam.pool <object>	# Pool-based IPAM parameters.
+spec.template.spec.nics[].ipam.pool.poolRef <object> (required)	# Typed reference (apiGroup + kind + name + optional namespace). Used wherever the referenced kind is pluggable — e.g. IPAM pools, where we want to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's default) or future banlieue-native pool types.
+spec.template.spec.nics[].ipam.pool.poolRef.apiGroup <string> (required)
+spec.template.spec.nics[].ipam.pool.poolRef.kind <string> (required)
+spec.template.spec.nics[].ipam.pool.poolRef.name <string> (required)
+spec.template.spec.nics[].ipam.pool.poolRef.namespace <string>
+spec.template.spec.nics[].ipam.static <object>	# Static IPAM parameters (address, prefix, gateway, nameservers, domain).
+spec.template.spec.nics[].ipam.static.address <string> (required)
+spec.template.spec.nics[].ipam.static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.template.spec.nics[].ipam.static.gateway <string>
+spec.template.spec.nics[].ipam.static.nameservers <[]string>
+spec.template.spec.nics[].ipam.static.prefix <integer> (required) min=0 max=255
+spec.template.spec.nics[].macAddress <string>	# Optional MAC address. The provider derives a stable one from the machine UID otherwise, so the address survives a restart.
+spec.template.spec.nics[].name <string> (required)	# Stable NIC name; echoed in status.
+spec.template.spec.nics[].networkClass <string> (required)	# Network class: a name the host resolves to one of its bridges. Never a bridge name from the cluster.
+spec.template.spec.osDiskSizeGiB <integer> (required) min=1 max=65536	# OS disk size in GiB. Required, and grown to before first boot; never shrunk. Must be at least the image's size.
+spec.template.spec.providerID <string>	# CAPI contract: Provider ID for the resulting Node, if this VM becomes a Kubernetes node. Format: `cloudhypervisor://<provider-name>/<machine-uid>`. Set by the provider once the guest exists.
+spec.template.spec.providerRef <object> (required)	# The `Provider` for the one host that runs this machine (ADR-0060).
+spec.template.spec.providerRef.name <string> (required)	# Name of the `Provider`.
+spec.template.spec.providerRef.namespace <string>	# Namespace of the `Provider`. Defaults to the referrer's namespace. Only `banlieue-controller` may set this: a machine naming a provider in another namespace is a placement that skipped scheduling, so an admission policy reserves the field to the controller's identity.
+spec.template.spec.storageClass <string> (required)	# Storage class the machine's disks live in. A name the host declares in its local config and publishes on its failure domain; never a path.
+spec.template.spec.tpmEnabled <boolean> default=false	# Attach a vTPM (swtpm), resolved from the VM's `VMClass.spec.tpmEnabled`. Requires `ChBootSourceKind::InstallMedia` (ADR-0040, ADR-0048, ADR-0065), or an image that seals itself on first boot (`Self::first_boot_sealing`, ADR-0088, ADR-0112).
+spec.template.spec.userData <string>	# Guest bootstrap payload, already resolved and placeholder-substituted by `banlieue-controller` (ADR-0025, ADR-0038). Rendered into a NoCloud `CIDATA` seed disk; the provider reads no Secret or ConfigMap.

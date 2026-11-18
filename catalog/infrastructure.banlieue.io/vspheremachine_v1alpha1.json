@@ -1,0 +1,467 @@
+{
+  "description": "VSphereMachine — the concrete, scheduled VM request for the vSphere backend.\n\nThis is banlieue's reference implementation of the CAPI v1beta2\nInfraMachine contract. Where a VirtualMachine is abstract, every field here\nis already resolved: a real vCenter `template`, `datacenter`, `cluster`,\n`datastore`, and per-NIC `portGroup`. banlieue's main controller creates it\nafter scheduling; the vSphere provider reconciles it into a real VM and\nreports CAPI-shaped status.\n\n# Why it exists\n\n- **It is the hand-off.** A VirtualMachine says \"an ubuntu db-prod VM\n  somewhere reasonable\"; a VSphereMachine says \"clone template X in DC0 /\n  cluster C0 onto datastore ds-fast-01\" — the thing a provider can actually\n  execute.\n- **CAPI-compatible by contract.** Because it satisfies the InfraMachine\n  contract, it doubles as a Cluster API infrastructure provider: a\n  `clusterv1.Machine` with `infrastructureRef.kind: VSphereMachine` drives\n  it the same way.\n\nYou normally do not create this by hand — the controller does, owned by the\nVirtualMachine. The CAPI contract label\n`cluster.x-k8s.io/v1beta2: v1alpha1` is emitted onto the generated CRD by\n`crdgen`, since kube-derive cannot set CRD-level labels (ADR-0005).",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "VSphereMachine — the concrete, scheduled VM request for the vSphere backend.\n\nThis is banlieue's reference implementation of the CAPI v1beta2\nInfraMachine contract. Where a VirtualMachine is abstract, every field here\nis already resolved: a real vCenter `template`, `datacenter`, `cluster`,\n`datastore`, and per-NIC `portGroup`. banlieue's main controller creates it\nafter scheduling; the vSphere provider reconciles it into a real VM and\nreports CAPI-shaped status.\n\n# Why it exists\n\n- **It is the hand-off.** A VirtualMachine says \"an ubuntu db-prod VM\n  somewhere reasonable\"; a VSphereMachine says \"clone template X in DC0 /\n  cluster C0 onto datastore ds-fast-01\" — the thing a provider can actually\n  execute.\n- **CAPI-compatible by contract.** Because it satisfies the InfraMachine\n  contract, it doubles as a Cluster API infrastructure provider: a\n  `clusterv1.Machine` with `infrastructureRef.kind: VSphereMachine` drives\n  it the same way.\n\nYou normally do not create this by hand — the controller does, owned by the\nVirtualMachine. The CAPI contract label\n`cluster.x-k8s.io/v1beta2: v1alpha1` is emitted onto the generated CRD by\n`crdgen`, since kube-derive cannot set CRD-level labels (ADR-0005).",
+      "properties": {
+        "cluster": {
+          "description": "Compute cluster within the datacenter.",
+          "type": "string"
+        },
+        "createdBy": {
+          "description": "The principal that created the parent `VirtualMachine`, copied from\nits `banlieue.io/created-by` annotation when present (ADR-0089). That\nannotation is stamped by an optional `MutatingAdmissionPolicy`\n(`deploy/admission/virtualmachine-created-by.yaml`) from\n`request.userInfo.username` at `VirtualMachine` CREATE — `None` on a\ncluster that doesn't apply it, or for a `VirtualMachine` that\npredates it. Surfaced as the vCenter `CreatedBy` custom attribute by\nthe provider; never a stand-in value when absent.",
+          "nullable": true,
+          "type": "string"
+        },
+        "datacenter": {
+          "description": "Datacenter name.",
+          "type": "string"
+        },
+        "datastore": {
+          "description": "Datastore or datastore cluster name (resolved from the storage class).",
+          "type": "string"
+        },
+        "desiredPowerState": {
+          "default": "PoweredOn",
+          "description": "Desired power state, resolved from the parent `VirtualMachine`'s\n`spec.desiredPowerState` (ADR-0024). Defaults to `PoweredOn`, matching\n`VirtualMachineSpec`'s own default.",
+          "enum": [
+            "PoweredOn",
+            "PoweredOff",
+            "Suspended"
+          ],
+          "type": "string"
+        },
+        "disks": {
+          "description": "Disks. The first disk is the template's OS disk (grown if needed);\nsubsequent disks are blank.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One virtual disk on the resulting vSphere VM.",
+            "properties": {
+              "name": {
+                "description": "Stable disk name; echoed in status with resolved backend identifiers.",
+                "type": "string"
+              },
+              "provisioning": {
+                "default": "thin",
+                "description": "Provisioning hint (thin / thick / eager-zeroed).",
+                "enum": [
+                  "thin",
+                  "thick",
+                  "eagerZeroed"
+                ],
+                "type": "string"
+              },
+              "sizeGiB": {
+                "description": "Disk size in GiB. For the OS disk this is a floor — the template's disk\nis grown to at least this size.",
+                "maximum": 65536,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "sizeGiB"
+            ],
+            "type": "object"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "type": "array"
+        },
+        "failureDomain": {
+          "description": "CAPI contract (optional): failure domain placement. The banlieue\nscheduler writes the chosen failure domain here; for CAPI users the\nparent Machine's `spec.failureDomain` is what populates this.",
+          "nullable": true,
+          "type": "string"
+        },
+        "firmware": {
+          "description": "Firmware. EFI / EFI Secure require the template to be EFI-capable.",
+          "enum": [
+            "bios",
+            "efi",
+            "efi-secure"
+          ],
+          "type": "string"
+        },
+        "firstBootSealing": {
+          "additionalProperties": false,
+          "description": "First-boot sealing the guest must report before `GuestReady`\n(ADR-0088), copied by `banlieue-controller` from the parent\n`VirtualMachine`'s `VMImage.spec.firstBootSealing` when the class is\n`tpmEnabled`. `None` for every other machine, which keeps today's\n`GuestReady` meaning unchanged.",
+          "nullable": true,
+          "properties": {
+            "partitions": {
+              "default": [
+                "COS_PERSISTENT"
+              ],
+              "description": "Kairos partition labels to seal on first boot. Defaults to\n`[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and\n`COS_GRUB` are refused at admission, mirroring Kairos's own refusal.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "timeoutSeconds": {
+              "default": 600,
+              "description": "Seconds from the machine's power-on (its infrastructure `Ready`\ntransition) within which the guest must report every listed partition\nsealed; after that `GuestReady` is `False` with reason\n`FirstBootSealingTimeout`. A clone that cannot seal halts in its\ninitramfs and never reports anything, so this is how it is noticed.",
+              "maximum": 86400,
+              "minimum": 60,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "folder": {
+          "description": "Destination vCenter folder path for the **clone** (not the source\ntemplate — see `template_folder`). Optional; defaults to the\ndatacenter VM root, or (once set by `banlieue-controller`) the same\nper-zone folder the template lives in.",
+          "nullable": true,
+          "type": "string"
+        },
+        "memoryMiB": {
+          "description": "Memory in MiB.",
+          "maximum": 4194304,
+          "minimum": 128,
+          "type": "integer"
+        },
+        "network": {
+          "description": "Network interfaces.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One virtual network interface on the resulting vSphere VM.",
+            "properties": {
+              "ipam": {
+                "additionalProperties": false,
+                "description": "IP address management for this interface.",
+                "properties": {
+                  "pool": {
+                    "additionalProperties": false,
+                    "description": "Pool-based IPAM parameters.",
+                    "nullable": true,
+                    "properties": {
+                      "poolRef": {
+                        "additionalProperties": false,
+                        "description": "Typed reference (apiGroup + kind + name + optional namespace).\n\nUsed wherever the referenced kind is pluggable — e.g. IPAM pools, where we\nwant to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's\ndefault) or future banlieue-native pool types.",
+                        "properties": {
+                          "apiGroup": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "apiGroup",
+                          "kind",
+                          "name"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "poolRef"
+                    ],
+                    "type": "object"
+                  },
+                  "static": {
+                    "additionalProperties": false,
+                    "description": "Static IPAM parameters (address, prefix, gateway, nameservers, domain).",
+                    "nullable": true,
+                    "properties": {
+                      "address": {
+                        "type": "string"
+                      },
+                      "domain": {
+                        "description": "DNS domain, used both as a DNS search domain and (by a\n`VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build\nan FQDN as `<vm-name>.<domain>`.",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "gateway": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "nameservers": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "prefix": {
+                        "maximum": 255,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "prefix"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "macAddress": {
+                "description": "Optional MAC address (otherwise vCenter generates one).",
+                "nullable": true,
+                "type": "string"
+              },
+              "name": {
+                "description": "Stable NIC name; echoed in status.",
+                "type": "string"
+              },
+              "portGroup": {
+                "description": "Resolved port group or distributed port group name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "ipam",
+              "name",
+              "portGroup"
+            ],
+            "type": "object"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "type": "array"
+        },
+        "numCpus": {
+          "description": "Number of virtual CPUs.",
+          "maximum": 256,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "providerID": {
+          "description": "CAPI contract: Provider ID for the resulting Node, if this VM\nbecomes a Kubernetes node. Format: `vsphere://<vm-instance-uuid>`.\nSet by the provider controller after the VM is created.",
+          "nullable": true,
+          "type": "string"
+        },
+        "providerRef": {
+          "additionalProperties": false,
+          "description": "Reference to the banlieue `Provider` whose connection details\ndescribe the target vCenter.",
+          "properties": {
+            "name": {
+              "description": "Name of the `Provider`.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the `Provider`. Defaults to the referrer's namespace.\n\nOnly `banlieue-controller` may set this: a machine naming a provider in\nanother namespace is a placement that skipped scheduling, so an\nadmission policy reserves the field to the controller's identity.",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "resourcePool": {
+          "description": "Resource pool path within the cluster. Optional; defaults to the\ncluster's root resource pool.",
+          "nullable": true,
+          "type": "string"
+        },
+        "template": {
+          "description": "vCenter template's bare display name (resolved from `VMImage`).\nNever a decorated string (no `[dc]`/folder prefix) — see\n`template_folder` for the scoping the lookup needs.",
+          "type": "string"
+        },
+        "templateFolder": {
+          "description": "The per-zone vCenter folder the template in `template` lives in\n(resolved from `VMImage.status`, e.g. `templates/cluster-01`,\nADR-0020 Decision #5). Set for both `Url` and `Template` vSphere\nsources (ADR-0104); `None` only for a row written by a provider that\npredates it, whose lookup is datacenter-wide.\n\nThis is deliberately a separate field from `template`, not a\n`folder/name`-encoded string: every zone's template shares the same\ndisplay `name`, so a lookup that doesn't scope by folder can match\na *different* zone's template (found live: a datacenter-wide\nlookup let one zone's `VirtualMachine` clone another zone's\ntemplate).",
+          "nullable": true,
+          "type": "string"
+        },
+        "tpmEnabled": {
+          "default": false,
+          "description": "Attach a virtual TPM (vTPM) device to this VM, resolved from the\nVM's `VMClass.spec.tpmEnabled` (ADR-0039). Consumed by the provider\ncontroller between `clone_vm` (which always clones powered off) and\nthe power-on step, so the device exists before first boot — a hard\nrequirement for Kairos's `kcrypt` to seal LUKS keys to it during\nunattended install.",
+          "type": "boolean"
+        },
+        "userData": {
+          "description": "Guest bootstrap payload content — already resolved from the parent\n`VirtualMachine`'s `spec.userData` Secret or ConfigMap (ADR-0038)\nand placeholder-substituted (ADR-0024's `${VM_NAME}`/`${FQDN}`/etc.\nset) by `banlieue-controller` (ADR-0025). The provider delivers this\nverbatim (base64 into `guestinfo.userdata`) — it never reads a\nSecret or ConfigMap itself.",
+          "nullable": true,
+          "type": "string"
+        }
+      },
+      "required": [
+        "cluster",
+        "datacenter",
+        "datastore",
+        "disks",
+        "firmware",
+        "memoryMiB",
+        "network",
+        "numCpus",
+        "providerRef",
+        "template"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed state of a VSphereMachine, shaped to the CAPI v1beta2 InfraMachine\nstatus contract (plus a few vSphere-specific diagnostics).",
+      "nullable": true,
+      "properties": {
+        "addresses": {
+          "description": "CAPI contract field (optional): VM addresses. Surfaced to the parent\nMachine's `status.addresses` once initialization is complete.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A typed machine address. Mirrors CAPI's `clusterv1.MachineAddress`.",
+            "properties": {
+              "address": {
+                "description": "The address itself.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.",
+                "enum": [
+                  "Hostname",
+                  "ExternalIP",
+                  "InternalIP",
+                  "ExternalDNS",
+                  "InternalDNS"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "conditions": {
+          "description": "CAPI-compatible conditions (using `metav1.Condition`). The `Ready`\ncondition is mirrored as `InfrastructureReady` on the parent\n(`clusterv1.Machine` or banlieue `VirtualMachine`) per contract.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "failureDomain": {
+          "description": "CAPI contract field (optional): observed failure domain.\nSurfaced to the parent Machine's `status.failureDomain`.",
+          "nullable": true,
+          "type": "string"
+        },
+        "guestInstalled": {
+          "description": "Whether the *installed* guest has announced itself, distinct from a\nlive installer still overwriting the disk (ADR-0043). Read from\n`guestinfo.banlieue.phase` via `config.extraConfig` — the guest\nwrites it with `vmware-rpctool`, the host reads it back here. `None`\nmeans nothing has looked yet (the whole life of an `Immediate` image,\nor a `Deferred` one before its first observation); sticky at\n`Some(true)` once observed, since the runtime value does not survive\na power cycle but a stopped VM has not become uninstalled. Not part\nof the CAPI contract; mirrored onto the parent `VirtualMachine` as\nthe `GuestReady` condition (`common::condition_types::GUEST_READY`),\nnever as `Ready`.",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "initialization": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "CAPI contract field: replaces the deprecated v1beta1 `status.ready`.",
+          "properties": {
+            "provisioned": {
+              "description": "True when the infrastructure provider reports that the resource's\ninfrastructure is fully provisioned.",
+              "nullable": true,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "installMediaDetached": {
+          "description": "Whether the provider has made sure no install medium is left on the\nVM (ADR-0044, vSphere amendment 2026-10-23).\n\nSet once `guestInstalled` is true: every ISO-backed CD-ROM is ejected\n(client-device backing, not connected, not connected at power-on, no\nguest control) and this becomes `true`, also when there was nothing to\neject, as on an `Immediate` clone whose template's CD-ROM was removed at\nbuild time. `None` until then. **Sticky once true**: an ejected ISO\ndoes not come back.\n\n`GuestReady` is published `True` only after this is true, so a pool can\nnever bind a member that still has its installer attached, and an\ninstalled VM never keeps holding its image's ISO on the datastore.",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "instanceUuid": {
+          "description": "VM instance UUID. Stable across vCenter restarts and the source for\n`spec.providerID`. Not part of the CAPI contract.",
+          "nullable": true,
+          "type": "string"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "observedPowerState": {
+          "description": "The backend VM's actual power state, as last observed via\n`VirtualMachine.runtime.powerState` (ADR-0034) — the hypervisor's\nview, available immediately on power-on, not a guest-OS-boot signal.\nAbsent until first observed. Not part of the CAPI contract; mirrored\nonto the parent `VirtualMachine`'s own `status.observedPowerState`.",
+          "enum": [
+            "PoweredOn",
+            "PoweredOff",
+            "Suspended",
+            null
+          ],
+          "nullable": true,
+          "type": "string"
+        },
+        "sealedPartitions": {
+          "description": "Partitions the guest has reported sealed, as LUKS containers, on a\nfirst-boot sealing machine (ADR-0088): from ``guestinfo.banlieue.sealed``. **Sticky**:\nthe report is re-asserted every boot but lives in volatile state, and a\npowered-off machine has not become unsealed. Empty until reported, and\non every machine without `spec.firstBootSealing`. Guest-supplied, so it\nis only ever used to *withhold* `GuestReady`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tpmAttached": {
+          "description": "Whether a vTPM device was successfully attached, when\n`spec.tpmEnabled` is set (ADR-0039). `None` when `tpmEnabled` is\n`false` (nothing was ever attempted) or the attach hasn't run yet.\nNot part of the CAPI contract; a failed attach surfaces through the\n`Ready`/`InfrastructureReady` conditions rather than a dedicated\n`VirtualMachine`-level mirror (ADR-0034's reasoning for\n`observedPowerState` applies equally here).",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "tpmEndorsementCertificates": {
+          "description": "PEM vTPM endorsement key certificate(s) issued by vCenter for this\nVM's vTPM (ADR-0045).\n\nRead host-side from `VirtualTpm.endorsementKeyCertificate` (DER,\nconverted here) as the first guest step, so the certificate-to-VM\nbinding is recorded while the VM is still something only banlieue has\ntouched. Empty when `spec.tpmEnabled` is `false`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "vmRef": {
+          "description": "VMware managed-object reference (vm-NNNN). Useful for operator\ndiagnostics. Not part of the CAPI contract.",
+          "nullable": true,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "VSphereMachine",
+  "type": "object",
+  "x-flux-schema-type": "VSphereMachine"
+}

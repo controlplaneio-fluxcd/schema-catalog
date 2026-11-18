@@ -1,0 +1,66 @@
+# schema source: Kubeflow Workspaces v2.0.0 https://github.com/kubeflow/notebooks
+apiVersion <string> enum=kubeflow.org/v1beta1
+kind <string> enum=Workspace
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object>	# WorkspaceSpec defines the desired state of Workspace
+spec.displayName <string> min=1 max=128	# an optional human-readable name for the Workspace, displayed in the UI instead of metadata.name
+spec.kind <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253 (immutable)	# the WorkspaceKind to use
+spec.paused <boolean> default=false	# if the workspace is paused (no pods running)
+spec.podTemplate <object> (required)	# options for "podTemplate"-type WorkspaceKinds
+spec.podTemplate.options <object> (required)	# the selected podTemplate options
+spec.podTemplate.options.imageConfig <string> (required) min=1 max=256	# the id of an imageConfig option - options are defined in WorkspaceKind under `spec.podTemplate.options.imageConfig.values[]`
+spec.podTemplate.options.podConfig <string> (required) min=1 max=256	# the id of a podConfig option - options are defined in WorkspaceKind under `spec.podTemplate.options.podConfig.values[]`
+spec.podTemplate.podMetadata <object>	# metadata to be applied to the Pod resource
+spec.podTemplate.podMetadata.annotations <map[string]string>	# annotations to be applied to the Pod resource - entries are currently NOT allowed, until the security model for Workspace-level Pod metadata is defined
+spec.podTemplate.podMetadata.labels <map[string]string>	# labels to be applied to the Pod resource - entries are currently NOT allowed, until the security model for Workspace-level Pod metadata is defined
+spec.podTemplate.volumes <object> (required)	# volume configs
+spec.podTemplate.volumes.data <[]object>	# additional PVCs to mount - these PVC must already exist in the Namespace - the same PVC can be mounted multiple times with different `mountPaths` - if `readOnly` is false, the PVC must be RWX (ReadWriteMany, ReadWriteOnce) - if `readOnly` is true, the PVC must be ReadOnlyMany
+spec.podTemplate.volumes.data[].mountPath <string> (required) pattern="^/[^/].*$" min=2 max=4096	# the mount path for the PVC
+spec.podTemplate.volumes.data[].pvcName <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# the name of the PVC to mount
+spec.podTemplate.volumes.data[].readOnly <boolean> default=false	# if the PVC should be mounted as ReadOnly
+spec.podTemplate.volumes.home <string> pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# the name of the PVC to mount as the home volume - this PVC must already exist in the Namespace - this PVC must be RWX (ReadWriteMany, ReadWriteOnce) - the mount path is defined in the WorkspaceKind under `spec.podTemplate.volumeMountPaths.home`
+spec.podTemplate.volumes.secrets <[]object>	# secrets to mount - these secrets must already exist in the Namespace - secrets are mounted as folders with the secret keys as files
+spec.podTemplate.volumes.secrets[].defaultMode <integer> default=420 format=int32 min=0 max=511	# default mode bits used to set permissions on files in the Secret - must be a decimal value between 0 and 511, or an octal value between 0000 and 0777 - for example, 420 is equivalent to 0644, and 511 is equivalent to 0777 - YAML accepts both octal and decimal values, JSON requires decimal - Defaults to 420 (octal: 0644) if not specified.
+spec.podTemplate.volumes.secrets[].mountPath <string> (required) pattern="^/[^/].*$" min=2 max=4096	# the mount path for the Secret
+spec.podTemplate.volumes.secrets[].secretName <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" min=1 max=253	# the name of the Secret to mount
+status <object>	# WorkspaceStatus defines the observed state of Workspace
+status.activity <object> (required)	# activity information for the Workspace, used to determine activity rule actions
+status.activity.lastActivity <integer> (required) default=0 format=int64	# the last time activity was observed on the Workspace (UNIX epoch in milliseconds) - this is the value returned by the activity probe, not the time the probe was run - the activity probe is authoritative: on success, the probe result unconditionally overwrites this timestamp (the controller does not validate monotonicity or clamp to wall-clock time) - not updated when a probe fails
+status.activity.lastProbe <object>	# probe result tracking
+status.activity.lastProbe.endTime <integer> (required) format=int64	# the time the probe was completed (UNIX epoch in milliseconds)
+status.activity.lastProbe.message <string> (required) default=""	# a human-readable message about the probe result - WARNING: this field is NOT FOR MACHINE USE, subject to change without notice
+status.activity.lastProbe.result <string> (required) enum=Success|Failure|Timeout	# the result of the last probe execution
+status.activity.lastProbe.startTime <integer> (required) format=int64	# the time the probe was started (UNIX epoch in milliseconds)
+status.activity.lastUpdate <integer> (required) default=0 format=int64	# the end time of the last successful probe (UNIX epoch in milliseconds) - not updated when a probe fails - used to determine when the next probe should run
+status.activity.rules <object>	# rule evaluation state
+status.activity.rules.pauseWorkspace <object>	# rule evaluation state for the pauseWorkspace effect
+status.activity.rules.pauseWorkspace.eligibleAfter <integer> (required) default=0 format=int64	# the time after which if the rule is evaluated the Workspace would be paused (UNIX epoch in milliseconds) - set to 0 when lastActivity is unknown (<= 0), indicating eligibility cannot be computed / not applicable - the controller will not pause a Workspace when eligibleAfter is 0
+status.lastRunningTime <integer> (required) default=0 format=int64	# the last time the Workspace entered a Running state (UNIX epoch in milliseconds) - used to compute running duration for `minRunningSeconds` activity guard - set to 0 when the Workspace has never been in a Running state
+status.pauseTime <integer> (required) default=0 format=int64	# the time when the Workspace was paused (UNIX epoch in milliseconds) - set to 0 when the Workspace is NOT paused
+status.pendingRestart <boolean> (required) default=false	# if the current Pod does not reflect the current "desired" state - true if any `spec.podTemplate.options` have a redirect and so will be patched on the next restart - true if the WorkspaceKind has changed one of its common `podTemplate` fields like `podMetadata`, `podSpec.mainContainer.livenessProbe`, `podSpec.mainContainer.extraEnv`, or `podSpec.mainContainer.securityContext`
+status.podTemplateOptions <object> (required)	# information about the current podTemplate options (only set for WorkspaceKind of podTemplate kind)
+status.podTemplateOptions.imageConfig <object> (required)	# info about the current imageConfig option
+status.podTemplateOptions.imageConfig.desired <string> min=1 max=256	# the option id which will take effect after the next restart
+status.podTemplateOptions.imageConfig.redirectChain <[]object>	# the chain from the current option to the desired option
+status.podTemplateOptions.imageConfig.redirectChain[].source <string> (required) min=1 max=256	# the source option id
+status.podTemplateOptions.imageConfig.redirectChain[].target <string> (required) min=1 max=256	# the target option id
+status.podTemplateOptions.podConfig <object> (required)	# info about the current podConfig option
+status.podTemplateOptions.podConfig.desired <string> min=1 max=256	# the option id which will take effect after the next restart
+status.podTemplateOptions.podConfig.redirectChain <[]object>	# the chain from the current option to the desired option
+status.podTemplateOptions.podConfig.redirectChain[].source <string> (required) min=1 max=256	# the source option id
+status.podTemplateOptions.podConfig.redirectChain[].target <string> (required) min=1 max=256	# the target option id
+status.podTemplatePod <object> (required)	# information about the Pod managed by this Workspace (only set for WorkspaceKind of podTemplate kind)
+status.podTemplatePod.containers <[]object>	# information about the Pod's containers
+status.podTemplatePod.containers[].name <string> (required)	# the name of the container
+status.podTemplatePod.initContainers <[]object>	# information about the Pod's initContainers
+status.podTemplatePod.initContainers[].name <string> (required)	# the name of the container
+status.podTemplatePod.name <string>	# the name of the Pod resource
+status.podTemplatePod.nodeName <string>	# the name of the node on which the Pod is scheduled
+status.podTemplatePod.serviceAccountName <string>	# the name of the ServiceAccount that the Pod runs as - this ServiceAccount is created and owned by the Workspace, and is stable for its lifetime - the name has a random suffix, so it is reported here for Roles, RoleBindings, and Istio AuthorizationPolicies which need to reference the ServiceAccount
+status.podTemplatePod.uid <string>	# the UID of the Pod resource
+status.podTemplateStatefulSet <object> (required)	# information about the StatefulSet managed by this Workspace (only set for WorkspaceKind of podTemplate kind)
+status.podTemplateStatefulSet.name <string>	# the name of the StatefulSet resource
+status.podTemplateStatefulSet.uid <string>	# the UID of the StatefulSet resource
+status.state <string> (required) enum=Running|Terminating|Paused|Pending|Error|Unknown default="Unknown"	# the current state of the Workspace
+status.stateMessage <string> (required) default=""	# a human-readable message about the state of the Workspace - WARNING: this field is NOT FOR MACHINE USE, subject to change without notice

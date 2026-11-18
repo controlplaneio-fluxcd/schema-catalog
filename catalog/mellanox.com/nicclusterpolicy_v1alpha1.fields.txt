@@ -1,4 +1,4 @@
-# schema source: NVIDIA Network Operator v26.7.1 https://github.com/Mellanox/network-operator
+# schema source: NVIDIA Network Operator v26.10.0 https://github.com/Mellanox/network-operator
 apiVersion <string> enum=mellanox.com/v1alpha1
 kind <string> enum=NicClusterPolicy (cluster-scoped)
 metadata.name <string> (required)
@@ -41,6 +41,7 @@ spec.docaTelemetryService.containerResources[].requests <object (free-form)>	# R
 spec.docaTelemetryService.image <string> (required) pattern="[a-zA-Z0-9\\-]+"	# Name of the image
 spec.docaTelemetryService.imagePullSecrets <[]string> default=[]	# ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling the image
 spec.docaTelemetryService.repository <string> pattern="[a-zA-Z0-9\\.\\-\\/]+"	# Address of the registry that stores the image
+spec.docaTelemetryService.shareHostSharedMemory <boolean> default=false	# ShareHostSharedMemory backs the shared memory used for IPC with the host's whole /dev/shm, which is what IPC clients running directly on the node require. When false the shared memory is confined to /dev/shm/telemetry on the host, which containerized IPC clients can mount while the rest of the host's shared memory stays isolated.
 spec.docaTelemetryService.version <string>	# Version of the image to use
 spec.global <object>	# Global contains global configuration for all components
 spec.global.imagePullSecrets <[]string>	# ImagePullSecrets is a list of secret names for pulling component images
@@ -60,6 +61,8 @@ spec.ibKubernetes.repository <string> pattern="[a-zA-Z0-9\\.\\-\\/]+"	# Address 
 spec.ibKubernetes.ufmSecret <string> (required)	# Secret containing credentials to UFM service
 spec.ibKubernetes.version <string>	# Version of the image to use
 spec.nicConfigurationOperator <object>	# NicConfigurationOperator provides Kubernetes CRD API to allow FW configuration on NVIDIA NICs in a coordinated manner See: https://github.com/Mellanox/nic-configuration-operator
+spec.nicConfigurationOperator.certConfig <object>	# Optional: Custom TLS certificates configuration for NIC Configuration Operator container
+spec.nicConfigurationOperator.certConfig.name <string>	# Name of the ConfigMap
 spec.nicConfigurationOperator.configurationDaemon <object> (required)	# Image information for nic-configuration-daemon
 spec.nicConfigurationOperator.configurationDaemon.containerResources <[]object>	# ResourceRequirements describes the compute resource requirements
 spec.nicConfigurationOperator.configurationDaemon.containerResources[].limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -95,6 +98,7 @@ spec.nicConfigurationOperator.env[].valueFrom.secretKeyRef.name <string> default
 spec.nicConfigurationOperator.env[].valueFrom.secretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
 spec.nicConfigurationOperator.logLevel <string> enum=info|debug default="info"	# LogLevel sets the verbosity level of the logs. info|debug
 spec.nicConfigurationOperator.nicFirmwareStorage <object>	# NicFirmwareStorage contains configuration for the NIC firmware storage. If not provided, the NIC firmware storage will not be configured.
+spec.nicConfigurationOperator.nicFirmwareStorage.accessMode <string> enum=ReadWriteMany|ReadWriteOnce default="ReadWriteMany" (immutable)	# AccessMode is the access mode of the PVC to create. Only applies if nicFirmwareStorage.create == true. ReadWriteMany is required on multi-node clusters, where the firmware storage is mounted by the configuration daemon on every node. ReadWriteOnce is only valid on single-node clusters (e.g. Single Node OpenShift with storage that does not support ReadWriteMany). Default value: ReadWriteMany
 spec.nicConfigurationOperator.nicFirmwareStorage.availableStorageSize <string> default="1Gi" pattern="^(\\d+)(Ei|Pi|Ti|Gi|Mi|Ki)$" (immutable)	# AvailableStorageSize is storage size for the NIC Configuration Operator to request. Only applies if nicFirmwareStorage.create == true. Default value: 1Gi
 spec.nicConfigurationOperator.nicFirmwareStorage.create <boolean> default=true	# Create specifies whether to create a new PVC or use an existing one If create == false, the existing PVC with the name specified in pvcName should be located in the same namespace as the operator
 spec.nicConfigurationOperator.nicFirmwareStorage.pvcName <string> default="nic-fw-storage-pvc" pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" min=1 max=63	# PVCName is the name of the PVC to mount as NIC Firmware storage. Default value: "nic-fw-storage-pvc"
@@ -252,6 +256,7 @@ spec.secondaryNetwork.multus.containerResources <[]object>	# ResourceRequirement
 spec.secondaryNetwork.multus.containerResources[].limits <object (free-form)>	# Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 spec.secondaryNetwork.multus.containerResources[].name <string> (required)	# Name of the container the requirements are set for
 spec.secondaryNetwork.multus.containerResources[].requests <object (free-form)>	# Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+spec.secondaryNetwork.multus.deploymentType <string> enum=thin|thick default="thin"	# DeploymentType selects the Multus deployment variant. "thin" (default): Multus runs as an in-process CNI plugin. The config field, if set, provides the Multus CNI configuration file content. "thick": Multus runs as a privileged daemon; CNI calls are proxied via a Unix socket shim. The config field, if set, configures the daemon (daemon-config.json).
 spec.secondaryNetwork.multus.image <string> (required) pattern="[a-zA-Z0-9\\-]+"	# Name of the image
 spec.secondaryNetwork.multus.imagePullSecrets <[]string> default=[]	# ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling the image
 spec.secondaryNetwork.multus.repository <string> pattern="[a-zA-Z0-9\\.\\-\\/]+"	# Address of the registry that stores the image

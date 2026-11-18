@@ -1,0 +1,515 @@
+{
+  "description": "DNSZone represents an authoritative DNS zone managed by BIND9. Each DNSZone defines a zone (e.g., example.com) with SOA record parameters. Can reference either a namespace-scoped Bind9Cluster or cluster-scoped ClusterBind9Provider.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "`DNSZone` defines a DNS zone to be managed by BIND9.\n\nA `DNSZone` represents an authoritative DNS zone (e.g., example.com) that will be\nserved by a BIND9 cluster. The zone includes SOA record information and will be\nsynchronized to all instances in the referenced cluster via AXFR/IXFR.\n\n`DNSZones` can reference either:\n- A namespace-scoped `Bind9Cluster` (using `clusterRef`)\n- A cluster-scoped `ClusterBind9Provider` (using `clusterProviderRef`)\n\nExactly one of `clusterRef` or `clusterProviderRef` must be specified.\n\n# Example: Namespace-scoped Cluster\n\n```yaml\napiVersion: bindy.firestoned.io/v1beta1\nkind: DNSZone\nmetadata:\n  name: example-com\n  namespace: dev-team-alpha\nspec:\n  zoneName: example.com\n  clusterRef: dev-team-dns  # References Bind9Cluster in same namespace\n  soaRecord:\n    primaryNs: ns1.example.com.\n    adminEmail: admin.example.com.\n    serial: 2024010101\n    refresh: 3600\n    retry: 600\n    expire: 604800\n    negativeTtl: 86400\n  ttl: 3600\n```\n\n# Example: Cluster-scoped Global Cluster\n\n```yaml\napiVersion: bindy.firestoned.io/v1beta1\nkind: DNSZone\nmetadata:\n  name: production-example-com\n  namespace: production\nspec:\n  zoneName: example.com\n  clusterProviderRef: shared-production-dns  # References ClusterBind9Provider (cluster-scoped)\n  soaRecord:\n    primaryNs: ns1.example.com.\n    adminEmail: admin.example.com.\n    serial: 2024010101\n    refresh: 3600\n    retry: 600\n    expire: 604800\n    negativeTtl: 86400\n  ttl: 3600\n```",
+      "properties": {
+        "bind9InstancesFrom": {
+          "description": "Select `Bind9Instance` resources to target for zone configuration using label selectors.\n\nThis field enables dynamic, label-based selection of DNS instances to serve this zone.\nInstances matching these selectors will automatically receive zone configuration from\nthe `DNSZone` controller.\n\nThis follows the standard Kubernetes selector pattern used by Services, `NetworkPolicies`,\nand other resources for declarative resource association.\n\n**IMPORTANT**: This is the **preferred** method for zone-instance association. It provides:\n- **Decoupled Architecture**: Zones select instances, not vice versa\n- **Zone Ownership**: Zone authors control which instances serve their zones\n- **Dynamic Scaling**: New instances matching labels automatically pick up zones\n- **Multi-Tenancy**: Zones can target specific instance groups (prod, staging, team-specific)\n\n# Example: Target production primary instances\n\n```yaml\napiVersion: bindy.firestoned.io/v1beta1\nkind: DNSZone\nmetadata:\n  name: example-com\n  namespace: bindy-system\nspec:\n  zoneName: example.com\n  bind9InstancesFrom:\n    - selector:\n        matchLabels:\n          environment: production\n          bindy.firestoned.io/role: primary\n```\n\n# Example: Target instances by region and tier\n\n```yaml\nbind9InstancesFrom:\n  - selector:\n      matchLabels:\n        tier: frontend\n      atchExpressions:\n        - key: region\n          operator: In\n          values:\n            - us-east-1\n            - us-west-2\n```\n\n# Selector Operators\n\n- **In**: Label value must be in the specified values list\n- **`NotIn`**: Label value must NOT be in the specified values list\n- **Exists**: Label key must exist (any value)\n- **`DoesNotExist`**: Label key must NOT exist\n\n# Use Cases\n\n- **Environment Isolation**: Target only production instances (`environment: production`)\n- **Role-Based Selection**: Select only primary or secondary instances\n- **Geographic Distribution**: Target instances in specific regions\n- **Team Boundaries**: Select instances managed by specific teams\n- **Testing Zones**: Target staging instances for non-production zones\n\n# Relationship with `clusterRef`\n\n- **`clusterRef`**: Explicitly assigns zone to ALL instances in a cluster\n- **`bind9InstancesFrom`**: Dynamically selects specific instances using labels (more flexible)\n\nYou can use both approaches together - the zone will target the **union** of:\n- All instances in `clusterRef` cluster\n- Plus any additional instances matching `bind9InstancesFrom` selectors\n\n# Event-Driven Architecture\n\nThe `DNSZone` controller watches both `DNSZone` and `Bind9Instance` resources.\nWhen labels change on either:\n1. Controller re-evaluates label selector matching\n2. Automatically configures zones on newly-matched instances\n3. Removes zone configuration from instances that no longer match",
+          "items": {
+            "additionalProperties": false,
+            "description": "Source for `Bind9Instance` resources to target for zone configuration.\n\nSpecifies how `Bind9Instance` resources should be selected using label selectors.\nThe `DNSZone` controller will configure zones on all matching instances.\n\n# Example\n\n```yaml\ninstancesFrom:\n  - selector:\n      matchLabels:\n        environment: production\n        role: primary\n      matchExpressions:\n        - key: region\n          operator: In\n          values:\n            - us-east-1\n            - us-west-2\n```",
+            "properties": {
+              "selector": {
+                "additionalProperties": false,
+                "description": "Label selector to match `Bind9Instance` resources.\n\n`Bind9Instance` resources with labels matching this selector will be automatically\ntargeted for zone configuration by this `DNSZone`.\n\nThe selector uses standard Kubernetes label selector semantics:\n- `matchLabels`: All specified labels must match (AND logic)\n- `matchExpressions`: All expressions must be satisfied (AND logic)\n- Both `matchLabels` and `matchExpressions` can be used together",
+                "properties": {
+                  "matchExpressions": {
+                    "description": "List of label selector requirements. All requirements must be satisfied.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A label selector requirement is a selector that contains values, a key, and an operator\nthat relates the key and values.",
+                      "properties": {
+                        "key": {
+                          "description": "The label key that the selector applies to.",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "description": "Operator represents a key's relationship to a set of values.\nValid operators are In, `NotIn`, Exists and `DoesNotExist`.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "An array of string values. If the operator is In or `NotIn`,\nthe values array must be non-empty. If the operator is Exists or `DoesNotExist`,\nthe values array must be empty.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "nullable": true,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "operator"
+                      ],
+                      "type": "object"
+                    },
+                    "nullable": true,
+                    "type": "array"
+                  },
+                  "matchLabels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent\nto an element of matchExpressions, whose key field is \"key\", the operator is \"In\",\nand the values array contains only \"value\". All requirements must be satisfied.",
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "selector"
+            ],
+            "type": "object"
+          },
+          "nullable": true,
+          "type": "array"
+        },
+        "clusterRef": {
+          "description": "Reference to a `Bind9Cluster` or `ClusterBind9Provider` to serve this zone.\n\nWhen specified, this zone will be automatically configured on all `Bind9Instance`\nresources that belong to the referenced cluster. This provides a simple way to\nassign zones to entire clusters.\n\n**Relationship with `bind9_instances_from`:**\n- If only `cluster_ref` is specified: Zone targets all instances in that cluster\n- If only `bind9_instances_from` is specified: Zone targets instances matching label selectors\n- If both are specified: Zone targets union of cluster instances AND label-selected instances\n\n# Example\n\n```yaml\nspec:\n  clusterRef: production-dns  # Target all instances in this cluster\n  zoneName: example.com\n```",
+          "nullable": true,
+          "type": "string"
+        },
+        "dnssecPolicy": {
+          "description": "Override DNSSEC policy for this zone\n\nAllows per-zone override of the cluster's global DNSSEC signing policy.\nIf not specified, the zone inherits the DNSSEC configuration from the\ncluster's `global.dnssec.signing.policy`.\n\nUse this to:\n- Disable signing for specific zones in a signing-enabled cluster\n- Use stricter security policies for sensitive zones\n- Test different signing algorithms on specific zones\n\n# Example: Custom High-Security Policy\n\n```yaml\napiVersion: bindy.firestoned.io/v1beta1\nkind: DNSZone\nmetadata:\n  name: secure-zone\nspec:\n  zoneName: secure.example.com\n  clusterRef: production-dns\n  dnssecPolicy: \"high-security\"  # Override cluster default\n```\n\n# Example: Disable Signing for One Zone\n\n```yaml\ndnssecPolicy: \"none\"  # Disable signing (cluster has signing enabled)\n```\n\nWhen unset, the zone inherits the signing policy of the instances that\nserve it (`global.dnssec.signing.policy`, or `\"bindy\"` when signing is\nenabled with no policy name). Name BIND's built-in `\"insecure\"` to\nunsign a signed zone gracefully, and `\"none\"` once it is unsigned.\n\nThe name is restricted to a safe identifier set (`[A-Za-z0-9_-]`, starting\nalphanumeric, max 63 chars) because it is interpolated into a quoted BIND9\nconfiguration literal; `\"`, `;`, `{`, `}` would allow config injection (B-6).",
+          "nullable": true,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,62}$",
+          "type": "string"
+        },
+        "nameServerIps": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "(DEPRECATED in v0.4.0) Map of nameserver hostnames to IP addresses for glue records.\n\n**Use `nameServers` instead.** This field will be removed in v1.0.0.\n\nGlue records provide IP addresses for nameservers within the zone's own domain.\nThis is necessary when delegating subdomains where the nameserver is within the\ndelegated zone itself.\n\nExample: When delegating `sub.example.com` with nameserver `ns1.sub.example.com`,\nyou must provide the IP address of `ns1.sub.example.com` as a glue record.\n\nFormat: `{\"ns1.example.com.\": \"192.0.2.1\", \"ns2.example.com.\": \"192.0.2.2\"}`\n\nNote: Nameserver hostnames should end with a dot (.) for FQDN.\n\n**Migration to `nameServers`:**\n```yaml\n# Old (deprecated):\nnameServerIps:\n  ns2.example.com.: \"192.0.2.2\"\n\n# New (recommended):\nnameServers:\n  - hostname: ns2.example.com.\n    ipv4Address: \"192.0.2.2\"\n```",
+          "nullable": true,
+          "type": "object"
+        },
+        "nameServers": {
+          "description": "Authoritative nameservers for this zone (v0.4.0+).\n\nNS records are automatically generated at the zone apex (@) for all entries.\nThe primary nameserver from `soaRecord.primaryNs` is always included automatically.\n\nEach entry can optionally include IP addresses to generate glue records (A/AAAA)\nfor in-zone nameservers. Glue records are required when the nameserver is within\nthe zone's own domain to avoid circular dependencies.\n\n# Examples\n\n```yaml\n# In-zone nameservers with glue records\nnameServers:\n  - hostname: ns2.example.com.\n    ipv4Address: \"192.0.2.2\"\n  - hostname: ns3.example.com.\n    ipv4Address: \"192.0.2.3\"\n    ipv6Address: \"2001:db8::3\"\n\n# Out-of-zone nameserver (no glue needed)\n  - hostname: ns4.external-provider.net.\n```\n\n**Generated Records:**\n- `@ IN NS ns2.example.com.` (NS record)\n- `ns2.example.com. IN A 192.0.2.2` (glue record for in-zone NS)\n- `@ IN NS ns3.example.com.` (NS record)\n- `ns3.example.com. IN A 192.0.2.3` (IPv4 glue)\n- `ns3.example.com. IN AAAA 2001:db8::3` (IPv6 glue)\n- `@ IN NS ns4.external-provider.net.` (NS record only, no glue)\n\n**Benefits over `nameServerIps` (deprecated):**\n- Clearer purpose: authoritative nameservers, not just glue records\n- IPv6 support via `ipv6Address` field\n- Automatic NS record generation (no manual `NSRecord` CRs needed)\n\n**Migration:** See [docs/src/operations/migration-guide.md](../operations/migration-guide.md)",
+          "items": {
+            "additionalProperties": false,
+            "description": "Authoritative nameserver configuration for a DNS zone.\n\nDefines an authoritative nameserver that will have an NS record automatically\ngenerated in the zone. Optionally includes IP addresses for glue record generation\nwhen the nameserver is within the zone's own domain.\n\n# Examples\n\n## In-zone nameserver with glue records\n\n```yaml\nnameServers:\n  - hostname: ns2.example.com.\n    ipv4Address: \"192.0.2.2\"\n    ipv6Address: \"2001:db8::2\"\n```\n\n## Out-of-zone nameserver (no glue needed)\n\n```yaml\nnameServers:\n  - hostname: ns1.external-provider.net.\n```",
+            "properties": {
+              "hostname": {
+                "description": "Fully qualified domain name of the nameserver.\n\nMust end with a dot (.) for FQDN. This nameserver will have an NS record\nautomatically generated at the zone apex (@).\n\nExample: `ns2.example.com.`",
+                "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\\.$",
+                "type": "string"
+              },
+              "ipv4Address": {
+                "description": "Optional IPv4 address for glue record generation.\n\nRequired when the nameserver is within the zone's own domain (in-zone delegation).\nWhen provided, an A record will be automatically generated for the nameserver.\n\nExample: For `ns2.example.com.` in zone `example.com`, provide `\"192.0.2.2\"`\n\nGlue records allow resolvers to find the IP addresses of nameservers that are\nwithin the zone they serve, avoiding circular dependencies.",
+                "nullable": true,
+                "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$",
+                "type": "string"
+              },
+              "ipv6Address": {
+                "description": "Optional IPv6 address for glue record generation (AAAA record).\n\nWhen provided along with (or instead of) `ipv4Address`, an AAAA record will be\nautomatically generated for the nameserver.\n\nExample: `\"2001:db8::2\"`",
+                "nullable": true,
+                "pattern": "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::$|^::1$|^([0-9a-fA-F]{1,4}:){1,7}:$|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "hostname"
+            ],
+            "type": "object"
+          },
+          "nullable": true,
+          "type": "array"
+        },
+        "recordsFrom": {
+          "description": "Sources for DNS records to include in this zone.\n\nThis field defines label selectors that automatically associate DNS records with this zone.\nRecords with matching labels will be included in the zone's DNS configuration.\n\nThis follows the standard Kubernetes selector pattern used by Services, `NetworkPolicies`,\nand other resources for declarative resource association.\n\n# Example: Match podinfo records in dev/staging environments\n\n```yaml\nrecordsFrom:\n  - selector:\n      matchLabels:\n        app: podinfo\n      matchExpressions:\n        - key: environment\n          operator: In\n          values:\n            - dev\n            - staging\n```\n\n# Selector Operators\n\n- **In**: Label value must be in the specified values list\n- **`NotIn`**: Label value must NOT be in the specified values list\n- **Exists**: Label key must exist (any value)\n- **`DoesNotExist`**: Label key must NOT exist\n\n# Use Cases\n\n- **Multi-environment zones**: Dynamically include records based on environment labels\n- **Application-specific zones**: Group all records for an application using `app` label\n- **Team-based zones**: Use team labels to automatically route records to team-owned zones\n- **Temporary records**: Use labels to include/exclude records without changing `zoneRef`",
+          "items": {
+            "additionalProperties": false,
+            "description": "Source for DNS records to include in a zone.\n\nSpecifies how DNS records should be associated with this zone using label selectors.\nRecords matching the selector criteria will be automatically included in the zone.\n\n# Example\n\n```yaml\nrecordsFrom:\n  - selector:\n      matchLabels:\n        app: podinfo\n      matchExpressions:\n        - key: environment\n          operator: In\n          values:\n            - dev\n            - staging\n```",
+            "properties": {
+              "selector": {
+                "additionalProperties": false,
+                "description": "Label selector to match DNS records.\n\nRecords (`ARecord`, `CNAMERecord`, `MXRecord`, etc.) with labels matching this selector\nwill be automatically associated with this zone.\n\nThe selector uses standard Kubernetes label selector semantics:\n- `matchLabels`: All specified labels must match (AND logic)\n- `matchExpressions`: All expressions must be satisfied (AND logic)\n- Both `matchLabels` and `matchExpressions` can be used together",
+                "properties": {
+                  "matchExpressions": {
+                    "description": "List of label selector requirements. All requirements must be satisfied.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "A label selector requirement is a selector that contains values, a key, and an operator\nthat relates the key and values.",
+                      "properties": {
+                        "key": {
+                          "description": "The label key that the selector applies to.",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "description": "Operator represents a key's relationship to a set of values.\nValid operators are In, `NotIn`, Exists and `DoesNotExist`.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "An array of string values. If the operator is In or `NotIn`,\nthe values array must be non-empty. If the operator is Exists or `DoesNotExist`,\nthe values array must be empty.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "nullable": true,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "operator"
+                      ],
+                      "type": "object"
+                    },
+                    "nullable": true,
+                    "type": "array"
+                  },
+                  "matchLabels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent\nto an element of matchExpressions, whose key field is \"key\", the operator is \"In\",\nand the values array contains only \"value\". All requirements must be satisfied.",
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "selector"
+            ],
+            "type": "object"
+          },
+          "nullable": true,
+          "type": "array"
+        },
+        "soaRecord": {
+          "additionalProperties": false,
+          "description": "SOA (Start of Authority) record - defines zone authority and refresh parameters.\n\nThe SOA record is required for all authoritative zones and contains\ntiming information for zone transfers and caching.",
+          "properties": {
+            "adminEmail": {
+              "description": "Email address of the zone administrator (@ replaced with ., must end with .).\n\nExample: `admin.example.com.` for admin@example.com",
+              "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\\.$",
+              "type": "string"
+            },
+            "expire": {
+              "description": "Expire time in seconds. After this time, secondaries stop serving the zone\nif they can't contact the primary.\n\nShould be much larger than refresh+retry. Typical values: 604800-2419200 (1-4 weeks).",
+              "format": "int32",
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "negativeTtl": {
+              "description": "Negative caching TTL in seconds. How long to cache NXDOMAIN responses.\n\nTypical values: 300-86400 (5 minutes to 1 day).",
+              "format": "int32",
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "primaryNs": {
+              "description": "Primary nameserver for this zone (must be a FQDN ending with .).\n\nExample: `ns1.example.com.`",
+              "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\\.$",
+              "type": "string"
+            },
+            "refresh": {
+              "description": "Refresh interval in seconds. How often secondaries should check for updates.\n\nTypical values: 3600-86400 (1 hour to 1 day).",
+              "format": "int32",
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "retry": {
+              "description": "Retry interval in seconds. How long to wait before retrying a failed refresh.\n\nShould be less than refresh. Typical values: 600-7200 (10 minutes to 2 hours).",
+              "format": "int32",
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "serial": {
+              "description": "Serial number for this zone. Typically in YYYYMMDDNN format.\nSecondaries use this to determine if they need to update.\n\nMust be a 32-bit unsigned integer (0 to 4294967295).\nThe field is i64 to accommodate the full u32 range.",
+              "format": "int64",
+              "maximum": 4294967295,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "adminEmail",
+            "expire",
+            "negativeTtl",
+            "primaryNs",
+            "refresh",
+            "retry",
+            "serial"
+          ],
+          "type": "object"
+        },
+        "ttl": {
+          "description": "Default TTL (Time To Live) for records in this zone, in seconds.\n\nIf not specified, individual records must specify their own TTL.\nTypical values: 300-86400 (5 minutes to 1 day).",
+          "format": "int32",
+          "maximum": 2147483647,
+          "minimum": 0,
+          "nullable": true,
+          "type": "integer"
+        },
+        "zoneName": {
+          "description": "DNS zone name (e.g., \"example.com\").\n\nMust be a valid DNS zone name. Can be a domain or subdomain.\nExamples: \"example.com\", \"internal.example.com\", \"10.in-addr.arpa\"",
+          "pattern": "^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)*[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "soaRecord",
+        "zoneName"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "`DNSZone` status",
+      "nullable": true,
+      "properties": {
+        "bind9Instances": {
+          "description": "List of `Bind9Instance` resources and their status for this zone.\n\n**Single Source of Truth for Instance-Zone Relationships:**\nThis field tracks all `Bind9Instances` selected by this zone via `bind9InstancesFrom` selectors,\nalong with the current status of zone configuration on each instance.\n\n**Status Lifecycle:**\n- `Claimed`: Zone selected this instance (via `bind9InstancesFrom`), waiting for configuration\n- `Configured`: Zone successfully configured on instance\n- `Failed`: Zone configuration failed on instance\n- `Unclaimed`: Instance no longer selected by this zone (cleanup pending)\n\n**Event-Driven Pattern:**\n- `DNSZone` controller evaluates `bind9InstancesFrom` selectors to find matching instances\n- `DNSZone` controller reads this field to track configuration status\n- `DNSZone` controller updates status after configuration attempts\n\n**Automatic Selection:**\nWhen a `DNSZone` reconciles, the controller automatically:\n1. Queries all `Bind9Instances` matching `bind9InstancesFrom` selectors\n2. Adds them to this list with status=\"Claimed\"\n3. Configures zones on each instance\n\n# Example\n\n```yaml\nstatus:\n  bind9Instances:\n    - apiVersion: bindy.firestoned.io/v1beta1\n      kind: Bind9Instance\n      name: primary-dns-0\n      namespace: bindy-system\n      status: Configured\n      lastReconciledAt: \"2026-01-03T20:00:00Z\"\n    - apiVersion: bindy.firestoned.io/v1beta1\n      kind: Bind9Instance\n      name: secondary-dns-0\n      namespace: bindy-system\n      status: Claimed\n      lastReconciledAt: \"2026-01-03T20:01:00Z\"\n```",
+          "items": {
+            "additionalProperties": false,
+            "description": "Reference to a `Bind9Instance` with status and timestamp.\n\nExtends `InstanceReference` with status tracking for zone claiming and configuration.",
+            "properties": {
+              "apiVersion": {
+                "description": "API version of the `Bind9Instance` resource",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind of the resource (always \"`Bind9Instance`\")",
+                "type": "string"
+              },
+              "lastReconciledAt": {
+                "description": "Timestamp when the instance status was last reconciled for this zone",
+                "nullable": true,
+                "type": "string"
+              },
+              "message": {
+                "description": "Additional message (for Failed status, error details, etc.)",
+                "nullable": true,
+                "type": "string"
+              },
+              "name": {
+                "description": "Name of the `Bind9Instance` resource",
+                "type": "string"
+              },
+              "namespace": {
+                "description": "Namespace of the `Bind9Instance` resource",
+                "type": "string"
+              },
+              "status": {
+                "description": "Current status of this instance's relationship with the zone",
+                "enum": [
+                  "Claimed",
+                  "Configured",
+                  "Failed",
+                  "Unclaimed"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "apiVersion",
+              "kind",
+              "name",
+              "namespace",
+              "status"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "bind9InstancesCount": {
+          "description": "Number of `Bind9Instance` resources in the `bind9_instances` list.\n\nThis field is automatically updated whenever the `bind9_instances` list changes.\nIt provides a quick view of how many instances are serving this zone without\nrequiring clients to count array elements.",
+          "format": "int32",
+          "nullable": true,
+          "type": "integer"
+        },
+        "conditions": {
+          "default": [],
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition represents an observation of a resource's current state.\n\nConditions are used in status subresources to communicate the state of\na resource to users and controllers.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "Last time the condition transitioned from one status to another (RFC3339 format).",
+                "nullable": true,
+                "type": "string"
+              },
+              "message": {
+                "description": "Human-readable message indicating details about the transition.",
+                "nullable": true,
+                "type": "string"
+              },
+              "reason": {
+                "description": "Brief CamelCase reason for the condition's last transition.",
+                "nullable": true,
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the condition: True, False, or Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Type of condition. Common types include: Ready, Available, Progressing, Degraded, Failed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "dnssec": {
+          "additionalProperties": false,
+          "description": "DNSSEC signing status for this zone\n\nPopulated when DNSSEC signing is enabled. Contains DS records,\nkey tags, and rotation information.\n\n**Important**: DS records must be published in the parent zone\nto complete the DNSSEC chain of trust.\n\n# Example\n\n```yaml\ndnssec:\n  signed: true\n  dsRecords:\n    - \"example.com. IN DS 12345 13 2 ABC123...\"\n  keyTag: 12345\n  algorithm: \"ECDSAP256SHA256\"\n  nextKeyRollover: \"2026-04-02T00:00:00Z\"\n```",
+          "nullable": true,
+          "properties": {
+            "algorithm": {
+              "description": "DNSSEC algorithm name\n\nExample: `\"ECDSAP256SHA256\"`, `\"RSASHA256\"`",
+              "nullable": true,
+              "type": "string"
+            },
+            "dsRecords": {
+              "default": [],
+              "description": "DS (Delegation Signer) records for parent zone delegation\n\nThese records must be published in the parent zone to complete\nthe DNSSEC chain of trust.\n\nFormat: `<zone> IN DS <keytag> <algorithm> <digesttype> <digest>`\n\nExample: `[\"example.com. IN DS 12345 13 2 ABC123...\"]`",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keyTag": {
+              "description": "KSK key tag (numeric identifier)\n\nIdentifies the Key Signing Key used to sign the DNSKEY `RRset`.\nThis value appears in the DS record.",
+              "format": "uint32",
+              "minimum": 0,
+              "nullable": true,
+              "type": "integer"
+            },
+            "lastKeyRollover": {
+              "description": "Last key rollover timestamp (ISO 8601)\n\nWhen the most recent key rotation occurred.\n\nExample: `\"2025-04-02T00:00:00Z\"`",
+              "nullable": true,
+              "type": "string"
+            },
+            "nextKeyRollover": {
+              "description": "Next scheduled key rollover timestamp (ISO 8601)\n\nWhen the next automatic key rotation will occur.\n\nExample: `\"2026-04-02T00:00:00Z\"`",
+              "nullable": true,
+              "type": "string"
+            },
+            "signed": {
+              "description": "Zone is signed with DNSSEC",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "signed"
+          ],
+          "type": "object"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "records": {
+          "default": [],
+          "description": "List of DNS records selected by recordsFrom label selectors.\n\n**Event-Driven Pattern:**\n- Records with `lastReconciledAt == None` need reconciliation\n- Records with `lastReconciledAt == Some(timestamp)` are already configured\n\nThis field is populated by the `DNSZone` controller when evaluating `recordsFrom` selectors.\nThe timestamp is copied from each record's `status.lastUpdated`, which the\nrecord operator sets after a successful BIND9 update.\n\n**Single Source of Truth:**\nThis status field is authoritative for which records belong to this zone and whether\nthey need reconciliation, preventing redundant BIND9 API calls.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Reference to a DNS record with reconciliation timestamp tracking.\n\nThis struct tracks which records are assigned to a zone and whether\nthey need reconciliation based on the `lastReconciledAt` timestamp.\n\n**Event-Driven Pattern:**\n- Records with `lastReconciledAt == None` need reconciliation\n- Records with `lastReconciledAt == Some(timestamp)` are already configured\n\nThis pattern prevents redundant BIND9 API calls for already-configured records,\nfollowing the same architecture as `Bind9Instance.status.selectedZones[]`.",
+            "properties": {
+              "apiVersion": {
+                "description": "API version of the record (e.g., \"bindy.firestoned.io/v1beta1\")",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind of the record (e.g., \"`ARecord`\", \"`CNAMERecord`\", \"`MXRecord`\")",
+                "type": "string"
+              },
+              "lastReconciledAt": {
+                "description": "Timestamp when this record was last successfully reconciled to BIND9.\n\n- `None` = Record needs reconciliation (new or spec changed)\n- `Some(timestamp)` = Record already configured, skip reconciliation\n\nThis field is copied by the zone controller from the record's\n`status.lastUpdated`, which the record operator sets after a successful\nBIND9 update.\nThe zone controller resets it to `None` when spec changes or zone is recreated.",
+                "format": "date-time",
+                "nullable": true,
+                "type": "string"
+              },
+              "name": {
+                "description": "Name of the record resource",
+                "type": "string"
+              },
+              "namespace": {
+                "description": "Namespace of the record resource",
+                "type": "string"
+              },
+              "recordName": {
+                "description": "DNS record name from spec.name (e.g., \"www\", \"@\", \"_service._tcp\")",
+                "nullable": true,
+                "type": "string"
+              }
+            },
+            "required": [
+              "apiVersion",
+              "kind",
+              "name",
+              "namespace"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "recordsCount": {
+          "default": 0,
+          "description": "Count of records selected by recordsFrom label selectors.\n\nThis field is automatically calculated from the length of `records`.\nIt provides a quick view of how many records are associated with this zone.\n\nDefaults to 0 when no records are selected.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "recordsResyncPending": {
+          "default": false,
+          "description": "Whether every selected record CR must be re-pushed into BIND9 before\nthis zone can be considered Ready.\n\nThe zone controller sets this to `true` whenever it *creates* the zone on\nany server endpoint. A created zone contains only the SOA and NS records\ngenerated from `spec`, so it is authoritative for a zone with no data -\nwhich happens every time a BIND9 pod or Deployment is wiped and comes\nback with empty (non-persistent) storage.\n\nWhile this is `true`:\n- every reconciliation replays all records in `records` into BIND9\n- the zone reports `Ready=False` / `Degraded=True`, so a server that is\n  authoritative for an empty zone is never reported healthy\n\nThe controller clears it only after every record has been successfully\npushed to every primary endpoint.",
+          "type": "boolean"
+        },
+        "transferPeers": {
+          "additionalProperties": false,
+          "description": "The zone-transfer peers last pushed to every server of this zone\n(ADR-0019).\n\nWritten by the `DNSZone` controller only after every primary accepted\nthe `allow-transfer` / `also-notify` lists and every secondary the\n`primaries` list. A reconcile whose desired peers differ from these\npushes the new lists; one whose peers are unchanged makes no peer\ncall. Absent on a zone not yet reconciled by a version that records\nit, which makes the first such reconcile push to every server.\n\n# Example\n\n```yaml\ntransferPeers:\n  primaries: [\"10.244.1.7\", \"10.244.2.9\"]\n  secondaries: [\"10.244.3.4\"]\n  notify: [\"10.96.41.12\"]\n```",
+          "nullable": true,
+          "properties": {
+            "notify": {
+              "default": [],
+              "description": "Addresses a primary sends NOTIFY to (`also-notify`): the ClusterIP of\neach secondary instance's Service, reached on port 53.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "primaries": {
+              "default": [],
+              "description": "IPs of the primary pods a secondary transfers the zone from: the\nzone's primary instances' pods that are running, not terminating and\nadmitted by the zones-loaded gate.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "secondaries": {
+              "default": [],
+              "description": "IPs of the secondary pods a primary allows to transfer the zone\n(`allow-transfer`): the zone's secondary instances' pods that are\nrunning and not terminating.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "DNSZone",
+  "type": "object",
+  "x-flux-schema-type": "DNSZone"
+}

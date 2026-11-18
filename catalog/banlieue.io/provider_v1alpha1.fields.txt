@@ -1,0 +1,109 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=banlieue.io/v1alpha1
+kind <string> enum=Provider
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# Provider — one backend instance registered with banlieue. A Provider represents a single place VMs can run: one vCenter, one Proxmox cluster, or one libvirt host. It carries the connection details and an admin-curated declaration of the storage classes, network classes, and features that backend exposes. Its controller logs in, verifies those capabilities, and publishes the reachable `status.failureDomains[]`. # Why create one - **Make a backend schedulable.** A VirtualMachine can only be placed on a Provider — no Provider, nowhere to run. - **Declare capabilities explicitly.** `spec.capabilities` maps abstract class names (the ones VMClass / VMImage request) to concrete backend targets (a datastore, a port group). That mapping is the contract the scheduler matches against — capabilities are declared, not guessed. - **Model many backends, including duplicates.** A cluster can hold many Providers of the same class (`prod-vsphere`, `dr-vsphere`) and mix classes freely. The provider's controller talks to the backend; banlieue's main controller never does. Communication between them is CRD-only.
+spec.attestation <object>	# Attestation trust anchors for this backend's vTPMs (ADR-0049 Decision 10). Admin-supplied, never discovered: an anchor read off the hypervisor would let whoever controls the hypervisor choose the anchor that vouches for its own guests. Optional — a Provider that runs no `tpmEnabled` classes has no reason to set it.
+spec.attestation.ekTrustBundle <object> (required)	# PEM bundle of CA certificates trusted to issue this backend's vTPM endorsement-key certificates. Provenance differs per backend (ADR-0045): on vSphere the issuing CA is vCenter's; on libvirt it is each host's `swtpm_localca` issuer certificate, one entry per host. Same value-or-source shape as `connection.caBundle`: exactly one of `inline`, `configMapRef`, `secretRef` must be set (see `CABundleSource`); references resolve in the Provider's namespace. Removal of an issuer from this bundle is the revocation mechanism on libvirt — swtpm EK certificates never expire.
+spec.attestation.ekTrustBundle.configMapRef <object>	# Key in a ConfigMap in the referrer's namespace (key defaults to `ca.crt`).
+spec.attestation.ekTrustBundle.configMapRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
+spec.attestation.ekTrustBundle.configMapRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
+spec.attestation.ekTrustBundle.inline <string>	# Inline PEM (one or more concatenated certificates).
+spec.attestation.ekTrustBundle.secretRef <object>	# Key in a Secret in the referrer's namespace (key defaults to `ca.crt`).
+spec.attestation.ekTrustBundle.secretRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
+spec.attestation.ekTrustBundle.secretRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
+spec.capabilities <object>	# Admin-defined capability mappings. Every storage / network class that VMClass and VMImage may request MUST be listed here for this provider to be considered by the scheduler.
+spec.capabilities.features <[]string>	# Feature flags admin asserts are available. Provider's controller may downgrade these in status if introspection finds otherwise. Well-known values: hotAddCPU, hotAddMemory, efiSecureBoot, nestedVirtualization, gpuPassthrough.
+spec.capabilities.networkClasses <[]object>	# Network classes the admin asserts are available on this backend.
+spec.capabilities.networkClasses[].name <string> (required)	# Abstract name referenced by VMClass.network.interfaces[].networkClass.
+spec.capabilities.networkClasses[].perZone <[]object>	# Per-`(datacenter, cluster)` overrides of `target` (ADR-0030).
+spec.capabilities.networkClasses[].perZone[].cluster <string> (required)	# Cluster name as vCenter reports it.
+spec.capabilities.networkClasses[].perZone[].datacenter <string> (required)	# Datacenter name as vCenter reports it.
+spec.capabilities.networkClasses[].perZone[].target <map[string]string> (required)	# Concrete backend target for this zone, same shape as `StorageClassMapping::target` / `NetworkClassMapping::target`.
+spec.capabilities.networkClasses[].perZoneSubnet <[]object>	# Per-`(datacenter, cluster)` overrides of `subnet` (ADR-0032).
+spec.capabilities.networkClasses[].perZoneSubnet[].cluster <string> (required)	# Cluster name as vCenter reports it.
+spec.capabilities.networkClasses[].perZoneSubnet[].datacenter <string> (required)	# Datacenter name as vCenter reports it.
+spec.capabilities.networkClasses[].perZoneSubnet[].subnet <object> (required)	# Subnet shape for this zone.
+spec.capabilities.networkClasses[].perZoneSubnet[].subnet.domain <string>
+spec.capabilities.networkClasses[].perZoneSubnet[].subnet.gateway <string>
+spec.capabilities.networkClasses[].perZoneSubnet[].subnet.nameservers <[]string>
+spec.capabilities.networkClasses[].subnet <object>	# Default subnet shape (gateway/nameservers/domain) for this network class, used in any zone `per_zone_subnet` does not cover. A port group implies a subnet, so this lives alongside `target`/`per_zone` rather than on `VMClass` — it lets a static-addressing `VirtualMachine` omit gateway/nameservers/domain entirely and have them resolved from whichever zone the scheduler picked (ADR-0032).
+spec.capabilities.networkClasses[].subnet.domain <string>
+spec.capabilities.networkClasses[].subnet.gateway <string>
+spec.capabilities.networkClasses[].subnet.nameservers <[]string>
+spec.capabilities.networkClasses[].target <map[string]string>	# Default concrete target, used in any zone `per_zone` does not cover. `None` means this class resolves ONLY in the zones `per_zone` lists. Free-form per provider class. Examples: vsphere: { portGroup: "vmnet-prod" } { distributedPortGroup: "dvs-prod-vlan100" } proxmox: { bridge: "vmbr0", vlan: "100" } libvirt: { network: "br-prod" }
+spec.capabilities.storageClasses <[]object>	# Storage classes the admin asserts are available on this backend. Each entry maps an abstract class name to a provider-interpreted concrete target.
+spec.capabilities.storageClasses[].name <string> (required)	# Abstract name referenced by VMClass.hardware.disks[].storageClass.
+spec.capabilities.storageClasses[].perZone <[]object>	# Per-`(datacenter, cluster)` overrides of `target` (ADR-0030).
+spec.capabilities.storageClasses[].perZone[].cluster <string> (required)	# Cluster name as vCenter reports it.
+spec.capabilities.storageClasses[].perZone[].datacenter <string> (required)	# Datacenter name as vCenter reports it.
+spec.capabilities.storageClasses[].perZone[].target <map[string]string> (required)	# Concrete backend target for this zone, same shape as `StorageClassMapping::target` / `NetworkClassMapping::target`.
+spec.capabilities.storageClasses[].target <map[string]string>	# Default concrete target, used in any zone `per_zone` does not cover. `None` means this class resolves ONLY in the zones `per_zone` lists. Free-form per provider class; the provider's controller interprets it. Examples by provider class: vsphere: { datastore: "ds-fast-01" } { datastoreCluster: "dsc-gold" } { tagCategory: "tier", tag: "gold" } proxmox: { storage: "ceph-pool-1" } libvirt: { pool: "nvme-pool" }
+spec.connection <object> (required)	# Connection details for the backend.
+spec.connection.caBundle <object>	# Optional CA bundle to validate the endpoint's TLS certificate. A value-or-source: inline PEM, or a `configMapRef` / `secretRef` naming a key (default `ca.crt`) in the Provider's namespace. Exactly one source must be set; see `CABundleSource`. Resolved by the provider controller and injected into the HTTP client (ADR-0008, BYOC). When unset, the system trust roots are used.
+spec.connection.caBundle.configMapRef <object>	# Key in a ConfigMap in the referrer's namespace (key defaults to `ca.crt`).
+spec.connection.caBundle.configMapRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
+spec.connection.caBundle.configMapRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
+spec.connection.caBundle.inline <string>	# Inline PEM (one or more concatenated certificates).
+spec.connection.caBundle.secretRef <object>	# Key in a Secret in the referrer's namespace (key defaults to `ca.crt`).
+spec.connection.caBundle.secretRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
+spec.connection.caBundle.secretRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
+spec.connection.credentialsRef <object>	# Reference to a Secret in the Provider's namespace containing the credentials. Required keys depend on provider class: vsphere: username, password proxmox: username (the full API token id, user@realm!tokenid), tokenValue (API tokens only; password/ticket auth is not supported, ADR-0074) libvirt: tls.crt, tls.key (mutual TLS, ADR-0011) Required by every backend that authenticates to a remote endpoint, and refused by `cloud-hypervisor`, whose provider runs on the hypervisor host and must read no Secret at all (ADR-0060 Decision 4). When unset the operator grants no Secret access whatsoever.
+spec.connection.credentialsRef.name <string> (required)
+spec.connection.endpoint <string> (required)	# Endpoint URL or URI. Format depends on provider class: vsphere: https://vcenter.example.com/sdk proxmox: https://pve.example.com:8006 libvirt: qemu+ssh://kvm-host.example.com/system
+spec.connection.insecureSkipTLSVerify <boolean>	# Skip TLS verification. Applies to vsphere and proxmox. Serialized as `insecureSkipTLSVerify` (matching CAPI convention with uppercase `TLS`), not the auto-derived `insecureSkipTlsVerify`.
+spec.failureDomainNameOverrides <[]object>	# Explicit overrides for individual discovered failure domains' generated `name`. The auto-computed, collision-safe name (`<provider>-<datacenter>-<cluster>`, hashed when too long) is always the fallback for any `(datacenter, cluster)` pair with no matching entry here — this is opt-in, never required. See ADR-0023.
+spec.failureDomainNameOverrides[].cluster <string> (required)	# Cluster name as vCenter reports it.
+spec.failureDomainNameOverrides[].datacenter <string> (required)	# Datacenter name as vCenter reports it (matches `discover_inventory`'s walk, not an operator-chosen alias).
+spec.failureDomainNameOverrides[].name <string> (required)	# The name to use instead of the auto-computed one, e.g. `cluster-01`. Slugified the same way auto-computed names are, so `Cluster 01` still produces a valid Kubernetes name.
+spec.namespaceSelector <object>	# The namespaces this Provider serves, besides its own (ADR-0133). A label selector over `Namespace` objects. Absent means the Provider's own namespace only, so a Provider written before ADR-0133 serves nobody new. It is the single source for both readers: - the operator renders it onto the provider workload as `--watch-namespace-selector`, so the provider watches machines in those namespaces while it keeps its credentials in its own; - the controller considers a Provider in the provider namespace for a VM only when this selector matches the VM's namespace labels. An empty selector (`{}`) serves nothing: banlieue never defaults to every namespace, so a Provider cannot serve all of them by omission or by accident. The selector is scope, not isolation: who may create a VM in a matching namespace is RBAC and admission policy. Set it only on a Provider in the platform's provider namespace; tenants must not be able to write it.
+spec.namespaceSelector.matchExpressions <[]object>
+spec.namespaceSelector.matchExpressions[].key <string> (required)
+spec.namespaceSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.namespaceSelector.matchExpressions[].values <[]string>
+spec.namespaceSelector.matchLabels <map[string]string>
+spec.paused <boolean>	# Suspend reconciliation. Equivalent to setting the `cluster.x-k8s.io/paused` annotation but in-band.
+spec.providerClassRef <object> (required)	# Reference to a ProviderClass that identifies the backend type. For v1alpha1 the ProviderClass CRD is deferred; treat this as a name drawn from a well-known set: `vsphere`, `proxmox`, `libvirt`. A future ProviderClass CRD will provide install metadata (image, RBAC) without changing this reference.
+spec.providerClassRef.name <string> (required)
+spec.scheduling <object>	# How the scheduler places VMs on this backend (ADR-0107). Optional: without it the defaults apply.
+spec.scheduling.cpuOvercommitRatio <integer> min=1 max=64	# vCPUs the scheduler may place per CPU a failure domain publishes in `attributes.capacity.cpus`. `1` means no overcommit. CPU contention only slows guests, so the default allows 4; memory is never overcommitted. Unset: 4.
+spec.scheduling.storageReservePercent <integer> min=0 max=50	# Percent of each store's `totalGiB` the scheduler keeps free when it places a new VM's disks (ADR-0128): a full store pauses the guests already on it. `0` disables the reserve. Unset: 10.
+spec.useContentLibrary <boolean>	# vSphere only: import `Url`-kind VMImages through a vCenter Content Library rather than the default datastore-upload + `MarkAsTemplate` path. Defaults to `false` (no Content Library required), matching environments where CL is not enabled. Ignored by non-vSphere classes. See ADR-0020.
+status <object>	# Observed state of a Provider: the failure domains its controller discovered and the health / reachability conditions.
+status.conditions <[]object>	# Standard Kubernetes conditions. The `Ready` condition reflects overall provider health. The `ProviderReachable` condition reflects connection state to the backend.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required)	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.ekCaCertificates <[]string>	# PEM certificates of the CAs that issue this backend's vTPM endorsement key certificates: on a Cloud Hypervisor host, the host's own `swtpm_localca` (ADR-0065 Decision 6). A verifier trusts a guest's EK only through the host that created it; this is the input `ekTrustBundle` needs (ADR-0049). Empty when the backend offers no vTPM or publishes no anchor.
+status.failureDomains <[]object>	# Failure domains ("availability zones" — the terms are synonyms; `failureDomain` was kept to align with CAPI v1beta2's own vocabulary) discovered by the provider's controller within this backend. The scheduler matches against `labels` and filters by `attributes.availableStorageClasses` / `availableNetworkClasses`.
+status.failureDomains[].attributes <object> default={}	# Attributes the provider's controller resolved for this domain, including the subset of admin-listed classes that are actually reachable from here.
+status.failureDomains[].attributes.availableNetworkClasses <[]string>	# Subset of spec.capabilities.networkClasses[].name reachable here.
+status.failureDomains[].attributes.availableStorageClasses <[]string>	# Subset of spec.capabilities.storageClasses[].name reachable here.
+status.failureDomains[].attributes.capacity <object>	# What guests may use in this failure domain, as the provider measured it (ADR-0107). The scheduler fits each VM against it; a domain that publishes none is not filtered on capacity.
+status.failureDomains[].attributes.capacity.cpus <integer> min=0	# Logical CPUs guests may use. vCPUs are placed up to this times the Provider's `scheduling.cpuOvercommitRatio`.
+status.failureDomains[].attributes.capacity.memoryAvailableMiB <integer> min=0	# Memory a new guest could take now, MiB, as the provider measured it (ADR-0128). Includes what running VMs already use, so the scheduler checks it for new placements only. Never more than `memoryMiB`.
+status.failureDomains[].attributes.capacity.memoryMiB <integer> min=0	# Memory guests may use, MiB: the host's, or a smaller budget the host declares for guests (a Cloud Hypervisor host's guests' slice, ADR-0105). Never overcommitted.
+status.failureDomains[].attributes.capacity.memoryOverheadMiBPerVM <integer> min=0	# Memory each VM costs beyond its class's `memoryMiB` (its VMM), MiB.
+status.failureDomains[].attributes.capacity.storage <[]object>	# Size and free space of the store behind each available storage class, as the provider measured it (ADR-0128).
+status.failureDomains[].attributes.capacity.storage[].freeGiB <integer> min=0	# Space a new disk could take now, GiB, for the writer the provider runs as.
+status.failureDomains[].attributes.capacity.storage[].shared <boolean>	# The same space backs other failure domains of this Provider (a Proxmox shared storage, a datastore mounted by several clusters), so disks placed in any of them draw on it.
+status.failureDomains[].attributes.capacity.storage[].storageClass <string> (required)	# A name from `availableStorageClasses`.
+status.failureDomains[].attributes.capacity.storage[].totalGiB <integer> min=0	# The store's size, GiB.
+status.failureDomains[].attributes.features <[]string>	# Feature flags actually present here. Always a subset of spec.capabilities.features.
+status.failureDomains[].attributes.raw <map[string]string>	# Provider-specific resolved attributes; for vSphere this typically includes datacenter, cluster, resourcePool. Used by the provider's controller when filling in the infrastructure CR.
+status.failureDomains[].labels <map[string]string>	# Labels used by the scheduler's `failureDomainSelector` and by VirtualMachine anti-affinity `topologyKey` matching. Recommended keys: `datacenter`, `cluster`, `rack`, `env`. Every provider also sets `name` to this failure domain's own resolved `name` above (auto-computed, or an ADR-0023 override) — `name` above is a top-level field a `LabelSelector` cannot match directly, so without this mirror, targeting a specific zone by its friendly override name (rather than a raw backend-reported label like `cluster`) would be impossible.
+status.failureDomains[].name <string> (required)	# Stable name. Conventionally `<provider>-<cluster-or-zone>`.
+status.observedGeneration <integer> format=int64	# The generation of the spec that the controller has reconciled.
+status.workload <object>	# The provider workload `banlieue-operator` created for this Provider. Written **only** by the operator's field manager (`banlieue.io/operator`); the provider's own controller never touches it. This split is deliberate: `conditions` is a plain list with no `x-kubernetes-list-type: map` marker, so two field managers writing into it would contend over the whole array rather than merging per entry. Giving the operator a disjoint field keeps server-side apply conflict-free (ADR-0012).
+status.workload.deploymentName <string>	# Name of the Deployment running this Provider's controller. Conventionally `banlieue-provider-<class>-<provider-name>`. Unset for `External`: there is no Deployment.
+status.workload.heartbeat <string> enum=Alive|Stale|Absent	# A provider's liveness, from its leader-election Lease (ADR-0102).
+status.workload.lastHeartbeatTime <string> format=date-time	# The Lease's last `renewTime`, when there is a Lease.
+status.workload.mode <string> enum=Managed|External default="Managed"	# Whether the operator runs this provider (`Managed`) or only gave it an identity (`External`, ADR-0060 Decision 3). Absent on objects written before the field existed, which were all Managed.
+status.workload.namespace <string> (required)	# Namespace the Deployment was created in — the ProviderClass's `workloadNamespace`, or the operator's own namespace when unset.
+status.workload.observedGeneration <integer> format=int64	# The Provider generation the operator had observed when it last applied this workload.
+status.workload.readyReplicas <integer> format=int32	# Ready replicas reported by that Deployment. Zero means the backend's controller is not currently running, whatever the Provider's other conditions say. Unset for `External`: there is no Deployment, and whether the provider is running is `heartbeat` (ADR-0102).
+status.workload.serviceAccountName <string>	# Name of the ServiceAccount the operator created for this Provider, in `namespace`: the identity its controller runs as, and what a host-resident provider's token is minted for (ADR-0126). Read it rather than derive it: the naming is the operator's. Unset on a Provider an older operator wrote.

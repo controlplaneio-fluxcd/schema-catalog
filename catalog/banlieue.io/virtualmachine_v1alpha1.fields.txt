@@ -1,0 +1,93 @@
+# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+apiVersion <string> enum=banlieue.io/v1alpha1
+kind <string> enum=VirtualMachine
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# VirtualMachine — the user-facing request for a running VM. This is the one resource end users create. It expresses *intent*: which VMClass (shape) and VMImage (OS) to use, optional placement constraints, the desired power state, and optional guest user-data. banlieue's controller schedules it onto a Provider + failure domain, creates the matching provider infrastructure CR (e.g. `VSphereMachine`), and mirrors that CR's status back here. # Why create one - **Declare a VM the Kubernetes way.** Describe the VM you want; the controller reconciles reality toward it, including power state. - **Stay backend-agnostic.** You reference a class and an image by name, not a datastore or a port group. Where it lands is the scheduler's job. - **Compose with policy.** Label / anti-affinity selectors and a migration policy steer placement and drift handling without coupling to a specific Provider. Independent of Cluster API: a VirtualMachine is **not** a `clusterv1. Machine`. It can coexist with CAPI but does not depend on it. Namespaced: candidate Providers are drawn from the VM's own namespace.
+spec.classRef <object> (required)	# Reference to a (cluster-scoped) VMClass.
+spec.classRef.name <string> (required)
+spec.desiredPowerState <string> enum=PoweredOn|PoweredOff|Suspended default="PoweredOn"	# Desired power state. Defaults to `PoweredOn`.
+spec.folder <string>	# Destination folder for the provisioned VM (e.g. `apps/prod` on vSphere). When unset, the provider defaults to organizing the VM the same way it organizes its source template — on vSphere, the same per-zone folder the template lives in (ADR-0020 Decision #5). Unlike `networkOverrides` / `hardwareOverride`, this has no `VMClass`-level counterpart to be a delta *against* — placement is purely an infrastructure concern, not part of a VM's abstract shape. It is also the one field here that is unavoidably backend-flavored (a "folder" is a vSphere concept); other backends may interpret it differently or ignore it.
+spec.hardwareOverride <object>	# Per-VM override for the `VMClass`'s hardware shape — CPUs, memory, and disk sizes. **This is a delta, not the primary definition.** The `VMClass` is the authoritative source for a VM's hardware shape: its `spec.hardware` is fixed and shared by every VM that references the class. This field applies *on top of* the class — only the fields you set here replace the class value; everything else is inherited verbatim. Use this sparingly. Its primary purpose is to accommodate the rare VM that genuinely needs a different CPU, memory, or disk budget than its class defines — for example, a database primary bumped to 16 CPUs while all other replicas use the 4-CPU class shape, or one VM that needs a larger data disk. If you find yourself setting the same override on every VM of a given class, create a new `VMClass` instead.
+spec.hardwareOverride.cpus <integer> min=1 max=256	# Override the `VMClass`'s `spec.hardware.cpus`. If absent, the class value is used unchanged.
+spec.hardwareOverride.diskOverrides <[]object>	# Per-disk size overrides, keyed by `DiskSpec.name`. Only `sizeGiB` can be overridden per VM; the disk's `storageClass` and `provisioning` are class-level concerns. **This is a delta, not the primary definition.** A disk with no entry here inherits the `VMClass`'s size verbatim.
+spec.hardwareOverride.diskOverrides[].name <string> (required)	# Matches a `VMClass.spec.hardware.disks[].name`.
+spec.hardwareOverride.diskOverrides[].sizeGiB <integer> (required) min=1 max=65536	# Override the disk's `sizeGiB`. Must be ≥ the class value (the provider will reject a shrink). If absent, the class size is used.
+spec.hardwareOverride.memoryMiB <integer> min=128 max=4194304	# Override the `VMClass`'s `spec.hardware.memoryMiB`. If absent, the class value is used unchanged.
+spec.imageRef <object> (required)	# Reference to a (cluster-scoped) VMImage.
+spec.imageRef.name <string> (required)
+spec.migrationPolicy <string> enum=automatic|manual|never default="automatic"	# What to do when current placement no longer satisfies the spec.
+spec.networkOverrides <[]object>	# Per-VM overrides for specific VMClass-declared network interfaces (ADR-0024). Keyed by `NetworkInterfaceSpec.name`; an interface with no entry here uses its VMClass's own `ipam` verbatim (commonly `dhcp`). Lets many VMs share one VMClass while each still gets its own static address — a VMClass-level `ipam.static` cannot express that, since a class is shared by design. **This is a delta, not the primary definition.** The VMClass is the authoritative source for the VM's network shape. Entries here are layered on top: only the named interface's `ipam` is replaced; every other interface is inherited from the class unchanged.
+spec.networkOverrides[].name <string> (required)	# Matches a `VMClass.spec.network.interfaces[].name`.
+spec.networkOverrides[].static <object> (required)	# The static address to use for this interface, overriding whatever the `VMClass`'s own `ipam` declares.
+spec.networkOverrides[].static.address <string> (required)
+spec.networkOverrides[].static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.networkOverrides[].static.gateway <string>
+spec.networkOverrides[].static.nameservers <[]string>
+spec.networkOverrides[].static.prefix <integer> (required) min=0 max=255
+spec.paused <boolean>	# Suspend reconciliation in-band.
+spec.placement <object> default={}	# Placement intent. If unset, the scheduler considers every Provider in the VM's namespace and every failure domain.
+spec.placement.antiAffinity <[]object>	# Anti-affinity rules against other VirtualMachines in the same namespace. Evaluated at scheduling time.
+spec.placement.antiAffinity[].labelSelector <object> (required)	# Other VMs (by their own metadata.labels) to spread away from.
+spec.placement.antiAffinity[].labelSelector.matchExpressions <[]object>
+spec.placement.antiAffinity[].labelSelector.matchExpressions[].key <string> (required)
+spec.placement.antiAffinity[].labelSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.placement.antiAffinity[].labelSelector.matchExpressions[].values <[]string>
+spec.placement.antiAffinity[].labelSelector.matchLabels <map[string]string>
+spec.placement.antiAffinity[].mode <string> enum=required|preferred default="required"	# Strictness. `required` filters candidates; `preferred` is best-effort.
+spec.placement.antiAffinity[].topologyKey <string> (required)	# A label key from the failure domain's labels. Spreading is required across distinct values of this key. Common keys: `cluster`, `rack`, `host`, `dc`.
+spec.placement.failureDomainSelector <object>	# Match failure domains by their `status.failureDomains[].labels`. Across all candidate Providers, only failure domains whose labels match are considered.
+spec.placement.failureDomainSelector.matchExpressions <[]object>
+spec.placement.failureDomainSelector.matchExpressions[].key <string> (required)
+spec.placement.failureDomainSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.placement.failureDomainSelector.matchExpressions[].values <[]string>
+spec.placement.failureDomainSelector.matchLabels <map[string]string>
+spec.placement.providerSelector <object>	# Match Providers by their `metadata.labels`. A Provider is a candidate only if its labels match this selector.
+spec.placement.providerSelector.matchExpressions <[]object>
+spec.placement.providerSelector.matchExpressions[].key <string> (required)
+spec.placement.providerSelector.matchExpressions[].operator <string> (required) enum=In|NotIn|Exists|DoesNotExist
+spec.placement.providerSelector.matchExpressions[].values <[]string>
+spec.placement.providerSelector.matchLabels <map[string]string>
+spec.userData <object>	# Optional user-data delivered to the guest via the image's `guestAgent` (cloud-init / ignition / sysprep).
+spec.userData.configMapRef <object>	# Key in a ConfigMap in the VirtualMachine's namespace (key defaults to `DEFAULT_USER_DATA_KEY`).
+spec.userData.configMapRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
+spec.userData.configMapRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
+spec.userData.secretRef <object>	# Key in a Secret in the VirtualMachine's namespace (key defaults to `DEFAULT_USER_DATA_KEY`).
+spec.userData.secretRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
+spec.userData.secretRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
+status <object>	# Observed state of a VirtualMachine: the scheduling decision, the infra CR it owns, mirrored provisioning / address / power state, and conditions.
+status.addresses <[]object>	# Mirrored from the infra CR's `status.addresses`.
+status.addresses[].address <string> (required)	# The address itself.
+status.addresses[].type <string> (required) enum=Hostname|ExternalIP|InternalIP|ExternalDNS|InternalDNS	# Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.
+status.conditions <[]object>	# Standard Kubernetes conditions. Required types: `Ready` — overall readiness `Scheduled` — placement decision exists and is current `PlacementValid` — current placement satisfies the spec `InfrastructureReady` — mirrors the infra CR's Ready condition Optional: `Migrating` — true while a migration is in progress `Paused` — present (True) only while `spec.paused` suspends reconciliation
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required)	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.heldAddresses <[]object>	# Static addresses this VM's infrastructure CR was last applied with (ADR-0083). Written by the controller **only** when it applies the infra CR, and carried forward unchanged otherwise, so it records what the guest is configured with: it survives guest reboots and is the same on every backend. A held address is never given to another VM.
+status.heldAddresses[].address <string> (required)	# The address, normalised (an IP is re-printed in canonical form).
+status.heldAddresses[].interface <string> (required)	# The `VMClass` interface the address is on.
+status.heldAddresses[].networkClass <string> (required)	# That interface's `networkClass`: the network the address is unique on.
+status.infrastructureRef <object>	# Reference to the provider-specific infrastructure CR (e.g. `infrastructure.banlieue.io/v1alpha1/VSphereMachine`). Set after scheduling, owned by this VirtualMachine.
+status.infrastructureRef.apiGroup <string> (required)
+status.infrastructureRef.kind <string> (required)
+status.infrastructureRef.name <string> (required)
+status.infrastructureRef.namespace <string>
+status.initialization <object> default={}	# Mirrored from the infra CR's `status.initialization`.
+status.initialization.provisioned <boolean>	# True when the infrastructure provider reports that the resource's infrastructure is fully provisioned.
+status.observedGeneration <integer> format=int64
+status.observedPowerState <string> enum=PoweredOn|PoweredOff|Suspended|null	# Observed power state from the provider.
+status.scheduled <object>	# Current scheduling decision. Absent until first successful schedule.
+status.scheduled.failureDomain <string> (required)	# Failure domain name (one of the Provider's `status.failureDomains[].name`).
+status.scheduled.providerClass <string> (required)	# Provider's ProviderClass (denormalized for convenience in printer columns).
+status.scheduled.providerName <string> (required)	# Provider name (in the VM's namespace).
+status.scheduled.resolvedNetworks <[]object>	# Resolved network class → concrete backend identifier mappings.
+status.scheduled.resolvedNetworks[].backendId <string> (required)	# Backend identifier the provider resolved to (e.g. "ds-fast-01", "vmnet-prod").
+status.scheduled.resolvedNetworks[].className <string> (required)	# Class name as referenced in the VMClass (e.g. "gold", "prod").
+status.scheduled.resolvedStorage <[]object>	# Resolved storage class → concrete backend identifier mappings.
+status.scheduled.resolvedStorage[].backendId <string> (required)	# Backend identifier the provider resolved to (e.g. "ds-fast-01", "vmnet-prod").
+status.scheduled.resolvedStorage[].className <string> (required)	# Class name as referenced in the VMClass (e.g. "gold", "prod").
+status.scheduled.scheduledAt <string> format=date-time	# Time the placement decision was made.
+status.tpmEndorsementCertificates <[]string>	# Mirrored from the infra CR's `status.tpmEndorsementCertificates` (ADR-0045). The anchor a verifier checks an attestation quote against; mirrored onward onto a bound `VirtualMachineClaim` so a consumer needs one GET.

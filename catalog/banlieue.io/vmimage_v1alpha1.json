@@ -1,0 +1,665 @@
+{
+  "description": "VMImage — a cluster-scoped, backend-agnostic catalog entry for a bootable\nguest image.\n\nA VMImage names an operating system (family / distribution / version /\narchitecture) once, then lists — per provider class — where that image\nactually lives on each backend (`spec.sources`). A VirtualMachine\nreferences a VMImage by name (`spec.imageRef`); the scheduler and the\nchosen provider resolve it to a concrete template / backing file / import\nURL at provisioning time.\n\n# Why create one\n\n- **One name, many backends.** \"ubuntu-22.04\" can map to a vSphere\n  template, a Proxmox template VMID, and a libvirt qcow2 — users reference\n  a single VMImage regardless of where the VM lands.\n- **Explicit, auditable image sourcing.** Sources (and optional checksums)\n  are declared, not auto-discovered, so what actually boots is reviewable.\n- **Readiness gating.** The image controller records per-Provider\n  readiness in `status`; the scheduler refuses to place a VM until the\n  image is confirmed available (or importable) on a candidate Provider.\n\nCluster-scoped: a VMImage is shared by VirtualMachines in any namespace.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "VMImage — a cluster-scoped, backend-agnostic catalog entry for a bootable\nguest image.\n\nA VMImage names an operating system (family / distribution / version /\narchitecture) once, then lists — per provider class — where that image\nactually lives on each backend (`spec.sources`). A VirtualMachine\nreferences a VMImage by name (`spec.imageRef`); the scheduler and the\nchosen provider resolve it to a concrete template / backing file / import\nURL at provisioning time.\n\n# Why create one\n\n- **One name, many backends.** \"ubuntu-22.04\" can map to a vSphere\n  template, a Proxmox template VMID, and a libvirt qcow2 — users reference\n  a single VMImage regardless of where the VM lands.\n- **Explicit, auditable image sourcing.** Sources (and optional checksums)\n  are declared, not auto-discovered, so what actually boots is reviewable.\n- **Readiness gating.** The image controller records per-Provider\n  readiness in `status`; the scheduler refuses to place a VM until the\n  image is confirmed available (or importable) on a candidate Provider.\n\nCluster-scoped: a VMImage is shared by VirtualMachines in any namespace.",
+      "properties": {
+        "architecture": {
+          "description": "Guest CPU architecture. Failure domains whose hosts cannot run this\narchitecture are filtered out by the scheduler.",
+          "enum": [
+            "amd64",
+            "arm64"
+          ],
+          "type": "string"
+        },
+        "cloudConfigs": {
+          "description": "Layered cloud-configs baked into the built artifact for `Url`-kind\nsources (ADR-0037). `banlieue-imagebuilder` fetches each referenced\nSecret in list order, deep-merges their YAML content (maps deep-merge,\nlists concatenate, type-mismatch errors), SSA-applies a single merged\nSecret (`<vmimage-name>-cloud-config-merged`), and passes *that* to\nthe kairos-operator `OSArtifact` as `cloudConfigRef`\n(`auroraboot build-iso --cloud-config`). Empty list = no cloud-config.\nIndex 0 is the base; each subsequent entry layers on top.\nSecretRef-first; see `CloudConfigSource` and ADR-0020.\nIgnored for non-`Url` sources.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Source of a default cloud-config baked into a built image artifact.\n\nMirrors `CABundleSource`'s value-or-source shape, but is **secretRef-first**\n(ADR-0020): only `secret_ref` is implemented today, because kairos-operator's\n`OSArtifact.spec.cloudConfigRef` is itself Secret-only and\n`banlieue-imagebuilder` passes this Secret straight through. The `inline` and\n`config_map_ref` variants are reserved for a later change (they will resolve\nby materialising an imagebuilder-owned derived Secret); adding them is an\nadditive, non-breaking CRD change.",
+            "properties": {
+              "secretRef": {
+                "additionalProperties": false,
+                "description": "Key in a Secret in the imagebuild namespace holding the cloud-config\nYAML (key defaults to `DEFAULT_CLOUD_CONFIG_KEY`).",
+                "nullable": true,
+                "properties": {
+                  "key": {
+                    "description": "Key within the object's `data`. Defaults are caller-defined.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "firstBootSealing": {
+          "additionalProperties": false,
+          "description": "Declares that every clone of this image seals the listed partitions\nto its own vTPM on its first boot (ADR-0088), which is what lets a\n`VMClass` with `tpmEnabled: true` use an `Immediate` (pre-installed)\nimage. Without it that pairing is refused, because the template was\ninstalled before any per-VM vTPM existed (ADR-0048).\n\nFor a `Url` source `banlieue-imagebuilder` writes the sealing policy\ninto the built image itself (`status.firstBootSealing: Built`); for a\n`Template` or `BackingFile` source the image must already carry it, and\nthis field is an operator assertion (`Asserted`). Either way every\nclone's `GuestReady` waits for the guest to report each listed\npartition sealed. Needs a source image on Kairos v4.4.0 or later.\nHonoured unless `banlieue-controller` runs with\n`--enable-first-boot-sealing=false`, which refuses a `VirtualMachine`\nof this image (`FirstBootSealingDisabled`). Not combinable with\n`trustedBoot`.",
+          "nullable": true,
+          "properties": {
+            "partitions": {
+              "default": [
+                "COS_PERSISTENT"
+              ],
+              "description": "Kairos partition labels to seal on first boot. Defaults to\n`[COS_PERSISTENT]`. `COS_OEM`, `COS_STATE`, `COS_RECOVERY` and\n`COS_GRUB` are refused at admission, mirroring Kairos's own refusal.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "timeoutSeconds": {
+              "default": 600,
+              "description": "Seconds from the machine's power-on (its infrastructure `Ready`\ntransition) within which the guest must report every listed partition\nsealed; after that `GuestReady` is `False` with reason\n`FirstBootSealingTimeout`. A clone that cannot seal halts in its\ninitramfs and never reports anything, so this is how it is noticed.",
+              "maximum": 86400,
+              "minimum": 60,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "guestAgent": {
+          "default": "cloud-init",
+          "description": "Guest agent contract this image is built to support; determines how\n`VirtualMachine.spec.userData` is delivered.",
+          "enum": [
+            "cloud-init",
+            "ignition",
+            "sysprep",
+            "none"
+          ],
+          "type": "string"
+        },
+        "isoOverlay": {
+          "additionalProperties": false,
+          "description": "Additional files overlaid onto a built ISO for `Url`-kind vSphere\nsources (e.g. a hand-verified `grub.cfg`). Resolved by\n`banlieue-imagebuilder` into the kairos-operator `OSArtifact`'s\n`spec.volumes[]` + `spec.artifacts.overlayISOVolume` — the same\n`auroraboot build-iso --overlay-iso` mechanism a hand-run ISO-build\npipeline would use. See `IsoOverlaySource` and ADR-0022. Ignored for\n`cloudImage`-kind builds and non-`Url` sources.",
+          "nullable": true,
+          "properties": {
+            "files": {
+              "default": [],
+              "description": "Explicit key -> ISO-relative-path mapping. At least one entry expected;\nan empty list is accepted but wires nothing into the `OSArtifact`.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One overlay file: a key within `IsoOverlaySource::secret_ref` mapped to\na destination path relative to the built ISO's root.",
+                "properties": {
+                  "key": {
+                    "description": "Key within the overlay Secret holding this file's content.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "Destination path, relative to the ISO root (e.g. `boot/grub2/grub.cfg`).",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "path"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "secretRef": {
+              "additionalProperties": false,
+              "description": "Secret in the imagebuild namespace holding the overlay file contents.",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "secretRef"
+          ],
+          "type": "object"
+        },
+        "osDistribution": {
+          "description": "Free-form distribution string. Examples: ubuntu, rhel, debian,\nfedora-coreos, windows-server.",
+          "type": "string"
+        },
+        "osFamily": {
+          "description": "Broad operating-system family. Coarser than `osDistribution`; lets\nproviders apply high-level guest handling.",
+          "enum": [
+            "linux",
+            "windows",
+            "bsd",
+            "other"
+          ],
+          "type": "string"
+        },
+        "osVersion": {
+          "description": "Free-form version string. Examples: \"22.04\", \"9.4\", \"2022\".",
+          "type": "string"
+        },
+        "prelay": {
+          "additionalProperties": false,
+          "description": "Pre-lay the built image (ADR-0113): `banlieue-imagebuilder` boots the\nraw `cloudImage` once, at build time, through the Kairos recovery\nreset every clone would otherwise run on its first boot, so each\nclone boots straight into the installed system. Only for a `Url`\nsource built as a `cloudImage`; an `iso` build is refused\n(`PrelayNeedsCloudImage`). The pre-lay Job runs the published\n`banlieue-prelay` image (`banlieue-imagebuilder --prelay-image`) and\nneeds `/dev/kvm` on the build node. The published artifact is the pre-laid file, with a\nchecksum the builder computed after verifying the built file against\nthe source's `checksum`.",
+          "nullable": true,
+          "properties": {
+            "diskSizeGiB": {
+              "description": "The clones' OS disk size, in GiB. `COS_PERSISTENT` fills a disk of\nthis size and does not grow on a larger one, and a smaller one cannot\nhold the image: give the classes that use this image this disk size\n(ADR-0113 Decision 4).",
+              "maximum": 65536,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "diskSizeGiB"
+          ],
+          "type": "object"
+        },
+        "sources": {
+          "description": "Per-provider source mappings — one backend binding for this catalog\nentry per `providerClass` you intend to schedule VMs onto (\"one\nname, many backends\", see the type-level doc comment above).\n\n`x-kubernetes-list-type: map` keyed on `providerClass`: the API\nserver rejects a second entry for a `providerClass` that already\nhas one, rather than leaving it to `find_url_source` /\n`find_vsphere_source` to silently pick whichever came first.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One backend's mapping for a VMImage: which provider class it applies to,\nand how to find (or import) the image there.",
+            "properties": {
+              "checksum": {
+                "description": "Optional checksum for imported images. Format: `<alg>:<hex>`,\ne.g. `sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b...`.\nSupported algorithms: `sha256`, `sha512`. Provider import Jobs verify\nthe built artifact against this value before writing it to the backend\nand fail closed on mismatch or an unsupported algorithm.",
+                "nullable": true,
+                "type": "string"
+              },
+              "importFrom": {
+                "description": "Optional source URL. When set, providers that support image import\nwill pull from here if the image isn't already present locally.",
+                "nullable": true,
+                "type": "string"
+              },
+              "kind": {
+                "description": "What kind of backend artifact `ref` refers to.",
+                "enum": [
+                  "Template",
+                  "BackingFile",
+                  "Url"
+                ],
+                "type": "string"
+              },
+              "providerClass": {
+                "description": "Name of the ProviderClass this source applies to. Conventional\nvalues: `vsphere`, `proxmox`, `libvirt`.",
+                "type": "string"
+              },
+              "ref": {
+                "description": "Provider-interpreted reference:\n  vsphere + Template:     template name e.g. \"ubuntu-22.04-cloudinit\"\n  proxmox + Template:     template VMID e.g. \"9000\"\n  libvirt + BackingFile:  path e.g. \"/var/lib/libvirt/images/ubuntu.qcow2\"\n  * + Url:                ignored; uses `importFrom`",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "providerClass",
+              "ref"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "providerClass"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "template": {
+          "additionalProperties": false,
+          "description": "How the backend **template** is built from a `Url` source (root\nfolder, network, disk, CPU / memory / firmware / NIC, force knobs).\nEvery field is optional and falls back to a built-in default. Only\nmeaningful for `Url` sources, with one exception: for a vSphere\n`Template` source (an existing template banlieue adopts and never\nbuilds) only `rootFolder` is read, to find the template in\n`<rootFolder>/<failure-domain>`; every other field is ignored.\nIgnored for `BackingFile`. See `VMImageTemplate`, ADR-0020 and\nADR-0104.",
+          "nullable": true,
+          "properties": {
+            "cpus": {
+              "description": "Virtual CPU count of the template (`govc vm.create -c`). When unset,\ndefaults to 2. vSphere-only.",
+              "format": "int32",
+              "nullable": true,
+              "type": "integer"
+            },
+            "disk": {
+              "additionalProperties": false,
+              "description": "Install disk of the template (the clone source's disk). When unset, a\nthin 100 GiB disk on a pvscsi controller is used.",
+              "nullable": true,
+              "properties": {
+                "controller": {
+                  "default": "pvscsi",
+                  "description": "Disk controller type. Defaults to `pvscsi`.",
+                  "enum": [
+                    "pvscsi",
+                    "lsiLogic",
+                    "lsiLogicSas",
+                    "busLogic"
+                  ],
+                  "type": "string"
+                },
+                "size": {
+                  "description": "Disk size, in GiB. Defaults to 100 when unset.",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+                },
+                "type": {
+                  "default": "thin",
+                  "description": "Provisioning hint: `thin` (default), `thick`, or `eagerZeroed`. Reuses\nthe backend-agnostic `DiskProvisioning` shared with `VMClass` /\n`VSphereMachine`; eager-zeroing is the `eagerZeroed` variant, not a\nseparate flag. Providers honor it on a best-effort basis.",
+                  "enum": [
+                    "thin",
+                    "thick",
+                    "eagerZeroed"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "firmware": {
+              "description": "Firmware for the template (`govc vm.create -firmware`). Reuses the\nbackend-agnostic `Firmware` hint (`bios` / `efi` / `efi-secure`). When\nunset, defaults to `efi`. vSphere maps `efi-secure` to EFI with secure\nboot enabled.",
+              "enum": [
+                "bios",
+                "efi",
+                "efi-secure",
+                null
+              ],
+              "nullable": true,
+              "type": "string"
+            },
+            "forceCreate": {
+              "description": "Recreate the template even if one of that name already exists,\ndestroying the existing one first. Threaded as `--force-create`.",
+              "type": "boolean"
+            },
+            "forceUpload": {
+              "description": "Re-upload the built ISO even if one of that name already exists on the\nbackend, deleting the existing one first (the vСenter datastore file API\ndoes not overwrite in place). Threaded as `--force-upload`.",
+              "type": "boolean"
+            },
+            "guestId": {
+              "description": "vCenter `guestId` for the template (`govc vm.create -g`, e.g.\n`rhel9_64Guest`, `ubuntu64Guest`). When unset, it is derived from the\nVMImage's `osFamily` / `osDistribution` / `osVersion`. vSphere-only.",
+              "nullable": true,
+              "type": "string"
+            },
+            "installMode": {
+              "default": "immediate",
+              "description": "How the template's install step is driven. See `InstallMode` and\nADR-0021 / ADR-0040.",
+              "enum": [
+                "immediate",
+                "deferred",
+                "manual"
+              ],
+              "type": "string"
+            },
+            "installTimeoutSeconds": {
+              "description": "Bound, in seconds, on how long the import Job waits for the\nunattended Kairos install to finish and the VM to power itself off\n(`install.poweroff: true` in the cloud-config) before failing the\nJob. When unset, defaults to 1800 (30 min). See ADR-0021: the golden\ndisk is never rebooted by the build, so this bounds only the\n(typically 8-12 min) unattended-install window, not a boot cycle.",
+              "format": "int32",
+              "nullable": true,
+              "type": "integer"
+            },
+            "memoryMib": {
+              "description": "Memory of the template, in MiB (`govc vm.create -m`). When unset,\ndefaults to 4096. vSphere-only.",
+              "format": "int64",
+              "nullable": true,
+              "type": "integer"
+            },
+            "network": {
+              "description": "The template's network interfaces. Empty means exactly one NIC, using\nevery per-entry default below — the same behavior this field had\nbefore it became a list (ADR-0031). vSphere-only.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One network interface on a `Url`-source template (ADR-0031).",
+                "properties": {
+                  "adapter": {
+                    "description": "Virtual NIC adapter type for the template (`govc vm.create -net.adapter`).",
+                    "enum": [
+                      "vmxnet3",
+                      "vmxnet2",
+                      "e1000",
+                      "e1000e"
+                    ],
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "network": {
+                    "description": "Port group this NIC attaches to. When unset, the zone's first\nreachable network class (ADR-0019) is used.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "pciSlot": {
+                    "description": "PCI slot number for this NIC (`ethernetN.pciSlotNumber`). Slot 192\non the first NIC yields a stable `ens192` interface name in the\nguest. When unset, defaults to `192 + this NIC's index` in\n`VMImageTemplate.network` — so a template with several NICs and no\nexplicit slots still gets predictable, non-colliding\n`ens192`/`ens193`/`ens194`/... naming.",
+                    "format": "int32",
+                    "nullable": true,
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "retainOnDelete": {
+              "description": "Keep the per-zone vCenter template(s) this `VMImage` caused to be\nbuilt when the `VMImage` itself is deleted. When unset (the default),\ndeleting a `VMImage` also destroys every per-zone template it owns —\ndeclarative deletion, matching `VirtualMachine`'s own cascade onto its\n`VSphereMachine` (ADR-0026). Set `true` to opt out — e.g. the template\nis still referenced by another generation, or its lifecycle is\nmanaged by hand outside banlieue. vSphere-only; ignored by any other\nprovider. See ADR-0028.",
+              "type": "boolean"
+            },
+            "rootFolder": {
+              "description": "Root vCenter inventory folder (path under the datacenter's VM folder,\ne.g. `templates/kairos`); created if missing. When unset, the\ndatacenter's VM-folder root is the root. vSphere-only. Read for both\n`Url` (where the template is created) and `Template` (where the\nexisting template is looked up) sources (ADR-0104).\n\nNamed `rootFolder`, not `folder`, because it is never the literal\ntarget: the per-zone import always places the template at\n`<rootFolder>/<failure-domain-name>` (ADR-0020). Two failure domains\ncommonly share a datacenter (only their cluster differs), and\nvSphere's VM/Template folder hierarchy is scoped per-datacenter, not\nper-cluster — without the per-zone subfolder, every zone's import\nraced `CreateVM_Task` against the identical folder + template name.",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "trustedBoot": {
+          "additionalProperties": false,
+          "description": "Requests a Trusted Boot (UKI) artifact instead of a classic\nkernel+initrd one, for `Url`-kind vSphere sources. Resolved by\n`banlieue-imagebuilder` into the kairos-operator `OSArtifact`'s\n`spec.artifacts.uki.{iso,keysVolume}` (replacing the plain\n`artifacts.iso` request) — the `auroraboot build-uki` mechanism. See\n`TrustedBootSource` and ADR-0051. Ignored for `cloudImage`-kind\nbuilds and non-`Url` sources.",
+          "nullable": true,
+          "properties": {
+            "secretRef": {
+              "additionalProperties": false,
+              "description": "Secret in the imagebuild namespace holding the six files\n`auroraboot build-uki` requires: `PK.auth`, `KEK.auth`, `db.auth`,\n`db.key`, `db.pem`, `tpm2-pcr-private.pem`. Generated out-of-band via\n`auroraboot genkey` — banlieue never generates or manages this key\nmaterial.",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "secretRef"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "architecture",
+        "osDistribution",
+        "osFamily",
+        "osVersion",
+        "sources"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed availability of a VMImage across the Providers that can serve it.\nMaintained by the image controller; read by the scheduler.",
+      "nullable": true,
+      "properties": {
+        "buildArtifact": {
+          "additionalProperties": false,
+          "description": "Progress of the shared, provider-agnostic image build for `Url`-kind\nsources — set exclusively by `banlieue-imagebuilder` (field manager\n`banlieue.io/imagebuilder`), never by a provider. Typed by `kind`\n(`cloudImage` for libvirt, `iso` for vSphere). `None` when no `Url`\nsource exists on this `VMImage` or the build hasn't started. See\nADR-0010 and ADR-0020.",
+          "nullable": true,
+          "properties": {
+            "checksum": {
+              "description": "Expected checksum (`<alg>:<hex>`) of the built artifact, copied from the\n`Url` source the build serves. Consumers that stream the artifact to a\nbackend MUST verify it against this value and fail closed on mismatch\n(security review 2026-07-31, SEC-004) — the value lives here, next to\nthe PVC reference, so no consumer has to re-derive which source the\nshared build came from.",
+              "nullable": true,
+              "type": "string"
+            },
+            "file": {
+              "description": "File name of the artifact within the artifacts PVC (kairos-operator\nconvention: `<osArtifactRef>.raw` for `cloudImage`, `<osArtifactRef>.iso`\nfor `iso`). Populated at phase `Ready`.",
+              "nullable": true,
+              "type": "string"
+            },
+            "firstBootSealingLayer": {
+              "description": "Whether this build carries the banlieue-generated first-boot sealing\nlayer (ADR-0088): set when `spec.firstBootSealing` was honoured by the\nmerged cloud-config this artifact was built from. Omitted when false.",
+              "type": "boolean"
+            },
+            "kind": {
+              "description": "What kind of artifact was built, aligned with kairos-operator's own\n`OSArtifactKind`. Determines the `file` extension and which provider\nclass consumes it.",
+              "enum": [
+                "cloudImage",
+                "iso"
+              ],
+              "type": "string"
+            },
+            "message": {
+              "description": "Long human-readable detail, e.g. the `OSArtifact.status.message` on\nfailure.",
+              "nullable": true,
+              "type": "string"
+            },
+            "ociArtifact": {
+              "additionalProperties": false,
+              "description": "The same artifact, pushed to an OCI registry for providers that run\noutside the cluster and cannot mount the artifacts PVC (ADR-0064).\nSet only when a `cloud-hypervisor` `Url` source exists; `None`\notherwise, so installs without a host-resident provider need no\nregistry.",
+              "nullable": true,
+              "properties": {
+                "message": {
+                  "description": "Human-readable detail, e.g. why the push failed.",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "phase": {
+                  "description": "Current push phase.",
+                  "enum": [
+                    "Pushing",
+                    "Ready",
+                    "Failed"
+                  ],
+                  "type": "string"
+                },
+                "reference": {
+                  "description": "Digest-pinned reference, `registry/repository@sha256:<hex>`, once the\npush succeeded. Consumers pull **by this digest** and nothing else:\nintegrity comes from content addressing, so a tag moved after the\npush cannot change what a host boots.",
+                  "nullable": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "phase"
+              ],
+              "type": "object"
+            },
+            "osArtifactRef": {
+              "description": "Name of the `OSArtifact` CR `banlieue-imagebuilder` created for this\n`VMImage` (same namespace as the artifacts PVC below).",
+              "type": "string"
+            },
+            "osArtifactUid": {
+              "description": "`metadata.uid` of the `OSArtifact` named by `os_artifact_ref`, once\nobserved. Each provider's per-zone import Job sets this as its own\n`ownerReference` so a rebuilt (deleted-and-recreated) `OSArtifact`\ngarbage-collects the stale Job — and the artifacts PVC mount it\nholds — instead of the Job outliving it for up to its\n`ttlSecondsAfterFinished` (ADR-0027). Absent until the `OSArtifact`\nhas actually been observed once.",
+              "nullable": true,
+              "type": "string"
+            },
+            "phase": {
+              "description": "Current build phase.",
+              "enum": [
+                "Pending",
+                "Building",
+                "Ready",
+                "Failed"
+              ],
+              "type": "string"
+            },
+            "prelaidDiskSizeGiB": {
+              "description": "The disk size, in GiB, the artifact was pre-laid for (ADR-0113), when\n`spec.prelay` was honoured: `file` is then the pre-laid image and\n`checksum` its digest, computed by the builder. Omitted otherwise.",
+              "minimum": 0,
+              "nullable": true,
+              "type": "integer"
+            },
+            "pvcRef": {
+              "additionalProperties": false,
+              "description": "Reference to the PVC kairos-operator created holding the built artifact,\nonce known. Populated no earlier than phase `Building`.",
+              "nullable": true,
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "reason": {
+              "description": "Short reason, mirroring the stable-string convention used elsewhere\nin this status (e.g. `ImagePerProviderStatus.reason`).",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "osArtifactRef",
+            "phase"
+          ],
+          "type": "object"
+        },
+        "conditions": {
+          "description": "`Ready` is True iff every per-provider entry is ready.\n\nWritten **only** by `banlieue-controller` (field manager\n`banlieue.io/controller`), which is the only component with a\nwhole-image view. A provider cannot compute \"ready everywhere\" from\nrows it does not own, so it writes its `perProvider` entry and nothing\nhere (ADR-0015). Merge-keyed on `type`, per Kubernetes convention.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "firstBootSealing": {
+          "description": "How banlieue knows an image seals itself on first boot (ADR-0088).",
+          "enum": [
+            "Built",
+            "Asserted"
+          ],
+          "nullable": true,
+          "type": "string"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "perProvider": {
+          "description": "Per-Provider readiness. One entry per Provider that supports this\nimage's providerClass and has reconciled at least once.\n\n**Merge-keyed, and it must stay that way (ADR-0015).** Several\nproviders write this list concurrently, each applying only its own\nentry. Without `x-kubernetes-list-type: map` server-side apply treats\nthe array as atomic — one manager owns the whole thing and `force()`\nhands it over wholesale, silently discarding every other provider's\nrow. That was a real, reproduced bug, not a theoretical one.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Readiness of a VMImage on one specific Provider.",
+            "properties": {
+              "message": {
+                "description": "Long human-readable detail.",
+                "nullable": true,
+                "type": "string"
+              },
+              "providerName": {
+                "description": "Name of the Provider.",
+                "type": "string"
+              },
+              "providerNamespace": {
+                "description": "Namespace of the Provider.",
+                "type": "string"
+              },
+              "ready": {
+                "description": "True when the image can be used to clone/create a VM on this provider.",
+                "type": "boolean"
+              },
+              "reason": {
+                "description": "Short reason if not ready. Stable values from\n`condition_reasons::IMAGE_*`.",
+                "nullable": true,
+                "type": "string"
+              },
+              "resolvedRef": {
+                "description": "Resolved concrete reference on the backend, for backends with one\nreference per provider. Proxmox: VMID. Libvirt: path. Unset for\nvSphere, whose per-zone references are in `Self::zones` (ADR-0104).",
+                "nullable": true,
+                "type": "string"
+              },
+              "zones": {
+                "description": "Per-zone (per-`Provider.status.failureDomains[]`) readiness. Populated\nby the vSphere provider for both `Url` sources (import progress) and\n`Template` sources (whether the adopted template exists in each zone's\nfolder, ADR-0104). For `Url`, `ready` means every zone is ready; for\n`Template` it means at least one zone is, and the scheduler places\nVMs only in ready zones. Empty for backends without zones (libvirt,\nProxmox).",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "Readiness of a `VMImage` in one failure domain (zone) of a Provider. For\n`Url`-kind sources, built by `banlieue-imagebuilder` and imported per zone\nby the owning provider's controller (e.g. `banlieue-provider-vsphere`, one\nzone == one vSphere compute cluster / datastore / network in the current\nenvironment), it is import progress (ADR-0010). For vSphere `Template`\nsources it is whether the adopted template exists in this zone's folder\n(ADR-0104).",
+                  "properties": {
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the failure domain, matching `Provider.status.failureDomains[].name`.",
+                      "type": "string"
+                    },
+                    "ready": {
+                      "description": "True once the template is usable in this zone (import finished for\n`Url`; template found in the zone's folder for `Template`).",
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "resolvedRef": {
+                      "description": "The template's bare display name within this zone once ready — the\nvalue a provider passes to a name-based template lookup. NOT a\ndecorated string (no `[dc]`/folder prefix): the folder lives in\n`Self::template_folder`, kept separate so a lookup can be built\nfrom structured fields instead of parsing this one.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "templateFolder": {
+                      "description": "The vCenter folder path (relative to the datacenter's VM folder,\ne.g. `templates/cluster-01`) the template in `Self::resolved_ref`\nlives in: `<spec.template.rootFolder>/<zone>` for both `Url` imports\n(ADR-0020 Decision #5) and `Template` sources (ADR-0104). Unset while\nthe zone is not ready.",
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "ready"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "providerName",
+              "providerNamespace",
+              "ready"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "providerName",
+            "providerNamespace"
+          ],
+          "x-kubernetes-list-type": "map"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "VMImage",
+  "type": "object",
+  "x-flux-schema-type": "VMImage"
+}

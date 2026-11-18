@@ -1,0 +1,277 @@
+{
+  "description": "VirtualMachineClaim: one subject's exclusive, time-boxed hold on one\npool member.\n\n# What a claim guarantees\n\n- **Bound once, ever.** The member it binds is never handed to another\n  subject, never returned to the warm set, and never reused. Release is\n  always destruction.\n- **Deleting the claim destroys the VM**, and the claim object does not\n  disappear until it has.\n- **`ttlSeconds` is a hard deadline**, not a grace period. At expiry the\n  member is deleted whether or not the consumer is finished.\n\n# What a claim is not\n\nIt is not a credential channel. `spec.subject` records *who* the member\nis for so the binding is auditable in the API server's own audit log; it\nis opaque to banlieue, and a token must never be placed in it. Delivering\nthe subject's token to the guest is the consumer's job, over its own\nattested channel, anchored on the bound member's EK certificate\n(`status.tpmEndorsementCertificates`, ADR-0045, ADR-0049).\n\n# Which pool\n\nExactly one of `poolRef` (one named pool) or `poolSelector` (every pool\nin the claim's namespace whose labels match). `poolSelector: {}` matches\nevery pool in the namespace; a claim with neither field is refused\nrather than read as \"any pool\" (ADR-0132).",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "VirtualMachineClaim: one subject's exclusive, time-boxed hold on one\npool member.\n\n# What a claim guarantees\n\n- **Bound once, ever.** The member it binds is never handed to another\n  subject, never returned to the warm set, and never reused. Release is\n  always destruction.\n- **Deleting the claim destroys the VM**, and the claim object does not\n  disappear until it has.\n- **`ttlSeconds` is a hard deadline**, not a grace period. At expiry the\n  member is deleted whether or not the consumer is finished.\n\n# What a claim is not\n\nIt is not a credential channel. `spec.subject` records *who* the member\nis for so the binding is auditable in the API server's own audit log; it\nis opaque to banlieue, and a token must never be placed in it. Delivering\nthe subject's token to the guest is the consumer's job, over its own\nattested channel, anchored on the bound member's EK certificate\n(`status.tpmEndorsementCertificates`, ADR-0045, ADR-0049).\n\n# Which pool\n\nExactly one of `poolRef` (one named pool) or `poolSelector` (every pool\nin the claim's namespace whose labels match). `poolSelector: {}` matches\nevery pool in the namespace; a claim with neither field is refused\nrather than read as \"any pool\" (ADR-0132).",
+      "properties": {
+        "poolRef": {
+          "additionalProperties": false,
+          "description": "The pool to take a member from. Same namespace as the claim.\nExactly one of this or `poolSelector`.",
+          "nullable": true,
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "poolSelector": {
+          "additionalProperties": false,
+          "description": "Take a member from any pool in the claim's namespace whose labels\nmatch. Members of every matching pool are ranked as one set (Ready\nonly, current image revision of their own pool first, then the one\nReady longest, then name), and `status.poolRef` records the pool\nthe bound member came from. `{}` matches every pool in the\nnamespace. Exactly one of this or `poolRef` (ADR-0132).",
+          "nullable": true,
+          "properties": {
+            "matchExpressions": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "enum": [
+                      "In",
+                      "NotIn",
+                      "Exists",
+                      "DoesNotExist"
+                    ],
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "matchLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "selection": {
+          "additionalProperties": false,
+          "description": "How the member is chosen among the Ready ones (ADR-0135). Absent\nmeans `LongestReady`, the order every claim used before this field\nexisted. A strategy only reorders: no strategy leaves a claim\n`Pending` while a Ready member exists. Immutable, like the pool\nfields: it is read once, when the member is picked.",
+          "nullable": true,
+          "properties": {
+            "strategy": {
+              "default": "LongestReady",
+              "description": "The ranking to apply. Defaults to `LongestReady`.",
+              "enum": [
+                "LongestReady",
+                "MostAvailable",
+                "Spread"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "subject": {
+          "additionalProperties": false,
+          "description": "Who this member is for. Opaque to banlieue: recorded, mirrored onto\nthe member as annotations, and never interpreted.",
+          "properties": {
+            "id": {
+              "description": "Stable subject identifier within that issuer (the `sub` / `oid`\nclaim), not a display name or e-mail.",
+              "type": "string"
+            },
+            "issuer": {
+              "description": "Token issuer the subject was authenticated by, e.g. an OIDC issuer\nURL.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "issuer"
+          ],
+          "type": "object"
+        },
+        "ttlSeconds": {
+          "description": "Hard lifetime in seconds, counted from binding rather than from\ncreation — a claim that waited ten minutes for capacity still gets\nits full TTL. Required, with no default: a claim without a deadline\nis a leaked VM, and the right value is a property of the workload.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "subject",
+        "ttlSeconds"
+      ],
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "a claim takes exactly one of poolRef or poolSelector; use poolSelector: {} for any pool in the namespace",
+          "rule": "has(self.poolRef) != has(self.poolSelector)"
+        }
+      ]
+    },
+    "status": {
+      "additionalProperties": false,
+      "nullable": true,
+      "properties": {
+        "addresses": {
+          "description": "Mirrored from the bound member so a consumer needs one GET.",
+          "items": {
+            "additionalProperties": false,
+            "description": "A typed machine address. Mirrors CAPI's `clusterv1.MachineAddress`.",
+            "properties": {
+              "address": {
+                "description": "The address itself.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.",
+                "enum": [
+                  "Hostname",
+                  "ExternalIP",
+                  "InternalIP",
+                  "ExternalDNS",
+                  "InternalDNS"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "boundAt": {
+          "description": "Time is a wrapper around time.Time which supports correct marshaling to YAML and JSON.  Wrappers are provided for many of the factory methods that the time package offers.",
+          "format": "date-time",
+          "nullable": true,
+          "type": "string"
+        },
+        "conditions": {
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "expiresAt": {
+          "description": "`bound_at + spec.ttlSeconds`. The member is deleted at this instant.",
+          "format": "date-time",
+          "nullable": true,
+          "type": "string"
+        },
+        "nonce": {
+          "description": "Deprecated, never set since v0.4.14. It was a per-claim value for\nADR-0049's quote-over-nonce handshake, which SPIRE's TPM node\nattestation superseded (ADR-0049, amended 2026-11-05). Kept so an\nexisting claim's status still parses; removed with the next API\nversion.",
+          "nullable": true,
+          "type": "string"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "phase": {
+          "default": "Pending",
+          "description": "Where a claim is in its one-way lifecycle.\n\n`Pending → Bound → Releasing` is the whole of the happy path. Nothing\nmoves backwards: a claim that has bound a member never unbinds it, and a\nclaim that has started releasing never returns to `Bound`.",
+          "enum": [
+            "Pending",
+            "Bound",
+            "Releasing",
+            "Failed"
+          ],
+          "type": "string"
+        },
+        "poolRef": {
+          "additionalProperties": false,
+          "description": "The pool the bound member came from. Set at bind time from the\nmember's `banlieue.io/pool` label; the only place a claim made with\n`spec.poolSelector` says which pool supplied its VM (ADR-0132).",
+          "nullable": true,
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "tpmEndorsementCertificates": {
+          "description": "PEM vTPM endorsement key certificate(s) of the bound member, mirrored\nfrom the infra CR (ADR-0045). Lets a verifier check that an\nattestation comes from the VM banlieue itself created for this\nclaim. Populated since ADR-0045, from the bound member's\n`VirtualMachine.status`, which mirrors its infrastructure CR. Empty\nfor a member with no vTPM.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "virtualMachineRef": {
+          "additionalProperties": false,
+          "description": "The bound member. Set once, at bind time, and never rewritten.",
+          "nullable": true,
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "VirtualMachineClaim",
+  "type": "object",
+  "x-flux-schema-type": "VirtualMachineClaim"
+}

@@ -1,0 +1,334 @@
+{
+  "description": "ProviderClass — what banlieue runs for a class of backends.\n\nA ProviderClass carries the install metadata for one backend type: which\n`banlieue provider <backend>` role to run, from which image, with what pod\nshape and extra permissions. It names no endpoint and holds no credentials\n— that is a `Provider`'s job.\n\n# Why create one\n\n- **Make backends self-provisioning.** With a ProviderClass in place,\n  registering a backend is `kubectl apply` of a Provider CR:\n  `banlieue-operator` creates that Provider's Deployment, ServiceAccount,\n  Role and RoleBinding for you. No manifest editing, no helm values.\n- **Decide the image once.** Every Provider of this class runs the image\n  pinned here, so upgrading a fleet of backends is a one-object edit\n  instead of one edit per backend.\n- **Separate the two jobs.** Deciding *what banlieue runs* (a platform\n  owner, cluster-scoped) is not the same as registering *a vCenter*\n  (a backend admin, namespaced) — different people, different privileges.\n\n# How it is used\n\n`Provider.spec.providerClassRef.name` points at a ProviderClass by name.\nThe operator resolves it, then applies one workload set per Provider, each\nowned by its Provider CR so deleting the Provider garbage-collects the\nworkload. Each spawned pod runs a server-side filtered watch scoped to its\nown Provider, so one hung backend cannot stall another (ADR-0003).\n\nCluster-scoped: one ProviderClass serves Providers in any namespace.",
+  "properties": {
+    "spec": {
+      "additionalProperties": false,
+      "description": "ProviderClass — what banlieue runs for a class of backends.\n\nA ProviderClass carries the install metadata for one backend type: which\n`banlieue provider <backend>` role to run, from which image, with what pod\nshape and extra permissions. It names no endpoint and holds no credentials\n— that is a `Provider`'s job.\n\n# Why create one\n\n- **Make backends self-provisioning.** With a ProviderClass in place,\n  registering a backend is `kubectl apply` of a Provider CR:\n  `banlieue-operator` creates that Provider's Deployment, ServiceAccount,\n  Role and RoleBinding for you. No manifest editing, no helm values.\n- **Decide the image once.** Every Provider of this class runs the image\n  pinned here, so upgrading a fleet of backends is a one-object edit\n  instead of one edit per backend.\n- **Separate the two jobs.** Deciding *what banlieue runs* (a platform\n  owner, cluster-scoped) is not the same as registering *a vCenter*\n  (a backend admin, namespaced) — different people, different privileges.\n\n# How it is used\n\n`Provider.spec.providerClassRef.name` points at a ProviderClass by name.\nThe operator resolves it, then applies one workload set per Provider, each\nowned by its Provider CR so deleting the Provider garbage-collects the\nworkload. Each spawned pod runs a server-side filtered watch scoped to its\nown Provider, so one hung backend cannot stall another (ADR-0003).\n\nCluster-scoped: one ProviderClass serves Providers in any namespace.",
+      "properties": {
+        "additionalRules": {
+          "description": "Extra RBAC rules appended to the per-instance Role the operator\ngenerates for each Provider of this class.\n\nNote that Kubernetes forbids granting permissions the grantor does not\nitself hold: a rule listed here also has to be present in the operator's\nown ClusterRole, or the RoleBinding is rejected (ADR-0012).",
+          "items": {
+            "additionalProperties": false,
+            "description": "PolicyRule holds information that describes a policy rule, but does not contain information about who the rule applies to or which namespace the rule applies to.",
+            "properties": {
+              "apiGroups": {
+                "description": "apiGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of the enumerated resources in any API group will be allowed. \"\" represents the core API group and \"*\" represents all API groups.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "nonResourceURLs": {
+                "description": "nonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding. Rules can either apply to API resources (such as \"pods\" or \"secrets\") or non-resource URL paths (such as \"/api\"),  but not both.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "resourceNames": {
+                "description": "resourceNames is an optional white list of names that the rule applies to.  An empty set means that everything is allowed.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "resources": {
+                "description": "resources is a list of resources this rule applies to. '*' represents all resources.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "verbs": {
+                "description": "verbs is a list of Verbs that apply to ALL the ResourceKinds contained in this rule. '*' represents all verbs.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "verbs"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "backend": {
+          "description": "Which provider backend this class instantiates — the\n`banlieue provider <backend>` subcommand spawned Deployments run.\n\nWell-known values: `vsphere`, `proxmox`, `libvirt`. Kept separate from\nthe object's name so two classes can pin different images or pod shapes\nfor the same backend (e.g. a canary class).",
+          "type": "string"
+        },
+        "deployment": {
+          "description": "How a class's providers run (ADR-0060 Decision 3).",
+          "enum": [
+            "Managed",
+            "External"
+          ],
+          "nullable": true,
+          "type": "string"
+        },
+        "image": {
+          "additionalProperties": false,
+          "description": "Container image every provider workload of this class runs.\n\nRequired when `deployment` is `Managed` (the default), and must be\nunset when it is `External`: nothing is deployed, so there is no image\nto run. The operator and the admission policy both enforce this\n(ADR-0060 Decision 3).",
+          "nullable": true,
+          "properties": {
+            "digest": {
+              "description": "Image digest, e.g. `sha256:0f756fa0…`. When set it is what actually\ngets pulled, and any `tag` becomes documentation of intent.\n\nPinning here does more than make the running version knowable. A\nDeployment referencing a mutable tag has a spec that is byte-identical\nacross pushes, so a new image triggers **no rollout** — and\n`imagePullPolicy: Always` does not help, because it only applies when a\npod is created. Pods keep running the old layers, looking healthy, for\nas long as nothing else disturbs them. A digest changes the spec, so\npushing a new image rolls the workload.",
+              "nullable": true,
+              "type": "string"
+            },
+            "pullPolicy": {
+              "description": "Image pull policy, spelled exactly as Kubernetes spells it.\n\nKept as an explicit enum rather than a free string so an invalid policy is\nrejected by the apiserver at admission instead of surfacing as a pod that\nwill not start.",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ],
+              "nullable": true,
+              "type": "string"
+            },
+            "pullSecrets": {
+              "description": "Secrets used to pull the image, for private or mirrored registries.",
+              "items": {
+                "additionalProperties": false,
+                "description": "Reference to an object in the same namespace.",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "repository": {
+              "description": "Image repository without a tag, e.g. `ghcr.io/firestoned/banlieue`.",
+              "type": "string"
+            },
+            "tag": {
+              "description": "Image tag, e.g. `v0.1.0`. Never use `latest` in production — a mutable\ntag makes the running version unknowable and defeats rollback.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag"
+          ],
+          "type": "object"
+        },
+        "logging": {
+          "additionalProperties": false,
+          "description": "Log level and format passed to spawned workloads.",
+          "properties": {
+            "format": {
+              "description": "Log format: `json` for SIEM-friendly structured output, anything else\nfor the human-readable text formatter.",
+              "nullable": true,
+              "type": "string"
+            },
+            "level": {
+              "description": "Log level, e.g. `info` or `debug,kube=warn`. Passed through as the\nworkload's log-level flag.",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "nodeSelector": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Node selector applied to provider pods. Useful when backend access is\nonly routable from particular nodes.",
+          "type": "object"
+        },
+        "paused": {
+          "description": "Suspend lifecycle reconciliation for every Provider of this class.\nExisting workloads are left running untouched.",
+          "type": "boolean"
+        },
+        "replicas": {
+          "description": "Replicas for each provider Deployment. Defaults to\n`DEFAULT_PROVIDER_REPLICAS`. Provider controllers are leader-elected,\nso values above one provide failover, not parallelism.",
+          "format": "int32",
+          "nullable": true,
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "description": "Resource requests and limits for the provider container. When unset the\noperator applies its own conservative defaults.",
+          "nullable": true,
+          "properties": {
+            "claims": {
+              "description": "Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.\n\nThis field depends on the DynamicResourceAllocation feature gate.\n\nThis field is immutable. It can only be set for containers.",
+              "items": {
+                "additionalProperties": false,
+                "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
+                "properties": {
+                  "name": {
+                    "description": "Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.",
+                    "type": "string"
+                  },
+                  "request": {
+                    "description": "Request is the name chosen for a request in the referenced claim. If empty, everything from the claim is made available, otherwise only the result of this request.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "limits": {
+              "additionalProperties": {
+                "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "description": "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": {
+                "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "description": "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "tolerations": {
+          "description": "Tolerations applied to provider pods.",
+          "items": {
+            "additionalProperties": false,
+            "description": "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
+            "properties": {
+              "effect": {
+                "description": "Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.",
+                "type": "string"
+              },
+              "key": {
+                "description": "Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.",
+                "type": "string"
+              },
+              "operator": {
+                "description": "Operator represents a key's relationship to the value. Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category. Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
+                "type": "string"
+              },
+              "tolerationSeconds": {
+                "description": "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "value": {
+                "description": "Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "workloadNamespace": {
+          "description": "Namespace to create provider workloads in.\n\nWhen unset — the recommended setting — each Provider's workload is\ncreated in **that Provider's own namespace**, alongside the credentials\nSecret it reads. That keeps every object in one namespace, so all of\nthem can carry an `ownerReference` to the Provider and be\ngarbage-collected with it (a cross-namespace owner reference is invalid\nand would have the collector delete the dependent immediately).\n\nSetting this pins every workload of the class to one namespace instead.\nThe generated Role still has to be created next to the Secret it grants\naccess to — in the Provider's namespace — so the two split apart, and\nthe operator falls back to finalizer-driven cleanup for the objects that\ncan no longer be owned.",
+          "nullable": true,
+          "type": "string"
+        }
+      },
+      "required": [
+        "backend"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed state of a ProviderClass.",
+      "nullable": true,
+      "properties": {
+        "conditions": {
+          "description": "Standard Kubernetes conditions. `Ready` reflects whether the class is\nusable: its backend is compiled into the running operator and its image\nreference is well-formed.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "observedGeneration": {
+          "description": "The generation of the spec the operator has reconciled.",
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "providers": {
+          "description": "Number of Provider CRs currently referencing this class.",
+          "format": "int32",
+          "nullable": true,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "ProviderClass",
+  "type": "object",
+  "x-flux-schema-type": "ProviderClass"
+}
