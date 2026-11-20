@@ -1,4 +1,4 @@
-# schema source: Datadog Operator v1.31.2 https://github.com/DataDog/datadog-operator
+# schema source: Datadog Operator v1.32.0 https://github.com/DataDog/datadog-operator
 apiVersion <string> enum=datadoghq.com/v1alpha1
 kind <string> enum=DatadogCSIDriver
 metadata.name <string> (required)
@@ -6,11 +6,12 @@ metadata.namespace <string> (required)
 spec <object>	# DatadogCSIDriverSpec defines the desired state of DatadogCSIDriver
 spec.apm <object>	# APM configures APM/Single Step Instrumentation support for the CSI driver.
 spec.apm.enabled <boolean>	# Enabled enables APM/Single Step Instrumentation support for the CSI driver. Default: true
-spec.apm.pullSecrets <[]object>	# PullSecrets are kubernetes.io/dockerconfigjson Secrets used to download APM libraries from private registries. When empty, the CSI driver falls back to csiDriverImage.pullSecrets; legacy kubernetes.io/dockercfg Secrets are ignored for APM authentication in that fallback path. Restart the CSI DaemonSet after rotating these Secrets. Not supported on GKE Autopilot.
+spec.apm.pullSecrets <[]object>	# PullSecrets are kubernetes.io/dockerconfigjson Secrets used to download APM libraries from private registries. When empty, the CSI driver falls back to csiDriverImage.pullSecrets; legacy kubernetes.io/dockercfg Secrets are ignored for APM authentication in that fallback path. Restart the CSI DaemonSet after rotating these Secrets.
 spec.apm.pullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.apm.registryAllowList <[]string>	# RegistryAllowList restricts which registries can be used for DatadogLibrary volumes. An empty list allows all registries. When managed by a DatadogAgent, it is set from spec.features.admissionController.registryAllowList. (Requires Datadog CSI Driver 1.3.0+)
 spec.apmSocketPath <string>	# APMSocketPath is the host path to the APM socket. Default: /var/run/datadog/apm.socket
 spec.commonLabels <map[string]string>	# CommonLabels are propagated from spec.global.commonLabels on the parent DatadogAgent and are applied to all resources managed by the CSI controller (DaemonSet ObjectMeta, pod template, and cluster-scoped CSIDriver object). This field is managed by the operator; do not set it manually.
-spec.csiDriverImage <object>	# CSIDriverImage is the image configuration for the main CSI node driver container.
+spec.csiDriverImage <object>	# CSIDriverImage is the image configuration for the main CSI node driver container. A full registry/name:tag in `name` takes precedence over spec.registry.
 spec.csiDriverImage.jmxEnabled <boolean>	# Define whether the Agent image should support JMX. To be used if the `Name` field does not correspond to a full image string.
 spec.csiDriverImage.name <string>	# Defines the Agent image name for the pod. You can provide this as: * `<NAME>` - Use `agent` for the Datadog Agent, `cluster-agent` for the Datadog Cluster Agent, or `dogstatsd` for DogStatsD. The full image string is derived from `global.registry`, `[key].image.tag`, and `[key].image.jmxEnabled`. * `<NAME>:<TAG>` - For example, `agent:latest`. The registry is derived from `global.registry`. `[key].image.tag` and `[key].image.jmxEnabled` are ignored. * `<REGISTRY>/<NAME>:<TAG>` - For example, `gcr.io/datadoghq/agent:latest`. If the full image string is specified like this, then `global.registry`, `[key].image.tag`, and `[key].image.jmxEnabled` are ignored.
 spec.csiDriverImage.pullPolicy <string>	# The Kubernetes pull policy: Use `Always`, `Never`, or `IfNotPresent`.
@@ -621,6 +622,7 @@ spec.registrarImage.pullPolicy <string>	# The Kubernetes pull policy: Use `Alway
 spec.registrarImage.pullSecrets <[]object>	# It is possible to specify Docker registry credentials. See https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
 spec.registrarImage.pullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.registrarImage.tag <string>	# Define the image tag to use. To be used if the `Name` field does not correspond to a full image string.
+spec.registry <string>	# Registry is the image registry to use for the Datadog CSI driver image, propagated from spec.global.registry on the parent DatadogAgent. It does not apply to the csi-node-driver-registrar sidecar, an upstream Kubernetes image always pulled from registry.k8s.io/sig-storage. Forced to GCR on GKE Autopilot. Default: 'registry.datadoghq.com'
 status <object>	# DatadogCSIDriverStatus defines the observed state of DatadogCSIDriver
 status.conditions <[]object>	# Conditions represents the latest available observations of the DatadogCSIDriver's current state.
 status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
