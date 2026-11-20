@@ -67,6 +67,33 @@ export async function fetchRetry(url: string, init: RequestInit = {}): Promise<R
   }
 }
 
+/**
+ * Whether a 403 body is GitHub refusing the token because the owning org has
+ * an IP allow list that excludes the caller (e.g. GitHub Actions runners).
+ * The allow list applies to authenticated requests only, so a public repo
+ * stays readable anonymously.
+ */
+export function isIpAllowListRefusal(body: string): boolean {
+  return /IP allow list/i.test(body);
+}
+
+/**
+ * fetchRetry with the GitHub API headers. When an org IP allow list refuses
+ * the token, retries once without it.
+ */
+export async function fetchGitHub(url: string): Promise<Response> {
+  const auth = headers();
+  const res = await fetchRetry(url, { headers: auth });
+  if (res.status !== 403 || auth.Authorization === undefined) {
+    return res;
+  }
+  if (!isIpAllowListRefusal(await res.clone().text().catch(() => ""))) {
+    return res;
+  }
+  const { Authorization: _, ...anonymous } = auth;
+  return fetchRetry(url, { headers: anonymous });
+}
+
 /** Response headers that explain why GitHub refused a request. */
 const DIAGNOSTIC_HEADERS = [
   "x-github-request-id",
@@ -128,7 +155,7 @@ export async function httpError(label: string, res: Response): Promise<Error> {
 }
 
 async function apiJson(path: string): Promise<unknown> {
-  const res = await fetchRetry(`${API_BASE}${path}`, { headers: headers() });
+  const res = await fetchGitHub(`${API_BASE}${path}`);
   if (!res.ok) {
     throw await httpError(path, res);
   }
@@ -284,7 +311,7 @@ async function fetchCrdDirViaTarball(
   const tmp = await mkdtemp(join(tmpdir(), "schema-catalog-tarball-"));
   try {
     const url = `${API_BASE}/repos/${repo}/tarball/${commit}`;
-    const res = await fetchRetry(url, { headers: headers() });
+    const res = await fetchGitHub(url);
     if (!res.ok) {
       throw await httpError(url, res);
     }

@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, fluxInstanceManifest } from "./extract.ts";
-import { describeHttpError, excludeByBasename, matchAsset } from "./github.ts";
+import { describeHttpError, excludeByBasename, fetchGitHub, isIpAllowListRefusal, matchAsset } from "./github.ts";
 import { digestFiles, historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, sha256 } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
@@ -151,6 +151,69 @@ describe("describeHttpError", () => {
 
   test("falls back to the bare status with an empty body", () => {
     expect(describeHttpError("u", 404, "Not Found", new Headers(), "")).toBe("GET u: 404 Not Found");
+  });
+});
+
+describe("fetchGitHub", () => {
+  const allowList =
+    "Although you appear to have the correct authorization credentials, the `marimo-team` organization " +
+    "has an IP allow list enabled, and your IP address is not permitted to access this resource.";
+
+  // Stubs fetch with a handler and records the Authorization header of each call.
+  async function withFetch(handler: (auth: string | null) => Response, run: (calls: (string | null)[]) => Promise<void>) {
+    const realFetch = globalThis.fetch;
+    const realToken = process.env.GITHUB_TOKEN;
+    const calls: (string | null)[] = [];
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      const auth = new Headers(init?.headers).get("authorization");
+      calls.push(auth);
+      return handler(auth);
+    }) as typeof fetch;
+    process.env.GITHUB_TOKEN = "test-token";
+    try {
+      await run(calls);
+    } finally {
+      globalThis.fetch = realFetch;
+      if (realToken === undefined) {
+        delete process.env.GITHUB_TOKEN;
+      } else {
+        process.env.GITHUB_TOKEN = realToken;
+      }
+    }
+  }
+
+  test("isIpAllowListRefusal matches only the IP allow list message", () => {
+    expect(isIpAllowListRefusal(JSON.stringify({ message: allowList }))).toBe(true);
+    expect(isIpAllowListRefusal(JSON.stringify({ message: "Resource protected by organization SAML enforcement." }))).toBe(false);
+    expect(isIpAllowListRefusal("")).toBe(false);
+  });
+
+  test("retries anonymously when an IP allow list refuses the token", async () => {
+    await withFetch(
+      (auth) =>
+        auth === null
+          ? new Response(JSON.stringify({ tag_name: "v0.3.0" }), { status: 200 })
+          : new Response(JSON.stringify({ message: allowList }), { status: 403, statusText: "Forbidden" }),
+      async (calls) => {
+        const res = await fetchGitHub("https://api.github.com/repos/o/r/releases/latest");
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({ tag_name: "v0.3.0" });
+        expect(calls).toEqual(["Bearer test-token", null]);
+      },
+    );
+  });
+
+  test("keeps other 403 refusals and leaves their body readable", async () => {
+    const message = "Resource protected by organization SAML enforcement.";
+    await withFetch(
+      () => new Response(JSON.stringify({ message }), { status: 403, statusText: "Forbidden" }),
+      async (calls) => {
+        const res = await fetchGitHub("https://api.github.com/repos/o/r/releases/latest");
+        expect(res.status).toBe(403);
+        expect(calls).toEqual(["Bearer test-token"]);
+        expect(((await res.json()) as { message: string }).message).toBe(message);
+      },
+    );
   });
 });
 
