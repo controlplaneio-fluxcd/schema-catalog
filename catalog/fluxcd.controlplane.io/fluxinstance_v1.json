@@ -1,4 +1,5 @@
 {
+  "additionalProperties": false,
   "description": "FluxInstance is the Schema for the fluxinstances API",
   "properties": {
     "apiVersion": {
@@ -61,6 +62,17 @@
                 "large"
               ],
               "type": "string"
+            },
+            "sourceWatcher": {
+              "additionalProperties": false,
+              "description": "SourceWatcher configures the source-watcher component.",
+              "properties": {
+                "namespaceManager": {
+                  "description": "NamespaceManager enables the RBAC required by source-watcher to manage\nNamespaces on behalf of ArtifactGenerator resources. This grants the\nsource-watcher service account cluster-wide permissions to create,\nupdate, patch and delete Namespaces. The source-watcher component must\nbe enabled in .spec.components.",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
             },
             "tenantDefaultDecryptionServiceAccount": {
               "description": "TenantDefaultDecryptionServiceAccount is the name of the service account\nto use as default for kustomize-controller SOPS decryption when the\nmultitenant lockdown for object identity is enabled. Defaults to the\n'default' service account from the tenant namespace.",
@@ -528,6 +540,10 @@
         {
           "message": ".spec.cluster.objectIdentityRBAC or .spec.spiffe.brokerAPI must be set when .spec.cluster.multitenantObjectIdentity is set to true",
           "rule": "!has(self.cluster) || !has(self.cluster.multitenantObjectIdentity) || !self.cluster.multitenantObjectIdentity || (has(self.cluster.objectIdentityRBAC) && self.cluster.objectIdentityRBAC) || (has(self.cluster.objectLevelWorkloadIdentity) && self.cluster.objectLevelWorkloadIdentity) || (has(self.spiffe) && has(self.spiffe.brokerAPI))"
+        },
+        {
+          "message": ".spec.cluster.sourceWatcher requires source-watcher in .spec.components",
+          "rule": "!has(self.cluster) || !has(self.cluster.sourceWatcher) || (has(self.components) && self.components.exists(c, c == 'source-watcher'))"
         }
       ]
     },
