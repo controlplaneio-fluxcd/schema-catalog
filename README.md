@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-126-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C643-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-686%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-127-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C655-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-686%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -171,6 +171,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.2 | 4 | 2026-11-20 |
 | [Sigstore Policy Controller](https://schemas.fluxoperator.dev/p/sigstore-policy-controller) | `sigstore-policy-controller` | v0.15.1 | 3 | 2026-11-20 |
 | [SPIRE Controller Manager](https://schemas.fluxoperator.dev/p/spire-controller-manager) | `spire-controller-manager` | v0.7.1 | 4 | 2026-11-20 |
+| [Trivy Operator](https://schemas.fluxoperator.dev/p/trivy-operator) | `trivy-operator` | v0.36.1 | 12 | 2026-11-20 |
 | [Trust Manager](https://schemas.fluxoperator.dev/p/trust-manager) | `trust-manager` | v0.26.0 | 2 | 2026-11-20 |
 | [Upbound AWS Provider](https://schemas.fluxoperator.dev/p/provider-upjet-aws) | `provider-upjet-aws` | v2.9.0 | 2452 | 2026-11-20 |
 | [Upbound Azure Provider](https://schemas.fluxoperator.dev/p/provider-upjet-azure) | `provider-upjet-azure` | v2.8.0 | 1827 | 2026-11-20 |
