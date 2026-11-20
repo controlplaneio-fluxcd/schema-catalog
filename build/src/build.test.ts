@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { parsePositiveIntegerFlag } from "./cli.ts";
 import { CATEGORIES } from "./config.ts";
 import { crdResourceNames, fluxInstanceManifest } from "./extract.ts";
-import { excludeByBasename, matchAsset } from "./github.ts";
+import { describeHttpError, excludeByBasename, matchAsset } from "./github.ts";
 import { digestFiles, historyKinds, kindCasing, parseKindName, pruneKindsWithoutFields, removedFiles, sha256 } from "./history.ts";
 import { runBoundedPool } from "./pool.ts";
 import { renderCatalogStats, renderVersionsTable, spliceVersionsTable } from "./readme.ts";
@@ -125,6 +125,32 @@ describe("excludeByBasename", () => {
     expect(() => excludeByBasename(files, ["gateway.networking.k8s.io_*"], "ctx")).toThrow(
       /exclude 'gateway.networking.k8s.io_\*' matched no file/,
     );
+  });
+});
+
+describe("describeHttpError", () => {
+  test("carries the GitHub API message and diagnostic headers", () => {
+    const headers = new Headers({
+      "x-github-request-id": "ABCD:1234",
+      "x-ratelimit-remaining": "4999",
+      "content-type": "application/json",
+    });
+    const body = JSON.stringify({ message: "Resource protected by organization SAML enforcement.", documentation_url: "x" });
+    expect(describeHttpError("/repos/o/r/releases/latest", 403, "Forbidden", headers, body)).toBe(
+      "GET /repos/o/r/releases/latest: 403 Forbidden: Resource protected by organization SAML enforcement. " +
+        "(x-github-request-id=ABCD:1234, x-ratelimit-remaining=4999)",
+    );
+  });
+
+  test("collapses and truncates a non-JSON body", () => {
+    const msg = describeHttpError("u", 502, "Bad Gateway", new Headers(), `<html>\n  ${"x".repeat(400)}\n</html>`);
+    expect(msg.startsWith("GET u: 502 Bad Gateway: <html> xxx")).toBe(true);
+    expect(msg.endsWith("...")).toBe(true);
+    expect(msg).not.toContain("\n");
+  });
+
+  test("falls back to the bare status with an empty body", () => {
+    expect(describeHttpError("u", 404, "Not Found", new Headers(), "")).toBe("GET u: 404 Not Found");
   });
 });
 
