@@ -1,9 +1,13 @@
-# schema source: Rancher Fleet v0.16.3 https://github.com/rancher/fleet
+# schema source: Rancher Fleet v0.17.0 https://github.com/rancher/fleet
 apiVersion <string> enum=fleet.cattle.io/v1alpha1
 kind <string> enum=Policy
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 allowNamespaceCreation <boolean>	# AllowNamespaceCreation, when true, allows Fleet to create namespaces on downstream clusters during Helm installs. By default (false), when RequireServiceAccount is true, namespace creation is disabled so that tenant ServiceAccounts are not forced to hold the cluster-scoped namespaces.create verb. Operators who have secured namespace creation through other means (ValidatingAdmissionPolicy, Kyverno, etc.) can set this to true.
+allowedDownstreamResources <[]object>	# AllowedDownstreamResources lists the Secrets and ConfigMaps that GitRepo, HelmOp, and Bundle resources may copy to downstream clusters through downstreamResources. The Fleet controller reads those objects with its own credentials, so whoever creates the resource needs no access to them. This list decides which of them may be copied. If non-empty, every Secret and ConfigMap in downstreamResources must match an entry. If empty, none may be copied when RequireServiceAccount is true, and all may be copied otherwise.
+allowedDownstreamResources[].kind <string> (required) enum=Secret|ConfigMap	# Kind is the kind of the allowed objects.
+allowedDownstreamResources[].name <string> min=1	# Name allows the object with exactly this name.
+allowedDownstreamResources[].namePattern <string> min=1	# NamePattern is a regex pattern that allows every object whose name matches it. The pattern is anchored as ^(?:<pattern>)$, so explicit ^ and $ anchors are not required.
 allowedServiceAccounts <[]string>	# AllowedServiceAccounts lists service accounts that may be used. If non-empty, the ServiceAccount must appear in this list. When RequireServiceAccount is also true, an empty ServiceAccount is rejected regardless of this list.
 gitRepo <object>	# GitRepo contains restrictions and defaults applied only by the GitRepo reconciler.
 gitRepo.allowedClientSecretNames <[]string>	# AllowedClientSecretNames lists client secret names that GitRepo objects may reference.

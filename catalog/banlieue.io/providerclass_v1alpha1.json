@@ -1,6 +1,18 @@
 {
+  "additionalProperties": false,
   "description": "ProviderClass — what banlieue runs for a class of backends.\n\nA ProviderClass carries the install metadata for one backend type: which\n`banlieue provider <backend>` role to run, from which image, with what pod\nshape and extra permissions. It names no endpoint and holds no credentials\n— that is a `Provider`'s job.\n\n# Why create one\n\n- **Make backends self-provisioning.** With a ProviderClass in place,\n  registering a backend is `kubectl apply` of a Provider CR:\n  `banlieue-operator` creates that Provider's Deployment, ServiceAccount,\n  Role and RoleBinding for you. No manifest editing, no helm values.\n- **Decide the image once.** Every Provider of this class runs the image\n  pinned here, so upgrading a fleet of backends is a one-object edit\n  instead of one edit per backend.\n- **Separate the two jobs.** Deciding *what banlieue runs* (a platform\n  owner, cluster-scoped) is not the same as registering *a vCenter*\n  (a backend admin, namespaced) — different people, different privileges.\n\n# How it is used\n\n`Provider.spec.providerClassRef.name` points at a ProviderClass by name.\nThe operator resolves it, then applies one workload set per Provider, each\nowned by its Provider CR so deleting the Provider garbage-collects the\nworkload. Each spawned pod runs a server-side filtered watch scoped to its\nown Provider, so one hung backend cannot stall another (ADR-0003).\n\nCluster-scoped: one ProviderClass serves Providers in any namespace.",
   "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
     "spec": {
       "additionalProperties": false,
       "description": "ProviderClass — what banlieue runs for a class of backends.\n\nA ProviderClass carries the install metadata for one backend type: which\n`banlieue provider <backend>` role to run, from which image, with what pod\nshape and extra permissions. It names no endpoint and holds no credentials\n— that is a `Provider`'s job.\n\n# Why create one\n\n- **Make backends self-provisioning.** With a ProviderClass in place,\n  registering a backend is `kubectl apply` of a Provider CR:\n  `banlieue-operator` creates that Provider's Deployment, ServiceAccount,\n  Role and RoleBinding for you. No manifest editing, no helm values.\n- **Decide the image once.** Every Provider of this class runs the image\n  pinned here, so upgrading a fleet of backends is a one-object edit\n  instead of one edit per backend.\n- **Separate the two jobs.** Deciding *what banlieue runs* (a platform\n  owner, cluster-scoped) is not the same as registering *a vCenter*\n  (a backend admin, namespaced) — different people, different privileges.\n\n# How it is used\n\n`Provider.spec.providerClassRef.name` points at a ProviderClass by name.\nThe operator resolves it, then applies one workload set per Provider, each\nowned by its Provider CR so deleting the Provider garbage-collects the\nworkload. Each spawned pod runs a server-side filtered watch scoped to its\nown Provider, so one hung backend cannot stall another (ADR-0003).\n\nCluster-scoped: one ProviderClass serves Providers in any namespace.",
