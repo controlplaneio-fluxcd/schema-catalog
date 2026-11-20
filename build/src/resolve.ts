@@ -1,7 +1,7 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { fetchRetry, latestReleaseTag, listReleases, matchAsset, type Release } from "./github.ts";
+import { fetchRetry, httpError, latestReleaseTag, listReleases, matchAsset, type Release } from "./github.ts";
 import { repoOf } from "./config.ts";
 import type { Source } from "./types.ts";
 
@@ -104,7 +104,7 @@ async function latestOpenShiftGA(): Promise<string> {
     const url = `${CINCINNATI_URL}?channel=stable-4.${minor}`;
     const res = await fetchRetry(url, { headers: { Accept: "application/json" } });
     if (!res.ok) {
-      throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+      throw await httpError(url, res);
     }
     if (!hasStableRelease(await res.json(), `4.${minor}`)) {
       break;

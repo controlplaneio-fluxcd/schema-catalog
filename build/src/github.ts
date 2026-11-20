@@ -67,10 +67,70 @@ export async function fetchRetry(url: string, init: RequestInit = {}): Promise<R
   }
 }
 
+/** Response headers that explain why GitHub refused a request. */
+const DIAGNOSTIC_HEADERS = [
+  "x-github-request-id",
+  "x-ratelimit-resource",
+  "x-ratelimit-remaining",
+  "x-ratelimit-reset",
+  "retry-after",
+  "x-github-sso",
+  "x-accepted-github-permissions",
+];
+
+/** Cap on the response body excerpt carried into an error message. */
+const ERROR_BODY_MAX = 300;
+
+/**
+ * Formats a failed response as a one-line error: status, the GitHub API
+ * `message` (or a whitespace-collapsed body excerpt for non-JSON replies), and
+ * any diagnostic headers present. A bare "403 Forbidden" cannot tell a rate
+ * limit from an IP allow list, SSO or token-permission refusal; the message
+ * and request ID can.
+ */
+export function describeHttpError(
+  label: string,
+  status: number,
+  statusText: string,
+  headers: Headers,
+  body: string,
+): string {
+  let detail = body.replace(/\s+/g, " ").trim();
+  try {
+    const message = (JSON.parse(body) as { message?: unknown }).message;
+    if (typeof message === "string" && message !== "") {
+      detail = message;
+    }
+  } catch {
+    // Not JSON: keep the raw excerpt.
+  }
+  if (detail.length > ERROR_BODY_MAX) {
+    detail = `${detail.slice(0, ERROR_BODY_MAX)}...`;
+  }
+  const diag = DIAGNOSTIC_HEADERS.flatMap((name) => {
+    const value = headers.get(name);
+    return value === null ? [] : [`${name}=${value}`];
+  });
+  let msg = `GET ${label}: ${status} ${statusText}`;
+  if (detail !== "" && detail !== statusText) {
+    msg += `: ${detail}`;
+  }
+  if (diag.length > 0) {
+    msg += ` (${diag.join(", ")})`;
+  }
+  return msg;
+}
+
+/** Builds the error for a non-ok response, reading its body for detail. */
+export async function httpError(label: string, res: Response): Promise<Error> {
+  const body = await res.text().catch(() => "");
+  return new Error(describeHttpError(label, res.status, res.statusText, res.headers, body));
+}
+
 async function apiJson(path: string): Promise<unknown> {
   const res = await fetchRetry(`${API_BASE}${path}`, { headers: headers() });
   if (!res.ok) {
-    throw new Error(`GET ${path}: ${res.status} ${res.statusText}`);
+    throw await httpError(path, res);
   }
   return res.json();
 }
@@ -142,7 +202,7 @@ export async function downloadAsset(asset: ReleaseAsset): Promise<string> {
 async function downloadText(url: string): Promise<string> {
   const res = await fetchRetry(url, { headers: { "User-Agent": "schema-catalog-build" } });
   if (!res.ok) {
-    throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+    throw await httpError(url, res);
   }
   return res.text();
 }
@@ -226,7 +286,7 @@ async function fetchCrdDirViaTarball(
     const url = `${API_BASE}/repos/${repo}/tarball/${commit}`;
     const res = await fetchRetry(url, { headers: headers() });
     if (!res.ok) {
-      throw new Error(`GET ${url}: ${res.status} ${res.statusText}`);
+      throw await httpError(url, res);
     }
     // fetchRetry's abort signal covers the response headers but does not
     // reliably fire on a body stream that stalls mid-download (observed as a
