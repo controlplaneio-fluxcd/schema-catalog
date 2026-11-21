@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-127-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C655-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-686%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-127-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C697-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-689%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -166,14 +166,14 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [OPA Gatekeeper](https://schemas.fluxoperator.dev/p/gatekeeper) | `gatekeeper` | v3.23.1 | 27 | 2026-11-20 |
 | [OpenReports](https://schemas.fluxoperator.dev/p/openreports) | `openreports` | v0.2.1 | 2 | 2026-11-20 |
 | [Rancher Elemental Operator](https://schemas.fluxoperator.dev/p/rancher-elemental-operator) | `rancher-elemental-operator` | v1.9.2 | 9 | 2026-11-20 |
-| [Rancher Turtles](https://schemas.fluxoperator.dev/p/rancher-turtles) | `rancher-turtles` | v0.27.4 | 2 | 2026-11-20 |
+| [Rancher Turtles](https://schemas.fluxoperator.dev/p/rancher-turtles) | `rancher-turtles` | v0.28.0 | 2 | 2026-11-21 |
 | [Sealed Secrets](https://schemas.fluxoperator.dev/p/sealed-secrets) | `sealed-secrets` | v0.41.2 | 1 | 2026-11-20 |
 | [Secrets Store CSI Driver](https://schemas.fluxoperator.dev/p/secrets-store-csi-driver) | `secrets-store-csi-driver` | v1.6.2 | 4 | 2026-11-20 |
 | [Sigstore Policy Controller](https://schemas.fluxoperator.dev/p/sigstore-policy-controller) | `sigstore-policy-controller` | v0.15.1 | 3 | 2026-11-20 |
 | [SPIRE Controller Manager](https://schemas.fluxoperator.dev/p/spire-controller-manager) | `spire-controller-manager` | v0.7.1 | 4 | 2026-11-20 |
 | [Trivy Operator](https://schemas.fluxoperator.dev/p/trivy-operator) | `trivy-operator` | v0.36.1 | 12 | 2026-11-20 |
 | [Trust Manager](https://schemas.fluxoperator.dev/p/trust-manager) | `trust-manager` | v0.26.0 | 2 | 2026-11-20 |
-| [Upbound AWS Provider](https://schemas.fluxoperator.dev/p/provider-upjet-aws) | `provider-upjet-aws` | v2.9.0 | 2452 | 2026-11-20 |
+| [Upbound AWS Provider](https://schemas.fluxoperator.dev/p/provider-upjet-aws) | `provider-upjet-aws` | v2.10.0 | 2494 | 2026-11-21 |
 | [Upbound Azure Provider](https://schemas.fluxoperator.dev/p/provider-upjet-azure) | `provider-upjet-azure` | v2.8.0 | 1827 | 2026-11-20 |
 | [Upbound GCP Provider](https://schemas.fluxoperator.dev/p/provider-upjet-gcp) | `provider-upjet-gcp` | v3.1.0 | 853 | 2026-11-20 |
 | [Vault Secrets Operator](https://schemas.fluxoperator.dev/p/vault-secrets-operator) | `vault-secrets-operator` | v1.6.2 | 8 | 2026-11-20 |
@@ -222,7 +222,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [JobSet](https://schemas.fluxoperator.dev/p/jobset) | `jobset` | v0.13.1 | 1 | 2026-11-20 |
 | [Karmada](https://schemas.fluxoperator.dev/p/karmada) | `karmada` | v1.19.1 | 19 | 2026-11-20 |
 | [Karpenter](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter` | v1.15.1 | 4 | 2026-11-20 |
-| [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.15.2 | 1 | 2026-11-20 |
+| [Karpenter AWS](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-aws` | v1.15.3 | 1 | 2026-11-21 |
 | [Karpenter Azure](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-azure` | v1.15.2 | 2 | 2026-11-20 |
 | [Karpenter Cluster API](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-cluster-api` | v0.2.0 | 1 | 2026-11-20 |
 | [Karpenter IBM Cloud](https://schemas.fluxoperator.dev/p/karpenter) | `karpenter-provider-ibm-cloud` | v1.0.5 | 1 | 2026-11-20 |

@@ -1,4 +1,4 @@
-# schema source: Upbound AWS Provider v2.9.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.10.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=ecs.aws.m.upbound.io/v1beta1
 kind <string> enum=Service
 metadata.name <string> (required)
@@ -38,9 +38,13 @@ spec.forProvider.deploymentConfiguration.canaryConfiguration.canaryBakeTimeInMin
 spec.forProvider.deploymentConfiguration.canaryConfiguration.canaryPercent <number>	# Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
 spec.forProvider.deploymentConfiguration.lifecycleHook <[]object>	# Configuration block for lifecycle hooks that are invoked during deployments. See below.
 spec.forProvider.deploymentConfiguration.lifecycleHook[].hookDetails <string>	# Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
-spec.forProvider.deploymentConfiguration.lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook.
+spec.forProvider.deploymentConfiguration.lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook. Required when target_type is AWS_LAMBDA. Not used when target_type is PAUSE.
 spec.forProvider.deploymentConfiguration.lifecycleHook[].lifecycleStages <[]string>	# Stages during the deployment when the hook should be invoked. Valid values: RECONCILE_SERVICE, PRE_SCALE_UP, POST_SCALE_UP, TEST_TRAFFIC_SHIFT, POST_TEST_TRAFFIC_SHIFT, PRODUCTION_TRAFFIC_SHIFT, POST_PRODUCTION_TRAFFIC_SHIFT.
-spec.forProvider.deploymentConfiguration.lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function.
+spec.forProvider.deploymentConfiguration.lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when target_type is AWS_LAMBDA. Not used when target_type is PAUSE.
+spec.forProvider.deploymentConfiguration.lifecycleHook[].targetType <string>	# Type of hook target. Valid values: AWS_LAMBDA, PAUSE. Default: AWS_LAMBDA. PAUSE hooks cannot use the TEST_TRAFFIC_SHIFT or PRODUCTION_TRAFFIC_SHIFT lifecycle stages.
+spec.forProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration <object>	# Configuration block defining the timeout behavior for a PAUSE hook. Only valid when target_type is PAUSE. See below.
+spec.forProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration.action <string>	# Action ECS takes when the pause hook times out. Valid values: ROLLBACK, CONTINUE. Default: ROLLBACK.
+spec.forProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration.timeoutInMinutes <string>	# Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes. Default: 1440 (24 hours).
 spec.forProvider.deploymentConfiguration.linearConfiguration <object>	# Configuration block for linear deployment strategy. Required when strategy is set to LINEAR. See below.
 spec.forProvider.deploymentConfiguration.linearConfiguration.stepBakeTimeInMinutes <string>	# Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
 spec.forProvider.deploymentConfiguration.linearConfiguration.stepPercent <number>	# Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
@@ -229,9 +233,13 @@ spec.initProvider.deploymentConfiguration.canaryConfiguration.canaryBakeTimeInMi
 spec.initProvider.deploymentConfiguration.canaryConfiguration.canaryPercent <number>	# Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
 spec.initProvider.deploymentConfiguration.lifecycleHook <[]object>	# Configuration block for lifecycle hooks that are invoked during deployments. See below.
 spec.initProvider.deploymentConfiguration.lifecycleHook[].hookDetails <string>	# Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
-spec.initProvider.deploymentConfiguration.lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook.
+spec.initProvider.deploymentConfiguration.lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook. Required when target_type is AWS_LAMBDA. Not used when target_type is PAUSE.
 spec.initProvider.deploymentConfiguration.lifecycleHook[].lifecycleStages <[]string>	# Stages during the deployment when the hook should be invoked. Valid values: RECONCILE_SERVICE, PRE_SCALE_UP, POST_SCALE_UP, TEST_TRAFFIC_SHIFT, POST_TEST_TRAFFIC_SHIFT, PRODUCTION_TRAFFIC_SHIFT, POST_PRODUCTION_TRAFFIC_SHIFT.
-spec.initProvider.deploymentConfiguration.lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function.
+spec.initProvider.deploymentConfiguration.lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when target_type is AWS_LAMBDA. Not used when target_type is PAUSE.
+spec.initProvider.deploymentConfiguration.lifecycleHook[].targetType <string>	# Type of hook target. Valid values: AWS_LAMBDA, PAUSE. Default: AWS_LAMBDA. PAUSE hooks cannot use the TEST_TRAFFIC_SHIFT or PRODUCTION_TRAFFIC_SHIFT lifecycle stages.
+spec.initProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration <object>	# Configuration block defining the timeout behavior for a PAUSE hook. Only valid when target_type is PAUSE. See below.
+spec.initProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration.action <string>	# Action ECS takes when the pause hook times out. Valid values: ROLLBACK, CONTINUE. Default: ROLLBACK.
+spec.initProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration.timeoutInMinutes <string>	# Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes. Default: 1440 (24 hours).
 spec.initProvider.deploymentConfiguration.linearConfiguration <object>	# Configuration block for linear deployment strategy. Required when strategy is set to LINEAR. See below.
 spec.initProvider.deploymentConfiguration.linearConfiguration.stepBakeTimeInMinutes <string>	# Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
 spec.initProvider.deploymentConfiguration.linearConfiguration.stepPercent <number>	# Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
@@ -428,9 +436,13 @@ status.atProvider.deploymentConfiguration.canaryConfiguration.canaryBakeTimeInMi
 status.atProvider.deploymentConfiguration.canaryConfiguration.canaryPercent <number>	# Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
 status.atProvider.deploymentConfiguration.lifecycleHook <[]object>	# Configuration block for lifecycle hooks that are invoked during deployments. See below.
 status.atProvider.deploymentConfiguration.lifecycleHook[].hookDetails <string>	# Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
-status.atProvider.deploymentConfiguration.lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook.
+status.atProvider.deploymentConfiguration.lifecycleHook[].hookTargetArn <string>	# ARN of the Lambda function to invoke for the lifecycle hook. Required when target_type is AWS_LAMBDA. Not used when target_type is PAUSE.
 status.atProvider.deploymentConfiguration.lifecycleHook[].lifecycleStages <[]string>	# Stages during the deployment when the hook should be invoked. Valid values: RECONCILE_SERVICE, PRE_SCALE_UP, POST_SCALE_UP, TEST_TRAFFIC_SHIFT, POST_TEST_TRAFFIC_SHIFT, PRODUCTION_TRAFFIC_SHIFT, POST_PRODUCTION_TRAFFIC_SHIFT.
-status.atProvider.deploymentConfiguration.lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function.
+status.atProvider.deploymentConfiguration.lifecycleHook[].roleArn <string>	# ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when target_type is AWS_LAMBDA. Not used when target_type is PAUSE.
+status.atProvider.deploymentConfiguration.lifecycleHook[].targetType <string>	# Type of hook target. Valid values: AWS_LAMBDA, PAUSE. Default: AWS_LAMBDA. PAUSE hooks cannot use the TEST_TRAFFIC_SHIFT or PRODUCTION_TRAFFIC_SHIFT lifecycle stages.
+status.atProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration <object>	# Configuration block defining the timeout behavior for a PAUSE hook. Only valid when target_type is PAUSE. See below.
+status.atProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration.action <string>	# Action ECS takes when the pause hook times out. Valid values: ROLLBACK, CONTINUE. Default: ROLLBACK.
+status.atProvider.deploymentConfiguration.lifecycleHook[].timeoutConfiguration.timeoutInMinutes <string>	# Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes. Default: 1440 (24 hours).
 status.atProvider.deploymentConfiguration.linearConfiguration <object>	# Configuration block for linear deployment strategy. Required when strategy is set to LINEAR. See below.
 status.atProvider.deploymentConfiguration.linearConfiguration.stepBakeTimeInMinutes <string>	# Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
 status.atProvider.deploymentConfiguration.linearConfiguration.stepPercent <number>	# Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
