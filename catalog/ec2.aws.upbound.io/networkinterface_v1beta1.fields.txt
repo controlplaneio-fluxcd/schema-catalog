@@ -1,10 +1,14 @@
-# schema source: Upbound AWS Provider v2.9.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.10.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=ec2.aws.upbound.io/v1beta1
 kind <string> enum=NetworkInterface (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# NetworkInterfaceSpec defines the desired state of NetworkInterface
 spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
 spec.forProvider <object> (required)
+spec.forProvider.connectionTrackingSpecification <object>	# Configures the connection tracking timeouts for the network interface. See Connection Tracking Specification below for more details.
+spec.forProvider.connectionTrackingSpecification.tcpEstablishedTimeout <number>	# Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Recommended: Less than 432000 seconds.
+spec.forProvider.connectionTrackingSpecification.udpStreamTimeout <number>	# Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
+spec.forProvider.connectionTrackingSpecification.udpTimeout <number>	# Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
 spec.forProvider.description <string>	# Description for the network interface.
 spec.forProvider.enaSrdSpecification <object>	# Configures ENA Express for the network interface. The ENI must be attached to an instance to configure ENA Express. See ENA SRD Specification below for more details.
 spec.forProvider.enaSrdSpecification.enaSrdEnabled <boolean>	# Indicates whether ENA Express is enabled for the network interface.
@@ -24,7 +28,7 @@ spec.forProvider.privateIp <string>
 spec.forProvider.privateIpList <[]string>	# List of private IPs to assign to the ENI in sequential order. Requires setting private_ip_list_enabled to true.
 spec.forProvider.privateIpListEnabled <boolean>	# Whether private_ip_list is allowed and controls the IPs to assign to the ENI and private_ips and private_ips_count become read-only. Default is false.
 spec.forProvider.privateIps <[]string>	# List of private IPs to assign to the ENI without regard to order.
-spec.forProvider.privateIpsCount <number>	# Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assiged to an ENI by default.
+spec.forProvider.privateIpsCount <number>	# Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assigned to an ENI by default.
 spec.forProvider.region <string> (required)	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 spec.forProvider.securityGroupRefs <[]object>	# References to SecurityGroup in ec2 to populate securityGroups.
 spec.forProvider.securityGroupRefs[].name <string> (required)	# Name of the referenced object.
@@ -53,6 +57,10 @@ spec.forProvider.subnetIdSelector.policy.resolution <string> enum=Required|Optio
 spec.forProvider.subnetIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.tags <map[string]string>	# Key-value map of resource tags.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
+spec.initProvider.connectionTrackingSpecification <object>	# Configures the connection tracking timeouts for the network interface. See Connection Tracking Specification below for more details.
+spec.initProvider.connectionTrackingSpecification.tcpEstablishedTimeout <number>	# Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Recommended: Less than 432000 seconds.
+spec.initProvider.connectionTrackingSpecification.udpStreamTimeout <number>	# Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
+spec.initProvider.connectionTrackingSpecification.udpTimeout <number>	# Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
 spec.initProvider.description <string>	# Description for the network interface.
 spec.initProvider.enaSrdSpecification <object>	# Configures ENA Express for the network interface. The ENI must be attached to an instance to configure ENA Express. See ENA SRD Specification below for more details.
 spec.initProvider.enaSrdSpecification.enaSrdEnabled <boolean>	# Indicates whether ENA Express is enabled for the network interface.
@@ -72,7 +80,7 @@ spec.initProvider.privateIp <string>
 spec.initProvider.privateIpList <[]string>	# List of private IPs to assign to the ENI in sequential order. Requires setting private_ip_list_enabled to true.
 spec.initProvider.privateIpListEnabled <boolean>	# Whether private_ip_list is allowed and controls the IPs to assign to the ENI and private_ips and private_ips_count become read-only. Default is false.
 spec.initProvider.privateIps <[]string>	# List of private IPs to assign to the ENI without regard to order.
-spec.initProvider.privateIpsCount <number>	# Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assiged to an ENI by default.
+spec.initProvider.privateIpsCount <number>	# Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assigned to an ENI by default.
 spec.initProvider.securityGroupRefs <[]object>	# References to SecurityGroup in ec2 to populate securityGroups.
 spec.initProvider.securityGroupRefs[].name <string> (required)	# Name of the referenced object.
 spec.initProvider.securityGroupRefs[].policy <object>	# Policies for referencing.
@@ -116,6 +124,10 @@ status.atProvider.attachment[].attachmentId <string>	# ID of the network interfa
 status.atProvider.attachment[].deviceIndex <number>	# Integer to define the devices index.
 status.atProvider.attachment[].instance <string>	# ID of the instance to attach to.
 status.atProvider.attachment[].networkCardIndex <number>	# Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by some instance types. The default is 0.
+status.atProvider.connectionTrackingSpecification <object>	# Configures the connection tracking timeouts for the network interface. See Connection Tracking Specification below for more details.
+status.atProvider.connectionTrackingSpecification.tcpEstablishedTimeout <number>	# Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Recommended: Less than 432000 seconds.
+status.atProvider.connectionTrackingSpecification.udpStreamTimeout <number>	# Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
+status.atProvider.connectionTrackingSpecification.udpTimeout <number>	# Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
 status.atProvider.description <string>	# Description for the network interface.
 status.atProvider.enaSrdSpecification <object>	# Configures ENA Express for the network interface. The ENI must be attached to an instance to configure ENA Express. See ENA SRD Specification below for more details.
 status.atProvider.enaSrdSpecification.enaSrdEnabled <boolean>	# Indicates whether ENA Express is enabled for the network interface.
@@ -140,7 +152,7 @@ status.atProvider.privateIp <string>
 status.atProvider.privateIpList <[]string>	# List of private IPs to assign to the ENI in sequential order. Requires setting private_ip_list_enabled to true.
 status.atProvider.privateIpListEnabled <boolean>	# Whether private_ip_list is allowed and controls the IPs to assign to the ENI and private_ips and private_ips_count become read-only. Default is false.
 status.atProvider.privateIps <[]string>	# List of private IPs to assign to the ENI without regard to order.
-status.atProvider.privateIpsCount <number>	# Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assiged to an ENI by default.
+status.atProvider.privateIpsCount <number>	# Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assigned to an ENI by default.
 status.atProvider.region <string>	# Region where this resource will be managed. Defaults to the Region set in the provider configuration. Region is the region you'd like your resource to be created in.
 status.atProvider.securityGroups <[]string>	# List of security group IDs to assign to the ENI.
 status.atProvider.sourceDestCheck <boolean>	# Whether to enable source destination checking for the ENI. Default true.

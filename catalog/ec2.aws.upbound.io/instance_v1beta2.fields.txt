@@ -1,11 +1,11 @@
-# schema source: Upbound AWS Provider v2.9.0 https://github.com/crossplane-contrib/provider-upjet-aws
+# schema source: Upbound AWS Provider v2.10.0 https://github.com/crossplane-contrib/provider-upjet-aws
 apiVersion <string> enum=ec2.aws.upbound.io/v1beta2
 kind <string> enum=Instance (cluster-scoped)
 metadata.name <string> (required)
 spec <object> (required)	# InstanceSpec defines the desired state of Instance
 spec.deletionPolicy <string> enum=Orphan|Delete default="Delete"	# DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. This field is planned to be deprecated in favor of the ManagementPolicies field in a future release. Currently, both could be set independently and non-default values would be honored if the feature flag is enabled. See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
 spec.forProvider <object> (required)
-spec.forProvider.ami <string>	# AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template.
+spec.forProvider.ami <string>	# AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifies an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template.
 spec.forProvider.associatePublicIpAddress <boolean>	# Whether to associate a public IP address with an instance in a VPC.
 spec.forProvider.availabilityZone <string>	# AZ to start the instance in.
 spec.forProvider.capacityReservationSpecification <object>	# Describes an instance's Capacity Reservation targeting option. See Capacity Reservation Specification below for more details.
@@ -100,9 +100,9 @@ spec.forProvider.networkInterface[].networkInterfaceIdSelector.matchLabels <map[
 spec.forProvider.networkInterface[].networkInterfaceIdSelector.policy <object>	# Policies for selection.
 spec.forProvider.networkInterface[].networkInterfaceIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.forProvider.networkInterface[].networkInterfaceIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.forProvider.placementGroup <string>	# Placement Group to start the instance in. Conflicts with placement_group_id.
-spec.forProvider.placementGroupId <string>	# Placement Group ID to start the instance in. Conflicts with placement_group.
-spec.forProvider.placementPartitionNumber <number>	# Number of the partition the instance is in. Valid only if the strategy argument is set to "partition".
+spec.forProvider.placementGroup <string>	# Placement Group to start the instance in. Conflicts with placement_group_id. Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
+spec.forProvider.placementGroupId <string>	# Placement Group ID to start the instance in. Conflicts with placement_group. Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
+spec.forProvider.placementPartitionNumber <number>	# Number of the partition the instance is in. Valid only if the strategy argument is set to "partition". Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
 spec.forProvider.primaryNetworkInterface <object>	# The primary network interface. See Primary Network Interface below.
 spec.forProvider.primaryNetworkInterface.networkInterfaceId <string>	# ID of the network interface to attach.
 spec.forProvider.primaryNetworkInterface.networkInterfaceIdRef <object>	# Reference to a NetworkInterface in ec2 to populate networkInterfaceId.
@@ -183,7 +183,7 @@ spec.forProvider.vpcSecurityGroupIdSelector.policy.resolution <string> enum=Requ
 spec.forProvider.vpcSecurityGroupIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
 spec.forProvider.vpcSecurityGroupIds <[]string>	# List of security group IDs to associate with.
 spec.initProvider <object>	# THIS IS A BETA FIELD. It will be honored unless the Management Policies feature flag is disabled. InitProvider holds the same fields as ForProvider, with the exception of Identifier and other resource reference fields. The fields that are in InitProvider are merged into ForProvider when the resource is created. The same fields are also added to the terraform ignore_changes hook, to avoid updating them after creation. This is useful for fields that are required on creation, but we do not desire to update them after creation, for example because of an external controller is managing them, like an autoscaler.
-spec.initProvider.ami <string>	# AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template.
+spec.initProvider.ami <string>	# AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifies an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template.
 spec.initProvider.associatePublicIpAddress <boolean>	# Whether to associate a public IP address with an instance in a VPC.
 spec.initProvider.availabilityZone <string>	# AZ to start the instance in.
 spec.initProvider.capacityReservationSpecification <object>	# Describes an instance's Capacity Reservation targeting option. See Capacity Reservation Specification below for more details.
@@ -278,9 +278,9 @@ spec.initProvider.networkInterface[].networkInterfaceIdSelector.matchLabels <map
 spec.initProvider.networkInterface[].networkInterfaceIdSelector.policy <object>	# Policies for selection.
 spec.initProvider.networkInterface[].networkInterfaceIdSelector.policy.resolution <string> enum=Required|Optional default="Required"	# Resolution specifies whether resolution of this reference is required. The default is 'Required', which means the reconcile will fail if the reference cannot be resolved. 'Optional' means this reference will be a no-op if it cannot be resolved.
 spec.initProvider.networkInterface[].networkInterfaceIdSelector.policy.resolve <string> enum=Always|IfNotPresent	# Resolve specifies when this reference should be resolved. The default is 'IfNotPresent', which will attempt to resolve the reference only when the corresponding field is not present. Use 'Always' to resolve the reference on every reconcile.
-spec.initProvider.placementGroup <string>	# Placement Group to start the instance in. Conflicts with placement_group_id.
-spec.initProvider.placementGroupId <string>	# Placement Group ID to start the instance in. Conflicts with placement_group.
-spec.initProvider.placementPartitionNumber <number>	# Number of the partition the instance is in. Valid only if the strategy argument is set to "partition".
+spec.initProvider.placementGroup <string>	# Placement Group to start the instance in. Conflicts with placement_group_id. Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
+spec.initProvider.placementGroupId <string>	# Placement Group ID to start the instance in. Conflicts with placement_group. Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
+spec.initProvider.placementPartitionNumber <number>	# Number of the partition the instance is in. Valid only if the strategy argument is set to "partition". Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
 spec.initProvider.primaryNetworkInterface <object>	# The primary network interface. See Primary Network Interface below.
 spec.initProvider.primaryNetworkInterface.networkInterfaceId <string>	# ID of the network interface to attach.
 spec.initProvider.primaryNetworkInterface.networkInterfaceIdRef <object>	# Reference to a NetworkInterface in ec2 to populate networkInterfaceId.
@@ -370,7 +370,7 @@ spec.writeConnectionSecretToRef.name <string> (required)	# Name of the secret.
 spec.writeConnectionSecretToRef.namespace <string> (required)	# Namespace of the secret.
 status <object>	# InstanceStatus defines the observed state of Instance.
 status.atProvider <object>
-status.atProvider.ami <string>	# AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template.
+status.atProvider.ami <string>	# AMI to use for the instance. Required unless launch_template is specified and the Launch Template specifies an AMI. If an AMI is specified in the Launch Template, setting ami will override the AMI specified in the Launch Template.
 status.atProvider.arn <string>	# ARN of the instance.
 status.atProvider.associatePublicIpAddress <boolean>	# Whether to associate a public IP address with an instance in a VPC.
 status.atProvider.availabilityZone <string>	# AZ to start the instance in.
@@ -450,9 +450,9 @@ status.atProvider.networkInterface[].networkCardIndex <number>	# Integer index o
 status.atProvider.networkInterface[].networkInterfaceId <string>	# ID of the network interface to attach.
 status.atProvider.outpostArn <string>	# ARN of the Outpost the instance is assigned to.
 status.atProvider.passwordData <string>	# Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if get_password_data is true. Note that this encrypted value will be stored in the state file, as with all exported attributes. See GetPasswordData for more information.
-status.atProvider.placementGroup <string>	# Placement Group to start the instance in. Conflicts with placement_group_id.
-status.atProvider.placementGroupId <string>	# Placement Group ID to start the instance in. Conflicts with placement_group.
-status.atProvider.placementPartitionNumber <number>	# Number of the partition the instance is in. Valid only if the strategy argument is set to "partition".
+status.atProvider.placementGroup <string>	# Placement Group to start the instance in. Conflicts with placement_group_id. Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
+status.atProvider.placementGroupId <string>	# Placement Group ID to start the instance in. Conflicts with placement_group. Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
+status.atProvider.placementPartitionNumber <number>	# Number of the partition the instance is in. Valid only if the strategy argument is set to "partition". Updating this argument stops and restarts the EC2 instance, except for Spot Instances and instances with disable_api_stop and force_destroy enabled, which are replaced.
 status.atProvider.primaryNetworkInterface <object>	# The primary network interface. See Primary Network Interface below.
 status.atProvider.primaryNetworkInterface.deleteOnTermination <boolean>	# (Read-Only) Whether the network interface will be deleted when the instance terminates.
 status.atProvider.primaryNetworkInterface.networkInterfaceId <string>	# ID of the network interface to attach.
