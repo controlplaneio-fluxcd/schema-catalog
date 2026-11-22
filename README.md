@@ -264,7 +264,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.45.0 | 3 | 2026-11-20 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.10.1 | 17 | 2026-11-20 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.63.0 | 4 | 2026-11-20 |
-| [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.10 | 2 | 2026-11-20 |
+| [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.11 | 2 | 2026-11-22 |
 | [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.6 | 11 | 2026-11-20 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.24.0 | 20 | 2026-11-20 |
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.24.0 | 12 | 2026-11-20 |
