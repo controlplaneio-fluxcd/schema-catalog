@@ -230,7 +230,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [kgateway](https://schemas.fluxoperator.dev/p/kgateway) | `kgateway` | v2.5.2 | 7 | 2026-11-20 |
 | [kjob](https://schemas.fluxoperator.dev/p/kjob) | `kjob` | v0.1.0 | 5 | 2026-11-20 |
 | [KubeEdge](https://schemas.fluxoperator.dev/p/kubeedge) | `kubeedge` | v1.23.1 | 18 | 2026-11-20 |
-| [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.7.2 | 7 | 2026-11-20 |
+| [KubeRay](https://schemas.fluxoperator.dev/p/kuberay) | `kuberay` | v1.7.3 | 7 | 2026-11-23 |
 | [Kueue](https://schemas.fluxoperator.dev/p/kueue) | `kueue` | v0.20.7 | 22 | 2026-11-20 |
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v3.0.1 | 32 | 2026-11-20 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-11-20 |
@@ -263,7 +263,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Dragonfly Operator](https://schemas.fluxoperator.dev/p/dragonfly-operator) | `dragonfly-operator` | v1.8.0 | 1 | 2026-11-20 |
 | [Flagger](https://schemas.fluxoperator.dev/p/flagger) | `flagger` | v1.45.0 | 3 | 2026-11-20 |
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.10.1 | 17 | 2026-11-20 |
-| [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.63.0 | 4 | 2026-11-20 |
+| [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.63.1 | 4 | 2026-11-23 |
 | [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.11 | 2 | 2026-11-22 |
 | [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.6 | 11 | 2026-11-20 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.24.0 | 20 | 2026-11-20 |
