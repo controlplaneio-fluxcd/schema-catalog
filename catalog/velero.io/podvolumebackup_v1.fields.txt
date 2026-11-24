@@ -1,4 +1,4 @@
-# schema source: Velero v1.18.4 https://github.com/vmware-tanzu/velero
+# schema source: Velero v1.19.0 https://github.com/vmware-tanzu/velero
 apiVersion <string> enum=velero.io/v1
 kind <string> enum=PodVolumeBackup
 metadata.name <string> (required)
@@ -7,6 +7,7 @@ spec <object>	# PodVolumeBackupSpec is the specification for a PodVolumeBackup.
 spec.backupStorageLocation <string> (required)	# BackupStorageLocation is the name of the backup storage location where the backup repository is stored.
 spec.cancel <boolean>	# Cancel indicates request to cancel the ongoing PodVolumeBackup. It can be set when the PodVolumeBackup is in InProgress phase
 spec.node <string> (required)	# Node is the name of the node that the Pod is running on.
+spec.parentSnapshot <string>	# ParentSnapshot specifies the parent snapshot that current backup is based on. If its value is "" or "auto", the data mover finds the recent backup of the same volume as parent. If its value is "none", the data mover will do a full backup If its value is a specific snapshotID, the data mover finds the specific snapshot as parent.
 spec.pod <object> (required)	# Pod is a reference to the pod containing the volume to be backed up.
 spec.pod.apiVersion <string>	# API version of the referent.
 spec.pod.fieldPath <string>	# If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object.
@@ -22,13 +23,16 @@ spec.uploaderType <string> enum=kopia|restic|	# UploaderType is the type of the 
 spec.volume <string> (required)	# Volume is the name of the volume within the Pod to be backed up.
 status <object>	# PodVolumeBackupStatus is the current status of a PodVolumeBackup.
 status.acceptedTimestamp <string> format=date-time	# AcceptedTimestamp records the time the pod volume backup is to be prepared. The server's time is used for AcceptedTimestamp
+status.activities <[]string>	# Activities contains one or more messages about what have been done for this pod volume backup.
 status.completionTimestamp <string> format=date-time	# CompletionTimestamp records the time a backup was completed. Completion time is recorded even on failed backups. Completion time is recorded before uploading the backup object. The server's time is used for CompletionTimestamps
-status.incrementalBytes <integer> format=int64	# IncrementalBytes holds the number of bytes new or changed since the last backup
-status.message <string>	# Message is a message about the pod volume backup's status.
+status.fallbackFull <boolean>	# FallbackFull indicates whether the incremental backup has fallen back to full backup
+status.incrementalBytes <integer> format=int64	# IncrementalBytes holds the number of bytes new or changed since the last backup. A nil value means the uploader did not report a figure; a pointer to 0 means it reported zero, i.e. nothing changed and nothing was transferred. The two are distinct: erasing a measured zero makes a perfect incremental indistinguishable from a full transfer in every downstream report.
+status.message <string>	# Message is a message describing the pod volume backup when it reaches to a terminal status.
 status.path <string>	# Path is the full path within the controller pod being backed up.
 status.phase <string> enum=New|Accepted|Prepared|InProgress|Canceling|Canceled|Completed|Failed	# Phase is the current state of the PodVolumeBackup.
 status.progress <object>	# Progress holds the total number of bytes of the volume and the current number of backed up bytes. This can be used to display progress information about the backup operation.
 status.progress.bytesDone <integer> format=int64
 status.progress.totalBytes <integer> format=int64
 status.snapshotID <string>	# SnapshotID is the identifier for the snapshot of the pod volume.
+status.sourceSize <integer> format=int64	# SourceSize holds the total size of the source volume.
 status.startTimestamp <string> format=date-time	# StartTimestamp records the time a backup was started. Separate from CreationTimestamp, since that value changes on restores. The server's time is used for StartTimestamps

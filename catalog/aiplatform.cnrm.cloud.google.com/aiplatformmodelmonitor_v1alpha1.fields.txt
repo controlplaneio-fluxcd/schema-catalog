@@ -1,4 +1,4 @@
-# schema source: GCP Config Connector v1.161.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.162.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=aiplatform.cnrm.cloud.google.com/v1alpha1
 kind <string> enum=AIPlatformModelMonitor
 metadata.name <string> (required)
@@ -97,7 +97,7 @@ spec.explanationSpec.parameters.xraiAttribution.smoothGradConfig.featureNoiseSig
 spec.explanationSpec.parameters.xraiAttribution.smoothGradConfig.noiseSigma <number>	# This is a single float value and will be used to add noise to all the features. Use this field when all features are normalized to have the same distribution: scale to range [0, 1], [-1, 1] or z-scoring, where features are normalized to have 0-mean and 1-variance. Learn more about [normalization](https://developers.google.com/machine-learning/data-prep/transform/normalization). For best results the recommended value is about 10% - 20% of the standard deviation of the input feature. Refer to section 3.2 of the SmoothGrad paper: https://arxiv.org/pdf/1706.03825.pdf. Defaults to 0.1. If the distribution is different per feature, set [feature_noise_sigma][google.cloud.aiplatform.v1.SmoothGradConfig.feature_noise_sigma] instead for each feature.
 spec.explanationSpec.parameters.xraiAttribution.smoothGradConfig.noisySampleCount <integer> format=int32	# The number of gradient samples to use for approximation. The higher this number, the more accurate the gradient is, but the runtime complexity increases by this factor as well. Valid range of its value is [1, 50]. Defaults to 3.
 spec.explanationSpec.parameters.xraiAttribution.stepCount <integer> format=int32	# Required. The number of steps for approximating the path integral. A good value to start is 50 and gradually increase until the sum to diff property is met within the desired error range. Valid range of its value is [1, 100], inclusively.
-spec.location <string> (required)	# The location of this resource.
+spec.location <string> (required) (immutable)	# The location that this resource belongs to.
 spec.modelMonitoringSchema <object>	# Monitoring Schema is to specify the model's features, prediction outputs and ground truth properties. It is used to extract pertinent data from the dataset and to process features based on their properties. Make sure that the schema aligns with your dataset, if it does not, we will be unable to extract data from the dataset. It is required for most models, but optional for Vertex AI AutoML Tables unless the schem information is not available.
 spec.modelMonitoringSchema.featureFields <[]object>	# Feature names of the model. Vertex AI will try to match the features from your dataset as follows: * For 'csv' files, the header names are required, and we will extract the corresponding feature values when the header names align with the feature names. * For 'jsonl' files, we will extract the corresponding feature values if the key names match the feature names. Note: Nested features are not supported, so please ensure your features are flattened. Ensure the feature values are scalar or an array of scalars. * For 'bigquery' dataset, we will extract the corresponding feature values if the column names match the feature names. Note: The column type can be a scalar or an array of scalars. STRUCT or JSON types are not supported. You may use SQL queries to select or aggregate the relevant features from your original table. However, ensure that the 'schema' of the query results meets our requirements. * For the Vertex AI Endpoint Request Response Logging table or Vertex AI Batch Prediction Job results. If the [instance_type][google.cloud.aiplatform.v1beta1.ModelMonitoringSchema.instance_type] is an array, ensure that the sequence in [feature_fields][google.cloud.aiplatform.v1beta1.ModelMonitoringSchema.feature_fields] matches the order of features in the prediction instance. We will match the feature with the array in the order specified in [feature_fields].
 spec.modelMonitoringSchema.featureFields[].dataType <string>	# Supported data types are: `float` `integer` `boolean` `string` `categorical`
@@ -113,18 +113,24 @@ spec.modelMonitoringSchema.predictionFields[].name <string>	# Field name.
 spec.modelMonitoringSchema.predictionFields[].repeated <boolean>	# Describes if the schema field is an array of given data type.
 spec.modelMonitoringTarget <object>	# The entity that is subject to analysis. Currently only models in Vertex AI Model Registry are supported. If you want to analyze the model which is outside the Vertex AI, you could register a model in Vertex AI Model Registry using just a display name.
 spec.modelMonitoringTarget.vertexModel <object>	# Model in Vertex AI Model Registry.
-spec.modelMonitoringTarget.vertexModel.model <string>	# Model resource name. Format: projects/{project}/locations/{location}/models/{model}.
+spec.modelMonitoringTarget.vertexModel.modelRef <object>	# Model resource name. Format: projects/{project}/locations/{location}/models/{model}.
+spec.modelMonitoringTarget.vertexModel.modelRef.external <string>	# A reference to an externally managed AIPlatformModel resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/models/{{modelID}}".
+spec.modelMonitoringTarget.vertexModel.modelRef.name <string>	# The name of an AIPlatformModel resource.
+spec.modelMonitoringTarget.vertexModel.modelRef.namespace <string>	# The namespace of an AIPlatformModel resource.
 spec.modelMonitoringTarget.vertexModel.modelVersionID <string>	# Model version id.
 spec.notificationSpec <object>	# Optional default notification spec, it can be overridden in the ModelMonitoringJob notification spec.
 spec.notificationSpec.emailConfig <object>	# Email alert config.
 spec.notificationSpec.emailConfig.userEmails <[]string>	# The email addresses to send the alerts.
-spec.notificationSpec.enableCloudLogging <boolean>	# Dump the anomalies to Cloud Logging. The anomalies will be put to json payload encoded from proto [google.cloud.aiplatform.logging.ModelMonitoringAnomaliesLogEntry][]. This can be further sinked to Pub/Sub or any other services supported by Cloud Logging.
+spec.notificationSpec.enableCloudLogging <boolean>	# Dump the anomalies to Cloud Logging.
 spec.notificationSpec.notificationChannelConfigs <[]object>	# Notification channel config.
-spec.notificationSpec.notificationChannelConfigs[].notificationChannel <string>	# Resource names of the NotificationChannels. Must be of the format `projects/<project_id_or_number>/notificationChannels/<channel_id>`
+spec.notificationSpec.notificationChannelConfigs[].notificationChannelRef <object>	# Resource names of the NotificationChannels.
+spec.notificationSpec.notificationChannelConfigs[].notificationChannelRef.external <string>	# A reference to an externally managed MonitoringNotificationChannel resource. Should be in the format "projects/{{projectID}}/notificationChannels/{{channelID}}".
+spec.notificationSpec.notificationChannelConfigs[].notificationChannelRef.name <string>	# The name of a MonitoringNotificationChannel resource.
+spec.notificationSpec.notificationChannelConfigs[].notificationChannelRef.namespace <string>	# The namespace of a MonitoringNotificationChannel resource.
 spec.outputSpec <object>	# Optional default monitoring metrics/logs export spec, it can be overridden in the ModelMonitoringJob output spec. If not specified, a default Google Cloud Storage bucket will be created under your project.
 spec.outputSpec.gcsBaseDirectory <object>	# Google Cloud Storage base folder path for metrics, error logs, etc.
 spec.outputSpec.gcsBaseDirectory.outputURIPrefix <string> (required)	# Required. Google Cloud Storage URI to output directory. If the uri doesn't end with '/', a '/' will be automatically appended. The directory is created if it doesn't exist.
-spec.projectRef <object> (required)	# The project that this resource belongs to.
+spec.projectRef <object> (required)	# The Project that this resource belongs to.
 spec.projectRef.external <string>	# The `projectID` field of a project, when not managed by Config Connector.
 spec.projectRef.kind <string>	# The kind of the Project resource; optional but must be `Project` if provided.
 spec.projectRef.name <string>	# The `name` field of a `Project` resource.
@@ -175,7 +181,10 @@ spec.tabularObjective.predictionOutputDriftSpec.features <[]string>	# Feature na
 spec.tabularObjective.predictionOutputDriftSpec.numericMetricType <string>	# Supported metrics type: * jensen_shannon_divergence
 spec.trainingDataset <object>	# Optional training dataset used to train the model. It can serve as a reference dataset to identify changes in production.
 spec.trainingDataset.batchPredictionOutput <object>	# Vertex AI Batch prediction Job.
-spec.trainingDataset.batchPredictionOutput.batchPredictionJob <string>	# Vertex AI Batch prediction job resource name. The job must match the model version specified in [ModelMonitor].[model_monitoring_target].
+spec.trainingDataset.batchPredictionOutput.batchPredictionJobRef <object>	# Vertex AI Batch prediction Job resource name.
+spec.trainingDataset.batchPredictionOutput.batchPredictionJobRef.external <string>	# A reference to an externally managed AIPlatformBatchPredictionJob resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/batchPredictionJobs/{{batchPredictionJobID}}".
+spec.trainingDataset.batchPredictionOutput.batchPredictionJobRef.name <string>	# The name of a AIPlatformBatchPredictionJob resource.
+spec.trainingDataset.batchPredictionOutput.batchPredictionJobRef.namespace <string>	# The namespace of a AIPlatformBatchPredictionJob resource.
 spec.trainingDataset.columnizedDataset <object>	# Columnized dataset.
 spec.trainingDataset.columnizedDataset.bigquerySource <object>	# BigQuery data source.
 spec.trainingDataset.columnizedDataset.bigquerySource.query <string>	# Standard SQL to be used instead of the `table_uri`.
@@ -184,7 +193,10 @@ spec.trainingDataset.columnizedDataset.gcsSource <object>	# Google Cloud Storage
 spec.trainingDataset.columnizedDataset.gcsSource.format <string>	# Data format of the dataset.
 spec.trainingDataset.columnizedDataset.gcsSource.gcsURI <string>	# Google Cloud Storage URI to the input file(s). May contain wildcards. For more information on wildcards, see https://cloud.google.com/storage/docs/wildcards.
 spec.trainingDataset.columnizedDataset.timestampField <string>	# The timestamp field. Usually for serving data.
-spec.trainingDataset.columnizedDataset.vertexDataset <string>	# Resource name of the Vertex AI managed dataset.
+spec.trainingDataset.columnizedDataset.vertexDatasetRef <object>	# Resource name of the Vertex AI managed dataset.
+spec.trainingDataset.columnizedDataset.vertexDatasetRef.external <string>	# A reference to an externally managed VertexAIDataset resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/datasets/{{datasetID}}".
+spec.trainingDataset.columnizedDataset.vertexDatasetRef.name <string>	# The name of a VertexAIDataset resource.
+spec.trainingDataset.columnizedDataset.vertexDatasetRef.namespace <string>	# The namespace of a VertexAIDataset resource.
 spec.trainingDataset.timeInterval <object>	# The time interval (pair of start_time and end_time) for which results should be returned.
 spec.trainingDataset.timeInterval.endTime <string>	# Optional. Exclusive end of the interval. If specified, a Timestamp matching this interval will have to be before the end.
 spec.trainingDataset.timeInterval.startTime <string>	# Optional. Inclusive start of the interval. If specified, a Timestamp matching this interval will have to be the same or after the start.
@@ -192,7 +204,10 @@ spec.trainingDataset.timeOffset <object>	# The time offset setting for which res
 spec.trainingDataset.timeOffset.offset <string>	# [offset] is the time difference from the cut-off time. For scheduled jobs, the cut-off time is the scheduled time. For non-scheduled jobs, it's the time when the job was created. Currently we support the following format: 'w|W': Week, 'd|D': Day, 'h|H': Hour E.g. '1h' stands for 1 hour, '2d' stands for 2 days.
 spec.trainingDataset.timeOffset.window <string>	# [window] refers to the scope of data selected for analysis. It allows you to specify the quantity of data you wish to examine. Currently we support the following format: 'w|W': Week, 'd|D': Day, 'h|H': Hour E.g. '1h' stands for 1 hour, '2d' stands for 2 days.
 spec.trainingDataset.vertexEndpointLogs <object>	# Vertex AI Endpoint request & response logging.
-spec.trainingDataset.vertexEndpointLogs.endpoints <[]string>	# List of endpoint resource names. The endpoints must enable the logging with the [Endpoint].[request_response_logging_config], and must contain the deployed model corresponding to the model version specified in [ModelMonitor].[model_monitoring_target].
+spec.trainingDataset.vertexEndpointLogs.endpointRefs <[]object>	# List of endpoint resource names.
+spec.trainingDataset.vertexEndpointLogs.endpointRefs[].external <string>	# A reference to an externally managed VertexAIEndpoint resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/endpoints/{{endpointID}}".
+spec.trainingDataset.vertexEndpointLogs.endpointRefs[].name <string>	# The name of a VertexAIEndpoint resource.
+spec.trainingDataset.vertexEndpointLogs.endpointRefs[].namespace <string>	# The namespace of a VertexAIEndpoint resource.
 status <object>	# AIPlatformModelMonitorStatus defines the config connector machine state of AIPlatformModelMonitor
 status.conditions <[]object>	# Conditions represent the latest available observations of the object's current state.
 status.conditions[].lastTransitionTime <string>	# Last time the condition transitioned from one status to another.

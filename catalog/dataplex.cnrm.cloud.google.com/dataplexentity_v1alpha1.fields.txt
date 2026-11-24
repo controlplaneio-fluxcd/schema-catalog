@@ -1,15 +1,17 @@
-# schema source: GCP Config Connector v1.161.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
+# schema source: GCP Config Connector v1.162.0 https://github.com/GoogleCloudPlatform/k8s-config-connector
 apiVersion <string> enum=dataplex.cnrm.cloud.google.com/v1alpha1
 kind <string> enum=DataplexEntity
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# DataplexEntitySpec defines the desired state of DataplexEntity
-spec.asset <string> (required)	# Required. Immutable. The ID of the asset associated with the storage location containing the entity data. The entity must be with in the same zone with the asset.
+spec.assetRef <object> (required)	# Required. Immutable. The DataplexAsset associated with the storage location containing the entity data. The entity must be within the same zone with the asset.
+spec.assetRef.external <string>	# A reference to an externally managed DataplexAsset resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/lakes/{{lakeID}}/zones/{{zone}}/assets/{{assetID}}".
+spec.assetRef.name <string>	# The name of a DataplexAsset resource.
+spec.assetRef.namespace <string>	# The namespace of a DataplexAsset resource.
 spec.dataPath <string> (required)	# Required. Immutable. The storage path of the entity data. For Cloud Storage data, this is the fully-qualified path to the entity, such as `gs://bucket/path/to/data`. For BigQuery data, this is the name of the table resource, such as `projects/project_id/datasets/dataset_id/tables/table_id`.
 spec.dataPathPattern <string>	# Optional. The set of items within the data path constituting the data in the entity, represented as a glob path. Example: `gs://bucket/path/to/data/**/*.csv`.
 spec.description <string>	# Optional. User friendly longer description text. Must be shorter than or equal to 1024 characters.
 spec.displayName <string>	# Optional. Display name must be shorter than or equal to 256 characters.
-spec.etag <string>	# Optional. The etag associated with the entity, which can be retrieved with a [GetEntity][] request. Required for update and delete requests.
 spec.format <object> (required)	# Required. Identifies the storage format of the entity data. It does not apply to entities with data stored in BigQuery.
 spec.format.compressionFormat <string>	# Optional. The compression type associated with the stored data. If unspecified, the data is uncompressed.
 spec.format.csv <object>	# Optional. Additional information about CSV formatted data.
@@ -23,12 +25,10 @@ spec.format.json <object>	# Optional. Additional information about CSV formatted
 spec.format.json.encoding <string>	# Optional. The character encoding of the data. Accepts "US-ASCII", "UTF-8" and "ISO-8859-1". Defaults to UTF-8 if not specified.
 spec.format.mimeType <string> (required)	# Required. The mime type descriptor for the data. Must match the pattern {type}/{subtype}. Supported values: - application/x-parquet - application/x-avro - application/x-orc - application/x-tfrecord - application/x-parquet+iceberg - application/x-avro+iceberg - application/x-orc+iceberg - application/json - application/{subtypes} - text/csv - text/<subtypes> - image/{image subtype} - video/{video subtype} - audio/{audio subtype}
 spec.id <string> (required)	# Required. A user-provided entity ID. It is mutable, and will be used as the published table name. Specifying a new ID in an update entity request will override the existing value. The ID must contain only letters (a-z, A-Z), numbers (0-9), and underscores, and consist of 256 or fewer characters.
-spec.location <string> (required)	# The location of this resource.
-spec.projectRef <object> (required)	# The project that this resource belongs to.
-spec.projectRef.external <string>	# The `projectID` field of a project, when not managed by Config Connector.
-spec.projectRef.kind <string>	# The kind of the Project resource; optional but must be `Project` if provided.
-spec.projectRef.name <string>	# The `name` field of a `Project` resource.
-spec.projectRef.namespace <string>	# The `namespace` field of a `Project` resource.
+spec.parentRef <object> (required) (immutable)	# The DataplexZone this DataplexEntity is created under.
+spec.parentRef.external <string>	# A reference to an externally managed DataplexZone resource. Should be in the format "projects/{{projectID}}/locations/{{location}}/lakes/{{lake}}/zones/{{zone}}".
+spec.parentRef.name <string>	# The name of a DataplexZone resource.
+spec.parentRef.namespace <string>	# The namespace of a DataplexZone resource.
 spec.resourceID <string>	# The DataplexEntity name. If not given, the metadata.name will be used.
 spec.schema <object> (required)	# Required. The description of the data structure and layout. The schema is not included in list responses. It is only included in `SCHEMA` and `FULL` entity views of a `GetEntity` response.
 spec.schema.fields <[]object>	# Optional. The sequence of fields describing data in table entities. **Note:** BigQuery SchemaFields are immutable.
@@ -65,6 +65,7 @@ status.observedState.compatibility.hiveMetastore <object>	# Output only. Whether
 status.observedState.compatibility.hiveMetastore.compatible <boolean>	# Output only. Whether the entity is compatible and can be represented in the metadata store.
 status.observedState.compatibility.hiveMetastore.reason <string>	# Output only. Provides additional detail if the entity is incompatible with the metadata store.
 status.observedState.createTime <string>	# Output only. The time when the entity was created.
+status.observedState.etag <string>	# The etag associated with the entity, which can be retrieved with a [GetEntity][] request. Required for update and delete requests.
 status.observedState.format <object>	# Required. Identifies the storage format of the entity data. It does not apply to entities with data stored in BigQuery.
 status.observedState.format.format <string>	# Output only. The data format associated with the stored data, which represents content type values. The value is inferred from mime type.
 status.observedState.uid <string>	# Output only. System generated unique ID for the Entity. This ID will be different if the Entity is deleted and re-created with the same name.

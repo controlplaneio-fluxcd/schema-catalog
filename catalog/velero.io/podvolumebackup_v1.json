@@ -28,6 +28,10 @@
           "description": "Node is the name of the node that the Pod is running on.",
           "type": "string"
         },
+        "parentSnapshot": {
+          "description": "ParentSnapshot specifies the parent snapshot that current backup is based on.\nIf its value is \"\" or \"auto\", the data mover finds the recent backup of the same volume as parent.\nIf its value is \"none\", the data mover will do a full backup\nIf its value is a specific snapshotID, the data mover finds the specific snapshot as parent.",
+          "type": "string"
+        },
         "pod": {
           "additionalProperties": false,
           "description": "Pod is a reference to the pod containing the volume to be backed up.",
@@ -116,19 +120,31 @@
           "nullable": true,
           "type": "string"
         },
+        "activities": {
+          "description": "Activities contains one or more messages about what have been done for this pod volume backup.",
+          "items": {
+            "type": "string"
+          },
+          "nullable": true,
+          "type": "array"
+        },
         "completionTimestamp": {
           "description": "CompletionTimestamp records the time a backup was completed.\nCompletion time is recorded even on failed backups.\nCompletion time is recorded before uploading the backup object.\nThe server's time is used for CompletionTimestamps",
           "format": "date-time",
           "nullable": true,
           "type": "string"
         },
+        "fallbackFull": {
+          "description": "FallbackFull indicates whether the incremental backup has fallen back to full backup",
+          "type": "boolean"
+        },
         "incrementalBytes": {
-          "description": "IncrementalBytes holds the number of bytes new or changed since the last backup",
+          "description": "IncrementalBytes holds the number of bytes new or changed since the last backup.\nA nil value means the uploader did not report a figure; a pointer to 0 means it\nreported zero, i.e. nothing changed and nothing was transferred. The two are\ndistinct: erasing a measured zero makes a perfect incremental indistinguishable\nfrom a full transfer in every downstream report.",
           "format": "int64",
           "type": "integer"
         },
         "message": {
-          "description": "Message is a message about the pod volume backup's status.",
+          "description": "Message is a message describing the pod volume backup when it reaches to a terminal status.",
           "type": "string"
         },
         "path": {
@@ -167,6 +183,11 @@
         "snapshotID": {
           "description": "SnapshotID is the identifier for the snapshot of the pod volume.",
           "type": "string"
+        },
+        "sourceSize": {
+          "description": "SourceSize holds the total size of the source volume.",
+          "format": "int64",
+          "type": "integer"
         },
         "startTimestamp": {
           "description": "StartTimestamp records the time a backup was started.\nSeparate from CreationTimestamp, since that value changes\non restores.\nThe server's time is used for StartTimestamps",

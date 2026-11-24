@@ -1,4 +1,4 @@
-# schema source: Velero v1.18.4 https://github.com/vmware-tanzu/velero
+# schema source: Velero v1.19.0 https://github.com/vmware-tanzu/velero
 apiVersion <string> enum=velero.io/v1
 kind <string> enum=Schedule
 metadata.name <string> (required)
@@ -8,8 +8,9 @@ spec.paused <boolean>	# Paused specifies whether the schedule is paused or not
 spec.schedule <string> (required)	# Schedule is a Cron expression defining when to run the Backup.
 spec.skipImmediately <boolean>	# SkipImmediately specifies whether to skip backup if schedule is due immediately from `schedule.status.lastBackup` timestamp when schedule is unpaused or if schedule is new. If true, backup will be skipped immediately when schedule is unpaused if it is due based on .Status.LastBackupTimestamp or schedule is new, and will run at next schedule time. If false, backup will not be skipped immediately when schedule is unpaused, but will run at next schedule time. If empty, will follow server configuration (default: false).
 spec.template <object> (required)	# Template is the definition of the Backup to be run on the provided schedule
+spec.template.backupType <string> enum=Full|Incremental	# BackupType specifies how volume data is backed up, with possible values including Full and Incremental.
 spec.template.csiSnapshotTimeout <string>	# CSISnapshotTimeout specifies the time used to wait for CSI VolumeSnapshot status turns to ReadyToUse during creation, before returning error as timeout. The default value is 10 minute.
-spec.template.datamover <string>	# DataMover specifies the data mover to be used by the backup. If DataMover is "" or "velero", the built-in data mover will be used.
+spec.template.datamover <string>	# DataMover specifies the data mover to be used by the backup. If DataMover is "" or "velero", the default built-in data mover will be used.
 spec.template.defaultVolumesToFsBackup <boolean>	# DefaultVolumesToFsBackup specifies whether pod volume file system backup should be used for all volumes by default.
 spec.template.defaultVolumesToRestic <boolean>	# DefaultVolumesToRestic specifies whether restic should be used to take a backup of all pod volumes by default. Deprecated: this field is no longer used and will be removed entirely in future. Use DefaultVolumesToFsBackup instead.
 spec.template.excludedClusterScopedResources <[]string>	# ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to "*", all cluster-scoped resource types are excluded. The default value is empty.
@@ -54,6 +55,7 @@ spec.template.labelSelector.matchExpressions[].operator <string> (required)	# op
 spec.template.labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.template.labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.template.metadata <object>
+spec.template.metadata.annotations <map[string]string>
 spec.template.metadata.labels <map[string]string>
 spec.template.orLabelSelectors <[]object>	# OrLabelSelectors is list of metav1.LabelSelector to filter with when adding individual objects to the backup. If multiple provided they will be joined by the OR operator. LabelSelector as well as OrLabelSelectors cannot co-exist in backup request, only one of them can be used.
 spec.template.orLabelSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -71,7 +73,8 @@ spec.template.snapshotVolumes <boolean>	# SnapshotVolumes specifies whether to t
 spec.template.storageLocation <string>	# StorageLocation is a string containing the name of a BackupStorageLocation where the backup should be stored.
 spec.template.ttl <string>	# TTL is a time.Duration-parseable string describing how long the Backup should be retained for.
 spec.template.uploaderConfig <object>	# UploaderConfig specifies the configuration for the uploader.
-spec.template.uploaderConfig.parallelFilesUpload <integer>	# ParallelFilesUpload is the number of files parallel uploads to perform when using the uploader.
+spec.template.uploaderConfig.parallelBlocksUpload <integer>	# ParallelBlocksUpload is the number of blocks parallel uploads to perform when using Velero block uploader.
+spec.template.uploaderConfig.parallelFilesUpload <integer>	# ParallelFilesUpload is the number of files parallel uploads to perform when using the Velero fs uploader.
 spec.template.volumeGroupSnapshotLabelKey <string>	# VolumeGroupSnapshotLabelKey specifies the label key to group PVCs under a VGS.
 spec.template.volumeSnapshotLocations <[]string>	# VolumeSnapshotLocations is a list containing names of VolumeSnapshotLocations associated with this backup.
 spec.useOwnerReferencesInBackup <boolean>	# UseOwnerReferencesBackup specifies whether to use OwnerReferences on backups created by this Schedule.

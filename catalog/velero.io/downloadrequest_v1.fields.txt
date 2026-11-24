@@ -1,4 +1,4 @@
-# schema source: Velero v1.18.4 https://github.com/vmware-tanzu/velero
+# schema source: Velero v1.19.0 https://github.com/vmware-tanzu/velero
 apiVersion <string> enum=velero.io/v1
 kind <string> enum=DownloadRequest
 metadata.name <string> (required)
@@ -8,6 +8,7 @@ spec.target <object> (required)	# Target is what to download (e.g. logs for a ba
 spec.target.kind <string> (required) enum=BackupLog|BackupContents|BackupVolumeSnapshots|BackupItemOperations|BackupResourceList|BackupResults|RestoreLog|RestoreResults|RestoreResourceList|RestoreItemOperations|CSIBackupVolumeSnapshots|CSIBackupVolumeSnapshotContents|BackupVolumeInfos|RestoreVolumeInfo	# Kind is the type of file to download.
 spec.target.name <string> (required)	# Name is the name of the Kubernetes resource with which the file is associated.
 status <object>	# DownloadRequestStatus is the current status of a DownloadRequest.
-status.downloadURL <string>	# DownloadURL contains the pre-signed URL for the target file.
+status.downloadURL <string>	# DownloadURL contains the pre-signed URL for the target file. It is signed for a fixed lifetime and expires at Expiration, so it should be used promptly and not cached.
 status.expiration <string> format=date-time	# Expiration is when this DownloadRequest expires and can be deleted by the system.
-status.phase <string> enum=New|Processed	# Phase is the current state of the DownloadRequest.
+status.message <string>	# Message explains a Failed phase. It is empty in every other phase.
+status.phase <string> enum=New|Processed|Failed	# Phase is the current state of the DownloadRequest. Processed means a URL has been signed into DownloadURL. It does not mean the target object exists in object storage, so a request whose target never produced a file still reaches Processed and the URL returns 404. Callers should check that the backup or restore is in a phase that produces the target before relying on the download.

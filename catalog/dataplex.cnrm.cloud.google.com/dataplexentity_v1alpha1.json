@@ -17,9 +17,55 @@
       "additionalProperties": false,
       "description": "DataplexEntitySpec defines the desired state of DataplexEntity",
       "properties": {
-        "asset": {
-          "description": "Required. Immutable. The ID of the asset associated with the storage location containing the entity data. The entity must be with in the same zone with the asset.",
-          "type": "string"
+        "assetRef": {
+          "additionalProperties": false,
+          "description": "Required. Immutable. The DataplexAsset associated with the storage location containing the entity data. The entity must be within the same zone with the asset.",
+          "oneOf": [
+            {
+              "not": {
+                "required": [
+                  "external"
+                ]
+              },
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "namespace"
+                    ]
+                  }
+                ]
+              },
+              "required": [
+                "external"
+              ]
+            }
+          ],
+          "properties": {
+            "external": {
+              "description": "A reference to an externally managed DataplexAsset resource. Should be in the format \"projects/{{projectID}}/locations/{{location}}/lakes/{{lakeID}}/zones/{{zone}}/assets/{{assetID}}\".",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of a DataplexAsset resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "The namespace of a DataplexAsset resource.",
+              "type": "string"
+            }
+          },
+          "type": "object"
         },
         "dataPath": {
           "description": "Required. Immutable. The storage path of the entity data. For Cloud Storage data, this is the fully-qualified path to the entity, such as `gs://bucket/path/to/data`. For BigQuery data, this is the name of the table resource, such as `projects/project_id/datasets/dataset_id/tables/table_id`.",
@@ -35,10 +81,6 @@
         },
         "displayName": {
           "description": "Optional. Display name must be shorter than or equal to 256 characters.",
-          "type": "string"
-        },
-        "etag": {
-          "description": "Optional. The etag associated with the entity, which can be retrieved with a [GetEntity][] request. Required for update and delete requests.",
           "type": "string"
         },
         "format": {
@@ -109,13 +151,9 @@
           "description": "Required. A user-provided entity ID. It is mutable, and will be used as the published table name. Specifying a new ID in an update entity request will override the existing value. The ID must contain only letters (a-z, A-Z), numbers (0-9), and underscores, and consist of 256 or fewer characters.",
           "type": "string"
         },
-        "location": {
-          "description": "The location of this resource.",
-          "type": "string"
-        },
-        "projectRef": {
+        "parentRef": {
           "additionalProperties": false,
-          "description": "The project that this resource belongs to.",
+          "description": "The DataplexZone this DataplexEntity is created under.",
           "oneOf": [
             {
               "not": {
@@ -149,23 +187,25 @@
           ],
           "properties": {
             "external": {
-              "description": "The `projectID` field of a project, when not managed by Config Connector.",
-              "type": "string"
-            },
-            "kind": {
-              "description": "The kind of the Project resource; optional but must be `Project` if provided.",
+              "description": "A reference to an externally managed DataplexZone resource. Should be in the format \"projects/{{projectID}}/locations/{{location}}/lakes/{{lake}}/zones/{{zone}}\".",
               "type": "string"
             },
             "name": {
-              "description": "The `name` field of a `Project` resource.",
+              "description": "The name of a DataplexZone resource.",
               "type": "string"
             },
             "namespace": {
-              "description": "The `namespace` field of a `Project` resource.",
+              "description": "The namespace of a DataplexZone resource.",
               "type": "string"
             }
           },
-          "type": "object"
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "parentRef is immutable",
+              "rule": "self == oldSelf"
+            }
+          ]
         },
         "resourceID": {
           "description": "The DataplexEntity name. If not given, the metadata.name will be used.",
@@ -260,12 +300,11 @@
         }
       },
       "required": [
-        "asset",
+        "assetRef",
         "dataPath",
         "format",
         "id",
-        "location",
-        "projectRef",
+        "parentRef",
         "schema",
         "system",
         "type"
@@ -373,6 +412,10 @@
             },
             "createTime": {
               "description": "Output only. The time when the entity was created.",
+              "type": "string"
+            },
+            "etag": {
+              "description": "The etag associated with the entity, which can be retrieved with a [GetEntity][] request. Required for update and delete requests.",
               "type": "string"
             },
             "format": {
