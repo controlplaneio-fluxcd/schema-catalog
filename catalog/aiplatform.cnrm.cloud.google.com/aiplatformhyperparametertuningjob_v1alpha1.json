@@ -82,12 +82,18 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "The labels with user-defined metadata to organize HyperparameterTuningJobs.\n\n Label keys and values can be no longer than 64 characters\n (Unicode codepoints), can only contain lowercase letters, numeric\n characters, underscores and dashes. International characters are allowed.\n\n See https://goo.gl/xmQnxf for more information and examples of labels.",
+          "description": "Optional. The labels with user-defined metadata to organize\n HyperparameterTuningJobs.\n\n Label keys and values can be no longer than 64 characters\n (Unicode codepoints), can only contain lowercase letters, numeric\n characters, underscores and dashes. International characters are allowed.\n\n See https://goo.gl/xmQnxf for more information and examples of labels.",
           "type": "object"
         },
         "location": {
-          "description": "The location of this resource.",
-          "type": "string"
+          "description": "The location that this resource belongs to.",
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "Location is immutable.",
+              "rule": "self == oldSelf"
+            }
+          ]
         },
         "maxFailedTrialCount": {
           "description": "The number of failed Trials that need to be seen before failing\n the HyperparameterTuningJob.\n\n If set to 0, Vertex AI decides how many Trials must fail\n before the whole job fails.",
@@ -106,7 +112,7 @@
         },
         "projectRef": {
           "additionalProperties": false,
-          "description": "The project that this resource belongs to.",
+          "description": "The Project that this resource belongs to.",
           "oneOf": [
             {
               "not": {
@@ -537,6 +543,9 @@
                   "type": "string"
                 }
               },
+              "required": [
+                "outputURIPrefix"
+              ],
               "type": "object"
             },
             "enableDashboardAccess": {
@@ -648,7 +657,7 @@
               "type": "object"
             },
             "modelRefs": {
-              "description": "Optional. The name of the Model resources for which to generate a mapping\n to the trial name formats. Model names should be of the form:\n `projects/{project}/locations/{location}/models/{model}`\n\n To specify this field, you must have already [configured Model Registry\n integration for Vertex\n AI](https://cloud.google.com/vertex-ai/docs/model-registry/model-registry-integration).\n\n At most 50 model names can be specified. For each specified model, its\n version alias is created for the custom job. The alias name format is\n `customjob-{job_id}`. The model version alias is deleted when the custom\n job is deleted. There will be at most one version alias for each model\n returned. The \"default\" version alias is created for the first version of\n the model, and can be moved to other versions later on. There will be\n exactly one default version.",
+              "description": "Optional. The name of the Model resources for which to generate a mapping\n to the trial name formats. Model names should be of the form:\n `projects/{project}/locations/{location}/models/{model}`\n\n To specify this field, you must have already [configured Model Registry\n integration for Vertex\n AI](https://cloud.google.com/vertex-ai/docs/model-registry/model-registry-integration).\n\n At most 50 model names can be specified. For each specified model, its\n version alias is created for the custom job. The alias name format is\n `customjob-{job_id}`. The model version alias is deleted when the custom\n job is deleted.\n\n If the model names are of the form:\n `projects/{project}/locations/{location}/models/{model}`:\n The default version will be returned.\n\n If the model names are of the form:\n `projects/{project}/locations/{location}/models/{model}@{version_id}`\n or\n `projects/{project}/locations/{location}/models/{model}@{version_alias}`:\n The specified model version will be used.\n\n Example: `projects/{project}/locations/{location}/models/{model}@2`\n            or\n          `projects/{project}/locations/{location}/models/{model}@golden`\n If no version ID or alias is specified, the \"default\" version will be\n returned. The \"default\" version alias is created for the first version of\n the model, and can be moved to other versions later on. There will be\n exactly one default version.",
               "items": {
                 "additionalProperties": false,
                 "description": "AIPlatformModelRef is a reference to an AIPlatformModel.",
@@ -751,9 +760,55 @@
               },
               "type": "object"
             },
-            "persistentResourceID": {
+            "persistentResourceRef": {
+              "additionalProperties": false,
               "description": "Optional. The ID of the PersistentResource in the same Project and Location\n which to run\n\n If this is specified, the job will be run on existing machines held by the\n PersistentResource instead of on-demand short-live machines.\n The network and CMEK configs on the job should be consistent with those on\n the PersistentResource, otherwise, the job will be rejected.",
-              "type": "string"
+              "oneOf": [
+                {
+                  "not": {
+                    "required": [
+                      "external"
+                    ]
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "namespace"
+                        ]
+                      }
+                    ]
+                  },
+                  "required": [
+                    "external"
+                  ]
+                }
+              ],
+              "properties": {
+                "external": {
+                  "description": "A reference to an externally managed AIPlatformPersistentResource resource. Should be in the format \"projects/{{projectID}}/locations/{{location}}/persistentResources/{persistentResource}\"",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "The name of an AIPlatformPersistentResource resource.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "The namespace of an AIPlatformPersistentResource resource.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
             },
             "protectedArtifactLocationID": {
               "description": "The ID of the location to store protected artifacts. e.g. us-central1. Populate only when the location is different than CustomJob location. List of supported locations: https://cloud.google.com/vertex-ai/docs/general/locations",
@@ -877,6 +932,11 @@
                         "type": "object"
                       }
                     },
+                    "required": [
+                      "domain",
+                      "targetNetworkRef",
+                      "targetProjectRef"
+                    ],
                     "type": "object"
                   },
                   "type": "array"
@@ -1105,6 +1165,10 @@
                               "type": "string"
                             }
                           },
+                          "required": [
+                            "name",
+                            "value"
+                          ],
                           "type": "object"
                         },
                         "type": "array"
@@ -1114,6 +1178,9 @@
                         "type": "string"
                       }
                     },
+                    "required": [
+                      "imageURI"
+                    ],
                     "type": "object"
                   },
                   "diskSpec": {
@@ -1154,6 +1221,12 @@
                           "type": "string"
                         }
                       },
+                      "required": [
+                        "filesystem",
+                        "instanceIP",
+                        "mountPoint",
+                        "volumeHandle"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
@@ -1199,6 +1272,9 @@
                             "type": "array"
                           }
                         },
+                        "required": [
+                          "reservationAffinityType"
+                        ],
                         "type": "object"
                       },
                       "tpuTopology": {
@@ -1226,6 +1302,11 @@
                           "type": "string"
                         }
                       },
+                      "required": [
+                        "mountPoint",
+                        "path",
+                        "server"
+                      ],
                       "type": "object"
                     },
                     "type": "array"

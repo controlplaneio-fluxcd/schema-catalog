@@ -1,26 +1,29 @@
-# schema source: Traefik v3.7.19 https://github.com/traefik/traefik
+# schema source: Traefik v3.8.0 https://github.com/traefik/traefik
 apiVersion <string> enum=traefik.io/v1alpha1
 kind <string> enum=IngressRoute
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object> (required)	# IngressRouteSpec defines the desired state of IngressRoute.
-spec.entryPoints <[]string>	# EntryPoints defines the list of entry point names to bind to. Entry points have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/install-configuration/entrypoints/ Default: all.
+spec.entryPoints <[]string>	# EntryPoints defines the list of entry point names to bind to. Entry points have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.8/reference/install-configuration/entrypoints/ Default: all.
 spec.ingressClassName <string>	# IngressClassName defines the name of the IngressClass cluster resource.
-spec.parentRefs <[]object>	# ParentRefs defines references to parent IngressRoute resources for multi-layer routing. When set, this IngressRoute's routers will be children of the referenced parent IngressRoute's routers. More info: https://doc.traefik.io/traefik/v3.7/routing/routers/#parentrefs
+spec.parentRefs <[]object>	# ParentRefs defines references to parent IngressRoute resources for multi-layer routing. When set, this IngressRoute's routers will be children of the referenced parent IngressRoute's routers. More info: https://doc.traefik.io/traefik/v3.8/routing/routers/#parentrefs
 spec.parentRefs[].name <string> (required)	# Name defines the name of the referenced IngressRoute resource.
 spec.parentRefs[].namespace <string>	# Namespace defines the namespace of the referenced IngressRoute resource.
-spec.routes <[]object> (required)	# Routes defines the list of routes.
+spec.routes <[]object> (required) max=100000	# Routes defines the list of routes.
 spec.routes[].kind <string> enum=Rule	# Kind defines the kind of the route. Rule is the only supported kind. If not defined, defaults to Rule.
-spec.routes[].match <string> (required)	# Match defines the router's rule. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/rules-and-priority/
-spec.routes[].middlewares <[]object>	# Middlewares defines the list of references to Middleware resources. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/middleware/
+spec.routes[].match <string> (required)	# Match defines the router's rule. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/routing/rules-and-priority/
+spec.routes[].middlewares <[]object>	# Middlewares defines the list of references to Middleware resources. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/kubernetes/crd/http/middleware/
 spec.routes[].middlewares[].name <string> (required)	# Name defines the name of the referenced Middleware resource.
 spec.routes[].middlewares[].namespace <string>	# Namespace defines the namespace of the referenced Middleware resource.
-spec.routes[].observability <object>	# Observability defines the observability configuration for a router. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/observability/
+spec.routes[].observability <object>	# Observability defines the observability configuration for a router. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/routing/observability/
 spec.routes[].observability.accessLogs <boolean>	# AccessLogs enables access logs for this router.
 spec.routes[].observability.metrics <boolean>	# Metrics enables metrics for this router.
 spec.routes[].observability.traceVerbosity <string> enum=minimal|detailed default="minimal"	# TraceVerbosity defines the verbosity level of the tracing for this router.
 spec.routes[].observability.tracing <boolean>	# Tracing enables tracing for this router.
-spec.routes[].priority <integer> max=9223372036854775000	# Priority defines the router's priority. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/rules-and-priority/#priority
+spec.routes[].priority <integer> max=9223372036854775000	# Priority defines the router's priority. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/routing/rules-and-priority/#priority
+spec.routes[].respondingTimeouts <object>	# RespondingTimeouts defines the timeouts for responding to client requests.
+spec.routes[].respondingTimeouts.readTimeout <int-or-string>	# ReadTimeout defines the maximum duration for reading the request body, from when the router receives the request. If zero, no timeout applies, and the entrypoint read timeout is lifted for the router.
+spec.routes[].respondingTimeouts.writeTimeout <int-or-string>	# WriteTimeout defines the maximum duration before timing out writes of the response, including the wait for the backend, from when the router receives the request. If zero, no timeout applies, and the entrypoint write timeout is lifted for the router.
 spec.routes[].services <[]object>	# Services defines the list of Service. It can contain any combination of TraefikService and/or reference to a Kubernetes Service.
 spec.routes[].services[].healthCheck <object>	# Healthcheck defines health checks for ExternalName services.
 spec.routes[].services[].healthCheck.followRedirects <boolean>	# FollowRedirects defines whether redirects should be followed during the health check calls. Default: true
@@ -52,7 +55,7 @@ spec.routes[].services[].responseForwarding <object>	# ResponseForwarding define
 spec.routes[].services[].responseForwarding.flushInterval <string>	# FlushInterval defines the interval, in milliseconds, in between flushes to the client while copying the response body. A negative value means to flush immediately after each write to the client. This configuration is ignored when ReverseProxy recognizes a response as a streaming response; for such responses, writes are flushed to the client immediately. Default: 100ms
 spec.routes[].services[].scheme <string>	# Scheme defines the scheme to use for the request to the upstream Kubernetes Service. It defaults to https when Kubernetes Service port is 443, http otherwise.
 spec.routes[].services[].serversTransport <string>	# ServersTransport defines the name of ServersTransport resource to use. It allows to configure the transport between Traefik and your servers. Can only be used on a Kubernetes Service.
-spec.routes[].services[].sticky <object>	# Sticky defines the sticky sessions configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/load-balancing/service/#sticky-sessions
+spec.routes[].services[].sticky <object>	# Sticky defines the sticky sessions configuration. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/load-balancing/service/#sticky-sessions
 spec.routes[].services[].sticky.cookie <object>	# Cookie defines the sticky cookie configuration.
 spec.routes[].services[].sticky.cookie.domain <string>	# Domain defines the host to which the cookie will be sent. More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#domaindomain-value
 spec.routes[].services[].sticky.cookie.httpOnly <boolean>	# HTTPOnly defines whether the cookie can be accessed by client-side APIs, such as JavaScript.
@@ -63,16 +66,16 @@ spec.routes[].services[].sticky.cookie.sameSite <string> enum=none|lax|strict|No
 spec.routes[].services[].sticky.cookie.secure <boolean>	# Secure defines whether the cookie can only be transmitted over an encrypted connection (i.e. HTTPS).
 spec.routes[].services[].strategy <string> enum=wrr|p2c|hrw|leasttime|RoundRobin	# Strategy defines the load balancing strategy between the servers. Supported values are: wrr (Weighed round-robin), p2c (Power of two choices), hrw (Highest Random Weight), and leasttime (Least-Time). RoundRobin value is deprecated and supported for backward compatibility.
 spec.routes[].services[].weight <integer> min=0	# Weight defines the weight and should only be specified when Name references a TraefikService object (and to be precise, one that embeds a Weighted Round Robin).
-spec.routes[].syntax <string>	# Syntax defines the router's rule syntax. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/rules-and-priority/#rulesyntax Deprecated: Please do not use this field and rewrite the router rules to use the v3 syntax.
-spec.tls <object>	# TLS defines the TLS configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/routing/router/#tls
-spec.tls.certResolver <string>	# CertResolver defines the name of the certificate resolver to use. Cert resolvers have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.7/reference/install-configuration/tls/certificate-resolvers/acme/
-spec.tls.domains <[]object>	# Domains defines the list of domains that will be used to issue certificates. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-certificates/#domains
+spec.routes[].syntax <string>	# Syntax defines the router's rule syntax. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/routing/rules-and-priority/#rulesyntax Deprecated: Please do not use this field and rewrite the router rules to use the v3 syntax.
+spec.tls <object>	# TLS defines the TLS configuration. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/routing/router/#tls
+spec.tls.certResolver <string>	# CertResolver defines the name of the certificate resolver to use. Cert resolvers have to be configured in the static configuration. More info: https://doc.traefik.io/traefik/v3.8/reference/install-configuration/tls/certificate-resolvers/acme/
+spec.tls.domains <[]object>	# Domains defines the list of domains that will be used to issue certificates. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/tls/tls-certificates/#domains
 spec.tls.domains[].main <string>	# Main defines the main domain name.
 spec.tls.domains[].sans <[]string>	# SANs defines the subject alternative domain names.
-spec.tls.options <object>	# Options defines the reference to a TLSOption, that specifies the parameters of the TLS connection. If not defined, the `default` TLSOption is used. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-options/
-spec.tls.options.name <string> (required)	# Name defines the name of the referenced TLSOption. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/tlsoption/
-spec.tls.options.namespace <string>	# Namespace defines the namespace of the referenced TLSOption. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/tlsoption/
+spec.tls.options <object>	# Options defines the reference to a TLSOption, that specifies the parameters of the TLS connection. If not defined, the `default` TLSOption is used. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/http/tls/tls-options/
+spec.tls.options.name <string> (required)	# Name defines the name of the referenced TLSOption. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/kubernetes/crd/http/tlsoption/
+spec.tls.options.namespace <string>	# Namespace defines the namespace of the referenced TLSOption. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/kubernetes/crd/http/tlsoption/
 spec.tls.secretName <string>	# SecretName is the name of the referenced Kubernetes Secret to specify the certificate details.
 spec.tls.store <object>	# Store defines the reference to the TLSStore, that will be used to store certificates. Please note that only `default` TLSStore can be used.
-spec.tls.store.name <string> (required)	# Name defines the name of the referenced TLSStore. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/tlsstore/
-spec.tls.store.namespace <string>	# Namespace defines the namespace of the referenced TLSStore. More info: https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/kubernetes/crd/http/tlsstore/
+spec.tls.store.name <string> (required)	# Name defines the name of the referenced TLSStore. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/kubernetes/crd/http/tlsstore/
+spec.tls.store.namespace <string>	# Namespace defines the namespace of the referenced TLSStore. More info: https://doc.traefik.io/traefik/v3.8/reference/routing-configuration/kubernetes/crd/http/tlsstore/

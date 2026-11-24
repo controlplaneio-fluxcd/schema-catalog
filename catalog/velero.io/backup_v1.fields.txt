@@ -1,11 +1,12 @@
-# schema source: Velero v1.18.4 https://github.com/vmware-tanzu/velero
+# schema source: Velero v1.19.0 https://github.com/vmware-tanzu/velero
 apiVersion <string> enum=velero.io/v1
 kind <string> enum=Backup
 metadata.name <string> (required)
 metadata.namespace <string> (required)
 spec <object>	# BackupSpec defines the specification for a Velero backup.
+spec.backupType <string> enum=Full|Incremental	# BackupType specifies how volume data is backed up, with possible values including Full and Incremental.
 spec.csiSnapshotTimeout <string>	# CSISnapshotTimeout specifies the time used to wait for CSI VolumeSnapshot status turns to ReadyToUse during creation, before returning error as timeout. The default value is 10 minute.
-spec.datamover <string>	# DataMover specifies the data mover to be used by the backup. If DataMover is "" or "velero", the built-in data mover will be used.
+spec.datamover <string>	# DataMover specifies the data mover to be used by the backup. If DataMover is "" or "velero", the default built-in data mover will be used.
 spec.defaultVolumesToFsBackup <boolean>	# DefaultVolumesToFsBackup specifies whether pod volume file system backup should be used for all volumes by default.
 spec.defaultVolumesToRestic <boolean>	# DefaultVolumesToRestic specifies whether restic should be used to take a backup of all pod volumes by default. Deprecated: this field is no longer used and will be removed entirely in future. Use DefaultVolumesToFsBackup instead.
 spec.excludedClusterScopedResources <[]string>	# ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to "*", all cluster-scoped resource types are excluded. The default value is empty.
@@ -50,6 +51,7 @@ spec.labelSelector.matchExpressions[].operator <string> (required)	# operator re
 spec.labelSelector.matchExpressions[].values <[]string>	# values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
 spec.labelSelector.matchLabels <map[string]string>	# matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
 spec.metadata <object>
+spec.metadata.annotations <map[string]string>
 spec.metadata.labels <map[string]string>
 spec.orLabelSelectors <[]object>	# OrLabelSelectors is list of metav1.LabelSelector to filter with when adding individual objects to the backup. If multiple provided they will be joined by the OR operator. LabelSelector as well as OrLabelSelectors cannot co-exist in backup request, only one of them can be used.
 spec.orLabelSelectors[].matchExpressions <[]object>	# matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -67,7 +69,8 @@ spec.snapshotVolumes <boolean>	# SnapshotVolumes specifies whether to take snaps
 spec.storageLocation <string>	# StorageLocation is a string containing the name of a BackupStorageLocation where the backup should be stored.
 spec.ttl <string>	# TTL is a time.Duration-parseable string describing how long the Backup should be retained for.
 spec.uploaderConfig <object>	# UploaderConfig specifies the configuration for the uploader.
-spec.uploaderConfig.parallelFilesUpload <integer>	# ParallelFilesUpload is the number of files parallel uploads to perform when using the uploader.
+spec.uploaderConfig.parallelBlocksUpload <integer>	# ParallelBlocksUpload is the number of blocks parallel uploads to perform when using Velero block uploader.
+spec.uploaderConfig.parallelFilesUpload <integer>	# ParallelFilesUpload is the number of files parallel uploads to perform when using the Velero fs uploader.
 spec.volumeGroupSnapshotLabelKey <string>	# VolumeGroupSnapshotLabelKey specifies the label key to group PVCs under a VGS.
 spec.volumeSnapshotLocations <[]string>	# VolumeSnapshotLocations is a list containing names of VolumeSnapshotLocations associated with this backup.
 status <object>	# BackupStatus captures the current status of a Velero backup.

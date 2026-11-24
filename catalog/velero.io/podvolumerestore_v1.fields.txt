@@ -1,4 +1,4 @@
-# schema source: Velero v1.18.4 https://github.com/vmware-tanzu/velero
+# schema source: Velero v1.19.0 https://github.com/vmware-tanzu/velero
 apiVersion <string> enum=velero.io/v1
 kind <string> enum=PodVolumeRestore
 metadata.name <string> (required)
@@ -15,6 +15,7 @@ spec.pod.namespace <string>	# Namespace of the referent. More info: https://kube
 spec.pod.resourceVersion <string>	# Specific resourceVersion to which this reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
 spec.pod.uid <string>	# UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
 spec.repoIdentifier <string> (required)	# RepoIdentifier is the backup repository identifier.
+spec.restoreType <string> (required)	# RestoreType indicates the type of the restore.
 spec.snapshotID <string> (required)	# SnapshotID is the ID of the volume snapshot to be restored.
 spec.snapshotSize <integer> format=int64	# SnapshotSize is the logical size in Bytes of the snapshot.
 spec.sourceNamespace <string> (required)	# SourceNamespace is the original namespace for namaspace mapping.
@@ -23,8 +24,11 @@ spec.uploaderType <string> enum=kopia|restic|	# UploaderType is the type of the 
 spec.volume <string> (required)	# Volume is the name of the volume within the Pod to be restored.
 status <object>	# PodVolumeRestoreStatus is the current status of a PodVolumeRestore.
 status.acceptedTimestamp <string> format=date-time	# AcceptedTimestamp records the time the pod volume restore is to be prepared. The server's time is used for AcceptedTimestamp
+status.activities <[]string>	# Activities contains one or more messages about what have been done for this pod volume restore.
 status.completionTimestamp <string> format=date-time	# CompletionTimestamp records the time a restore was completed. Completion time is recorded even on failed restores. The server's time is used for CompletionTimestamps
-status.message <string>	# Message is a message about the pod volume restore's status.
+status.fallbackFull <boolean>	# FallbackFull indicates whether the incremental restore has fallen back to full restore
+status.incrementalBytes <integer> format=int64	# IncrementalBytes holds the number of bytes restored incrementally
+status.message <string>	# Message is a message describing the pod volume restore when it reaches to a terminal status.
 status.node <string>	# Node is name of the node where the pod volume restore is processed.
 status.phase <string> enum=New|Accepted|Prepared|InProgress|Canceling|Canceled|Completed|Failed	# Phase is the current state of the PodVolumeRestore.
 status.progress <object>	# Progress holds the total number of bytes of the snapshot and the current number of restored bytes. This can be used to display progress information about the restore operation.

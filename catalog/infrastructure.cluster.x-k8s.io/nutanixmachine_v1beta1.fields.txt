@@ -1,13 +1,13 @@
-# schema source: Cluster API Nutanix v1.10.3 https://github.com/nutanix-cloud-native/cluster-api-provider-nutanix
+# schema source: Cluster API Nutanix v1.11.0-dev.2 https://github.com/nutanix-cloud-native/cluster-api-provider-nutanix
 apiVersion <string> enum=infrastructure.cluster.x-k8s.io/v1beta1
 kind <string> enum=NutanixMachine
 metadata.name <string> (required)
 metadata.namespace <string> (required)
-spec <object>	# NutanixMachineSpec defines the desired state of NutanixMachine
+spec <object>	# NutanixMachineSpec defines the desired state of NutanixMachine NOTE: For non-pointer scalar fields (e.g. int32/string aliases), CEL has(...) can evaluate as present due zero-value decoding in CRDs. Use value checks instead.
 spec.additionalCategories <[]object>	# List of categories that need to be added to the machines. Categories must already exist in Prism Central
 spec.additionalCategories[].key <string>	# key is the Key of category in PC.
 spec.additionalCategories[].value <string>	# value is the category value linked to the category key in PC
-spec.bootType <string> enum=legacy|uefi	# Defines the boot type of the virtual machine. Only supports UEFI and Legacy
+spec.bootType <string> enum=legacy|uefi	# Defines the boot type of the virtual machine. Only supports UEFI and Legacy Mutually exclusive with vmProfile. When vmProfile is set, bootType must not be set.
 spec.bootstrapRef <object>	# BootstrapRef is a reference to a bootstrap provider-specific resource that holds configuration details.
 spec.bootstrapRef.apiVersion <string>	# API version of the referent.
 spec.bootstrapRef.fieldPath <string>	# If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object.
@@ -20,7 +20,7 @@ spec.cluster <object>	# cluster is to identify the cluster (the Prism Element un
 spec.cluster.name <string> min=1	# name is the resource name in the PC
 spec.cluster.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
 spec.cluster.uuid <string> format=uuid min=36 max=36	# uuid is the UUID of the resource in the PC.
-spec.dataDisks <[]object>	# dataDisks hold the list of data disks to be attached to the VM
+spec.dataDisks <[]object>	# dataDisks hold the list of data disks to be attached to the VM Mutually exclusive with VMProfile. When VMProfile is set, dataDisks must not be set.
 spec.dataDisks[].dataSource <object>	# dataSource refers to a data source image for the VM disk.
 spec.dataDisks[].dataSource.name <string> min=1	# name is the resource name in the PC
 spec.dataDisks[].dataSource.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
@@ -36,10 +36,14 @@ spec.dataDisks[].storageConfig.storageContainer <object>	# storageContainer refe
 spec.dataDisks[].storageConfig.storageContainer.name <string> min=1	# name is the resource name in the PC
 spec.dataDisks[].storageConfig.storageContainer.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
 spec.dataDisks[].storageConfig.storageContainer.uuid <string> format=uuid min=36 max=36	# uuid is the UUID of the resource in the PC.
-spec.gpus <[]object>	# List of GPU devices that need to be added to the machines.
+spec.gpus <[]object> max=32	# List of GPU devices that need to be added to the machines. Mutually exclusive with VMProfile. When VMProfile is set, GPUs must not be set.
 spec.gpus[].deviceID <integer> format=int64	# deviceID is the id of the GPU entity.
-spec.gpus[].name <string>	# name is the GPU name
-spec.gpus[].type <string> (required) enum=deviceID|name	# Type is the identifier type to use for this resource.
+spec.gpus[].name <string> min=1	# name is the GPU name
+spec.gpus[].profile <object>	# profile identifies the AHV GPU profile to assign by name or UUID. Profile-based GPU assignment uses the named GPU profile APIs and is only supported on PC 7.6 or later.
+spec.gpus[].profile.name <string> min=1	# name is the resource name in the PC
+spec.gpus[].profile.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
+spec.gpus[].profile.uuid <string> format=uuid min=36 max=36	# uuid is the UUID of the resource in the PC.
+spec.gpus[].type <string> (required) enum=deviceID|name|profile	# Type is the identifier type to use for this resource.
 spec.image <object>	# image is to identify the nutanix machine image uploaded to the Prism Central (PC) The image identifier (uuid or name) can be obtained from the Prism Central console or using the prism_central API.
 spec.image.name <string> min=1	# name is the resource name in the PC
 spec.image.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
@@ -47,7 +51,7 @@ spec.image.uuid <string> format=uuid min=36 max=36	# uuid is the UUID of the res
 spec.imageLookup <object>	# imageLookup is a container that holds how to look up rhcos images for the cluster.
 spec.imageLookup.baseOS <string> (required) min=1	# BaseOS is the name of the base operating system to use for image lookup.
 spec.imageLookup.format <string> default="capx-{{.BaseOS}}-{{.K8sVersion}}-*"	# Format is the naming format to look up the image for this machine It will be ignored if an explicit image is set. Supports substitutions for {{.BaseOS}} and {{.K8sVersion}} with the base OS and kubernetes version, respectively. The BaseOS will be the value in BaseOS and the K8sVersion is the value in the Machine .spec.version, with the v prefix removed. This is effectively the defined by the packages produced by kubernetes/release without v as a prefix: 1.13.0, 1.12.5-mybuild.1, or 1.17.3. For example, the default image format of {{.BaseOS}}-?{{.K8sVersion}}-* and BaseOS as "rhel-8.10" will end up searching for images that match the pattern rhel-8.10-1.30.5-* for a Machine that is targeting kubernetes v1.30.5. See also: https://golang.org/pkg/text/template/
-spec.memorySize <int-or-string> (required)	# memorySize is the memory size (in Quantity format) of the VM The minimum memorySize is 2Gi bytes
+spec.memorySize <int-or-string>	# memorySize is the memory size (in Quantity format) of the VM The minimum memorySize is 2Gi bytes Required when VMProfile is not set, mutually exclusive with VMProfile
 spec.project <object>	# Add the machine resources to a Prism Central project
 spec.project.name <string> min=1	# name is the resource name in the PC
 spec.project.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
@@ -58,8 +62,12 @@ spec.subnet[].name <string> min=1	# name is the resource name in the PC
 spec.subnet[].type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
 spec.subnet[].uuid <string> format=uuid min=36 max=36	# uuid is the UUID of the resource in the PC.
 spec.systemDiskSize <int-or-string> (required)	# systemDiskSize is size (in Quantity format) of the system disk of the VM The minimum systemDiskSize is 20Gi bytes
-spec.vcpuSockets <integer> (required) format=int32 min=1	# vcpuSockets is the number of vCPU sockets of the VM
-spec.vcpusPerSocket <integer> (required) format=int32 min=1	# vcpusPerSocket is the number of vCPUs per socket of the VM
+spec.vcpuSockets <integer> format=int32 min=1	# vCPUsockets is the number of vCPU sockets of the VM Required when VMProfile is not set, mutually exclusive with VMProfile
+spec.vcpusPerSocket <integer> format=int32 min=1	# vcpusPerSocket is the number of vCPUs per socket of the VM Required when VMProfile is not set, mutually exclusive with VMProfile
+spec.vmProfile <object>	# VMProfile is to identify the VM profile in Prism Central (PC) The VM profile identifier (uuid or name) can be obtained from the Prism Central console or using the prism_central API. When VMProfile is set, it provides CPU, memory, and bootType configuration. vcpusPerSocket, vcpuSockets, memorySize, bootType, and GPUs are mutually exclusive with VMProfile; dataDisks is currently mutually exclusive with VMProfile (support for this combination may be added later).
+spec.vmProfile.name <string> min=1	# name is the resource name in the PC
+spec.vmProfile.type <string> (required) enum=uuid|name	# Type is the identifier type to use for this resource.
+spec.vmProfile.uuid <string> format=uuid min=36 max=36	# uuid is the UUID of the resource in the PC.
 status <object>	# NutanixMachineStatus defines the observed state of NutanixMachine
 status.addresses <[]object>	# Addresses contains the Nutanix VM associated addresses. Address type is one of Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS
 status.addresses[].address <string> (required) min=1 max=256	# address is the machine address.
