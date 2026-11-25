@@ -185,6 +185,23 @@ export async function listReleases(repo: string): Promise<Release[]> {
 }
 
 /**
+ * Returns the names of every git tag of owner/name that starts with prefix,
+ * for repos that tag versions but publish no GitHub releases. The
+ * matching-refs endpoint is unpaginated, so the list is complete however many
+ * tags the repo has (unlike /tags, which pages at 100).
+ */
+export async function listTags(repo: string, prefix = ""): Promise<string[]> {
+  const refs = await apiJson(`/repos/${repo}/git/matching-refs/tags/${encodeURI(prefix)}`);
+  if (!Array.isArray(refs)) {
+    throw new Error(`unexpected matching-refs payload for ${repo}`);
+  }
+  return refs
+    .map((r) => (r as { ref?: unknown }).ref)
+    .filter((ref): ref is string => typeof ref === "string" && ref.startsWith("refs/tags/"))
+    .map((ref) => ref.slice("refs/tags/".length));
+}
+
+/**
  * Returns the commit SHA a git ref points at. The commits endpoint
  * dereferences annotated tags to the tagged commit, so the result is always
  * a commit SHA — the value that pins a build even if the tag later moves.
