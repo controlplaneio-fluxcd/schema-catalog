@@ -1,4 +1,4 @@
-# schema source: Rook v1.21.2 https://github.com/rook/rook
+# schema source: Rook v1.21.3 https://github.com/rook/rook
 apiVersion <string> enum=ceph.rook.io/v1
 kind <string> enum=CephCluster
 metadata.name <string> (required)
@@ -65,7 +65,7 @@ spec.healthCheck.daemonHealth.status.interval <string>	# Interval is the interna
 spec.healthCheck.daemonHealth.status.timeout <string>
 spec.healthCheck.livenessProbe <map[string]object>	# LivenessProbe allows changing the livenessProbe configuration for a given daemon
 spec.healthCheck.livenessProbe.<key>.disabled <boolean>	# Disabled determines whether probe is disable or not
-spec.healthCheck.livenessProbe.<key>.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+spec.healthCheck.livenessProbe.<key>.probe <object>	# Probe overrides the timing and thresholds of the probe Rook configures for the daemon. Only initialDelaySeconds, periodSeconds, timeoutSeconds, successThreshold, failureThreshold and terminationGracePeriodSeconds are used, subject to Kubernetes' rules for each probe type. The check itself is always the one Rook generates for the daemon, and any exec, httpGet, tcpSocket or grpc handler set here is ignored. If Rook has no check to run for this probe, these settings are ignored.
 spec.healthCheck.livenessProbe.<key>.probe.exec <object>	# Exec specifies a command to execute in the container.
 spec.healthCheck.livenessProbe.<key>.probe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
 spec.healthCheck.livenessProbe.<key>.probe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
@@ -94,7 +94,7 @@ spec.healthCheck.muteHealthWarning <map[string]object>	# MuteHealthWarning confi
 spec.healthCheck.muteHealthWarning.<key>.policy <string> (required) enum=mute|unmute	# Policy controls whether to mute or unmute a Ceph health warning.
 spec.healthCheck.startupProbe <map[string]object>	# StartupProbe allows changing the startupProbe configuration for a given daemon
 spec.healthCheck.startupProbe.<key>.disabled <boolean>	# Disabled determines whether probe is disable or not
-spec.healthCheck.startupProbe.<key>.probe <object>	# Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+spec.healthCheck.startupProbe.<key>.probe <object>	# Probe overrides the timing and thresholds of the probe Rook configures for the daemon. Only initialDelaySeconds, periodSeconds, timeoutSeconds, successThreshold, failureThreshold and terminationGracePeriodSeconds are used, subject to Kubernetes' rules for each probe type. The check itself is always the one Rook generates for the daemon, and any exec, httpGet, tcpSocket or grpc handler set here is ignored. If Rook has no check to run for this probe, these settings are ignored.
 spec.healthCheck.startupProbe.<key>.probe.exec <object>	# Exec specifies a command to execute in the container.
 spec.healthCheck.startupProbe.<key>.probe.exec.command <[]string>	# Command is the command line to execute inside the container, the working directory for the command is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
 spec.healthCheck.startupProbe.<key>.probe.failureThreshold <integer> format=int32	# Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
@@ -509,6 +509,7 @@ spec.storage.nodes[].volumeClaimTemplates[].spec.volumeMode <string>	# volumeMod
 spec.storage.nodes[].volumeClaimTemplates[].spec.volumeName <string>	# volumeName is the binding reference to the PersistentVolume backing this claim.
 spec.storage.onlyApplyOSDPlacement <boolean>
 spec.storage.osdMaxUpdatesInParallel <integer> format=int32 min=1	# The maximum number of OSDs to update in parallel.
+spec.storage.osdUpdateFailureDomain <string> min=1 max=63	# The CRUSH bucket type (e.g. "host" or "rack") that OSDs updated in parallel must share. Ceph may report OSDs outside the failure domain of the OSD being updated as ok-to-stop; setting this restricts each batch of updates to OSDs within a single bucket of this type. If an OSD has no bucket of this type above it in the CRUSH tree, it is updated on its own. If unset, all OSDs reported as ok-to-stop are updated together.
 spec.storage.scheduleAlways <boolean>	# Whether to always schedule OSDs on a node even if the node is not currently schedulable or ready
 spec.storage.storageClassDeviceSets <[]object>
 spec.storage.storageClassDeviceSets[].config <map[string]string>	# Provider-specific device configuration

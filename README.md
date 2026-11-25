@@ -148,13 +148,13 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cluster API k0smotron Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-control-plane` | v2.3.1 | 12 | 2026-11-20 |
 | [Cluster API k0smotron Infrastructure](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-k0smotron-infrastructure` | v2.3.1 | 10 | 2026-11-20 |
 | [Cluster API Metal3](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-metal3` | v1.14.3 | 18 | 2026-11-20 |
-| [Cluster API Nutanix](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-nutanix` | v1.11.0-dev.2 | 8 | 2026-11-24 |
+| [Cluster API Nutanix](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-nutanix` | v1.10.4 | 8 | 2026-11-25 |
 | [Cluster API OpenStack](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-openstack` | v0.15.2 | 11 | 2026-11-20 |
 | [Cluster API Operator](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-operator` | v0.30.1 | 7 | 2026-11-20 |
-| [Cluster API RKE2 Bootstrap](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-bootstrap` | v0.27.2 | 4 | 2026-11-20 |
-| [Cluster API RKE2 Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-control-plane` | v0.27.2 | 4 | 2026-11-20 |
+| [Cluster API RKE2 Bootstrap](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-bootstrap` | v0.27.3 | 4 | 2026-11-25 |
+| [Cluster API RKE2 Control Plane](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-rke2-control-plane` | v0.27.3 | 4 | 2026-11-25 |
 | [Cluster API vSphere](https://schemas.fluxoperator.dev/p/cluster-api) | `cluster-api-provider-vsphere` | v1.17.0 | 16 | 2026-11-20 |
-| [Crossplane](https://schemas.fluxoperator.dev/p/crossplane) | `crossplane` | v2.4.3 | 25 | 2026-11-20 |
+| [Crossplane](https://schemas.fluxoperator.dev/p/crossplane) | `crossplane` | v2.5.0 | 25 | 2026-11-25 |
 | [External Secrets](https://schemas.fluxoperator.dev/p/external-secrets) | `external-secrets` | v2.15.0 | 29 | 2026-11-20 |
 | [Falco Operator](https://schemas.fluxoperator.dev/p/falco-operator) | `falco-operator` | v0.5.0 | 6 | 2026-11-20 |
 | [GCP Config Connector](https://schemas.fluxoperator.dev/p/config-connector) | `config-connector` | v1.162.0 | 911 | 2026-11-24 |
@@ -197,7 +197,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [NVIDIA GPU Operator](https://schemas.fluxoperator.dev/p/nvidia-gpu-operator) | `nvidia-gpu-operator` | v26.7.3 | 5 | 2026-11-20 |
 | [NVIDIA Network Operator](https://schemas.fluxoperator.dev/p/nvidia-network-operator) | `nvidia-network-operator` | v26.10.0 | 5 | 2026-11-20 |
 | [OVN-Kubernetes](https://schemas.fluxoperator.dev/p/ovn-kubernetes) | `ovn-kubernetes` | v1.4.0 | 13 | 2026-11-20 |
-| [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.21.2 | 21 | 2026-11-20 |
+| [Rook](https://schemas.fluxoperator.dev/p/rook) | `rook` | v1.21.3 | 21 | 2026-11-25 |
 | [Skupper](https://schemas.fluxoperator.dev/p/skupper) | `skupper` | 2.3.0 | 12 | 2026-11-20 |
 | [Spiderpool](https://schemas.fluxoperator.dev/p/spiderpool) | `spiderpool` | v1.3.0 | 6 | 2026-11-20 |
 | [Submariner](https://schemas.fluxoperator.dev/p/submariner) | `submariner` | v0.25.0 | 9 | 2026-11-20 |
@@ -211,7 +211,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | Project | ID | Version | Schemas | Updated |
 | --- | --- | --- | --- | --- |
 | [Agentgateway](https://schemas.fluxoperator.dev/p/agentgateway) | `agentgateway` | v1.7.0 | 4 | 2026-11-20 |
-| [AWS Load Balancer Controller](https://schemas.fluxoperator.dev/p/aws-load-balancer-controller) | `aws-load-balancer-controller` | v3.6.3 | 11 | 2026-11-20 |
+| [AWS Load Balancer Controller](https://schemas.fluxoperator.dev/p/aws-load-balancer-controller) | `aws-load-balancer-controller` | v3.7.0 | 11 | 2026-11-25 |
 | [Bindy](https://schemas.fluxoperator.dev/p/bindy) | `bindy` | v0.8.3 | 13 | 2026-11-20 |
 | [Cluster Inventory API](https://schemas.fluxoperator.dev/p/cluster-inventory-api) | `cluster-inventory-api` | v0.2.0 | 4 | 2026-11-20 |
 | [Envoy Gateway](https://schemas.fluxoperator.dev/p/envoy-gateway) | `envoy-gateway` | v1.10.0 | 8 | 2026-11-20 |
@@ -252,7 +252,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Actions Runner Controller](https://schemas.fluxoperator.dev/p/actions-runner-controller) | `actions-runner-controller` | 0.15.1 | 9 | 2026-11-20 |
 | [AIBrix](https://schemas.fluxoperator.dev/p/aibrix) | `aibrix` | v0.8.0 | 10 | 2026-11-20 |
 | [Altinity ClickHouse Operator](https://schemas.fluxoperator.dev/p/altinity-clickhouse-operator) | `altinity-clickhouse-operator` | 0.27.4 | 4 | 2026-11-20 |
-| [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.6.2 | 3 | 2026-11-20 |
+| [Argo CD](https://schemas.fluxoperator.dev/p/argo) | `argo-cd` | v3.6.3 | 3 | 2026-11-25 |
 | [Argo Events](https://schemas.fluxoperator.dev/p/argo) | `argo-events` | v1.9.11 | 3 | 2026-11-20 |
 | [Argo Rollouts](https://schemas.fluxoperator.dev/p/argo) | `argo-rollouts` | v1.10.2 | 5 | 2026-11-20 |
 | [Argo Workflows](https://schemas.fluxoperator.dev/p/argo) | `argo-workflows` | v4.1.6 | 8 | 2026-11-20 |
@@ -265,7 +265,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Flux](https://schemas.fluxoperator.dev/p/flux) | `flux` | v2.10.1 | 17 | 2026-11-20 |
 | [Flux Operator](https://schemas.fluxoperator.dev/p/flux-operator) | `flux-operator` | v0.63.1 | 4 | 2026-11-23 |
 | [k3s Helm Controller](https://schemas.fluxoperator.dev/p/k3s-helm-controller) | `k3s-helm-controller` | v0.17.11 | 2 | 2026-11-22 |
-| [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.6 | 11 | 2026-11-20 |
+| [Kargo](https://schemas.fluxoperator.dev/p/kargo) | `kargo` | v1.12.7 | 11 | 2026-11-25 |
 | [Knative Eventing](https://schemas.fluxoperator.dev/p/knative) | `knative-eventing` | v1.24.0 | 20 | 2026-11-20 |
 | [Knative Serving](https://schemas.fluxoperator.dev/p/knative) | `knative-serving` | v1.24.0 | 12 | 2026-11-20 |
 | [KServe](https://schemas.fluxoperator.dev/p/kserve) | `kserve` | v0.21.0 | 6 | 2026-11-20 |
