@@ -37,12 +37,12 @@
           "type": "boolean"
         },
         "package": {
-          "description": "Package is the name of the package that is being requested.\nmust be a fully qualified image name, including the registry,\nrepository, and tag. for example, \"registry.example.com/repo/package:tag\".",
+          "description": "Package is the name of the package that is being requested. Must be a\nfully qualified OCI reference, including the registry, repository, and\ntag. For example, \"registry.example.com/repo/package:tag\". May be empty\nwhen revisions are managed externally, in which case the package manager\nwill not manage revisions for the package, but will propagate the status\nof any externally-managed revisions.",
           "type": "string",
           "x-kubernetes-validations": [
             {
               "message": "must be a fully qualified image name, including the registry, repository, and tag or digest. For example, 'registry.example.com/repo/package:tag' or 'registry.example.com/repo/package[:tag]@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'.",
-              "rule": "self.matches('^[^\\\\.\\\\/]+(\\\\.[^\\\\.\\\\/]+)+(\\\\/[^\\\\/:@]+)+(:[^:@]+(@sha256.+)?|@sha256.+)$')"
+              "rule": "self == '' || self.matches('^[^\\\\.\\\\/]+(\\\\.[^\\\\.\\\\/]+)+(\\\\/[^\\\\/:@]+)+(:[^:@]+(@sha256.+)?|@sha256.+)$')"
             }
           ]
         },
@@ -112,9 +112,6 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "package"
-      ],
       "type": "object"
     },
     "status": {
@@ -198,6 +195,27 @@
         "currentRevision": {
           "description": "CurrentRevision is the name of the current package revision. It will\nreflect the most up to date revision, whether it has been activated or\nnot.",
           "type": "string"
+        },
+        "externalRevisionRefs": {
+          "description": "ExternalRevisionRefs are references to the FunctionRevisions of this\nFunction that are managed externally, rather than by the package\nmanager. For example, Crossplane creates external revisions for\ncomposition and operation pipeline steps that reference a function by\nOCI reference. When spec.package is empty, the Function's status\nreflects the status of its external revisions.",
+          "items": {
+            "additionalProperties": false,
+            "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
+            "properties": {
+              "name": {
+                "default": "",
+                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                "type": "string"
+              }
+            },
+            "type": "object",
+            "x-kubernetes-map-type": "atomic"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
         },
         "resolvedPackage": {
           "description": "ResolvedPackage is the name of the package that was used for version\nresolution. It may be different from spec.package if the package path was\nrewritten using an image config.",

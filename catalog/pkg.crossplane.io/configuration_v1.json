@@ -37,12 +37,12 @@
           "type": "boolean"
         },
         "package": {
-          "description": "Package is the name of the package that is being requested.\nmust be a fully qualified image name, including the registry,\nrepository, and tag. for example, \"registry.example.com/repo/package:tag\".",
+          "description": "Package is the name of the package that is being requested. Must be a\nfully qualified OCI reference, including the registry, repository, and\ntag. For example, \"registry.example.com/repo/package:tag\". May be empty\nwhen revisions are managed externally, in which case the package manager\nwill not manage revisions for the package, but will propagate the status\nof any externally-managed revisions.",
           "type": "string",
           "x-kubernetes-validations": [
             {
               "message": "must be a fully qualified image name, including the registry, repository, and tag or digest. For example, 'registry.example.com/repo/package:tag' or 'registry.example.com/repo/package[:tag]@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'.",
-              "rule": "self.matches('^[^\\\\.\\\\/]+(\\\\.[^\\\\.\\\\/]+)+(\\\\/[^\\\\/:@]+)+(:[^:@]+(@sha256.+)?|@sha256.+)$')"
+              "rule": "self == '' || self.matches('^[^\\\\.\\\\/]+(\\\\.[^\\\\.\\\\/]+)+(\\\\/[^\\\\/:@]+)+(:[^:@]+(@sha256.+)?|@sha256.+)$')"
             }
           ]
         },
@@ -85,10 +85,13 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "package"
-      ],
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "package is required",
+          "rule": "has(self.package) && self.package != \"\""
+        }
+      ]
     },
     "status": {
       "additionalProperties": false,
