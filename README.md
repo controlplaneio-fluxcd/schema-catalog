@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-127-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C743-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-690%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-129-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C762-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-694%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -159,6 +159,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Falco Operator](https://schemas.fluxoperator.dev/p/falco-operator) | `falco-operator` | v0.5.0 | 6 | 2026-11-20 |
 | [GCP Config Connector](https://schemas.fluxoperator.dev/p/config-connector) | `config-connector` | v1.162.0 | 911 | 2026-11-24 |
 | [Image Scanner Operator](https://schemas.fluxoperator.dev/p/image-scanner-operator) | `image-scanner-operator` | v0.16.37 | 1 | 2026-11-24 |
+| [Keycloak Operator](https://schemas.fluxoperator.dev/p/keycloak) | `keycloak` | 26.8.2 | 6 | 2026-11-25 |
 | [kro](https://schemas.fluxoperator.dev/p/kro) | `kro` | v0.10.0 | 3 | 2026-11-20 |
 | [Kubescape Operator](https://schemas.fluxoperator.dev/p/kubescape-operator) | `kubescape-operator` | 1.42.0 | 5 | 2026-11-20 |
 | [Kubewarden](https://schemas.fluxoperator.dev/p/kubewarden) | `kubewarden` | v1.39.0 | 8 | 2026-11-20 |
@@ -189,6 +190,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Cilium](https://schemas.fluxoperator.dev/p/cilium) | `cilium` | v1.20.5 | 30 | 2026-11-20 |
 | [Container Object Storage Interface](https://schemas.fluxoperator.dev/p/cosi) | `cosi` | v0.2.2 | 5 | 2026-11-20 |
 | [CSI External Snapshotter](https://schemas.fluxoperator.dev/p/external-snapshotter) | `external-snapshotter` | v8.7.1 | 15 | 2026-11-24 |
+| [Garage Operator](https://schemas.fluxoperator.dev/p/garage-operator) | `garage-operator` | v0.9.2 | 13 | 2026-11-25 |
 | [Kube-OVN](https://schemas.fluxoperator.dev/p/kube-ovn) | `kube-ovn` | v1.17.1 | 25 | 2026-11-20 |
 | [Longhorn](https://schemas.fluxoperator.dev/p/longhorn) | `longhorn` | v1.13.0 | 28 | 2026-11-20 |
 | [Multi-Cluster Services API](https://schemas.fluxoperator.dev/p/mcs-api) | `mcs-api` | v0.5.2 | 4 | 2026-11-20 |
