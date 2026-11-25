@@ -1,0 +1,39 @@
+# schema source: Garage Operator v0.9.2 https://github.com/rajsinghtech/garage-operator
+apiVersion <string> enum=garage.rajsingh.info/v1beta1
+kind <string> enum=GarageAdminToken
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# GarageAdminTokenSpec defines the desired state of GarageAdminToken. GarageAdminToken provisions a static bootstrap Secret for the Garage Admin HTTP API. The referenced GarageCluster must explicitly select this Secret in spec.admin.adminTokenSecretRef. This resource does not create a row in Garage's dynamic Admin-token table, and deletion does not revoke bytes that a running Garage process already loaded at startup. Admin tokens authenticate differently from S3 keys (GarageKey) — they use Bearer token auth against the admin port (default 3903) instead of HMAC-SHA256. Static configured tokens always have full admin access and no server-side name, scope, or expiry metadata. Use Garage's Admin API directly for a user-managed scoped/dynamic token.
+spec.clusterRef <object> (required)	# ClusterRef references the GarageCluster this token belongs to
+spec.clusterRef.kubeConfigSecretRef <object>	# KubeConfigSecretRef is reserved for a future remote Kubernetes client integration. It is currently rejected by admission because the operator does not use it.
+spec.clusterRef.kubeConfigSecretRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.clusterRef.kubeConfigSecretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.clusterRef.kubeConfigSecretRef.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.clusterRef.name <string> (required)	# Name of the GarageCluster resource.
+spec.clusterRef.namespace <string>	# Namespace of the GarageCluster. Defaults to the referencing resource's namespace. Cross-namespace references require a GarageReferenceGrant where supported by the owning resource. GarageNode and GarageAdminToken reject them.
+spec.expiresAt <string> format=date-time	# ExpiresAt is retained for compatibility but rejected because static configured tokens have no Garage-side expiry or revocation record.
+spec.name <string>	# Name is retained for compatibility but rejected because static bootstrap material has no Garage-side friendly name.
+spec.neverExpires <boolean>	# NeverExpires is retained for compatibility. Static configured tokens are always non-expiring, so this field is deprecated and has no effect.
+spec.secretTemplate <object>	# SecretTemplate configures how the secret containing the token is generated
+spec.secretTemplate.annotations <map[string]string>	# Annotations to add to the secret
+spec.secretTemplate.endpointKey <string> default="admin-endpoint"	# EndpointKey is the key name for the admin endpoint
+spec.secretTemplate.includeEndpoint <boolean>	# IncludeEndpoint includes the admin API endpoint in the secret Defaults to true if not specified
+spec.secretTemplate.labels <map[string]string>	# Labels to add to the secret
+spec.secretTemplate.name <string>	# Name is the name of the secret to create Defaults to the GarageAdminToken name
+spec.secretTemplate.tokenKey <string> default="admin-token"	# TokenKey is the key name for the admin token in the secret
+status <object>	# GarageAdminTokenStatus defines the observed state of GarageAdminToken
+status.conditions <[]object>	# Conditions represent the current state
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required) max=32768	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64 min=0	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$" min=1 max=1024	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.expiresAt <string> format=date-time	# ExpiresAt is deprecated and always cleared because static configured tokens have no Garage-side expiry record.
+status.observedGeneration <integer> format=int64	# ObservedGeneration is the last observed generation
+status.phase <string> enum=Pending|Creating|Ready|Deleting|Failed|Expired|Unknown	# Phase represents the current phase
+status.secretRef <object>	# SecretRef references the created secret
+status.secretRef.name <string>	# name is unique within a namespace to reference a secret resource.
+status.secretRef.namespace <string>	# namespace defines the space within which the secret name must be unique.
+status.tokenDigest <string>	# TokenDigest is the full SHA-256 digest of the static bearer. The controller uses it to detect mutation of an existing generated Secret without exposing any bearer bytes.
+status.tokenId <string>	# TokenID is a short display fingerprint of the generated static token. It is not a Garage-assigned dynamic token ID.
