@@ -100,7 +100,11 @@ Any `input` may carry a `releaseTag` glob (e.g. `v*`) constraining version
 resolution to the highest matching release tag, for repos where
 `/releases/latest` surfaces the wrong tag: interleaved unrelated releases
 (external-secrets' `helm-chart-*`) or two concurrent release lines (strimzi's
-`0.x` still serves `v1beta2`, its `1.x` serves `v1` only). A `crdDir` input
+`0.x` still serves `v1beta2`, its `1.x` serves `v1` only). For repos that tag
+versions but publish no GitHub releases (Keycloak's keycloak-k8s-resources),
+a `gitTag` glob (e.g. `*`) resolves the highest stable semver git tag instead,
+skipping prerelease tags (`-rc.1`) and non-version tags (`nightly`). It
+excludes `releaseTag` and cannot pair with `releaseAsset`. A `crdDir` input
 may carry an `exclude` list of basename globs for directories that vendor
 another source's CRDs (Calico vendors a `policy.networking.k8s.io_*` CRD owned
 by network-policy-api, which would trip the cross-source conflict guard); each

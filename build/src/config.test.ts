@@ -225,6 +225,39 @@ describe("parseConfig", () => {
     );
   });
 
+  test("accepts a gitTag glob alongside a non-release input kind", () => {
+    const input = { gitTag: "*", kustomize: "kubernetes" };
+    const sources = parseSources({ sources: [validSource({ input })] });
+    expect(sources[0]!).toMatchObject({ input: { gitTag: "*", kustomize: "kubernetes" } });
+  });
+
+  test("rejects an empty gitTag glob", () => {
+    const input = { gitTag: "", crdDir: "config/crd" };
+    expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
+      "input.gitTag must be a non-empty glob",
+    );
+  });
+
+  test("rejects gitTag together with releaseTag", () => {
+    const input = { gitTag: "*", releaseTag: "v*", crdDir: "config/crd" };
+    expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
+      "input.gitTag and input.releaseTag are mutually exclusive",
+    );
+  });
+
+  test("rejects gitTag with a releaseAsset input", () => {
+    const input = { gitTag: "*", releaseAsset: "crds.yaml" };
+    expect(() => parseSources({ sources: [validSource({ input })] })).toThrow(
+      "input.gitTag cannot be used with releaseAsset",
+    );
+  });
+
+  test("rejects input with only a gitTag and no source kind", () => {
+    expect(() => parseSources({ sources: [validSource({ input: { gitTag: "*" } })] })).toThrow(
+      "exactly one of: kustomize, releaseAsset, crdDir, crdFile, fluxInstance",
+    );
+  });
+
   test("rejects input with only a releaseTag and no source kind", () => {
     expect(() => parseSources({ sources: [validSource({ input: { releaseTag: "v*" } })] })).toThrow(
       "exactly one of: kustomize, releaseAsset, crdDir, crdFile, fluxInstance",

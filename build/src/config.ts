@@ -256,37 +256,49 @@ function parseInput(input: unknown, ctx: string): CrdInput {
     throw new Error(`${ctx}: input.releaseTag must be a non-empty glob`);
   }
   const releaseTag = input.releaseTag as string | undefined;
+  if (input.gitTag !== undefined && (typeof input.gitTag !== "string" || input.gitTag === "")) {
+    throw new Error(`${ctx}: input.gitTag must be a non-empty glob`);
+  }
+  const gitTag = input.gitTag as string | undefined;
+  if (gitTag !== undefined && releaseTag !== undefined) {
+    throw new Error(`${ctx}: input.gitTag and input.releaseTag are mutually exclusive`);
+  }
 
-  const kinds = Object.keys(input).filter((k) => k !== "releaseTag" && k !== "exclude");
+  const modifiers = ["releaseTag", "gitTag", "exclude"];
+  const kinds = Object.keys(input).filter((k) => !modifiers.includes(k));
   if (kinds.length !== 1 || !INPUT_KINDS.includes(kinds[0]!)) {
     throw new Error(`${ctx}: input must have exactly one of: ${INPUT_KINDS.join(", ")}`);
   }
   if (input.exclude !== undefined && kinds[0] !== "crdDir") {
     throw new Error(`${ctx}: input.exclude is only valid with crdDir`);
   }
+  if (gitTag !== undefined && kinds[0] === "releaseAsset") {
+    throw new Error(`${ctx}: input.gitTag cannot be used with releaseAsset, which needs a release`);
+  }
+  const base = { releaseTag, gitTag };
   switch (kinds[0]) {
     case "kustomize":
       if (typeof input.kustomize !== "string" || input.kustomize === "") {
         throw new Error(`${ctx}: input.kustomize must be a non-empty overlay path`);
       }
-      return { releaseTag, kustomize: input.kustomize };
+      return { ...base, kustomize: input.kustomize };
     case "releaseAsset":
       if (typeof input.releaseAsset !== "string" || input.releaseAsset === "") {
         throw new Error(`${ctx}: input.releaseAsset must be a non-empty asset name or glob`);
       }
-      return { releaseTag, releaseAsset: input.releaseAsset };
+      return { ...base, releaseAsset: input.releaseAsset };
     case "crdDir":
       if (typeof input.crdDir !== "string" || input.crdDir === "") {
         throw new Error(`${ctx}: input.crdDir must be a non-empty repo directory path`);
       }
-      return { releaseTag, crdDir: input.crdDir, exclude: parseExclude(input.exclude, ctx) };
+      return { ...base, crdDir: input.crdDir, exclude: parseExclude(input.exclude, ctx) };
     case "crdFile":
       if (typeof input.crdFile !== "string" || input.crdFile === "") {
         throw new Error(`${ctx}: input.crdFile must be a non-empty repo file path`);
       }
-      return { releaseTag, crdFile: input.crdFile };
+      return { ...base, crdFile: input.crdFile };
     default:
-      return { releaseTag, fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
+      return { ...base, fluxInstance: parseFluxInstance(input.fluxInstance, ctx) };
   }
 }
 

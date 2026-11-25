@@ -16,6 +16,7 @@ import {
   normalizeVersion,
   openshiftRef,
   hasStableRelease,
+  pickLatestGitTag,
   pickLatestRelease,
   sourceRef,
 } from "./resolve.ts";
@@ -337,6 +338,29 @@ describe("pickLatestRelease", () => {
     ];
     expect(pickLatestRelease(releases, "vertical-pod-autoscaler-*")).toBe(
       "vertical-pod-autoscaler-1.10.0",
+    );
+  });
+});
+
+describe("pickLatestGitTag", () => {
+  test("picks the highest semver bare tag and skips non-version tags", () => {
+    const tags = ["18.0.0", "26.8.2", "26.10.0", "nightly", "26.8.1"];
+    expect(pickLatestGitTag(tags, "*")).toBe("26.10.0");
+  });
+
+  test("skips semver prerelease tags", () => {
+    const tags = ["v2.0.0-rc.1", "v1.9.0", "v2.0.0-alpha"];
+    expect(pickLatestGitTag(tags, "v*")).toBe("v1.9.0");
+  });
+
+  test("ignores tags that do not match the glob", () => {
+    const tags = ["chart-3.0.0", "v1.2.0", "operator/v9.0.0"];
+    expect(pickLatestGitTag(tags, "v*")).toBe("v1.2.0");
+  });
+
+  test("throws when no git tag matches the glob", () => {
+    expect(() => pickLatestGitTag(["nightly", "v1.0.0-rc.1"], "*")).toThrow(
+      "no git tag matches '*'",
     );
   });
 });

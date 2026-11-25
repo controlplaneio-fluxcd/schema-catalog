@@ -30,6 +30,14 @@ interface CrdInputBase {
    * releases alongside the app `v*` releases). Ignored when `version` is pinned.
    */
   releaseTag?: string;
+  /**
+   * Optional glob resolving the version from git tags instead of GitHub
+   * releases, for repos that tag versions but publish no releases (Keycloak's
+   * keycloak-k8s-resources). Picks the highest stable semver tag matching the
+   * glob. Mutually exclusive with `releaseTag` and `releaseAsset`. Ignored when
+   * `version` is pinned.
+   */
+  gitTag?: string;
 }
 
 /**

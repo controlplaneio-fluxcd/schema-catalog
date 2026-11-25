@@ -1,7 +1,15 @@
 // Copyright 2026 Stefan Prodan.
 // SPDX-License-Identifier: AGPL-3.0
 
-import { fetchRetry, httpError, latestReleaseTag, listReleases, matchAsset, type Release } from "./github.ts";
+import {
+  fetchRetry,
+  httpError,
+  latestReleaseTag,
+  listReleases,
+  listTags,
+  matchAsset,
+  type Release,
+} from "./github.ts";
 import { repoOf } from "./config.ts";
 import type { Source } from "./types.ts";
 
@@ -17,8 +25,9 @@ const OPENSHIFT_PROBE_FLOOR = 20;
 /**
  * Resolves the version a source should be built at: the explicit pin when
  * set, otherwise the latest GA OpenShift release from the Cincinnati upgrade
- * graph for extract: openshift, otherwise the latest GitHub release of the
- * source repo.
+ * graph for extract: openshift, otherwise the highest git tag matching
+ * input.gitTag, the highest release matching input.releaseTag, or the latest
+ * GitHub release of the source repo.
  *
  * A pin and the OpenShift release are normalized to a 'v' prefix (vX.Y.Z;
  * OpenShift: vX.Y). A resolved GitHub tag is returned verbatim: for crd
@@ -33,9 +42,12 @@ export async function resolveVersion(source: Source): Promise<string> {
     return `v${await latestOpenShiftGA()}`;
   }
   const repo = repoOf(source);
-  const releaseTag = source.extract === "crd" ? source.input.releaseTag : undefined;
-  if (releaseTag !== undefined) {
-    return pickLatestRelease(await listReleases(repo), releaseTag);
+  const input = source.extract === "crd" ? source.input : undefined;
+  if (input?.gitTag !== undefined) {
+    return pickLatestGitTag(await listTags(repo, globPrefix(input.gitTag)), input.gitTag);
+  }
+  if (input?.releaseTag !== undefined) {
+    return pickLatestRelease(await listReleases(repo), input.releaseTag);
   }
   return await latestReleaseTag(repo);
 }
@@ -56,16 +68,39 @@ export async function resolveVersion(source: Source): Promise<string> {
  * patch of an older line never wins.
  */
 export function pickLatestRelease(releases: Release[], pattern: string): string {
-  const prefix = pattern.includes("*") ? pattern.slice(0, pattern.indexOf("*")) : pattern;
-  const tags = releases
-    .filter((r) => !r.draft && !r.prerelease && matchAsset(pattern, r.tag_name))
-    .filter((r) => /^\d/.test(r.tag_name.slice(prefix.length)))
-    .map((r) => r.tag_name);
-  if (tags.length === 0) {
-    throw new Error(`no release tag matches '${pattern}'`);
+  const tags = releases.filter((r) => !r.draft && !r.prerelease).map((r) => r.tag_name);
+  return pickHighestTag(tags, pattern, "release tag");
+}
+
+/**
+ * Picks the highest stable semver git tag matching a glob, for repos that tag
+ * versions but publish no GitHub releases (Keycloak's keycloak-k8s-resources).
+ * Tags carry no prerelease flag, so a semver prerelease suffix (`-rc.1`)
+ * stands in for it; non-version tags like `nightly` fail the digit check.
+ */
+export function pickLatestGitTag(tags: string[], pattern: string): string {
+  return pickHighestTag(
+    tags.filter((t) => !semverOf(t).includes("-")),
+    pattern,
+    "git tag",
+  );
+}
+
+function pickHighestTag(tags: string[], pattern: string, what: string): string {
+  const prefix = globPrefix(pattern);
+  const matched = tags
+    .filter((t) => matchAsset(pattern, t))
+    .filter((t) => /^\d/.test(t.slice(prefix.length)));
+  if (matched.length === 0) {
+    throw new Error(`no ${what} matches '${pattern}'`);
   }
-  tags.sort((a, b) => Bun.semver.order(semverOf(a), semverOf(b)));
-  return tags.at(-1)!;
+  matched.sort((a, b) => Bun.semver.order(semverOf(a), semverOf(b)));
+  return matched.at(-1)!;
+}
+
+/** The literal part of a tag glob before its first wildcard. */
+function globPrefix(pattern: string): string {
+  return pattern.includes("*") ? pattern.slice(0, pattern.indexOf("*")) : pattern;
 }
 
 /** The semver embedded in a release tag (`vertical-pod-autoscaler-1.7.0` → `1.7.0`). */
