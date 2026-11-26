@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-129-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C764-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-695%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-131-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C767-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-695%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -308,6 +308,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Fluent Operator](https://schemas.fluxoperator.dev/p/fluent-operator) | `fluent-operator` | v3.11.0 | 22 | 2026-11-20 |
 | [Grafana Operator](https://schemas.fluxoperator.dev/p/grafana-operator) | `grafana-operator` | v5.26.0 | 14 | 2026-11-20 |
 | [Jaeger Operator](https://schemas.fluxoperator.dev/p/jaeger-operator) | `jaeger-operator` | v1.65.0 | 1 | 2026-11-20 |
+| [Kiali Operator](https://schemas.fluxoperator.dev/p/kiali-operator) | `kiali-operator` | v2.35.0 | 2 | 2026-11-26 |
 | [Litmus](https://schemas.fluxoperator.dev/p/litmus) | `litmus` | 3.34.0 | 3 | 2026-11-20 |
 | [Logging Operator](https://schemas.fluxoperator.dev/p/logging-operator) | `logging-operator` | 6.9.0 | 21 | 2026-11-20 |
 | [Loki Operator](https://schemas.fluxoperator.dev/p/loki-operator) | `loki-operator` | v0.12.0 | 9 | 2026-11-20 |
@@ -315,6 +316,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [OpenTelemetry Operator](https://schemas.fluxoperator.dev/p/opentelemetry) | `opentelemetry` | v0.164.0 | 5 | 2026-11-26 |
 | [Perses Operator](https://schemas.fluxoperator.dev/p/perses-operator) | `perses-operator` | v0.6.1 | 7 | 2026-11-20 |
 | [Prometheus Operator](https://schemas.fluxoperator.dev/p/prometheus-operator) | `prometheus-operator` | v0.95.2 | 10 | 2026-11-20 |
+| [Sloth](https://schemas.fluxoperator.dev/p/sloth) | `sloth` | v0.16.0 | 1 | 2026-11-26 |
 | [Tempo Operator](https://schemas.fluxoperator.dev/p/tempo-operator) | `tempo-operator` | v0.24.0 | 2 | 2026-11-24 |
 | [VictoriaMetrics Operator](https://schemas.fluxoperator.dev/p/victoriametrics-operator) | `victoriametrics-operator` | v0.75.2 | 26 | 2026-11-20 |
 <!-- versions:end -->
