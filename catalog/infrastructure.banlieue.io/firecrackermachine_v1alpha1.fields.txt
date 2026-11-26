@@ -1,0 +1,52 @@
+# schema source: Banlieue v0.6.0 https://github.com/firestoned/banlieue
+apiVersion <string> enum=infrastructure.banlieue.io/v1alpha1
+kind <string> enum=FirecrackerMachine
+metadata.name <string> (required)
+metadata.namespace <string> (required)
+spec <object> (required)	# FirecrackerMachine: the concrete, scheduled microVM request for a Firecracker host. You normally do not create this by hand: banlieue's controller does, owned by the `VirtualMachine` it was scheduled from, and the host-resident provider on the chosen host runs it as a Firecracker guest.
+spec.desiredPowerState <string> enum=PoweredOn|PoweredOff|Suspended default="PoweredOn"	# Desired power state, resolved from the parent `VirtualMachine`.
+spec.failureDomain <string>	# CAPI contract (optional): failure domain placement. One host is one failure domain on this backend.
+spec.image <string> (required)	# The image to boot: `<repository>@sha256:<manifest digest>`, the resolved `ref` of the `VMImage`'s `OciArtifact` source (ADR-0142 Decision 2). The host pulls only a digest in the repository it pins; the cluster says which image, never where images may come from.
+spec.memoryMiB <integer> (required) min=128 max=1048576	# Guest memory in MiB. Fixed at boot, and must cover the image's RAM overlay as well as its working set (ADR-0142 Decision 4): the provider refuses a value below the image's declared minimum.
+spec.nics <[]object> (required) max=8	# Network interfaces. One tap each, on the host's private bridge for the network class (ADR-0137 Decision 5).
+spec.nics[].ipam <object> (required)	# IP address management for this interface. The address and gateway are passed to the guest on its kernel command line (ADR-0137 Decision 5).
+spec.nics[].ipam.pool <object>	# Pool-based IPAM parameters.
+spec.nics[].ipam.pool.poolRef <object> (required)	# Typed reference (apiGroup + kind + name + optional namespace). Used wherever the referenced kind is pluggable — e.g. IPAM pools, where we want to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's default) or future banlieue-native pool types.
+spec.nics[].ipam.pool.poolRef.apiGroup <string> (required)
+spec.nics[].ipam.pool.poolRef.kind <string> (required)
+spec.nics[].ipam.pool.poolRef.name <string> (required)
+spec.nics[].ipam.pool.poolRef.namespace <string>
+spec.nics[].ipam.static <object>	# Static IPAM parameters (address, prefix, gateway, nameservers, domain).
+spec.nics[].ipam.static.address <string> (required)
+spec.nics[].ipam.static.domain <string>	# DNS domain, used both as a DNS search domain and (by a `VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build an FQDN as `<vm-name>.<domain>`.
+spec.nics[].ipam.static.gateway <string>
+spec.nics[].ipam.static.nameservers <[]string>
+spec.nics[].ipam.static.prefix <integer> (required) min=0 max=255
+spec.nics[].macAddress <string>	# Optional MAC address. The provider derives a stable one from the machine UID otherwise.
+spec.nics[].name <string> (required)	# Stable NIC name; echoed in status.
+spec.nics[].networkClass <string> (required)	# Network class: a name the host resolves to one of its bridges. Never a bridge name from the cluster.
+spec.providerID <string>	# CAPI contract: Provider ID for the resulting Node, if this VM becomes a Kubernetes node. Format: `firecracker://<provider-name>/<machine-uid>`. Set by the provider once the guest exists.
+spec.providerRef <object> (required)	# The `Provider` for the one host that runs this machine. Shared-capable from the first commit (ADR-0133): the namespace may name a `Provider` outside the machine's own, which only `banlieue-controller` may set.
+spec.providerRef.name <string> (required)	# Name of the `Provider`.
+spec.providerRef.namespace <string>	# Namespace of the `Provider`. Defaults to the referrer's namespace. Only `banlieue-controller` may set this: a machine naming a provider in another namespace is a placement that skipped scheduling, so an admission policy reserves the field to the controller's identity.
+spec.userData <string>	# Guest bootstrap payload, already resolved and placeholder-substituted by `banlieue-controller` (ADR-0025, ADR-0038). Rendered into a NoCloud seed drive, attached read-only second; the provider reads no Secret or ConfigMap (ADR-0137 Decision 4, ADR-0054).
+spec.vcpus <integer> (required) min=1 max=32	# Virtual CPUs. Fixed at boot: there is no hotplug (ADR-0137 Decision 7), so a `VMClass` change is a `Recreate`.
+status <object>	# Observed state of a FirecrackerMachine, shaped to the CAPI v1beta2 InfraMachine status contract. The non-contract fields mean what they mean on `CloudHypervisorMachineStatus`, so the controller's status mirror treats both backends alike.
+status.addresses <[]object>	# CAPI contract field (optional): VM addresses. Known before boot, from IPAM (ADR-0024, ADR-0033).
+status.addresses[].address <string> (required)	# The address itself.
+status.addresses[].type <string> (required) enum=Hostname|ExternalIP|InternalIP|ExternalDNS|InternalDNS	# Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.
+status.attestationSubject <string>	# The exact certificate subject CN the host's signer sets for this guest: this machine's `metadata.uid`, never a value from the guest (ADR-0143 Decision 3). Public and carrying no authorization; mirrored onto the bound claim so mediatore can compute the node entry's parent before the guest boots. This class has no vTPM, so this replaces the EK certificate as the published attestation fact.
+status.conditions <[]object>	# Standard Kubernetes conditions.
+status.conditions[].lastTransitionTime <string> (required) format=date-time	# lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.
+status.conditions[].message <string> (required)	# message is a human readable message indicating details about the transition. This may be an empty string.
+status.conditions[].observedGeneration <integer> format=int64	# observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+status.conditions[].reason <string> (required)	# reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+status.conditions[].status <string> (required)	# status of the condition, one of True, False, Unknown.
+status.conditions[].type <string> (required)	# type of condition in CamelCase or in foo.example.com/CamelCase.
+status.failureDomain <string>	# CAPI contract field (optional): observed failure domain.
+status.guestInstalled <boolean>	# Whether the guest has announced readiness over its vsock (ADR-0137 Decision 6). Sticky once true.
+status.hostUid <integer> min=0	# The unprivileged host uid this machine's unit runs as (ADR-0063 Decision 3). Recorded so the provider re-adopts a running guest without trusting its own memory.
+status.initialization <object> default={}	# CAPI contract field.
+status.initialization.provisioned <boolean>	# True when the infrastructure provider reports that the resource's infrastructure is fully provisioned.
+status.observedGeneration <integer> format=int64	# The `metadata.generation` this status was computed from.
+status.observedPowerState <string> enum=PoweredOn|PoweredOff|Suspended|null	# The VM's last observed run state.

@@ -1,0 +1,342 @@
+{
+  "additionalProperties": false,
+  "description": "FirecrackerMachine: the concrete, scheduled microVM request for a\nFirecracker host.\n\nYou normally do not create this by hand: banlieue's controller does, owned\nby the `VirtualMachine` it was scheduled from, and the host-resident\nprovider on the chosen host runs it as a Firecracker guest.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "FirecrackerMachine: the concrete, scheduled microVM request for a\nFirecracker host.\n\nYou normally do not create this by hand: banlieue's controller does, owned\nby the `VirtualMachine` it was scheduled from, and the host-resident\nprovider on the chosen host runs it as a Firecracker guest.",
+      "properties": {
+        "desiredPowerState": {
+          "default": "PoweredOn",
+          "description": "Desired power state, resolved from the parent `VirtualMachine`.",
+          "enum": [
+            "PoweredOn",
+            "PoweredOff",
+            "Suspended"
+          ],
+          "type": "string"
+        },
+        "failureDomain": {
+          "description": "CAPI contract (optional): failure domain placement. One host is one\nfailure domain on this backend.",
+          "nullable": true,
+          "type": "string"
+        },
+        "image": {
+          "description": "The image to boot: `<repository>@sha256:<manifest digest>`, the\nresolved `ref` of the `VMImage`'s `OciArtifact` source (ADR-0142\nDecision 2). The host pulls only a digest in the repository it pins;\nthe cluster says which image, never where images may come from.",
+          "type": "string"
+        },
+        "memoryMiB": {
+          "description": "Guest memory in MiB. Fixed at boot, and must cover the image's RAM\noverlay as well as its working set (ADR-0142 Decision 4): the provider\nrefuses a value below the image's declared minimum.",
+          "maximum": 1048576,
+          "minimum": 128,
+          "type": "integer"
+        },
+        "nics": {
+          "description": "Network interfaces. One tap each, on the host's private bridge for the\nnetwork class (ADR-0137 Decision 5).",
+          "items": {
+            "additionalProperties": false,
+            "description": "One network interface.",
+            "properties": {
+              "ipam": {
+                "additionalProperties": false,
+                "description": "IP address management for this interface. The address and gateway are\npassed to the guest on its kernel command line (ADR-0137 Decision 5).",
+                "properties": {
+                  "pool": {
+                    "additionalProperties": false,
+                    "description": "Pool-based IPAM parameters.",
+                    "nullable": true,
+                    "properties": {
+                      "poolRef": {
+                        "additionalProperties": false,
+                        "description": "Typed reference (apiGroup + kind + name + optional namespace).\n\nUsed wherever the referenced kind is pluggable — e.g. IPAM pools, where we\nwant to accept either `ipam.cluster.x-k8s.io/IPAddressClaim` (CAPI's\ndefault) or future banlieue-native pool types.",
+                        "properties": {
+                          "apiGroup": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "namespace": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "apiGroup",
+                          "kind",
+                          "name"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "poolRef"
+                    ],
+                    "type": "object"
+                  },
+                  "static": {
+                    "additionalProperties": false,
+                    "description": "Static IPAM parameters (address, prefix, gateway, nameservers, domain).",
+                    "nullable": true,
+                    "properties": {
+                      "address": {
+                        "type": "string"
+                      },
+                      "domain": {
+                        "description": "DNS domain, used both as a DNS search domain and (by a\n`VirtualMachine.spec.networkOverrides` consumer, ADR-0024) to build\nan FQDN as `<vm-name>.<domain>`.",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "gateway": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "nameservers": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "prefix": {
+                        "maximum": 255,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "prefix"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "macAddress": {
+                "description": "Optional MAC address. The provider derives a stable one from the\nmachine UID otherwise.",
+                "nullable": true,
+                "type": "string"
+              },
+              "name": {
+                "description": "Stable NIC name; echoed in status.",
+                "type": "string"
+              },
+              "networkClass": {
+                "description": "Network class: a name the host resolves to one of its bridges. Never a\nbridge name from the cluster.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "ipam",
+              "name",
+              "networkClass"
+            ],
+            "type": "object"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "providerID": {
+          "description": "CAPI contract: Provider ID for the resulting Node, if this VM becomes\na Kubernetes node. Format: `firecracker://<provider-name>/<machine-uid>`.\nSet by the provider once the guest exists.",
+          "nullable": true,
+          "type": "string"
+        },
+        "providerRef": {
+          "additionalProperties": false,
+          "description": "The `Provider` for the one host that runs this machine. Shared-capable\nfrom the first commit (ADR-0133): the namespace may name a `Provider`\noutside the machine's own, which only `banlieue-controller` may set.",
+          "properties": {
+            "name": {
+              "description": "Name of the `Provider`.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the `Provider`. Defaults to the referrer's namespace.\n\nOnly `banlieue-controller` may set this: a machine naming a provider in\nanother namespace is a placement that skipped scheduling, so an\nadmission policy reserves the field to the controller's identity.",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "userData": {
+          "description": "Guest bootstrap payload, already resolved and placeholder-substituted\nby `banlieue-controller` (ADR-0025, ADR-0038). Rendered into a NoCloud\nseed drive, attached read-only second; the provider reads no Secret or\nConfigMap (ADR-0137 Decision 4, ADR-0054).",
+          "nullable": true,
+          "type": "string"
+        },
+        "vcpus": {
+          "description": "Virtual CPUs. Fixed at boot: there is no hotplug (ADR-0137 Decision 7),\nso a `VMClass` change is a `Recreate`.",
+          "maximum": 32,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "image",
+        "memoryMiB",
+        "nics",
+        "providerRef",
+        "vcpus"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "additionalProperties": false,
+      "description": "Observed state of a FirecrackerMachine, shaped to the CAPI v1beta2\nInfraMachine status contract. The non-contract fields mean what they mean\non `CloudHypervisorMachineStatus`, so the controller's status mirror\ntreats both backends alike.",
+      "nullable": true,
+      "properties": {
+        "addresses": {
+          "description": "CAPI contract field (optional): VM addresses. Known before boot, from\nIPAM (ADR-0024, ADR-0033).",
+          "items": {
+            "additionalProperties": false,
+            "description": "A typed machine address. Mirrors CAPI's `clusterv1.MachineAddress`.",
+            "properties": {
+              "address": {
+                "description": "The address itself.",
+                "type": "string"
+              },
+              "type": {
+                "description": "Address type. Accepted: Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS.",
+                "enum": [
+                  "Hostname",
+                  "ExternalIP",
+                  "InternalIP",
+                  "ExternalDNS",
+                  "InternalDNS"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "attestationSubject": {
+          "description": "The exact certificate subject CN the host's signer sets for this\nguest: this machine's `metadata.uid`, never a value from the guest\n(ADR-0143 Decision 3). Public and carrying no authorization; mirrored\nonto the bound claim so mediatore can compute the node entry's parent\nbefore the guest boots. This class has no vTPM, so this replaces the\nEK certificate as the published attestation fact.",
+          "nullable": true,
+          "type": "string"
+        },
+        "conditions": {
+          "description": "Standard Kubernetes conditions.",
+          "items": {
+            "additionalProperties": false,
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition. This may be an empty string.",
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "failureDomain": {
+          "description": "CAPI contract field (optional): observed failure domain.",
+          "nullable": true,
+          "type": "string"
+        },
+        "guestInstalled": {
+          "description": "Whether the guest has announced readiness over its vsock (ADR-0137\nDecision 6). Sticky once true.",
+          "nullable": true,
+          "type": "boolean"
+        },
+        "hostUid": {
+          "description": "The unprivileged host uid this machine's unit runs as (ADR-0063\nDecision 3). Recorded so the provider re-adopts a running guest without\ntrusting its own memory.",
+          "minimum": 0,
+          "nullable": true,
+          "type": "integer"
+        },
+        "initialization": {
+          "additionalProperties": false,
+          "default": {},
+          "description": "CAPI contract field.",
+          "properties": {
+            "provisioned": {
+              "description": "True when the infrastructure provider reports that the resource's\ninfrastructure is fully provisioned.",
+              "nullable": true,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "observedGeneration": {
+          "description": "The `metadata.generation` this status was computed from.",
+          "format": "int64",
+          "nullable": true,
+          "type": "integer"
+        },
+        "observedPowerState": {
+          "description": "The VM's last observed run state.",
+          "enum": [
+            "PoweredOn",
+            "PoweredOff",
+            "Suspended",
+            null
+          ],
+          "nullable": true,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "FirecrackerMachine",
+  "type": "object",
+  "x-flux-schema-type": "FirecrackerMachine"
+}

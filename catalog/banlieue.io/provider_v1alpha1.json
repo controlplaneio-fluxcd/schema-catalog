@@ -24,7 +24,61 @@
           "properties": {
             "ekTrustBundle": {
               "additionalProperties": false,
-              "description": "PEM bundle of CA certificates trusted to issue this backend's vTPM\nendorsement-key certificates. Provenance differs per backend\n(ADR-0045): on vSphere the issuing CA is vCenter's; on libvirt it is\neach host's `swtpm_localca` issuer certificate, one entry per host.\n\nSame value-or-source shape as `connection.caBundle`: exactly one of\n`inline`, `configMapRef`, `secretRef` must be set (see\n`CABundleSource`); references resolve in the Provider's namespace.\nRemoval of an issuer from this bundle is the revocation mechanism on\nlibvirt — swtpm EK certificates never expire.",
+              "description": "PEM bundle of CA certificates trusted to issue this backend's vTPM\nendorsement-key certificates. Provenance differs per backend\n(ADR-0045): on vSphere the issuing CA is vCenter's; on libvirt it is\neach host's `swtpm_localca` issuer certificate, one entry per host.\n\nSame value-or-source shape as `connection.caBundle`: exactly one of\n`inline`, `configMapRef`, `secretRef` must be set (see\n`CABundleSource`); references resolve in the Provider's namespace.\nRemoval of an issuer from this bundle is the revocation mechanism on\nlibvirt: swtpm EK certificates never expire. Not used by the\n`firecracker` class, which has no vTPM.",
+              "nullable": true,
+              "properties": {
+                "configMapRef": {
+                  "additionalProperties": false,
+                  "description": "Key in a ConfigMap in the referrer's namespace (key defaults to `ca.crt`).",
+                  "nullable": true,
+                  "properties": {
+                    "key": {
+                      "description": "Key within the object's `data`. Defaults are caller-defined.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "inline": {
+                  "description": "Inline PEM (one or more concatenated certificates).",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "secretRef": {
+                  "additionalProperties": false,
+                  "description": "Key in a Secret in the referrer's namespace (key defaults to `ca.crt`).",
+                  "nullable": true,
+                  "properties": {
+                    "key": {
+                      "description": "Key within the object's `data`. Defaults are caller-defined.",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name of the ConfigMap / Secret in the referrer's namespace.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "hostCa": {
+              "additionalProperties": false,
+              "description": "For the `firecracker` class: the host's attestation CA (ADR-0143\nDecision 2), the one certificate whose key signs the short-lived\ncertificates the host issues to its guests. Asserted here by the\nadministrator who installed the host, never discovered from the\nhost's own status (ADR-0049 Decision 10).\n\nSame value-or-source shape as `ekTrustBundle`, but it must hold\n**exactly one** certificate and no private key: an inline source is\nchecked by `validate`. banlieue neither resolves nor\nverifies against it. Revocation is removing it here and from the SPIRE\nbundle.",
+              "nullable": true,
               "properties": {
                 "configMapRef": {
                   "additionalProperties": false,
@@ -75,9 +129,6 @@
               "type": "object"
             }
           },
-          "required": [
-            "ekTrustBundle"
-          ],
           "type": "object"
         },
         "capabilities": {

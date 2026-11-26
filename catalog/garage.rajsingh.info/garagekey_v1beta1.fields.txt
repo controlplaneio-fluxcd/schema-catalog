@@ -1,4 +1,4 @@
-# schema source: Garage Operator v0.9.2 https://github.com/rajsinghtech/garage-operator
+# schema source: Garage Operator v0.9.3 https://github.com/rajsinghtech/garage-operator
 apiVersion <string> enum=garage.rajsingh.info/v1beta1
 kind <string> enum=GarageKey
 metadata.name <string> (required)
@@ -22,19 +22,19 @@ spec.clusterRef.kubeConfigSecretRef <object>	# KubeConfigSecretRef is reserved f
 spec.clusterRef.kubeConfigSecretRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.clusterRef.kubeConfigSecretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.clusterRef.kubeConfigSecretRef.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.clusterRef.name <string> (required)	# Name of the GarageCluster resource.
-spec.clusterRef.namespace <string>	# Namespace of the GarageCluster. Defaults to the referencing resource's namespace. Cross-namespace references require a GarageReferenceGrant where supported by the owning resource. GarageNode and GarageAdminToken reject them.
+spec.clusterRef.name <string> (required) max=253	# Name of the GarageCluster resource.
+spec.clusterRef.namespace <string> max=63	# Namespace of the GarageCluster. Defaults to the referencing resource's namespace. Cross-namespace references require a GarageReferenceGrant where supported by the owning resource. GarageNode and GarageAdminToken reject them.
 spec.expiresAt <string> format=date-time	# ExpiresAt sets when this key expires. After this time Garage will reject requests using the key. The operator sets the KeyExpired condition when expired but does NOT automatically delete or rotate the key. Mutually exclusive with neverExpires.
 spec.importKey <object>	# ImportKey imports an existing key instead of generating new credentials
-spec.importKey.accessKeyId <string>	# AccessKeyID is the existing Garage access key ID. Garage v2.3 and newer accept at least 8 characters from ASCII letters, digits, '-', '_' and '.' (so keys from other S3 providers can be migrated). Garage v2.0 to v2.2 accept only "GK" followed by 24 hex characters and reject anything else with a 400 that is reported in the Ready condition. Use secretRef instead to avoid storing credentials in the CR.
+spec.importKey.accessKeyId <string> max=256	# AccessKeyID is the existing Garage access key ID. Garage v2.3 and newer accept at least 8 characters from ASCII letters, digits, '-', '_' and '.' (so keys from other S3 providers can be migrated). Garage v2.0 to v2.2 accept only "GK" followed by 24 hex characters and reject anything else with a 400 that is reported in the Ready condition. Use secretRef instead to avoid storing credentials in the CR.
 spec.importKey.accessKeyIdKey <string>	# AccessKeyIDKey is the key name within secretRef for the access key ID. Defaults to "access-key-id". Only valid when secretRef is set.
-spec.importKey.secretAccessKey <string>	# SecretAccessKey is the existing secret access key. Garage v2.3 and newer accept at least 16 graphic ASCII characters (U+0021 to U+007E: no spaces, control characters or non-ASCII text). Garage v2.0 to v2.2 accept only 64 hex characters and reject anything else with a 400 that is reported in the Ready condition. Use secretRef instead to avoid storing credentials in the CR.
+spec.importKey.secretAccessKey <string> max=512	# SecretAccessKey is the existing secret access key. Garage v2.3 and newer accept at least 16 graphic ASCII characters (U+0021 to U+007E: no spaces, control characters or non-ASCII text). Garage v2.0 to v2.2 accept only 64 hex characters and reject anything else with a 400 that is reported in the Ready condition. Use secretRef instead to avoid storing credentials in the CR.
 spec.importKey.secretAccessKeyKey <string>	# SecretAccessKeyKey is the key name within secretRef for the secret access key. Defaults to "secret-access-key". Only valid when secretRef is set.
 spec.importKey.secretRef <object>	# SecretRef references a Kubernetes secret containing the credentials. Mutually exclusive with inline accessKeyId/secretAccessKey. The namespace must be empty or match the GarageKey namespace.
 spec.importKey.secretRef.name <string>	# name is unique within a namespace to reference a secret resource.
 spec.importKey.secretRef.namespace <string>	# namespace defines the space within which the secret name must be unique.
 spec.name <string>	# Name is a friendly name for this access key If not set, metadata.name is used
-spec.neverExpires <boolean>	# NeverExpires explicitly marks this key as having no expiration. Sets the Garage key expiration to "never" rather than leaving it unset. Mutually exclusive with expiration.
+spec.neverExpires <boolean>	# NeverExpires explicitly marks this key as having no expiration. Sets the Garage key expiration to "never" rather than leaving it unset. Mutually exclusive with expiresAt.
 spec.permissions <object>	# Permissions configures key-level permissions Note: For admin API access, use admin tokens configured in GarageCluster
 spec.permissions.createBucket <boolean> default=false	# CreateBucket allows this key to create new buckets via the S3 CreateBucket API
 spec.secretTemplate <object>	# SecretTemplate configures how the secret is generated
@@ -76,7 +76,7 @@ status.conditions[].reason <string> (required) pattern="^[A-Za-z]([A-Za-z0-9_,:]
 status.conditions[].status <string> (required) enum=True|False|Unknown	# status of the condition, one of True, False, Unknown.
 status.conditions[].type <string> (required) pattern="^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$" max=316	# type of condition in CamelCase or in foo.example.com/CamelCase.
 status.createdAt <string> format=date-time	# CreatedAt is when the key was created in Garage
-status.effectivePermissions <[]object>	# EffectivePermissions is retained for API compatibility but is not currently populated. Status.Buckets reports Garage's authoritative effective bucket access.
+status.effectivePermissions <[]object>	# EffectivePermissions is retained for API compatibility but is not currently populated. Status.Buckets reports Garage's authoritative effective bucket access. Deprecated: never populated by the operator. It will be removed in the next API version.
 status.effectivePermissions[].bucketAlias <string>	# BucketAlias is the bucket's global alias (if set)
 status.effectivePermissions[].bucketId <string>	# BucketID is the bucket ID
 status.effectivePermissions[].owner <boolean> default=false	# Owner permission

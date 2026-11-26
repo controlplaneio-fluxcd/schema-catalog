@@ -1,4 +1,4 @@
-# schema source: Banlieue v0.5.10 https://github.com/firestoned/banlieue
+# schema source: Banlieue v0.6.0 https://github.com/firestoned/banlieue
 apiVersion <string> enum=banlieue.io/v1alpha1
 kind <string> enum=VMImage (cluster-scoped)
 metadata.name <string> (required)
@@ -26,9 +26,9 @@ spec.prelay.diskSizeGiB <integer> (required) min=10 max=65536	# The clones' OS d
 spec.sources <[]object> (required)	# Per-provider source mappings — one backend binding for this catalog entry per `providerClass` you intend to schedule VMs onto ("one name, many backends", see the type-level doc comment above). `x-kubernetes-list-type: map` keyed on `providerClass`: the API server rejects a second entry for a `providerClass` that already has one, rather than leaving it to `find_url_source` / `find_vsphere_source` to silently pick whichever came first.
 spec.sources[].checksum <string>	# Optional checksum for imported images. Format: `<alg>:<hex>`, e.g. `sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b...`. Supported algorithms: `sha256`, `sha512`. Provider import Jobs verify the built artifact against this value before writing it to the backend and fail closed on mismatch or an unsupported algorithm.
 spec.sources[].importFrom <string>	# Optional source URL. When set, providers that support image import will pull from here if the image isn't already present locally.
-spec.sources[].kind <string> (required) enum=Template|BackingFile|Url	# What kind of backend artifact `ref` refers to.
+spec.sources[].kind <string> (required) enum=Template|BackingFile|Url|OciArtifact	# What kind of backend artifact `ref` refers to.
 spec.sources[].providerClass <string> (required)	# Name of the ProviderClass this source applies to. Conventional values: `vsphere`, `proxmox`, `libvirt`.
-spec.sources[].ref <string> (required)	# Provider-interpreted reference: vsphere + Template: template name e.g. "ubuntu-22.04-cloudinit" proxmox + Template: template VMID e.g. "9000" libvirt + BackingFile: path e.g. "/var/lib/libvirt/images/ubuntu.qcow2" * + Url: ignored; uses `importFrom`
+spec.sources[].ref <string> (required)	# Provider-interpreted reference: vsphere + Template: template name e.g. "ubuntu-22.04-cloudinit" proxmox + Template: template VMID e.g. "9000" libvirt + BackingFile: path e.g. "/var/lib/libvirt/images/ubuntu.qcow2" firecracker + OciArtifact: `<repository>@sha256:<manifest digest>` * + Url: ignored; uses `importFrom`
 spec.template <object>	# How the backend **template** is built from a `Url` source (root folder, network, disk, CPU / memory / firmware / NIC, force knobs). Every field is optional and falls back to a built-in default. Only meaningful for `Url` sources, with one exception: for a vSphere `Template` source (an existing template banlieue adopts and never builds) only `rootFolder` is read, to find the template in `<rootFolder>/<failure-domain>`; every other field is ignored. Ignored for `BackingFile`. See `VMImageTemplate`, ADR-0020 and ADR-0104.
 spec.template.cpus <integer> format=int32	# Virtual CPU count of the template (`govc vm.create -c`). When unset, defaults to 2. vSphere-only.
 spec.template.disk <object>	# Install disk of the template (the clone source's disk). When unset, a thin 100 GiB disk on a pvscsi controller is used.

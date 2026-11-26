@@ -1,4 +1,4 @@
-# schema source: Garage Operator v0.9.2 https://github.com/rajsinghtech/garage-operator
+# schema source: Garage Operator v0.9.3 https://github.com/rajsinghtech/garage-operator
 apiVersion <string> enum=garage.rajsingh.info/v1beta2
 kind <string> enum=GarageCluster
 metadata.name <string> (required)
@@ -452,11 +452,12 @@ spec.imageRepository <string>	# ImageRepository overrides just the repository po
 spec.k2vApi <object>	# K2VAPI configures the K2V (key-value) API endpoint. Omit to disable K2V.
 spec.k2vApi.bindAddress <string>	# BindAddress is a custom wildcard TCP bind address for the K2V API.
 spec.k2vApi.bindPort <integer> default=3904 format=int32 min=1 max=65535	# BindPort is the port to bind for K2V API.
+spec.k2vApi.publicEndpoint <string>	# PublicEndpoint is the public K2V URL advertised in auto-generated client configurations (Garage k2v_api.public_endpoint). Must be a complete URL with a scheme and host, for example "https://k2v.example.com". There is no default. Rendered only for Garage v2.5.0 and newer; older tagged images skip the key and admission warns.
 spec.layoutManagement <object>	# LayoutManagement controls automatic layout application behavior.
 spec.layoutManagement.autoApply <boolean>	# AutoApply automatically applies staged layout changes.
 spec.layoutManagement.drain <object>	# Drain configures the fail-closed boundary for positive-capacity removal across the canonical Garage layout. It is deliberately independent of a local storage workload: management handles, mixed PVC/SMB/node-local-pool sites, external GarageNodes, scale-down, and deletionPolicy: Drain all coordinate through the same policy.
 spec.layoutManagement.drain.unverifiedPeersPolicy <string> enum=Block|AssumeConsistent default="Block"	# UnverifiedPeersPolicy defaults to Block. AssumeConsistent is required for federated or externally managed processes and is a deliberate maintenance assertion, not an online safety guarantee.
-spec.layoutManagement.minNodesHealthy <integer>	# MinNodesHealthy is the minimum healthy nodes required before applying layout changes.
+spec.layoutManagement.minNodesHealthy <integer>	# MinNodesHealthy is the minimum healthy nodes required before applying layout changes. Deprecated: MinNodesHealthy is currently a no-op and is ignored by the controller; it will be removed in the next API version.
 spec.layoutManagement.redundancyVerification <object>	# RedundancyVerification configures the FullyReplicated proof (#474).
 spec.layoutManagement.redundancyVerification.onTopologyChange <boolean>	# OnTopologyChange starts a blocks-only proof, one local storage node at a time, when the storage nodes, zones or capacities of the layout change after the operator recorded its baseline. Off by default: proofs then run only from the annotation. Ignored on a Follower site.
 spec.layoutManagement.siteRole <string> enum=Writer|Follower	# SiteRole selects whether this GarageCluster may change the shared Garage layout. Absent is equivalent to Writer, the behavior of every release before this field existed. A Follower never stages, applies, reverts, or removes roles; it only reconciles its own workloads and reports status. Exactly one site in a federation should be the Writer.
@@ -535,6 +536,8 @@ spec.replication.zoneRedundancyMode <string> enum=Maximum|AtLeast	# ZoneRedundan
 spec.s3Api <object>	# S3API configures the S3-compatible API endpoint
 spec.s3Api.bindAddress <string>	# BindAddress is a custom wildcard TCP bind address for the S3 API.
 spec.s3Api.bindPort <integer> default=3900 format=int32 min=1 max=65535	# BindPort is the port to bind for S3 API.
+spec.s3Api.publicEndpoint <string>	# PublicEndpoint is the public S3 URL advertised in auto-generated client configurations (Garage s3_api.public_endpoint). Must be a complete URL with a scheme and host, for example "https://s3.example.com". There is no default. Rendered only for Garage v2.5.0 and newer; older tagged images skip the key and admission warns.
+spec.s3Api.publicEndpointPathStyle <boolean>	# PublicEndpointPathStyle, when set, selects path-style (true) or virtual-hosted (false) URLs in those auto-generated S3 client configurations (Garage s3_api.public_endpoint_path_style). Unset omits the key so Garage applies its own default. Setting false requires rootDomain; Garage v2.5.0+ will not start otherwise. Rendered only for Garage v2.5.0 and newer; older tagged images skip the key and admission warns.
 spec.s3Api.region <string> (required) default="garage"	# Region is the AWS S3 region name to use.
 spec.s3Api.rootDomain <string>	# RootDomain is the root domain suffix for vhost-style S3 access.
 spec.security <object>	# Security configures security-related settings
@@ -907,7 +910,7 @@ spec.storage.metadataSnapshotsDir <string>	# MetadataSnapshotsDir specifies dire
 spec.storage.nodeLocalPools <[]object> max=32	# NodeLocalPools adds named node-local storage member sets. Each entry is currently realized as one operator-managed DaemonSet. One Garage Pod and one generated GarageNode identity run on every Kubernetes Node selected by the entry. Metadata and block data remain tied to that Node's HostPaths. The DaemonSet is an implementation of the node-local contract, not a selectable workload mode. The operator coordinates activation, rollout, Garage layout membership, draining, and retirement. Multiple entries produce multiple DaemonSets; one entry is the normal single-DaemonSet deployment. Entries remain operator-managed even when storage.layoutPolicy is Manual and are independent of the optional default StatefulSet/PVC group. Across all entries, at most 255 Kubernetes Nodes may be selected. Garage's global layout accepts at most 256 positive-capacity roles across node-local, PVC, SMB, manual, external, and federated members; those other members consume the same headroom and can make activation fail below the selector ceiling. At 255 live roles, a new node-local activation is eligible only for a locally proven retiring generated member. This is not a reservation against independently operated federated sites.
 spec.storage.nodeLocalPools[].capacity <int-or-string> (required)	# Capacity is the uniform effective capacity advertised to the Garage layout for every generated role in this pool; it is not aggregate pool capacity. HostPath volumes have no PVC request from which to derive it. For multi-disk pools this may not exceed the sum of writable dataPaths capacities.
 spec.storage.nodeLocalPools[].data <object>	# Data is the single node-local block-data directory, mounted at /data/data. Mutually exclusive with dataPaths.
-spec.storage.nodeLocalPools[].data.hostPath <string> (required)	# HostPath is an absolute directory on each selected Kubernetes Node.
+spec.storage.nodeLocalPools[].data.hostPath <string> (required) max=4096	# HostPath is an absolute directory on each selected Kubernetes Node.
 spec.storage.nodeLocalPools[].data.hostPathType <string> enum=Directory|DirectoryOrCreate default="Directory"	# HostPathType controls whether Kubernetes creates a missing directory. Directory (the production default) also requires a pre-provisioned .garage-volume-id file inside HostPath. The pool workload mounts that marker separately as HostPath type File, so an unmounted but still-present root-filesystem directory cannot silently receive Garage data. DirectoryOrCreate skips this marker guarantee and is intended for tests or explicitly ephemeral provisioning.
 spec.storage.nodeLocalPools[].dataPaths <[]object> max=32	# DataPaths configures multiple node-local Garage data directories. Mutually exclusive with data. Every writable entry needs a capacity; read-only entries are retained for Garage's staged disk migration flow.
 spec.storage.nodeLocalPools[].dataPaths[].capacity <int-or-string>	# Capacity is the per-directory Garage capacity. Required unless readOnly.
@@ -916,7 +919,7 @@ spec.storage.nodeLocalPools[].dataPaths[].hostPathType <string> enum=Directory|D
 spec.storage.nodeLocalPools[].dataPaths[].path <string> (required)	# Path is the absolute in-container mount path used in garage.toml.
 spec.storage.nodeLocalPools[].dataPaths[].readOnly <boolean>	# ReadOnly removes this path from new block placement while keeping it mounted for Garage's staged disk migration.
 spec.storage.nodeLocalPools[].metadata <object> (required)	# Metadata is the node-local directory that stores Garage's durable node_key and metadata database. Its hostPath is immutable after pool creation because changing it changes every selected node's identity.
-spec.storage.nodeLocalPools[].metadata.hostPath <string> (required)	# HostPath is an absolute directory on each selected Kubernetes Node.
+spec.storage.nodeLocalPools[].metadata.hostPath <string> (required) max=4096	# HostPath is an absolute directory on each selected Kubernetes Node.
 spec.storage.nodeLocalPools[].metadata.hostPathType <string> enum=Directory|DirectoryOrCreate default="Directory"	# HostPathType controls whether Kubernetes creates a missing directory. Directory (the production default) also requires a pre-provisioned .garage-volume-id file inside HostPath. The pool workload mounts that marker separately as HostPath type File, so an unmounted but still-present root-filesystem directory cannot silently receive Garage data. DirectoryOrCreate skips this marker guarantee and is intended for tests or explicitly ephemeral provisioning.
 spec.storage.nodeLocalPools[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" max=63	# Name identifies this operator-managed membership set and is used in child resource names, labels, and Garage layout tags. It is not a Garage identity, replication group, quorum, zone, or failure domain.
 spec.storage.nodeLocalPools[].network <object>	# Network configures identity-specific connectivity for this pool.
@@ -1312,7 +1315,7 @@ status.layoutHistory.versions[].gatewayNodes <integer>	# GatewayNodes is the num
 status.layoutHistory.versions[].status <string>	# Status is the version status (Current, Draining, Historical).
 status.layoutHistory.versions[].storageNodes <integer>	# StorageNodes is the number of storage nodes in this version.
 status.layoutHistory.versions[].version <integer> format=int64	# Version is the layout version number.
-status.layoutPreview <object>	# LayoutPreview shows what would change if staged layout is applied.
+status.layoutPreview <object>	# LayoutPreview shows what would change if staged layout is applied. Deprecated: never populated by the operator. It will be removed in the next API version.
 status.layoutPreview.dataTransferEstimate <string>	# DataTransferEstimate is a human-readable estimate of data movement.
 status.layoutPreview.nodesAdded <[]string>	# NodesAdded shows node IDs that would be added to the layout.
 status.layoutPreview.nodesModified <[]string>	# NodesModified shows node IDs with changed configuration.
@@ -1421,8 +1424,8 @@ status.scrubStatus.progress <string>	# Progress is a human-readable progress des
 status.scrubStatus.running <boolean>	# Running indicates if a scrub is currently running on any node.
 status.scrubStatus.tranquilityLevel <integer>	# TranquilityLevel is the current tranquility setting.
 status.selector <string> (required)	# Selector is the aggregate serialized label selector for pods managed by this cluster. It is not used by the scale subresource.
-status.stagedLayoutVersion <integer> format=int64	# StagedLayoutVersion is the staged layout version pending application.
-status.stagedRoles <integer> format=int32	# StagedRoles is the number of roles in the staged layout.
+status.stagedLayoutVersion <integer> format=int64	# StagedLayoutVersion is the staged layout version pending application. Deprecated: never populated by the operator. It will be removed in the next API version.
+status.stagedRoles <integer> format=int32	# StagedRoles is the number of roles in the staged layout. Deprecated: never populated by the operator. It will be removed in the next API version.
 status.storageDrain <object>	# StorageDrain records the single cluster-wide positive-capacity removal and block-migration proof. It excludes every other layout mutation until the exact actor completes its Kubernetes handoff.
 status.storageDrain.actor <object> (required)	# Actor is the exact object authorized to advance this transaction.
 status.storageDrain.actor.apiVersion <string> (required)	# APIVersion is the actor's Kubernetes API version.
