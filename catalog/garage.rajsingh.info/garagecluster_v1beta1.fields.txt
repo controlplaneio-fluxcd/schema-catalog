@@ -1,4 +1,4 @@
-# schema source: Garage Operator v0.9.2 https://github.com/rajsinghtech/garage-operator
+# schema source: Garage Operator v0.9.3 https://github.com/rajsinghtech/garage-operator
 apiVersion <string> enum=garage.rajsingh.info/v1beta1 (deprecated)	# garage.rajsingh.info/v1beta1 GarageCluster is deprecated; migrate to garage.rajsingh.info/v1beta2
 kind <string> enum=GarageCluster
 metadata.name <string> (required)
@@ -153,8 +153,8 @@ spec.connectTo.clusterRef.kubeConfigSecretRef <object>	# KubeConfigSecretRef is 
 spec.connectTo.clusterRef.kubeConfigSecretRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.connectTo.clusterRef.kubeConfigSecretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.connectTo.clusterRef.kubeConfigSecretRef.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.connectTo.clusterRef.name <string> (required)	# Name of the GarageCluster resource.
-spec.connectTo.clusterRef.namespace <string>	# Namespace of the GarageCluster. Defaults to the referencing resource's namespace. Cross-namespace references require a GarageReferenceGrant where supported by the owning resource. GarageNode and GarageAdminToken reject them.
+spec.connectTo.clusterRef.name <string> (required) max=253	# Name of the GarageCluster resource.
+spec.connectTo.clusterRef.namespace <string> max=63	# Namespace of the GarageCluster. Defaults to the referencing resource's namespace. Cross-namespace references require a GarageReferenceGrant where supported by the owning resource. GarageNode and GarageAdminToken reject them.
 spec.connectTo.rpcSecretRef <object>	# RPCSecretRef references a secret containing the shared RPC secret. Required when clusterRef is not set or references a different namespace. The secret must have a key with a 32-byte hex-encoded value.
 spec.connectTo.rpcSecretRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.connectTo.rpcSecretRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -239,11 +239,12 @@ spec.initContainers[].name <string> (required) pattern="^[a-z0-9]([-a-z0-9]*[a-z
 spec.k2vApi <object>	# K2VAPI configures the K2V (key-value) API endpoint. Omit to disable K2V.
 spec.k2vApi.bindAddress <string>	# BindAddress is a custom wildcard TCP bind address for the K2V API. If set, this overrides BindPort.
 spec.k2vApi.bindPort <integer> default=3904 format=int32 min=1 max=65535	# BindPort is the port to bind for K2V API
+spec.k2vApi.publicEndpoint <string>	# PublicEndpoint is the public K2V URL advertised in auto-generated client configurations (Garage k2v_api.public_endpoint). Must be a complete URL with a scheme and host, for example "https://k2v.example.com". There is no default. Rendered only for Garage v2.5.0 and newer; older tagged images skip the key and admission warns.
 spec.layoutManagement <object>	# LayoutManagement controls automatic layout application behavior. With autoApply disabled, gateway tombstones are reported but are neither staged nor applied; remove those exact roles with the Garage CLI or enable autoApply. The force-layout-apply annotation is only a legacy/bootstrap below-replication-factor override and does not approve tombstones.
 spec.layoutManagement.autoApply <boolean>	# AutoApply automatically applies staged layout changes
 spec.layoutManagement.drain <object>	# Drain is the layout-wide positive-capacity removal policy. It mirrors the v1beta2 hub so conversion preserves external/federated assertions even on connection-only management handles.
 spec.layoutManagement.drain.unverifiedPeersPolicy <string> enum=Block|AssumeConsistent default="Block"	# UnverifiedPeersPolicy defaults to Block. AssumeConsistent is required for federated or externally managed processes and is a deliberate maintenance assertion, not an online safety guarantee.
-spec.layoutManagement.minNodesHealthy <integer>	# MinNodesHealthy is the minimum healthy nodes required before applying layout changes
+spec.layoutManagement.minNodesHealthy <integer>	# MinNodesHealthy is the minimum healthy nodes required before applying layout changes. Deprecated: MinNodesHealthy is currently a no-op and is ignored by the controller; it will be removed in the next API version.
 spec.layoutManagement.redundancyVerification <object>	# RedundancyVerification configures the FullyReplicated proof (#474).
 spec.layoutManagement.redundancyVerification.onTopologyChange <boolean>	# OnTopologyChange starts a blocks-only proof, one local storage node at a time, when the storage nodes, zones or capacities of the layout change after the operator recorded its baseline. Off by default: proofs then run only from the annotation. Ignored on a Follower site.
 spec.layoutManagement.siteRole <string> enum=Writer|Follower	# SiteRole selects whether this GarageCluster may change the shared Garage layout. Absent is equivalent to Writer, the behavior of every release before this field existed. A Follower never stages, applies, reverts, or removes roles; it only reconciles its own workloads and reports status. Exactly one site in a federation should be the Writer.
@@ -336,6 +337,8 @@ spec.resources.requests <object (free-form)>	# Requests describes the minimum am
 spec.s3Api <object>	# S3API configures the S3-compatible API endpoint
 spec.s3Api.bindAddress <string>	# BindAddress is a custom wildcard TCP bind address for the S3 API. Managed workloads accept "0.0.0.0:3900" or "[::]:3900" so the generated Service and probes can reach every Garage process. If set, this overrides BindPort.
 spec.s3Api.bindPort <integer> default=3900 format=int32 min=1 max=65535	# BindPort is the port to bind for S3 API
+spec.s3Api.publicEndpoint <string>	# PublicEndpoint is the public S3 URL advertised in auto-generated client configurations (Garage s3_api.public_endpoint). Must be a complete URL with a scheme and host, for example "https://s3.example.com". There is no default. Rendered only for Garage v2.5.0 and newer; older tagged images skip the key and admission warns.
+spec.s3Api.publicEndpointPathStyle <boolean>	# PublicEndpointPathStyle, when set, selects path-style (true) or virtual-hosted (false) URLs in those auto-generated S3 client configurations (Garage s3_api.public_endpoint_path_style). Unset omits the key so Garage applies its own default. Setting false requires rootDomain; Garage v2.5.0+ will not start otherwise. Rendered only for Garage v2.5.0 and newer; older tagged images skip the key and admission warns.
 spec.s3Api.region <string> (required) default="garage"	# Region is the AWS S3 region name to use
 spec.s3Api.rootDomain <string>	# RootDomain is the root domain suffix for vhost-style S3 access. When set, buckets can be accessed via <bucket-name>.<root-domain>. Examples: - ".s3.garage.tld" -> Access bucket "mybucket" at "mybucket.s3.garage.tld" - ".s3.example.com" -> Access bucket "data" at "data.s3.example.com" Note: Include the leading dot.
 spec.security <object>	# Security configures security-related settings
@@ -720,7 +723,7 @@ status.layoutHistory.versions[].gatewayNodes <integer>	# GatewayNodes is the num
 status.layoutHistory.versions[].status <string>	# Status is the version status (Current, Draining, Historical)
 status.layoutHistory.versions[].storageNodes <integer>	# StorageNodes is the number of storage nodes in this version
 status.layoutHistory.versions[].version <integer> format=int64	# Version is the layout version number
-status.layoutPreview <object>	# LayoutPreview shows what would change if staged layout is applied
+status.layoutPreview <object>	# LayoutPreview shows what would change if staged layout is applied Deprecated: never populated by the operator. It will be removed in the next API version.
 status.layoutPreview.dataTransferEstimate <string>	# DataTransferEstimate is a human-readable estimate of data movement (e.g., "~50 GB")
 status.layoutPreview.nodesAdded <[]string>	# NodesAdded shows node IDs that would be added to the layout
 status.layoutPreview.nodesModified <[]string>	# NodesModified shows node IDs with changed configuration (zone, capacity, tags)
@@ -827,8 +830,8 @@ status.scrubStatus.progress <string>	# Progress is a human-readable progress des
 status.scrubStatus.running <boolean>	# Running indicates if a scrub is currently running on any node
 status.scrubStatus.tranquilityLevel <integer>	# TranquilityLevel is the current tranquility setting (higher = less aggressive)
 status.selector <string> (required)	# Selector is the serialized label selector for pods managed by this cluster. This is the aggregate cluster selector and is not used by the scale subresource.
-status.stagedLayoutVersion <integer> format=int64	# StagedLayoutVersion is the staged layout version pending application
-status.stagedRoles <integer> format=int32	# StagedRoles is the number of roles in the staged layout
+status.stagedLayoutVersion <integer> format=int64	# StagedLayoutVersion is the staged layout version pending application Deprecated: never populated by the operator. It will be removed in the next API version.
+status.stagedRoles <integer> format=int32	# StagedRoles is the number of roles in the staged layout Deprecated: never populated by the operator. It will be removed in the next API version.
 status.storageDrain <object>	# StorageDrain records the single cluster-wide positive-capacity removal and block-migration proof.
 status.storageDrain.actor <object> (required)	# StorageDrainActorStatus identifies the exact object authorized to advance a cluster-wide storage-drain transaction.
 status.storageDrain.actor.apiVersion <string> (required)
