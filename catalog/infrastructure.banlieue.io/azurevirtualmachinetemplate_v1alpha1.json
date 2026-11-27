@@ -1,0 +1,142 @@
+{
+  "additionalProperties": false,
+  "description": "AzureVirtualMachineTemplate: a stamped-out AzureVirtualMachine spec.\n\nCAPI requires an InfraMachineTemplate so a MachineSet or MachineDeployment\ncan mint identical machines. banlieue ships it for CAPI compatibility;\nstandalone VirtualMachine users do not need it.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "additionalProperties": false,
+      "description": "AzureVirtualMachineTemplate: a stamped-out AzureVirtualMachine spec.\n\nCAPI requires an InfraMachineTemplate so a MachineSet or MachineDeployment\ncan mint identical machines. banlieue ships it for CAPI compatibility;\nstandalone VirtualMachine users do not need it.",
+      "properties": {
+        "template": {
+          "additionalProperties": false,
+          "description": "The spec stamped into every machine created from this template.",
+          "properties": {
+            "spec": {
+              "additionalProperties": false,
+              "description": "The AzureVirtualMachine spec for machines created from this template.",
+              "properties": {
+                "acceleratedNetworking": {
+                  "description": "Enable accelerated networking on the NIC. The image must not\nconfigure the VF itself (ADR-0163 Decision 3).",
+                  "type": "boolean"
+                },
+                "desiredPowerState": {
+                  "default": "PoweredOn",
+                  "description": "Desired power state, resolved from the parent `VirtualMachine`.\n`PoweredOff` deallocates the VM, which stops compute billing\n(ADR-0164 Decision 3). `Suspended` is refused.",
+                  "enum": [
+                    "PoweredOn",
+                    "PoweredOff",
+                    "Suspended"
+                  ],
+                  "type": "string"
+                },
+                "failureDomain": {
+                  "description": "CAPI contract (optional): failure domain placement, the name of one of\nthe `Provider`'s failure domains (one per availability zone).",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "imageVersionId": {
+                  "description": "Resource ID of the Compute Gallery image version to boot, from the\n`VMImage`'s `azure` source (a hand-published `Template`, ADR-0162\nDecision 4).",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "osDiskSizeGiB": {
+                  "description": "OS disk size in GiB, from the `VMClass` (ADR-0160 Decision 4).",
+                  "maximum": 32767,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "osDiskSku": {
+                  "description": "Managed-disk SKU of the OS disk (`Premium_LRS`, `StandardSSD_LRS`),\nfrom the storage class's `sku` target.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "providerID": {
+                  "description": "CAPI contract: Provider ID for the resulting Node. Format:\n`azure:///subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Compute/virtualMachines/<name>`.\nSet by the provider once the VM exists.",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "providerRef": {
+                  "additionalProperties": false,
+                  "description": "The `Provider` whose connection names the subscription, region and\nresource group.",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the `Provider`.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "Namespace of the `Provider`. Defaults to the referrer's namespace.\n\nOnly `banlieue-controller` may set this: a machine naming a provider in\nanother namespace is a placement that skipped scheduling, so an\nadmission policy reserves the field to the controller's identity.",
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "size": {
+                  "description": "VM size (`Standard_D2s_v5`), resolved from the `Provider`'s\n`instanceSizes` mapping for the `VMClass` (ADR-0160).",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "subnetId": {
+                  "description": "Resource ID of the subnet the NIC is created in, from the network\nclass's `subnetId` target for this zone.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "trustedLaunch": {
+                  "description": "Trusted Launch: Secure Boot and a vTPM (ADR-0165). Set from the\n`VMClass`'s `tpmEnabled`; the image definition must declare Trusted\nLaunch support.",
+                  "type": "boolean"
+                },
+                "userData": {
+                  "description": "Guest bootstrap payload, already resolved and placeholder-substituted\nby `banlieue-controller` (ADR-0025, ADR-0038). Sent as `customData`;\nat most 64 KiB. The provider reads no Secret or ConfigMap.",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "zone": {
+                  "description": "Availability zone the VM is created in, as the subscription names it\n(`1`, `2`, `3`). Resolved from the failure domain's `labels.zone`.",
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "imageVersionId",
+                "osDiskSizeGiB",
+                "osDiskSku",
+                "providerRef",
+                "size",
+                "subnetId",
+                "zone"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "spec"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "template"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "title": "AzureVirtualMachineTemplate",
+  "type": "object",
+  "x-flux-schema-type": "AzureVirtualMachineTemplate"
+}

@@ -183,7 +183,7 @@
             "description": "One backend's mapping for a VMImage: which provider class it applies to,\nand how to find (or import) the image there.",
             "properties": {
               "checksum": {
-                "description": "Optional checksum for imported images. Format: `<alg>:<hex>`,\ne.g. `sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b...`.\nSupported algorithms: `sha256`, `sha512`. Provider import Jobs verify\nthe built artifact against this value before writing it to the backend\nand fail closed on mismatch or an unsupported algorithm.",
+                "description": "Optional checksum for imported images. Format: `<alg>:<hex>`,\ne.g. `sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b...`.\nSupported algorithms: `sha256`, `sha512`. For a `Url` source,\n`banlieue-imagebuilder` verifies the built artifact against this value\nonce the build finishes and fails the build closed on mismatch or an\nunsupported algorithm (ADR-0010, amendment 2026-11-26); it is optional\nbecause the build measures the artifact itself.",
                 "nullable": true,
                 "type": "string"
               },
@@ -406,7 +406,7 @@
           "nullable": true,
           "properties": {
             "checksum": {
-              "description": "Expected checksum (`<alg>:<hex>`) of the built artifact, copied from the\n`Url` source the build serves. Consumers that stream the artifact to a\nbackend MUST verify it against this value and fail closed on mismatch\n(security review 2026-07-31, SEC-004) — the value lives here, next to\nthe PVC reference, so no consumer has to re-derive which source the\nshared build came from.",
+              "description": "`sha256:<hex>` of the built artifact file, measured by\n`banlieue-imagebuilder` from the file on the artifacts PVC once the\nbuild finished (ADR-0010, amendment 2026-11-26); for a pre-laid build,\nof the pre-laid file (ADR-0113). Set only at phase `Ready`: while it\nis being measured the phase is `Building` with reason `DigestPending`.\nWhen the `Url` source declares a checksum, the build is verified\nagainst it first and fails closed on mismatch. Consumers that stream\nthe artifact to a backend MUST verify it against this value and fail\nclosed on mismatch (security review 2026-07-31, SEC-004); a cloud\npublisher names the published version by it (ADR-0162 Decision 6).",
               "nullable": true,
               "type": "string"
             },
@@ -587,6 +587,12 @@
                 "nullable": true,
                 "type": "string"
               },
+              "minOsDiskSizeGiB": {
+                "description": "Cloud `Provider`s only (ADR-0162 Decision 4, ADR-0160 Decision 4): the\nsmallest OS disk, in GiB, a VM booting the published image may have.\nUnset until the publish reports it.",
+                "minimum": 0,
+                "nullable": true,
+                "type": "integer"
+              },
               "providerName": {
                 "description": "Name of the Provider.",
                 "type": "string"
@@ -605,9 +611,21 @@
                 "type": "string"
               },
               "resolvedRef": {
-                "description": "Resolved concrete reference on the backend, for backends with one\nreference per provider. Proxmox: VMID. Libvirt: path. Unset for\nvSphere, whose per-zone references are in `Self::zones` (ADR-0104).",
+                "description": "Resolved concrete reference on the backend, for backends with one\nreference per provider. Proxmox: VMID. Libvirt: path. Azure: the\nCompute Gallery image version resource ID. Unset for\nvSphere, whose per-zone references are in `Self::zones` (ADR-0104).",
                 "nullable": true,
                 "type": "string"
+              },
+              "sourceDigest": {
+                "description": "Cloud `Provider`s only (ADR-0162 Decision 4): the digest\n(`sha256:<hex>`) of the build the published image in `resolvedRef`\nwas made from. Unset for a `Template` source, which banlieue did not\npublish.",
+                "nullable": true,
+                "type": "string"
+              },
+              "supersededRefs": {
+                "description": "Cloud `Provider`s only (ADR-0162 Decision 8): images this `VMImage`\npublished into this `Provider` for an earlier digest, still waiting to\nbe deleted because a machine references them or the delete has not\nfinished. Emptied as each is deleted; recorded here because the\nprovider can read a published image only by its name.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "zones": {
                 "description": "Per-zone (per-`Provider.status.failureDomains[]`) readiness. Populated\nby the vSphere provider for both `Url` sources (import progress) and\n`Template` sources (whether the adopted template exists in each zone's\nfolder, ADR-0104). For `Url`, `ready` means every zone is ready; for\n`Template` it means at least one zone is, and the scheduler places\nVMs only in ready zones. Empty for backends without zones (libvirt,\nProxmox).",

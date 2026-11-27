@@ -1,4 +1,4 @@
-# schema source: Banlieue v0.6.0 https://github.com/firestoned/banlieue
+# schema source: Banlieue v0.6.1 https://github.com/firestoned/banlieue
 apiVersion <string> enum=banlieue.io/v1alpha1
 kind <string> enum=Provider
 metadata.name <string> (required)
@@ -23,12 +23,19 @@ spec.attestation.hostCa.secretRef.key <string>	# Key within the object's `data`.
 spec.attestation.hostCa.secretRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
 spec.capabilities <object>	# Admin-defined capability mappings. Every storage / network class that VMClass and VMImage may request MUST be listed here for this provider to be considered by the scheduler.
 spec.capabilities.features <[]string>	# Feature flags admin asserts are available. Provider's controller may downgrade these in status if introspection finds otherwise. Well-known values: hotAddCPU, hotAddMemory, efiSecureBoot, nestedVirtualization, gpuPassthrough.
+spec.capabilities.instanceSizes <[]object>	# Cloud `Provider`s only: which instance size each `VMClass` runs as (ADR-0160 Decision 1). A `VMClass` with no entry is not schedulable on this `Provider`; nothing is guessed from vCPU and memory.
+spec.capabilities.instanceSizes[].perZone <[]object>	# Per-zone overrides of `size`, for a zone that does not offer it.
+spec.capabilities.instanceSizes[].perZone[].size <string> (required)	# The cloud's size name in that zone.
+spec.capabilities.instanceSizes[].perZone[].zone <string> (required)	# Zone name as the cloud reports it (`1`, `2`).
+spec.capabilities.instanceSizes[].size <string> (required)	# The cloud's size name, such as `Standard_D2s_v5`.
+spec.capabilities.instanceSizes[].vmClass <string> (required)	# The `VMClass` name.
 spec.capabilities.networkClasses <[]object>	# Network classes the admin asserts are available on this backend.
 spec.capabilities.networkClasses[].name <string> (required)	# Abstract name referenced by VMClass.network.interfaces[].networkClass.
 spec.capabilities.networkClasses[].perZone <[]object>	# Per-`(datacenter, cluster)` overrides of `target` (ADR-0030).
-spec.capabilities.networkClasses[].perZone[].cluster <string> (required)	# Cluster name as vCenter reports it.
-spec.capabilities.networkClasses[].perZone[].datacenter <string> (required)	# Datacenter name as vCenter reports it.
+spec.capabilities.networkClasses[].perZone[].cluster <string>	# Cluster name as vCenter reports it. Empty on a cloud `Provider`.
+spec.capabilities.networkClasses[].perZone[].datacenter <string>	# Datacenter name as vCenter reports it. Empty on a cloud `Provider`.
 spec.capabilities.networkClasses[].perZone[].target <map[string]string> (required)	# Concrete backend target for this zone, same shape as `StorageClassMapping::target` / `NetworkClassMapping::target`.
+spec.capabilities.networkClasses[].perZone[].zone <string>	# Availability zone name as the cloud reports it (`1`, `2`), on a cloud `Provider` (ADR-0158 Decision 3).
 spec.capabilities.networkClasses[].perZoneSubnet <[]object>	# Per-`(datacenter, cluster)` overrides of `subnet` (ADR-0032).
 spec.capabilities.networkClasses[].perZoneSubnet[].cluster <string> (required)	# Cluster name as vCenter reports it.
 spec.capabilities.networkClasses[].perZoneSubnet[].datacenter <string> (required)	# Datacenter name as vCenter reports it.
@@ -44,11 +51,27 @@ spec.capabilities.networkClasses[].target <map[string]string>	# Default concrete
 spec.capabilities.storageClasses <[]object>	# Storage classes the admin asserts are available on this backend. Each entry maps an abstract class name to a provider-interpreted concrete target.
 spec.capabilities.storageClasses[].name <string> (required)	# Abstract name referenced by VMClass.hardware.disks[].storageClass.
 spec.capabilities.storageClasses[].perZone <[]object>	# Per-`(datacenter, cluster)` overrides of `target` (ADR-0030).
-spec.capabilities.storageClasses[].perZone[].cluster <string> (required)	# Cluster name as vCenter reports it.
-spec.capabilities.storageClasses[].perZone[].datacenter <string> (required)	# Datacenter name as vCenter reports it.
+spec.capabilities.storageClasses[].perZone[].cluster <string>	# Cluster name as vCenter reports it. Empty on a cloud `Provider`.
+spec.capabilities.storageClasses[].perZone[].datacenter <string>	# Datacenter name as vCenter reports it. Empty on a cloud `Provider`.
 spec.capabilities.storageClasses[].perZone[].target <map[string]string> (required)	# Concrete backend target for this zone, same shape as `StorageClassMapping::target` / `NetworkClassMapping::target`.
-spec.capabilities.storageClasses[].target <map[string]string>	# Default concrete target, used in any zone `per_zone` does not cover. `None` means this class resolves ONLY in the zones `per_zone` lists. Free-form per provider class; the provider's controller interprets it. Examples by provider class: vsphere: { datastore: "ds-fast-01" } { datastoreCluster: "dsc-gold" } { tagCategory: "tier", tag: "gold" } proxmox: { storage: "ceph-pool-1" } libvirt: { pool: "nvme-pool" }
+spec.capabilities.storageClasses[].perZone[].zone <string>	# Availability zone name as the cloud reports it (`1`, `2`), on a cloud `Provider` (ADR-0158 Decision 3).
+spec.capabilities.storageClasses[].target <map[string]string>	# Default concrete target, used in any zone `per_zone` does not cover. `None` means this class resolves ONLY in the zones `per_zone` lists. Free-form per provider class; the provider's controller interprets it. Examples by provider class: vsphere: { datastore: "ds-fast-01" } { datastoreCluster: "dsc-gold" } { tagCategory: "tier", tag: "gold" } proxmox: { storage: "ceph-pool-1" } libvirt: { pool: "nvme-pool" } azure: { sku: "Premium_LRS" } (a managed-disk SKU, ADR-0160)
 spec.connection <object> (required)	# Connection details for the backend.
+spec.connection.azure <object>	# `azure` only: the subscription, region and resource group this `Provider` creates into, and the Entra ID identity it federates to (ADR-0158 Decision 1, ADR-0159 Decision 1). `endpoint` is the ARM endpoint (`https://management.azure.com`) and `credentialsRef` is not set: the provider's ServiceAccount token is its only credential.
+spec.connection.azure.authorityHost <string>	# Entra ID authority host. Defaults to the public cloud (`https://login.microsoftonline.com/`).
+spec.connection.azure.clientId <string> (required) min=1	# Client ID of the user-assigned managed identity or app registration whose federated credential trusts this provider's ServiceAccount.
+spec.connection.azure.diskEncryptionSetId <string>	# Resource ID of a disk encryption set (customer-managed key) that encrypts every OS disk, upload disk, snapshot and image version this `Provider` creates (ADR-0172 Decision 2): `/subscriptions/<subscriptionId>/resourceGroups/<rg>/providers/Microsoft.Compute/diskEncryptionSets/<name>`. It must be in this `Provider`'s subscription and region (an Azure restriction); its resource group may differ. Both the provider's and the publisher's identities need `Microsoft.Compute/diskEncryptionSets/read` on it. Unset: platform-managed keys.
+spec.connection.azure.encryptionAtHost <boolean>	# Create every VM with `securityProfile.encryptionAtHost` (ADR-0172 Decision 3): temp disks and disk caches encrypted on the host. The subscription must have the `Microsoft.Compute/EncryptionAtHost` feature registered, and every mapped instance size must support it.
+spec.connection.azure.imageGallery <object>	# The admin's existing Compute Gallery this `Provider` publishes a `VMImage`'s `Url` source into (ADR-0162 Decisions 4 and 8). banlieue never creates or deletes the gallery; it creates and deletes only the image definitions and versions it tags. Unset: no `Url` source is published to this `Provider`, and its rows report `GalleryNotConfigured`. `Template` sources need no gallery here.
+spec.connection.azure.imageGallery.name <string> (required) min=1	# The gallery's name.
+spec.connection.azure.imageGallery.resourceGroup <string> (required) min=1	# The resource group the gallery is in. It may differ from the `Provider`'s `resourceGroup`.
+spec.connection.azure.location <string> (required) min=1	# The region (`location`), such as `canadacentral`. One `Provider` is one region; its availability zones are the failure domains (ADR-0158 Decisions 1 and 3).
+spec.connection.azure.publisher <object>	# The image publisher's own identity (ADR-0159 Decision 3, ADR-0162 Decision 1), separate from `clientId`: the publish Job federates to it, and only it holds the rights to create and delete images. Its tenant is `tenantId`. Unset: no `Url` source is published to this `Provider` (`PublisherNotConfigured`).
+spec.connection.azure.publisher.clientId <string> (required) min=1	# Client ID of the publisher's user-assigned managed identity or app registration.
+spec.connection.azure.resourceGroup <string> (required) min=1	# The resource group VMs, NICs and disks are created in. Must exist; banlieue never creates or deletes it, and never touches anything in it that does not carry its ownership tags (ADR-0158 Decision 4).
+spec.connection.azure.subscriptionId <string> (required) min=1	# Subscription ID.
+spec.connection.azure.tags <map[string]string>	# Extra tags put on every resource this `Provider` creates by name: the NIC, the VM, and the publish Job's image definition, upload disk, snapshot and image version (ADR-0172 Decision 1). For a subscription whose Azure Policy denies a resource without them. Not the OS disk, which Azure creates from the VM without copying its tags. banlieue's own ownership tags always win: a name starting with `banlieue-` (in any case, since Azure folds tag-name case) is refused, as are two names that differ only in case, a name containing `<>%&\?/`, a name over 512 or a value over 256 characters, and more than 45 entries. An invalid set sets the `Provider` `Ready=False` (`ConnectionInvalid`) and nothing is created. Applies to resources created afterwards; existing ones are not re-tagged.
+spec.connection.azure.tenantId <string> (required) min=1	# Entra ID tenant (directory) ID.
 spec.connection.caBundle <object>	# Optional CA bundle to validate the endpoint's TLS certificate. A value-or-source: inline PEM, or a `configMapRef` / `secretRef` naming a key (default `ca.crt`) in the Provider's namespace. Exactly one source must be set; see `CABundleSource`. Resolved by the provider controller and injected into the HTTP client (ADR-0008, BYOC). When unset, the system trust roots are used.
 spec.connection.caBundle.configMapRef <object>	# Key in a ConfigMap in the referrer's namespace (key defaults to `ca.crt`).
 spec.connection.caBundle.configMapRef.key <string>	# Key within the object's `data`. Defaults are caller-defined.
@@ -59,7 +82,7 @@ spec.connection.caBundle.secretRef.key <string>	# Key within the object's `data`
 spec.connection.caBundle.secretRef.name <string> (required)	# Name of the ConfigMap / Secret in the referrer's namespace.
 spec.connection.credentialsRef <object>	# Reference to a Secret in the Provider's namespace containing the credentials. Required keys depend on provider class: vsphere: username, password proxmox: username (the full API token id, user@realm!tokenid), tokenValue (API tokens only; password/ticket auth is not supported, ADR-0074) libvirt: tls.crt, tls.key (mutual TLS, ADR-0011) Required by every backend that authenticates to a remote endpoint, and refused by `cloud-hypervisor`, whose provider runs on the hypervisor host and must read no Secret at all (ADR-0060 Decision 4). When unset the operator grants no Secret access whatsoever.
 spec.connection.credentialsRef.name <string> (required)
-spec.connection.endpoint <string> (required)	# Endpoint URL or URI. Format depends on provider class: vsphere: https://vcenter.example.com/sdk proxmox: https://pve.example.com:8006 libvirt: qemu+ssh://kvm-host.example.com/system
+spec.connection.endpoint <string> (required)	# Endpoint URL or URI. Format depends on provider class: vsphere: https://vcenter.example.com/sdk proxmox: https://pve.example.com:8006 libvirt: qemu+ssh://kvm-host.example.com/system azure: https://management.azure.com
 spec.connection.insecureSkipTLSVerify <boolean>	# Skip TLS verification. Applies to vsphere and proxmox. Serialized as `insecureSkipTLSVerify` (matching CAPI convention with uppercase `TLS`), not the auto-derived `insecureSkipTlsVerify`.
 spec.failureDomainNameOverrides <[]object>	# Explicit overrides for individual discovered failure domains' generated `name`. The auto-computed, collision-safe name (`<provider>-<datacenter>-<cluster>`, hashed when too long) is always the fallback for any `(datacenter, cluster)` pair with no matching entry here — this is opt-in, never required. See ADR-0023.
 spec.failureDomainNameOverrides[].cluster <string> (required)	# Cluster name as vCenter reports it.
@@ -72,7 +95,7 @@ spec.namespaceSelector.matchExpressions[].operator <string> (required) enum=In|N
 spec.namespaceSelector.matchExpressions[].values <[]string>
 spec.namespaceSelector.matchLabels <map[string]string>
 spec.paused <boolean>	# Suspend reconciliation. Equivalent to setting the `cluster.x-k8s.io/paused` annotation but in-band.
-spec.providerClassRef <object> (required)	# Reference to a ProviderClass that identifies the backend type. For v1alpha1 the ProviderClass CRD is deferred; treat this as a name drawn from a well-known set: `vsphere`, `proxmox`, `libvirt`. A future ProviderClass CRD will provide install metadata (image, RBAC) without changing this reference.
+spec.providerClassRef <object> (required)	# Reference to a ProviderClass that identifies the backend type. For v1alpha1 the ProviderClass CRD is deferred; treat this as a name drawn from a well-known set: `vsphere`, `proxmox`, `libvirt`, `cloud-hypervisor`, `azure`. A future ProviderClass CRD will provide install metadata (image, RBAC) without changing this reference.
 spec.providerClassRef.name <string> (required)
 spec.scheduling <object>	# How the scheduler places VMs on this backend (ADR-0107). Optional: without it the defaults apply.
 spec.scheduling.cpuOvercommitRatio <integer> min=1 max=64	# vCPUs the scheduler may place per CPU a failure domain publishes in `attributes.capacity.cpus`. `1` means no overcommit. CPU contention only slows guests, so the default allows 4; memory is never overcommitted. Unset: 4.

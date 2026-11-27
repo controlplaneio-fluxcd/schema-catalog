@@ -576,6 +576,47 @@
           "nullable": true,
           "type": "string"
         },
+        "placementFailures": {
+          "description": "Failure domains whose backend refused to create this VM, most recent\nlast (ADR-0173). Written by the controller when the infra CR of the\nrecorded placement reports `VMCreated=False` with reason\n`ZoneUnavailable`; each entry excludes its failure domain from this\nVM's placement for an exponentially growing, bounded time. Cleared\nonce the infrastructure reports provisioned.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One failure domain whose backend refused to create a VM (ADR-0173).",
+            "properties": {
+              "failureDomain": {
+                "description": "The failure domain that refused it.",
+                "type": "string"
+              },
+              "failures": {
+                "description": "Consecutive failures in this failure domain; the exclusion doubles\nwith each.",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "lastFailureTime": {
+                "description": "The infra CR's `lastTransitionTime` for the latest failure: a\nfailure is counted once, when it is later than this.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "providerName": {
+                "description": "The `Provider` the VM was placed on.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "The infra CR's `VMCreated` reason, such as `ZoneUnavailable`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "failureDomain",
+              "failures",
+              "lastFailureTime",
+              "providerName",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
         "scheduled": {
           "additionalProperties": false,
           "description": "Current scheduling decision. Absent until first successful schedule.",
