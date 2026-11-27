@@ -1,4 +1,4 @@
-# schema source: Banlieue v0.6.0 https://github.com/firestoned/banlieue
+# schema source: Banlieue v0.6.1 https://github.com/firestoned/banlieue
 apiVersion <string> enum=banlieue.io/v1alpha1
 kind <string> enum=VirtualMachine
 metadata.name <string> (required)
@@ -80,6 +80,12 @@ status.initialization <object> default={}	# Mirrored from the infra CR's `status
 status.initialization.provisioned <boolean>	# True when the infrastructure provider reports that the resource's infrastructure is fully provisioned.
 status.observedGeneration <integer> format=int64
 status.observedPowerState <string> enum=PoweredOn|PoweredOff|Suspended|null	# Observed power state from the provider.
+status.placementFailures <[]object> max=8	# Failure domains whose backend refused to create this VM, most recent last (ADR-0173). Written by the controller when the infra CR of the recorded placement reports `VMCreated=False` with reason `ZoneUnavailable`; each entry excludes its failure domain from this VM's placement for an exponentially growing, bounded time. Cleared once the infrastructure reports provisioned.
+status.placementFailures[].failureDomain <string> (required)	# The failure domain that refused it.
+status.placementFailures[].failures <integer> (required) min=0	# Consecutive failures in this failure domain; the exclusion doubles with each.
+status.placementFailures[].lastFailureTime <string> (required) format=date-time	# The infra CR's `lastTransitionTime` for the latest failure: a failure is counted once, when it is later than this.
+status.placementFailures[].providerName <string> (required)	# The `Provider` the VM was placed on.
+status.placementFailures[].reason <string> (required)	# The infra CR's `VMCreated` reason, such as `ZoneUnavailable`.
 status.scheduled <object>	# Current scheduling decision. Absent until first successful schedule.
 status.scheduled.failureDomain <string> (required)	# Failure domain name (one of the Provider's `status.failureDomains[].name`).
 status.scheduled.providerClass <string> (required)	# Provider's ProviderClass (denormalized for convenience in printer columns).
