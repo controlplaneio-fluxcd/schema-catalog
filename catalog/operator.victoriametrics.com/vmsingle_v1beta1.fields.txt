@@ -1,4 +1,4 @@
-# schema source: VictoriaMetrics Operator v0.75.2 https://github.com/VictoriaMetrics/operator
+# schema source: VictoriaMetrics Operator v0.76.0 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1beta1
 kind <string> enum=VMSingle
 metadata.name <string> (required)
@@ -166,13 +166,14 @@ spec.insertPorts.influxPort <string>	# InfluxPort listen port
 spec.insertPorts.openTSDBHTTPPort <string>	# OpenTSDBHTTPPort for http connections.
 spec.insertPorts.openTSDBPort <string>	# OpenTSDBPort for tcp and udp listen
 spec.license <object>	# License allows to configure license key to be used for enterprise features. Using license key is supported starting from VictoriaMetrics v1.94.0. See [here](https://docs.victoriametrics.com/victoriametrics/enterprise/)
-spec.license.forceOffline <boolean>	# Enforce offline verification of the license key.
-spec.license.key <string>	# Enterprise license key. This flag is available only in [VictoriaMetrics enterprise](https://docs.victoriametrics.com/victoriametrics/enterprise/). To request a trial license, [go to](https://victoriametrics.com/products/enterprise/trial)
-spec.license.keyRef <object>	# KeyRef is reference to secret with license key for enterprise features.
+spec.license.acceptEULA <boolean>	# AcceptEULA accepts the [ESA](https://victoriametrics.com/legal/esa/) and enables enterprise features without a license key. The operator passes it to the components as the `-eula` command-line flag. Requires VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23), VictoriaLogs v1.54.0 or vmanomaly v1.33.0 and newer. Use key or keyRef for older versions.
+spec.license.forceOffline <boolean>	# Enforce offline verification of the license key. It has no effect starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0.
+spec.license.key <string>	# Enterprise license key. This flag is available only in [VictoriaMetrics enterprise](https://docs.victoriametrics.com/victoriametrics/enterprise/). To request a trial license, [go to](https://victoriametrics.com/products/enterprise/trial) Starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0, license keys are no longer verified and the `-license` flag is treated as `-eula`, which accepts the [ESA](https://victoriametrics.com/legal/esa/). Use acceptEULA instead for these versions.
+spec.license.keyRef <object>	# KeyRef is reference to secret with license key for enterprise features. Starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0, license keys are no longer verified and the `-licenseFile` flag is treated as `-eula`, which accepts the [ESA](https://victoriametrics.com/legal/esa/). Use acceptEULA instead for these versions.
 spec.license.keyRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.license.keyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.license.keyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.license.reloadInterval <string>	# Interval to be used for checking for license key changes. Note that this is only applicable when using KeyRef.
+spec.license.reloadInterval <string>	# Interval to be used for checking for license key changes. Note that this is only applicable when using KeyRef. It has no effect starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0.
 spec.livenessProbe <object (free-form)>	# LivenessProbe that will be added to CR pod
 spec.logFormat <string> enum=default|json	# LogFormat for VMSingle to be configured with.
 spec.logLevel <string> enum=INFO|WARN|ERROR|FATAL|PANIC	# LogLevel for victoria metrics single to be configured with.
@@ -624,7 +625,6 @@ spec.useStrictSecurity <boolean>	# UseStrictSecurity enables strict security mod
 spec.useVMConfigReloader <boolean>	# UseVMConfigReloader replaces prometheus-like config-reloader with vm one. It uses secrets watch instead of file watch which greatly increases speed of config updates
 spec.vmAgentExternalLabelName <string>	# VMAgentExternalLabelName Name of vmAgent external label used to denote vmAgent instance name. Defaults to the value of `prometheus`. External label will _not_ be added when value is set to empty string (`""`).
 spec.vmBackup <object>	# VMBackup configuration for backup
-spec.vmBackup.acceptEULA <boolean>	# AcceptEULA accepts enterprise feature usage, must be set to true. otherwise backupmanager cannot be added to single/cluster version. https://victoriametrics.com/legal/esa/
 spec.vmBackup.concurrency <integer> format=int32	# Defines number of concurrent workers. Higher concurrency may reduce backup duration (default 10)
 spec.vmBackup.credentialsSecret <object>	# CredentialsSecret is secret in the same namespace for access to remote storage The secret is mounted into /etc/vm/creds.
 spec.vmBackup.credentialsSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.

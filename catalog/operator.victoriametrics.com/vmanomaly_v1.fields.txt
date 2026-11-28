@@ -1,4 +1,4 @@
-# schema source: VictoriaMetrics Operator v0.75.2 https://github.com/VictoriaMetrics/operator
+# schema source: VictoriaMetrics Operator v0.76.0 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1
 kind <string> enum=VMAnomaly
 metadata.name <string> (required)
@@ -108,13 +108,14 @@ spec.imagePullSecrets <[]object>	# ImagePullSecrets An optional list of referenc
 spec.imagePullSecrets[].name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.initContainers <[]object>	# InitContainers allows adding initContainers to the pod definition. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
 spec.license <object>	# License allows to configure license key to be used for enterprise features. Using license key is supported starting from VictoriaMetrics v1.94.0. See [here](https://docs.victoriametrics.com/victoriametrics/enterprise/)
-spec.license.forceOffline <boolean>	# Enforce offline verification of the license key.
-spec.license.key <string>	# Enterprise license key. This flag is available only in [VictoriaMetrics enterprise](https://docs.victoriametrics.com/victoriametrics/enterprise/). To request a trial license, [go to](https://victoriametrics.com/products/enterprise/trial)
-spec.license.keyRef <object>	# KeyRef is reference to secret with license key for enterprise features.
+spec.license.acceptEULA <boolean>	# AcceptEULA accepts the [ESA](https://victoriametrics.com/legal/esa/) and enables enterprise features without a license key. The operator passes it to the components as the `-eula` command-line flag. Requires VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23), VictoriaLogs v1.54.0 or vmanomaly v1.33.0 and newer. Use key or keyRef for older versions.
+spec.license.forceOffline <boolean>	# Enforce offline verification of the license key. It has no effect starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0.
+spec.license.key <string>	# Enterprise license key. This flag is available only in [VictoriaMetrics enterprise](https://docs.victoriametrics.com/victoriametrics/enterprise/). To request a trial license, [go to](https://victoriametrics.com/products/enterprise/trial) Starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0, license keys are no longer verified and the `-license` flag is treated as `-eula`, which accepts the [ESA](https://victoriametrics.com/legal/esa/). Use acceptEULA instead for these versions.
+spec.license.keyRef <object>	# KeyRef is reference to secret with license key for enterprise features. Starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0, license keys are no longer verified and the `-licenseFile` flag is treated as `-eula`, which accepts the [ESA](https://victoriametrics.com/legal/esa/). Use acceptEULA instead for these versions.
 spec.license.keyRef.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.license.keyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.license.keyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.license.reloadInterval <string>	# Interval to be used for checking for license key changes. Note that this is only applicable when using KeyRef.
+spec.license.reloadInterval <string>	# Interval to be used for checking for license key changes. Note that this is only applicable when using KeyRef. It has no effect starting from VictoriaMetrics v1.156.0 (LTS v1.148.9 and v1.136.23) and VictoriaLogs v1.54.0.
 spec.livenessProbe <object (free-form)>	# LivenessProbe that will be added to CR pod
 spec.logLevel <string> enum=INFO|WARN|ERROR|FATAL|PANIC	# LogLevel for VMAnomaly to be configured with. INFO, WARN, ERROR, FATAL, PANIC
 spec.managedMetadata <object>	# ManagedMetadata defines metadata that will be added to the all objects created by operator for the given CustomResource
@@ -321,6 +322,34 @@ spec.server.addr <string>	# Addr defines IP address to listen on
 spec.server.maxConcurrentTasks <integer> min=1	# MaxConcurrentTasks defines maximum number of concurrent anomaly detection tasks
 spec.server.pathPrefix <string>	# PathPrefix defines optional URL path prefix for all HTTP routes If set to 'my-app' or '/my-app', routes will be served under '/my-app/...'
 spec.server.port <string>	# Port defines port to listen on
+spec.server.tlsConfig <object>	# TLSConfig enables HTTPS for the anomaly UI and API. cert and keySecret (or certFile and keyFile) define the server certificate. If ca or caFile is set, clients must present a certificate signed by this CA (mTLS). insecureSkipVerify and serverName are not supported. Probes and metrics scraping use the separate monitoring.pull port, which must differ from the server port.
+spec.server.tlsConfig.ca <object>	# Struct containing the CA cert to use for the targets.
+spec.server.tlsConfig.ca.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.server.tlsConfig.ca.configMap.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.server.tlsConfig.ca.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.server.tlsConfig.ca.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.server.tlsConfig.ca.secret <object>	# Secret containing data to use for the targets.
+spec.server.tlsConfig.ca.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.server.tlsConfig.ca.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.server.tlsConfig.ca.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.server.tlsConfig.caFile <string>	# Path to the CA cert in the container to use for the targets.
+spec.server.tlsConfig.cert <object>	# Struct containing the client cert file for the targets.
+spec.server.tlsConfig.cert.configMap <object>	# ConfigMap containing data to use for the targets.
+spec.server.tlsConfig.cert.configMap.key <string> (required)	# The key to select from the ConfigMap's Data field. Keys in the BinaryData field are not currently propagated to container env vars.
+spec.server.tlsConfig.cert.configMap.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.server.tlsConfig.cert.configMap.optional <boolean>	# Specify whether the ConfigMap or its key must be defined
+spec.server.tlsConfig.cert.secret <object>	# Secret containing data to use for the targets.
+spec.server.tlsConfig.cert.secret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.server.tlsConfig.cert.secret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.server.tlsConfig.cert.secret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.server.tlsConfig.certFile <string>	# Path to the client cert file in the container for the targets.
+spec.server.tlsConfig.insecureSkipVerify <boolean>	# Disable target certificate validation.
+spec.server.tlsConfig.keyFile <string>	# Path to the client key file in the container for the targets.
+spec.server.tlsConfig.keySecret <object>	# Secret containing the client key file for the targets.
+spec.server.tlsConfig.keySecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
+spec.server.tlsConfig.keySecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+spec.server.tlsConfig.keySecret.optional <boolean>	# Specify whether the Secret or its key must be defined
+spec.server.tlsConfig.serverName <string>	# Used to verify the hostname for the targets.
 spec.server.uiDefaultState <string>	# UIDefaultState defines default query state for anomaly UI
 spec.server.useReaderConnectionSettings <boolean>	# UseReaderConnectionSettings when set to true, anomaly UI reuses connection settings (credentials, TLS, etc.) from the reader configuration to connect to datasources
 spec.serviceAccountName <string>	# ServiceAccountName is the name of the ServiceAccount to use to run the pods
