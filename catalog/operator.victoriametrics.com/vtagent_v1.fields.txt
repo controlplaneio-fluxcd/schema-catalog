@@ -1,4 +1,4 @@
-# schema source: VictoriaMetrics Operator v0.75.2 https://github.com/VictoriaMetrics/operator
+# schema source: VictoriaMetrics Operator v0.76.0 https://github.com/VictoriaMetrics/operator
 apiVersion <string> enum=operator.victoriametrics.com/v1
 kind <string> enum=VTAgent
 metadata.name <string> (required)
@@ -175,7 +175,7 @@ spec.priorityClassName <string>	# PriorityClassName class assigned to the Pods
 spec.readinessGates <[]object>	# ReadinessGates defines pod readiness gates
 spec.readinessGates[].conditionType <string> (required)	# ConditionType refers to a condition in the pod's condition list with matching type.
 spec.readinessProbe <object (free-form)>	# ReadinessProbe that will be added to CR pod
-spec.remoteWrite <[]object> (required)	# RemoteWrite list of VictoriaTraces endpoints to replicate ingested trace spans to. The url must point to the `/insert/native` API of a VictoriaTraces instance, e.g. http://vtsingle-example:10428/insert/native See https://docs.victoriametrics.com/victoriatraces/vtagent/
+spec.remoteWrite <[]object> (required)	# RemoteWrite list of endpoints to replicate ingested trace spans to. Since v0.13.0, vtagent sends data in OTLP/HTTP protobuf format, so the url must point to an OTLP/HTTP traces endpoint, e.g. http://vtsingle-example:10428/insert/opentelemetry/v1/traces Older vtagent versions require a VictoriaTraces endpoint matching the selected format, such as `/insert/native` for `native`. See https://docs.victoriametrics.com/victoriatraces/vtagent/
 spec.remoteWrite[].basicAuth <object>	# BasicAuth allow an endpoint to authenticate over basic authentication.
 spec.remoteWrite[].basicAuth.password <object>	# Password defines reference for secret with password value The secret needs to be in the same namespace as scrape object
 spec.remoteWrite[].basicAuth.password.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
@@ -191,7 +191,7 @@ spec.remoteWrite[].bearerTokenSecret <object>	# Optional bearer auth token to us
 spec.remoteWrite[].bearerTokenSecret.key <string> (required)	# The key of the secret to select from. Must be a valid secret key.
 spec.remoteWrite[].bearerTokenSecret.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.remoteWrite[].bearerTokenSecret.optional <boolean>	# Specify whether the Secret or its key must be defined
-spec.remoteWrite[].format <string> enum=native|jsonline	# Format defines the wire format used to send data to the given url.
+spec.remoteWrite[].format <string> enum=native|jsonline	# Format defines the wire format used to send data to the given url. This field is deprecated, as vtagent v0.13.0 removed the `-remoteWrite.format` flag and always sends data in OTLP/HTTP protobuf format. The operator ignores this field for vtagent v0.13.0 and newer.
 spec.remoteWrite[].headers <[]string>	# Headers allow configuring custom http headers Must be in form of semicolon separated header with value e.g. headerName: headerValue
 spec.remoteWrite[].maxDiskUsage <any>	# MaxDiskUsage defines the maximum file-based buffer size in bytes for the given remoteWrite It overrides global configuration defined at remoteWriteSettings.maxDiskUsagePerURL
 spec.remoteWrite[].oauth2 <object>	# OAuth2 defines auth configuration
@@ -228,7 +228,7 @@ spec.remoteWrite[].tlsConfig.keySecretKeyRef.key <string> (required)	# The key o
 spec.remoteWrite[].tlsConfig.keySecretKeyRef.name <string> default=""	# Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 spec.remoteWrite[].tlsConfig.keySecretKeyRef.optional <boolean>	# Specify whether the Secret or its key must be defined
 spec.remoteWrite[].tlsConfig.serverName <string>	# Used to verify the hostname for the targets.
-spec.remoteWrite[].url <string> (required)	# URL of the VictoriaTraces `/insert/native` endpoint to send trace spans to.
+spec.remoteWrite[].url <string> (required)	# URL of the OTLP/HTTP traces endpoint to send trace spans to, e.g. http://vtsingle-example:10428/insert/opentelemetry/v1/traces vtagent versions older than v0.13.0 require a VictoriaTraces endpoint matching the selected Format, such as `/insert/native` for `native`.
 spec.remoteWriteSettings <object>	# RemoteWriteSettings defines global settings for all remoteWrite urls.
 spec.remoteWriteSettings.flushInterval <string> pattern="[0-9]+(ms|s|m|h)"	# Interval for flushing the data to remote storage. (default 1s)
 spec.remoteWriteSettings.maxBlockSize <any>	# The maximum size of unpacked request to send to remote storage

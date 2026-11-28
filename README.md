@@ -1,7 +1,7 @@
 #  Kubernetes Ecosystem Schema Catalog
 
 <!-- stats:start -->
-![Projects](https://img.shields.io/badge/Projects-131-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C769-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-695%20MB-8957E5?style=flat-square)
+![Projects](https://img.shields.io/badge/Projects-131-2088FF?style=flat-square) ![Schemas](https://img.shields.io/badge/Schemas-9%2C770-3FB950?style=flat-square) ![Catalog size](https://img.shields.io/badge/Catalog%20size-696%20MB-8957E5?style=flat-square)
 <!-- stats:end -->
 
 A hosted catalog of JSON Schemas and LLM-optimized indexes for Kubernetes and the CNCF Ecosystem,
@@ -237,7 +237,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Kuma](https://schemas.fluxoperator.dev/p/kuma) | `kuma` | v3.0.1 | 32 | 2026-11-20 |
 | [KWOK](https://schemas.fluxoperator.dev/p/kwok) | `kwok` | v0.8.0 | 12 | 2026-11-20 |
 | [LeaderWorkerSet](https://schemas.fluxoperator.dev/p/lws) | `lws` | v1.0.0 | 3 | 2026-11-20 |
-| [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.11.2 | 19 | 2026-11-20 |
+| [Linkerd](https://schemas.fluxoperator.dev/p/linkerd) | `linkerd` | 26.11.3 | 19 | 2026-11-28 |
 | [MetalLB](https://schemas.fluxoperator.dev/p/metallb) | `metallb` | v0.16.2 | 10 | 2026-11-20 |
 | [NFD NodeResourceTopology](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery-nrt` | v0.20.1 | 2 | 2026-11-20 |
 | [Node Feature Discovery](https://schemas.fluxoperator.dev/p/node-feature-discovery) | `node-feature-discovery` | v0.20.1 | 3 | 2026-11-20 |
@@ -318,7 +318,7 @@ gh attestation verify <ID>.json -R controlplaneio-fluxcd/schema-catalog
 | [Prometheus Operator](https://schemas.fluxoperator.dev/p/prometheus-operator) | `prometheus-operator` | v0.95.2 | 10 | 2026-11-20 |
 | [Sloth](https://schemas.fluxoperator.dev/p/sloth) | `sloth` | v0.16.0 | 1 | 2026-11-26 |
 | [Tempo Operator](https://schemas.fluxoperator.dev/p/tempo-operator) | `tempo-operator` | v0.24.0 | 2 | 2026-11-24 |
-| [VictoriaMetrics Operator](https://schemas.fluxoperator.dev/p/victoriametrics-operator) | `victoriametrics-operator` | v0.75.2 | 26 | 2026-11-20 |
+| [VictoriaMetrics Operator](https://schemas.fluxoperator.dev/p/victoriametrics-operator) | `victoriametrics-operator` | v0.76.0 | 27 | 2026-11-28 |
 <!-- versions:end -->
 
 ## Documentation
